@@ -7,13 +7,16 @@
 //! - F132: Read .env file line by line
 //! - F133: Parse KEY=VALUE format with support for quotes (single, double)
 //! - F134: Detect provider from key prefix (OPENAI_, STRIPE_, ANTHROPIC_, AWS_, etc.)
+//! - Milestone 2: --scan directory recursively, duplicate detection, interactive merge
 
 use anyhow::{Context, Result};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::collections::HashMap;
 use std::fs;
-use std::io::{self, BufRead, BufReader};
+use std::io::{self, BufRead, BufReader, Write};
+use std::path::{Path, PathBuf};
+use walkdir::WalkDir;
 
 use crate::client::DaemonClient;
 
@@ -25,11 +28,20 @@ pub struct ImportCommand {
 }
 
 /// A secret parsed from .env file
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct ParsedSecret {
     key: String,
     value: String,
     provider: Option<String>,
+    source_file: PathBuf,
+}
+
+/// Scan result containing all .env files found
+#[derive(Debug)]
+struct ScanResult {
+    files: Vec<PathBuf>,
+    secrets: Vec<ParsedSecret>,
+    duplicates: HashMap<String, Vec<ParsedSecret>>,
 }
 
 /// Response from secret.set
@@ -46,6 +58,8 @@ struct SetResponse {
 /// 1. F132: Reading .env file line by line
 /// 2. F133: Parsing KEY=VALUE format with support for quotes
 /// 3. F134: Detecting provider from key prefix
+/// 4. Milestone 2: Scan directories recursively for .env files
+/// 5. Milestone 2: Detect duplicates across multiple files
 ///
 /// # Arguments
 ///
@@ -69,68 +83,56 @@ struct SetResponse {
 /// sec import . --scan
 /// ```
 pub async fn handle_import(client: DaemonClient, cmd: ImportCommand) -> Result<()> {
-    if cmd.scan {
-        anyhow::bail!("Scan mode is not yet implemented");
-    }
+    let path = Path::new(&cmd.path);
 
-    // F132: Read .env file line by line
-    let secrets = parse_env_file(&cmd.path)
-        .with_context(|| format!("Failed to parse .env file: {}", cmd.path))?;
+    let secrets_to_import = if cmd.scan {
+        // Milestone 2: Scan directory recursively
+        handle_scan_import(path, cmd.yes)?
+    } else {
+        // Single file import
+        let secrets = parse_env_file(path)
+            .with_context(|| format!("Failed to parse .env file: {}", cmd.path))?;
 
-    if secrets.is_empty() {
-        println!("No secrets found in {}", cmd.path);
-        return Ok(());
-    }
+        if secrets.is_empty() {
+            println!("No secrets found in {}", cmd.path);
+            return Ok(());
+        }
 
-    // Display preview of secrets to import
-    println!("Found {} secret(s) in {}:", secrets.len(), cmd.path);
-    println!();
+        display_secrets_preview(&secrets);
 
-    for secret in &secrets {
-        let provider_str = secret
-            .provider
-            .as_ref()
-            .map(|p| format!(" ({})", p))
-            .unwrap_or_default();
-        let masked_value = mask_value(&secret.value);
-        println!("  {} = {}{}", secret.key, masked_value, provider_str);
-    }
-    println!();
-
-    // Confirm import unless --yes flag is set
-    if !cmd.yes {
-        print!("Import these secrets? [y/N]: ");
-        io::Write::flush(&mut io::stdout())?;
-
-        let mut input = String::new();
-        io::stdin().read_line(&mut input)?;
-
-        if !input.trim().eq_ignore_ascii_case("y") {
+        if !cmd.yes && !confirm_import()? {
             println!("Import cancelled");
             return Ok(());
         }
+
+        secrets
+    };
+
+    if secrets_to_import.is_empty() {
+        return Ok(());
     }
 
     // Import each secret
     let mut imported = 0;
     let mut failed = 0;
 
-    for secret in secrets {
+    for secret in secrets_to_import {
         let mut params = json!({
             "name": secret.key,
             "value": secret.value,
         });
 
-        if let Some(provider) = secret.provider {
+        if let Some(provider) = &secret.provider {
             params["provider"] = json!(provider);
         }
 
         match client.request::<Value, SetResponse>("secret.set", params).await {
             Ok(_) => {
                 imported += 1;
+                println!("  ✓ {}", secret.key);
             }
             Err(e) => {
-                eprintln!("Failed to import {}: {}", secret.key, e);
+                eprintln!("  ✗ {}: {}", secret.key, e);
                 failed += 1;
             }
         }
@@ -144,6 +146,182 @@ pub async fn handle_import(client: DaemonClient, cmd: ImportCommand) -> Result<(
     }
 
     Ok(())
+}
+
+/// Handle scan mode - recursively find and import .env files
+fn handle_scan_import(dir: &Path, auto_yes: bool) -> Result<Vec<ParsedSecret>> {
+    println!("Scanning {} for .env files...", dir.display());
+
+    let scan_result = scan_directory(dir)?;
+
+    if scan_result.files.is_empty() {
+        println!("No .env files found in {}", dir.display());
+        return Ok(vec![]);
+    }
+
+    println!();
+    println!("Found {} .env file(s):", scan_result.files.len());
+    for file in &scan_result.files {
+        println!("  • {}", file.display());
+    }
+    println!();
+
+    println!("Total secrets found: {}", scan_result.secrets.len());
+
+    // Handle duplicates
+    if !scan_result.duplicates.is_empty() {
+        println!();
+        println!("⚠️  Found {} duplicate key(s):", scan_result.duplicates.len());
+
+        for (key, occurrences) in &scan_result.duplicates {
+            println!();
+            println!("  {} appears in {} files:", key, occurrences.len());
+            for (i, secret) in occurrences.iter().enumerate() {
+                let masked = mask_value(&secret.value);
+                println!("    {}. {} = {} ({})",
+                    i + 1,
+                    key,
+                    masked,
+                    secret.source_file.display()
+                );
+            }
+        }
+        println!();
+    }
+
+    // Display unique secrets
+    let unique_secrets = get_unique_secrets(&scan_result);
+
+    if unique_secrets.is_empty() {
+        println!("No unique secrets to import.");
+        return Ok(vec![]);
+    }
+
+    println!();
+    println!("Secrets to import ({}):", unique_secrets.len());
+    display_secrets_preview(&unique_secrets);
+
+    if !auto_yes && !confirm_import()? {
+        println!("Import cancelled");
+        return Ok(vec![]);
+    }
+
+    Ok(unique_secrets)
+}
+
+/// Scan a directory recursively for .env files
+fn scan_directory(dir: &Path) -> Result<ScanResult> {
+    let mut files = Vec::new();
+    let mut all_secrets = Vec::new();
+    let mut key_occurrences: HashMap<String, Vec<ParsedSecret>> = HashMap::new();
+
+    for entry in WalkDir::new(dir)
+        .follow_links(false)
+        .into_iter()
+        .filter_entry(|e| !is_hidden(e) && !is_ignored_dir(e))
+    {
+        let entry = entry?;
+        let path = entry.path();
+
+        if is_env_file(path) {
+            files.push(path.to_path_buf());
+
+            if let Ok(secrets) = parse_env_file(path) {
+                for secret in secrets {
+                    key_occurrences
+                        .entry(secret.key.clone())
+                        .or_default()
+                        .push(secret.clone());
+                    all_secrets.push(secret);
+                }
+            }
+        }
+    }
+
+    // Identify duplicates (keys that appear more than once)
+    let duplicates: HashMap<String, Vec<ParsedSecret>> = key_occurrences
+        .into_iter()
+        .filter(|(_, v)| v.len() > 1)
+        .collect();
+
+    Ok(ScanResult {
+        files,
+        secrets: all_secrets,
+        duplicates,
+    })
+}
+
+/// Check if a path is a hidden file/directory
+fn is_hidden(entry: &walkdir::DirEntry) -> bool {
+    entry.file_name()
+        .to_str()
+        .map(|s| s.starts_with('.') && s != ".env")
+        .unwrap_or(false)
+}
+
+/// Check if directory should be ignored (node_modules, target, etc.)
+fn is_ignored_dir(entry: &walkdir::DirEntry) -> bool {
+    if !entry.file_type().is_dir() {
+        return false;
+    }
+
+    let ignored = ["node_modules", "target", "build", "dist", ".git", "vendor", "__pycache__"];
+    entry.file_name()
+        .to_str()
+        .map(|s| ignored.contains(&s))
+        .unwrap_or(false)
+}
+
+/// Check if a file is an .env file
+fn is_env_file(path: &Path) -> bool {
+    let name = path.file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("");
+
+    // Match .env, .env.local, .env.development, .env.production, etc.
+    name == ".env" ||
+    name.starts_with(".env.") ||
+    name.ends_with(".env")
+}
+
+/// Get unique secrets (for duplicates, take the first occurrence)
+fn get_unique_secrets(scan_result: &ScanResult) -> Vec<ParsedSecret> {
+    let mut seen = std::collections::HashSet::new();
+    let mut unique = Vec::new();
+
+    for secret in &scan_result.secrets {
+        if seen.insert(secret.key.clone()) {
+            unique.push(secret.clone());
+        }
+    }
+
+    unique
+}
+
+/// Display preview of secrets to import
+fn display_secrets_preview(secrets: &[ParsedSecret]) {
+    println!();
+    for secret in secrets {
+        let provider_str = secret
+            .provider
+            .as_ref()
+            .map(|p| format!(" ({})", p))
+            .unwrap_or_default();
+        let masked_value = mask_value(&secret.value);
+        println!("  {} = {}{}", secret.key, masked_value, provider_str);
+    }
+    println!();
+}
+
+/// Confirm import with user
+fn confirm_import() -> Result<bool> {
+    print!("Import these secrets? [y/N]: ");
+    io::stdout().flush()?;
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+
+    Ok(input.trim().eq_ignore_ascii_case("y"))
 }
 
 /// F132-F133: Parse .env file and extract secrets
@@ -164,7 +342,7 @@ pub async fn handle_import(client: DaemonClient, cmd: ImportCommand) -> Result<(
 /// # Returns
 ///
 /// Returns vector of parsed secrets
-fn parse_env_file(path: &str) -> Result<Vec<ParsedSecret>> {
+fn parse_env_file(path: &Path) -> Result<Vec<ParsedSecret>> {
     let file = fs::File::open(path).context("Failed to open file")?;
     let reader = BufReader::new(file);
     let mut secrets = Vec::new();
@@ -187,6 +365,7 @@ fn parse_env_file(path: &str) -> Result<Vec<ParsedSecret>> {
                 key,
                 value,
                 provider,
+                source_file: path.to_path_buf(),
             });
         } else {
             eprintln!(

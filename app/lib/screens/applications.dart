@@ -87,6 +87,84 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
     return secret.name;
   }
 
+  /// Handle grant permission action - shows dialog to select a secret
+  Future<void> _handleGrantPermission(String appId, String appName) async {
+    final vaultProvider = Provider.of<VaultProvider>(context, listen: false);
+    final secrets = vaultProvider.secrets;
+    final app = vaultProvider.applications.firstWhere((a) => a.id == appId);
+
+    // Filter out already granted secrets
+    final availableSecrets = secrets.where(
+      (s) => !app.permissions.contains(s.id) && !app.permissions.contains(s.name)
+    ).toList();
+
+    if (availableSecrets.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('All secrets already granted to this app')),
+        );
+      }
+      return;
+    }
+
+    final selectedSecret = await showDialog<Secret>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Grant Permission to $appName'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: availableSecrets.length,
+            itemBuilder: (context, index) {
+              final secret = availableSecrets[index];
+              return ListTile(
+                leading: Icon(
+                  Icons.vpn_key,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                title: Text(secret.name),
+                subtitle: secret.provider != null
+                    ? Text(secret.provider!)
+                    : null,
+                onTap: () => Navigator.of(context).pop(secret),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+
+    if (selectedSecret != null && mounted) {
+      try {
+        await vaultProvider.grantPermission(appId, selectedSecret.name);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Granted access to "${selectedSecret.name}"'),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to grant permission: $e'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+      }
+    }
+  }
+
   /// F191: Handle revoke permission action
   Future<void> _handleRevokePermission(
     String appId,
@@ -232,6 +310,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
                 formatTimestamp: _formatTimestamp,
                 getSecretName: _getSecretName,
                 onRevokePermission: _handleRevokePermission,
+                onGrantPermission: _handleGrantPermission,
               );
             },
           );
@@ -250,7 +329,8 @@ class _ApplicationTile extends StatelessWidget {
   final String Function(DateTime) formatTimestamp;
   final String Function(String, List<Secret>) getSecretName;
   final Future<void> Function(String appId, String secretId, String secretName)
-  onRevokePermission;
+      onRevokePermission;
+  final Future<void> Function(String appId, String appName) onGrantPermission;
 
   const _ApplicationTile({
     required this.application,
@@ -258,6 +338,7 @@ class _ApplicationTile extends StatelessWidget {
     required this.formatTimestamp,
     required this.getSecretName,
     required this.onRevokePermission,
+    required this.onGrantPermission,
   });
 
   @override
@@ -376,21 +457,37 @@ class _ApplicationTile extends StatelessWidget {
         ),
         // F190: Show permissions for each app when expanded
         children: [
-          if (hasPermissions)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Granted Permissions',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Divider(),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Granted Permissions',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
+                    TextButton.icon(
+                      onPressed: () => onGrantPermission(
+                        application.id,
+                        application.name,
+                      ),
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Grant'),
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (hasPermissions)
                   // List of permissions
                   ...application.permissions.map((secretId) {
                     final secretName = getSecretName(secretId, secrets);
@@ -426,24 +523,24 @@ class _ApplicationTile extends StatelessWidget {
                         ],
                       ),
                     );
-                  }),
-                  const SizedBox(height: 8),
-                ],
-              ),
-            )
-          else
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Center(
-                child: Text(
-                  'No permissions granted yet',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontStyle: FontStyle.italic,
+                  })
+                else
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Text(
+                        'No permissions granted yet',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                const SizedBox(height: 8),
+              ],
             ),
+          ),
         ],
       ),
     );

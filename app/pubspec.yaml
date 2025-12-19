@@ -45,6 +45,9 @@ dependencies:
   # Migrated from system_tray to tray_manager (actively maintained)
   tray_manager: ^0.2.3
 
+  # Desktop drag & drop support - for Import Wizard
+  desktop_drop: ^0.4.4
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

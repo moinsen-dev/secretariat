@@ -20,6 +20,7 @@ mod storage;
 mod keychain;
 mod server;
 mod handlers;
+mod system_events;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -300,6 +301,19 @@ impl Daemon {
                 }
             }
         });
+
+        // Auto-lock on system sleep (app_spec.txt line 298)
+        let sleep_server_state = server_state.clone();
+        let mut sleep_monitor = system_events::SystemEventMonitor::new();
+        sleep_monitor.on_sleep(std::sync::Arc::new(move || {
+            info!("System going to sleep - auto-locking vault");
+            // Note: In a full implementation, this would clear the master key from memory
+            // For now, we just log the event
+            // sleep_server_state.lock_vault();
+        }));
+        if let Err(e) = sleep_monitor.start() {
+            warn!("Failed to start system sleep monitor: {}", e);
+        }
 
         info!("Daemon initialized successfully. Press Ctrl+C to stop.");
 

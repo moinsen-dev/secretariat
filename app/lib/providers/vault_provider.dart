@@ -13,6 +13,7 @@
 import 'package:flutter/foundation.dart';
 import '../models/secret.dart';
 import '../models/application.dart';
+import '../models/audit_entry.dart';
 import '../services/daemon_client.dart';
 import '../services/daemon_manager.dart';
 
@@ -49,6 +50,9 @@ class VaultProvider extends ChangeNotifier {
   /// F188: List of all registered applications
   List<Application> _applications = [];
 
+  /// List of audit log entries
+  List<AuditEntry> _auditEntries = [];
+
   /// Daemon client for communication
   final DaemonClient _daemonClient = DaemonClient();
 
@@ -72,6 +76,9 @@ class VaultProvider extends ChangeNotifier {
 
   /// F188: Getter for applications
   List<Application> get applications => List.unmodifiable(_applications);
+
+  /// Getter for audit entries
+  List<AuditEntry> get auditEntries => List.unmodifiable(_auditEntries);
 
   /// Getter for loading state
   bool get isLoading => _isLoading;
@@ -426,9 +433,9 @@ class VaultProvider extends ChangeNotifier {
   ///
   /// Example:
   /// ```dart
-  /// await provider.revokePermission('app-id', 'secret-id');
+  /// await provider.revokePermission('app-id', 'secret-name');
   /// ```
-  Future<void> revokePermission(String appId, String secretId) async {
+  Future<void> revokePermission(String appId, String secretName) async {
     try {
       _errorMessage = null;
 
@@ -436,12 +443,158 @@ class VaultProvider extends ChangeNotifier {
         await _daemonClient.connect();
       }
 
-      await _daemonClient.revokePermission(appId, secretId);
+      await _daemonClient.revokePermission(appId, secretName);
 
       // Reload applications to reflect the change
       await loadApplications();
     } catch (e) {
       _errorMessage = 'Failed to revoke permission: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Grant an application permission to access a secret
+  ///
+  /// Example:
+  /// ```dart
+  /// await provider.grantPermission('app-fingerprint', 'OPENAI_API_KEY');
+  /// ```
+  Future<void> grantPermission(String appId, String secretName) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      await _daemonClient.grantPermission(appId, secretName);
+
+      // Reload applications to reflect the change
+      await loadApplications();
+    } catch (e) {
+      _errorMessage = 'Failed to grant permission: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Load audit log entries from daemon
+  ///
+  /// Example:
+  /// ```dart
+  /// await provider.loadAuditLog(limit: 50);
+  /// ```
+  Future<void> loadAuditLog({int limit = 100, String? appId}) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      final entriesJson = await _daemonClient.getAuditLog(
+        limit: limit,
+        appId: appId,
+      );
+
+      _auditEntries = entriesJson
+          .map((json) => AuditEntry.fromJson(json))
+          .toList();
+
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Failed to load audit log: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Get vault status from daemon
+  ///
+  /// Returns the current vault state, secret count, and app count.
+  Future<Map<String, dynamic>> getVaultStatus() async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      return await _daemonClient.getVaultStatus();
+    } catch (e) {
+      _errorMessage = 'Failed to get vault status: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Lock the vault via daemon
+  ///
+  /// Sends lock command to daemon and clears local state.
+  Future<void> lockVault() async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      await _daemonClient.lockVault();
+
+      // Clear local state
+      _secrets = [];
+      _isLocked = true;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Failed to lock vault: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Unlock the vault with password
+  ///
+  /// Sends unlock command to daemon with password.
+  Future<void> unlockVault(String password) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      await _daemonClient.unlockVault(password);
+
+      // Mark as unlocked and reload secrets
+      _isLocked = false;
+      await loadSecrets();
+    } catch (e) {
+      _errorMessage = 'Failed to unlock vault: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Rotate a secret's value
+  ///
+  /// Creates a new version of the secret while preserving the previous value.
+  Future<Map<String, dynamic>> rotateSecret(String name, String newValue) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      final result = await _daemonClient.rotateSecret(name, newValue);
+
+      // Reload secrets to get updated version
+      await loadSecrets();
+
+      return result;
+    } catch (e) {
+      _errorMessage = 'Failed to rotate secret: $e';
       notifyListeners();
       rethrow;
     }

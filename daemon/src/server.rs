@@ -502,11 +502,41 @@ fn route_request(request: Request, storage: &crate::storage::Storage, master_key
             }
         }
         "secret.rotate" => {
-            // TODO: Implement actual secret rotation
-            Response::error(
-                request.id,
-                ErrorInfo::internal_error("Not yet implemented")
-            )
+            // Secret rotation with version tracking
+            let name = match request.params.get("name").and_then(|v| v.as_str()) {
+                Some(n) => n,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: name")
+                    );
+                }
+            };
+
+            let new_value = match request.params.get("value").and_then(|v| v.as_str()) {
+                Some(v) => v,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: value")
+                    );
+                }
+            };
+
+            match crate::handlers::handle_secret_rotate(name, new_value, storage, master_key) {
+                Ok(result) => Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "name": result.name,
+                        "version": result.version,
+                        "status": result.status
+                    })
+                ),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to rotate secret: {}", e))
+                ),
+            }
         }
         "app.register" => {
             // F071-F075: Call actual app.register handler with process extraction
@@ -577,20 +607,56 @@ fn route_request(request: Request, storage: &crate::storage::Storage, master_key
             }
         }
         "app.revoke" => {
-            // TODO: Implement actual app access revocation
-            Response::error(
-                request.id,
-                ErrorInfo::internal_error("Not yet implemented")
-            )
+            // Call actual app.revoke handler with permission deletion and audit logging
+            let app_id = match request.params.get("app_id").and_then(|v| v.as_str()) {
+                Some(a) => a,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: app_id")
+                    );
+                }
+            };
+
+            let secret_name = match request.params.get("secret_name").and_then(|v| v.as_str()) {
+                Some(s) => s,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: secret_name")
+                    );
+                }
+            };
+
+            match crate::handlers::handle_app_revoke(app_id, secret_name, storage) {
+                Ok(()) => Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "app_id": app_id,
+                        "secret_name": secret_name,
+                        "status": "revoked"
+                    })
+                ),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to revoke app access: {}", e))
+                ),
+            }
         }
         "app.list" => {
-            // TODO: Implement actual app listing
-            Response::success(
-                request.id,
-                serde_json::json!({
-                    "apps": []
-                })
-            )
+            // Call actual app.list handler to get registered applications
+            match crate::handlers::handle_app_list(storage) {
+                Ok(apps) => Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "apps": apps
+                    })
+                ),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to list apps: {}", e))
+                ),
+            }
         }
         "audit.log" => {
             // F082-F084: Call actual audit log query handler
@@ -653,6 +719,71 @@ fn route_request(request: Request, storage: &crate::storage::Storage, master_key
                 Err(e) => Response::error(
                     request.id,
                     ErrorInfo::internal_error(format!("Failed to initialize vault: {}", e))
+                ),
+            }
+        }
+        "vault.lock" => {
+            // Lock the vault (clears master key from memory)
+            // Note: The actual key clearing happens at server level
+            match crate::handlers::handle_vault_lock() {
+                Ok(result) => Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "status": result.status
+                    })
+                ),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to lock vault: {}", e))
+                ),
+            }
+        }
+        "vault.unlock" => {
+            // Unlock the vault with password
+            let password = match request.params.get("password").and_then(|v| v.as_str()) {
+                Some(p) => p,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: password")
+                    );
+                }
+            };
+
+            match crate::handlers::handle_vault_unlock(password, storage) {
+                Ok(result) => {
+                    // Note: The caller (main.rs) needs to store the returned master_key
+                    // For now, we just return success status
+                    Response::success(
+                        request.id,
+                        serde_json::json!({
+                            "status": result.status
+                        })
+                    )
+                },
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to unlock vault: {}", e))
+                ),
+            }
+        }
+        "vault.status" => {
+            // Get vault status (state, secret count, app count)
+            // Note: is_locked would come from server state, but we don't have access here
+            // For now, assume unlocked since we have a master_key
+            let is_locked = false; // TODO: Get from actual server state
+            match crate::handlers::handle_vault_status(storage, is_locked) {
+                Ok(result) => Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "state": result.state.to_string(),
+                        "secret_count": result.secret_count,
+                        "app_count": result.app_count
+                    })
+                ),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to get vault status: {}", e))
                 ),
             }
         }

@@ -372,34 +372,52 @@ async fn handle_delete(client: DaemonClient, cmd: DeleteCommand) -> Result<()> {
     commands::handle_delete(client, cmd_args).await
 }
 
-async fn handle_rotate(_client: DaemonClient, _cmd: RotateCommand) -> Result<()> {
-    println!("TODO: Implement rotate command");
-    Ok(())
+async fn handle_rotate(client: DaemonClient, cmd: RotateCommand) -> Result<()> {
+    let cmd_args = commands::rotate::RotateCommand {
+        key: cmd.key,
+        new_value: cmd.new_value,
+    };
+    commands::handle_rotate(client, cmd_args).await
 }
 
-async fn handle_grant(_client: DaemonClient, _cmd: GrantCommand) -> Result<()> {
-    println!("TODO: Implement grant command");
-    Ok(())
+async fn handle_grant(client: DaemonClient, cmd: GrantCommand) -> Result<()> {
+    let cmd_args = commands::grant::GrantCommand {
+        app: cmd.app,
+        key: cmd.key,
+    };
+    commands::handle_grant(client, cmd_args).await
 }
 
-async fn handle_revoke(_client: DaemonClient, _cmd: RevokeCommand) -> Result<()> {
-    println!("TODO: Implement revoke command");
-    Ok(())
+async fn handle_revoke(client: DaemonClient, cmd: RevokeCommand) -> Result<()> {
+    let cmd_args = commands::revoke::RevokeCommand {
+        app: cmd.app,
+        key: cmd.key,
+    };
+    commands::handle_revoke(client, cmd_args).await
 }
 
-async fn handle_apps(_client: DaemonClient, _cmd: AppsCommand) -> Result<()> {
-    println!("TODO: Implement apps command");
-    Ok(())
+async fn handle_apps(client: DaemonClient, cmd: AppsCommand) -> Result<()> {
+    let cmd_args = commands::apps::AppsCommand {
+        json: cmd.json,
+    };
+    commands::handle_apps(client, cmd_args).await
 }
 
-async fn handle_audit(_client: DaemonClient, _cmd: AuditCommand) -> Result<()> {
-    println!("TODO: Implement audit command");
-    Ok(())
+async fn handle_audit(client: DaemonClient, cmd: AuditCommand) -> Result<()> {
+    let cmd_args = commands::audit::AuditCommand {
+        app: cmd.app,
+        secret: cmd.secret,
+        limit: cmd.limit,
+        json: cmd.json,
+    };
+    commands::handle_audit(client, cmd_args).await
 }
 
-async fn handle_explain(_client: DaemonClient, _cmd: ExplainCommand) -> Result<()> {
-    println!("TODO: Implement explain command");
-    Ok(())
+async fn handle_explain(client: DaemonClient, cmd: ExplainCommand) -> Result<()> {
+    let cmd_args = commands::explain::ExplainCommand {
+        app: cmd.app,
+    };
+    commands::handle_explain(client, cmd_args).await
 }
 
 // F131-F134: Import command - implemented in commands/import.rs
@@ -412,24 +430,33 @@ async fn handle_import(client: DaemonClient, cmd: ImportCommand) -> Result<()> {
     commands::handle_import(client, cmd_args).await
 }
 
-async fn handle_cleanup(_client: DaemonClient, _cmd: CleanupCommand) -> Result<()> {
-    println!("TODO: Implement cleanup command");
-    Ok(())
+async fn handle_cleanup(client: DaemonClient, cmd: CleanupCommand) -> Result<()> {
+    let cmd_args = commands::cleanup::CleanupCommand {
+        dry_run: cmd.dry_run,
+        execute: cmd.execute,
+        archive: false, // Added as option
+        path: None,     // Use current directory
+    };
+    commands::handle_cleanup(client, cmd_args).await
 }
 
-async fn handle_status(_client: DaemonClient, _cmd: StatusCommand) -> Result<()> {
-    println!("TODO: Implement status command");
-    Ok(())
+async fn handle_status(client: DaemonClient, cmd: StatusCommand) -> Result<()> {
+    let cmd_args = commands::status::StatusCommand {
+        json: cmd.json,
+    };
+    commands::handle_status(client, cmd_args).await
 }
 
-async fn handle_unlock(_client: DaemonClient, _cmd: UnlockCommand) -> Result<()> {
-    println!("TODO: Implement unlock command");
-    Ok(())
+async fn handle_unlock(client: DaemonClient, cmd: UnlockCommand) -> Result<()> {
+    let cmd_args = commands::unlock::UnlockCommand {
+        password: cmd.password,
+    };
+    commands::handle_unlock(client, cmd_args).await
 }
 
-async fn handle_lock(_client: DaemonClient, _cmd: LockCommand) -> Result<()> {
-    println!("TODO: Implement lock command");
-    Ok(())
+async fn handle_lock(client: DaemonClient, _cmd: LockCommand) -> Result<()> {
+    let cmd_args = commands::lock::LockCommand {};
+    commands::handle_lock(client, cmd_args).await
 }
 
 async fn handle_version(_client: DaemonClient, cmd: VersionCommand) -> Result<()> {

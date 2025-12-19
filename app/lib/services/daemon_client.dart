@@ -278,17 +278,84 @@ class DaemonClient {
   /// ```
   Future<List<Map<String, dynamic>>> listApplications() async {
     final result = await sendRequest('app.list', {});
-    return List<Map<String, dynamic>>.from(result['applications'] as List);
+    return List<Map<String, dynamic>>.from(result['apps'] as List);
   }
 
   /// Revoke an application's access to a secret
   ///
   /// Example:
   /// ```dart
-  /// await client.revokePermission('app-id-123', 'secret-id-456');
+  /// await client.revokePermission('app-id-123', 'secret-name');
   /// ```
-  Future<void> revokePermission(String appId, String secretId) async {
-    await sendRequest('app.revoke', {'app_id': appId, 'secret_id': secretId});
+  Future<void> revokePermission(String appId, String secretName) async {
+    await sendRequest('app.revoke', {'app_id': appId, 'secret_name': secretName});
+  }
+
+  /// Grant an application access to a secret
+  ///
+  /// Example:
+  /// ```dart
+  /// await client.grantPermission('app-id-123', 'OPENAI_API_KEY');
+  /// ```
+  Future<void> grantPermission(String appId, String secretName) async {
+    await sendRequest('app.authorize', {'app_id': appId, 'secret_name': secretName});
+  }
+
+  /// Get vault status
+  ///
+  /// Example:
+  /// ```dart
+  /// final status = await client.getVaultStatus();
+  /// // status = {'state': 'unlocked', 'secret_count': 5, 'app_count': 2}
+  /// ```
+  Future<Map<String, dynamic>> getVaultStatus() async {
+    return await sendRequest('vault.status', {});
+  }
+
+  /// Lock the vault
+  ///
+  /// Example:
+  /// ```dart
+  /// await client.lockVault();
+  /// ```
+  Future<void> lockVault() async {
+    await sendRequest('vault.lock', {});
+  }
+
+  /// Unlock the vault with password
+  ///
+  /// Example:
+  /// ```dart
+  /// await client.unlockVault('my-password');
+  /// ```
+  Future<void> unlockVault(String password) async {
+    await sendRequest('vault.unlock', {'password': password});
+  }
+
+  /// Get audit log entries
+  ///
+  /// Example:
+  /// ```dart
+  /// final entries = await client.getAuditLog(limit: 50);
+  /// ```
+  Future<List<Map<String, dynamic>>> getAuditLog({int limit = 100, String? appId}) async {
+    final params = <String, dynamic>{'limit': limit};
+    if (appId != null) {
+      params['app_id'] = appId;
+    }
+    final result = await sendRequest('audit.log', params);
+    return List<Map<String, dynamic>>.from(result['entries'] as List);
+  }
+
+  /// Rotate a secret's value
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = await client.rotateSecret('OPENAI_API_KEY', 'new-secret-value');
+  /// // result = {'name': 'OPENAI_API_KEY', 'version': 2, 'status': 'rotated'}
+  /// ```
+  Future<Map<String, dynamic>> rotateSecret(String name, String newValue) async {
+    return await sendRequest('secret.rotate', {'name': name, 'value': newValue});
   }
 
   /// Handle incoming socket data

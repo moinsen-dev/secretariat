@@ -27,6 +27,28 @@ pub struct SecretMetadata {
     pub created_at: String,
 }
 
+/// Metadata for a secret with version information
+///
+/// Extended metadata structure that includes versioning information
+/// for secret rotation support.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SecretMetadataWithVersion {
+    /// Unique identifier for the secret
+    pub id: String,
+    /// Secret name/key (e.g., "OPENAI_API_KEY")
+    pub name: String,
+    /// Auto-detected provider (e.g., "openai", "stripe")
+    pub provider: Option<String>,
+    /// Environment context (e.g., "default", "dev", "staging", "prod")
+    pub environment: String,
+    /// Timestamp when the secret was created
+    pub created_at: String,
+    /// Current version number (starts at 1, increments on rotation)
+    pub version: Option<i64>,
+    /// Whether a previous version exists (for rollback)
+    pub has_previous: bool,
+}
+
 /// Full secret record including encrypted value
 ///
 /// This structure contains the complete secret data including the encrypted value.
@@ -70,6 +92,29 @@ pub struct AppInfo {
     pub bundle_id: Option<String>,
     /// Stable fingerprint (SHA-256 hash of path + bundle_id)
     pub fingerprint: String,
+}
+
+/// Application record from database
+///
+/// Contains all application information including permissions count.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ApplicationRecord {
+    /// Unique identifier
+    pub id: String,
+    /// Display name
+    pub name: String,
+    /// Path to executable
+    pub path: Option<String>,
+    /// macOS bundle identifier
+    pub bundle_id: Option<String>,
+    /// Stable fingerprint
+    pub fingerprint: Option<String>,
+    /// When the application was registered
+    pub registered_at: String,
+    /// When the application last accessed a secret
+    pub last_access: Option<String>,
+    /// Number of secrets the application has access to
+    pub permission_count: i64,
 }
 
 /// Storage backend for managing secrets in an encrypted SQLite database
@@ -147,7 +192,9 @@ impl Storage {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 rotated_at TIMESTAMP,                   -- Last rotation timestamp
-                notes TEXT                              -- Optional user notes
+                notes TEXT,                             -- Optional user notes
+                version INTEGER DEFAULT 1,              -- Version number for rotation tracking
+                previous_value_encrypted BLOB           -- Previous encrypted value for rollback
             );
 
             -- Index for fast lookups by name (most common query pattern)
@@ -768,6 +815,118 @@ impl Storage {
         Ok(())
     }
 
+    /// List all registered applications
+    ///
+    /// Returns a list of all applications that have been registered,
+    /// along with their permissions count.
+    ///
+    /// # Returns
+    ///
+    /// A vector of `ApplicationRecord` containing application details
+    pub fn list_applications(&self) -> Result<Vec<ApplicationRecord>> {
+        let mut stmt = self.conn.prepare(
+            r#"
+            SELECT
+                a.id,
+                a.name,
+                a.path,
+                a.bundle_id,
+                a.fingerprint,
+                a.registered_at,
+                a.last_access,
+                (SELECT COUNT(*) FROM permissions WHERE app_id = a.id) as permission_count
+            FROM applications a
+            ORDER BY a.name
+            "#
+        )?;
+
+        let apps = stmt.query_map([], |row| {
+            Ok(ApplicationRecord {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                path: row.get(2)?,
+                bundle_id: row.get(3)?,
+                fingerprint: row.get(4)?,
+                registered_at: row.get(5)?,
+                last_access: row.get(6)?,
+                permission_count: row.get(7)?,
+            })
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(apps)
+    }
+
+    /// Revoke permission for an app to access a secret
+    ///
+    /// Removes the permission record linking an application to a secret.
+    ///
+    /// # Arguments
+    ///
+    /// * `app_id` - The fingerprint of the application
+    /// * `secret_name` - The name of the secret to revoke access to
+    ///
+    /// # Returns
+    ///
+    /// Returns `Ok(())` on success
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The permission does not exist
+    /// - Database deletion fails
+    pub fn revoke_permission(&self, app_id: &str, secret_name: &str) -> Result<()> {
+        // Get secret ID
+        let secret_id: String = self.conn.query_row(
+            "SELECT id FROM secrets WHERE name = ?",
+            [secret_name],
+            |row| row.get(0)
+        )
+        .context(format!("Secret not found: {}", secret_name))?;
+
+        // Delete permission
+        let affected = self.conn.execute(
+            "DELETE FROM permissions WHERE app_id = (SELECT id FROM applications WHERE fingerprint = ?) AND secret_id = ?",
+            rusqlite::params![app_id, &secret_id]
+        )
+        .context("Failed to revoke permission")?;
+
+        if affected == 0 {
+            anyhow::bail!("Permission not found for app '{}' and secret '{}'", app_id, secret_name);
+        }
+
+        Ok(())
+    }
+
+    /// Get permissions for a specific application
+    ///
+    /// Returns a list of secret names that the application has access to.
+    ///
+    /// # Arguments
+    ///
+    /// * `app_id` - The fingerprint of the application
+    ///
+    /// # Returns
+    ///
+    /// A vector of secret names
+    pub fn get_app_permissions(&self, app_id: &str) -> Result<Vec<String>> {
+        let mut stmt = self.conn.prepare(
+            r#"
+            SELECT s.name
+            FROM permissions p
+            JOIN applications a ON p.app_id = a.id
+            JOIN secrets s ON p.secret_id = s.id
+            WHERE a.fingerprint = ?
+            ORDER BY s.name
+            "#
+        )?;
+
+        let names = stmt.query_map([app_id], |row| row.get(0))?
+            .collect::<Result<Vec<String>, _>>()?;
+
+        Ok(names)
+    }
+
     /// F076-F080: Grant permission for an app to access a secret
     ///
     /// Creates a permission record linking an application to a secret.
@@ -961,6 +1120,99 @@ impl Storage {
         }
 
         Ok(deleted)
+    }
+
+    /// Count total secrets in the vault
+    ///
+    /// # Returns
+    ///
+    /// The number of secrets stored
+    pub fn count_secrets(&self) -> Result<i64> {
+        let count: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM secrets",
+            [],
+            |row| row.get(0)
+        )?;
+        Ok(count)
+    }
+
+    /// Count total registered applications
+    ///
+    /// # Returns
+    ///
+    /// The number of registered applications
+    pub fn count_applications(&self) -> Result<i64> {
+        let count: i64 = self.conn.query_row(
+            "SELECT COUNT(*) FROM applications",
+            [],
+            |row| row.get(0)
+        )?;
+        Ok(count)
+    }
+
+    /// Get secret metadata with version information
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The secret name
+    ///
+    /// # Returns
+    ///
+    /// The secret metadata including version
+    pub fn get_secret_metadata(&self, name: &str) -> Result<Option<SecretMetadataWithVersion>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, name, provider, environment, created_at, version, previous_value_encrypted FROM secrets WHERE name = ?"
+        )?;
+
+        let result = stmt.query_row([name], |row| {
+            Ok(SecretMetadataWithVersion {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                provider: row.get(2)?,
+                environment: row.get(3)?,
+                created_at: row.get(4)?,
+                version: row.get(5)?,
+                has_previous: row.get::<_, Option<Vec<u8>>>(6)?.is_some(),
+            })
+        });
+
+        match result {
+            Ok(secret) => Ok(Some(secret)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    /// Rotate a secret's value
+    ///
+    /// Stores the current encrypted value as previous_value_encrypted,
+    /// updates with the new encrypted value, and increments the version.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The secret name
+    /// * `new_encrypted` - The new encrypted value
+    /// * `new_version` - The new version number
+    ///
+    /// # Returns
+    ///
+    /// Ok(()) on success
+    pub fn rotate_secret(&self, name: &str, new_encrypted: &[u8], new_version: i64) -> Result<()> {
+        // First, copy current value to previous_value_encrypted, then update with new value
+        self.conn.execute(
+            r#"
+            UPDATE secrets
+            SET previous_value_encrypted = value_encrypted,
+                value_encrypted = ?,
+                version = ?,
+                rotated_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE name = ?
+            "#,
+            rusqlite::params![new_encrypted, new_version, name]
+        ).context("Failed to rotate secret")?;
+
+        Ok(())
     }
 }
 
