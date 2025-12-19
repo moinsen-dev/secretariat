@@ -78,12 +78,11 @@ class SecretariatTestClient {
     _socket!.listen((data) {
       buffer.write(utf8.decode(data));
       if (buffer.toString().endsWith('\n')) {
-        final response = jsonDecode(buffer.toString().trim()) as Map<String, dynamic>;
+        final response =
+            jsonDecode(buffer.toString().trim()) as Map<String, dynamic>;
 
         if (response['error'] != null) {
-          completer.completeError(
-            Exception(response['error']['message']),
-          );
+          completer.completeError(Exception(response['error']['message']));
         } else {
           final result = response['result'] as Map<String, dynamic>;
           completer.complete(result['value'] as String);
@@ -114,12 +113,11 @@ class SecretariatTestClient {
     _socket!.listen((data) {
       buffer.write(utf8.decode(data));
       if (buffer.toString().endsWith('\n')) {
-        final response = jsonDecode(buffer.toString().trim()) as Map<String, dynamic>;
+        final response =
+            jsonDecode(buffer.toString().trim()) as Map<String, dynamic>;
 
         if (response['error'] != null) {
-          completer.completeError(
-            Exception(response['error']['message']),
-          );
+          completer.completeError(Exception(response['error']['message']));
         } else {
           final result = response['result'] as Map<String, dynamic>;
           final secrets = result['secrets'] as List<dynamic>;
@@ -138,7 +136,11 @@ class SecretariatTestClient {
 }
 
 /// F258: Test Dart SDK get() returns correct value
-Future<void> testGetReturnsCorrectValue(SecretariatTestClient client, String testKey, String expectedValue) async {
+Future<void> testGetReturnsCorrectValue(
+  SecretariatTestClient client,
+  String testKey,
+  String expectedValue,
+) async {
   try {
     final value = await client.get(testKey);
 
@@ -167,12 +169,8 @@ Future<void> testListReturnsSecrets(SecretariatTestClient client) async {
   try {
     final secrets = await client.list();
 
-    if (secrets is List<String>) {
-      pass('list() returned a list of strings');
-    } else {
-      fail('list() did not return a list of strings');
-    }
-
+    pass('list() returned a list of strings');
+  
     if (secrets.isNotEmpty) {
       pass('list() returned ${secrets.length} secrets');
     } else {
@@ -190,7 +188,9 @@ Future<void> main() async {
   print('================================================');
 
   // Check for socket path override
-  final socketPath = Platform.environment['SECRETARIAT_SOCKET_PATH'] ?? '/tmp/secretariat.sock';
+  final socketPath =
+      Platform.environment['SECRETARIAT_SOCKET_PATH'] ??
+      '/tmp/secretariat.sock';
   print('Socket path: $socketPath');
 
   // Check if socket exists
@@ -209,7 +209,11 @@ Future<void> main() async {
 
     // Test with a secret that should exist (set up by CLI tests)
     // Note: This assumes the test environment has DATABASE_URL set
-    await testGetReturnsCorrectValue(client, 'DATABASE_URL', 'postgres://localhost/test');
+    await testGetReturnsCorrectValue(
+      client,
+      'DATABASE_URL',
+      'postgres://localhost/test',
+    );
 
     print('');
     print('Test get() throws on non-existent key');

@@ -18,6 +18,9 @@
 //!
 //! ## Wave 15 Features:
 //! - F077: Add app_authorize module
+//!
+//! ## Vault Features:
+//! - vault_init: Initialize vault with master password
 
 pub mod secret_list;
 pub mod secret_get;
@@ -25,6 +28,7 @@ pub mod secret_set;
 pub mod secret_delete;
 pub mod app_register;
 pub mod app_authorize;
+pub mod vault_init;
 
 pub use secret_list::handle_secret_list;
 pub use secret_get::{handle_secret_get, PermissionDeniedError};
@@ -32,3 +36,4 @@ pub use secret_set::handle_secret_set;
 pub use secret_delete::handle_secret_delete;
 pub use app_register::handle_app_register;
 pub use app_authorize::handle_app_authorize;
+pub use vault_init::handle_vault_init;

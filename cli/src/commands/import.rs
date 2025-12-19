@@ -34,6 +34,7 @@ struct ParsedSecret {
 
 /// Response from secret.set
 #[derive(Debug, Deserialize)]
+#[allow(dead_code)] // Fields used for deserialization validation
 struct SetResponse {
     name: String,
     status: String,

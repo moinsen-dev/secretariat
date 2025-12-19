@@ -113,7 +113,7 @@ The master key is stored in the OS secure keychain:
 ### Keychain Entry
 
 ```
-Service: com.secretariat.daemon
+Service: dev.moinsen.secretariat.daemon
 Account: master_key
 Data: [32 bytes - encrypted by keychain]
 Access: Requires user authentication (Touch ID/password)

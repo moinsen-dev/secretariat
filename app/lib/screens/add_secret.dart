@@ -156,9 +156,9 @@ class _AddSecretScreenState extends State<AddSecretScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to add secret: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to add secret: $e')));
       }
     } finally {
       if (mounted) {
@@ -172,9 +172,7 @@ class _AddSecretScreenState extends State<AddSecretScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Secret'),
-      ),
+      appBar: AppBar(title: const Text('Add Secret')),
       body: Form(
         key: _formKey,
         child: ListView(
@@ -261,9 +259,11 @@ class _AddSecretScreenState extends State<AddSecretScreen> {
                         color: Theme.of(context).colorScheme.primary,
                       ),
                       const SizedBox(width: 8),
-                      Text(provider == 'custom'
-                          ? 'Custom / Other'
-                          : provider.toUpperCase()),
+                      Text(
+                        provider == 'custom'
+                            ? 'Custom / Other'
+                            : provider.toUpperCase(),
+                      ),
                     ],
                   ),
                 );
@@ -302,9 +302,7 @@ class _AddSecretScreenState extends State<AddSecretScreen> {
                     )
                   : const Icon(Icons.add),
               label: Text(_isSubmitting ? 'Adding...' : 'Add Secret'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.all(16),
-              ),
+              style: FilledButton.styleFrom(padding: const EdgeInsets.all(16)),
             ),
           ],
         ),

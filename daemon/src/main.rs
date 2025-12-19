@@ -2,6 +2,18 @@
 //!
 //! Background service for secure local secrets management.
 //! Provides encrypted storage and IPC-based API for secret access.
+//!
+//! # Usage
+//!
+//! ```bash
+//! secd              # Start daemon in foreground
+//! secd start        # Start daemon in foreground
+//! secd start -d     # Start daemon in background (daemonized)
+//! secd stop         # Stop running daemon
+//! secd status       # Check daemon status
+//! secd --help       # Show help
+//! secd --version    # Show version
+//! ```
 
 mod crypto;
 mod storage;
@@ -10,12 +22,45 @@ mod server;
 mod handlers;
 
 use anyhow::{Context, Result};
+use clap::{Parser, Subcommand};
+use std::fs;
 use std::path::PathBuf;
+use std::process::{Command, Stdio};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tracing::{info, error};
+use tracing::{info, error, warn};
 
 use storage::Storage;
+
+/// Secretariat Daemon - Secure local secrets management
+#[derive(Parser)]
+#[command(name = "secd")]
+#[command(author, version, about, long_about = None)]
+#[command(after_help = "Examples:
+  secd              Start daemon in foreground
+  secd start        Start daemon in foreground
+  secd start -d     Start daemon in background (daemonized)
+  secd stop         Stop running daemon
+  secd status       Check if daemon is running
+")]
+struct Cli {
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Start the daemon
+    Start {
+        /// Run in background (daemonize)
+        #[arg(short, long)]
+        daemonize: bool,
+    },
+    /// Stop the running daemon
+    Stop,
+    /// Check daemon status
+    Status,
+}
 
 /// Application configuration
 struct Config {
@@ -23,6 +68,10 @@ struct Config {
     data_dir: PathBuf,
     /// Path to the SQLite database
     db_path: PathBuf,
+    /// Path to the PID file
+    pid_path: PathBuf,
+    /// Path to the socket file
+    socket_path: PathBuf,
 }
 
 impl Config {
@@ -50,11 +99,76 @@ impl Config {
         };
 
         let db_path = data_dir.join("vault.db");
+        let pid_path = data_dir.join("secd.pid");
+        let socket_path = data_dir.join("secretariat.sock");
 
         Ok(Config {
             data_dir,
             db_path,
+            pid_path,
+            socket_path,
         })
+    }
+}
+
+/// PID file management for single-instance enforcement
+struct PidFile {
+    path: PathBuf,
+}
+
+impl PidFile {
+    fn new(path: PathBuf) -> Self {
+        PidFile { path }
+    }
+
+    /// Check if another daemon is already running
+    ///
+    /// Uses kill(pid, 0) to check if process exists - this is fast and reliable
+    /// unlike sysinfo which can hang on macOS.
+    fn is_daemon_running(&self) -> Option<u32> {
+        if let Ok(content) = fs::read_to_string(&self.path) {
+            if let Ok(pid) = content.trim().parse::<u32>() {
+                // Use kill(pid, 0) to check if process exists
+                // This sends no signal but returns success if process exists
+                let result = unsafe { libc::kill(pid as i32, 0) };
+
+                if result == 0 {
+                    // Process exists - assume it's our daemon since we wrote the PID file
+                    return Some(pid);
+                }
+
+                // Process doesn't exist - stale PID file
+                warn!("Removing stale PID file (process {} not running)", pid);
+                let _ = fs::remove_file(&self.path);
+            }
+        }
+        None
+    }
+
+    /// Write current process PID to file
+    fn write(&self) -> Result<()> {
+        let pid = std::process::id();
+        fs::write(&self.path, pid.to_string())
+            .context("Failed to write PID file")?;
+        info!("PID file created: {} (PID: {})", self.path.display(), pid);
+        Ok(())
+    }
+
+    /// Remove PID file
+    fn remove(&self) {
+        if self.path.exists() {
+            if let Err(e) = fs::remove_file(&self.path) {
+                warn!("Failed to remove PID file: {}", e);
+            } else {
+                info!("PID file removed");
+            }
+        }
+    }
+}
+
+impl Drop for PidFile {
+    fn drop(&mut self) {
+        self.remove();
     }
 }
 
@@ -62,6 +176,7 @@ impl Config {
 struct Daemon {
     config: Config,
     storage: Arc<Mutex<Storage>>,
+    _pid_file: PidFile,
 }
 
 impl Daemon {
@@ -70,8 +185,21 @@ impl Daemon {
     /// Sets up storage and prepares the daemon to handle requests
     fn new(config: Config) -> Result<Self> {
         // Ensure data directory exists
-        std::fs::create_dir_all(&config.data_dir)
+        fs::create_dir_all(&config.data_dir)
             .context("Failed to create data directory")?;
+
+        // Check if another daemon is already running
+        let pid_file = PidFile::new(config.pid_path.clone());
+        if let Some(existing_pid) = pid_file.is_daemon_running() {
+            anyhow::bail!(
+                "Another daemon instance is already running (PID: {}). \
+                 Use 'secd stop' to stop it first.",
+                existing_pid
+            );
+        }
+
+        // Write our PID file
+        pid_file.write()?;
 
         info!("Initializing daemon with data directory: {}", config.data_dir.display());
 
@@ -92,6 +220,7 @@ impl Daemon {
         Ok(Daemon {
             config,
             storage: Arc::new(Mutex::new(storage)),
+            _pid_file: pid_file,
         })
     }
 
@@ -194,31 +323,205 @@ impl Daemon {
     }
 }
 
+/// Check daemon status by checking PID file
+fn check_daemon_status(config: &Config) -> (bool, Option<u32>) {
+    let pid_file = PidFile::new(config.pid_path.clone());
+    let running_pid = pid_file.is_daemon_running();
+
+    // PID check is authoritative - socket may not exist during startup
+    (running_pid.is_some(), running_pid)
+}
+
+/// Stop the running daemon by sending SIGTERM
+fn stop_daemon(config: &Config) -> Result<()> {
+    let pid_file = PidFile::new(config.pid_path.clone());
+
+    if let Some(pid) = pid_file.is_daemon_running() {
+        println!("Stopping daemon (PID: {})...", pid);
+
+        #[cfg(unix)]
+        {
+            // Send SIGTERM to the process
+            let result = Command::new("kill")
+                .args(["-TERM", &pid.to_string()])
+                .output();
+
+            match result {
+                Ok(output) if output.status.success() => {
+                    // Wait a moment for the process to stop
+                    std::thread::sleep(std::time::Duration::from_millis(500));
+
+                    // Check if it actually stopped
+                    if pid_file.is_daemon_running().is_none() {
+                        println!("Daemon stopped successfully");
+
+                        // Clean up socket file if it still exists
+                        if config.socket_path.exists() {
+                            let _ = fs::remove_file(&config.socket_path);
+                        }
+
+                        Ok(())
+                    } else {
+                        // Process still running, try SIGKILL
+                        warn!("Daemon didn't respond to SIGTERM, sending SIGKILL...");
+                        let _ = Command::new("kill")
+                            .args(["-KILL", &pid.to_string()])
+                            .output();
+                        std::thread::sleep(std::time::Duration::from_millis(200));
+
+                        // Clean up
+                        let _ = fs::remove_file(&config.pid_path);
+                        if config.socket_path.exists() {
+                            let _ = fs::remove_file(&config.socket_path);
+                        }
+
+                        println!("Daemon killed");
+                        Ok(())
+                    }
+                }
+                Ok(output) => {
+                    anyhow::bail!("Failed to stop daemon: {}", String::from_utf8_lossy(&output.stderr));
+                }
+                Err(e) => {
+                    anyhow::bail!("Failed to send signal to daemon: {}", e);
+                }
+            }
+        }
+
+        #[cfg(windows)]
+        {
+            // On Windows, use taskkill
+            let result = Command::new("taskkill")
+                .args(["/PID", &pid.to_string(), "/F"])
+                .output();
+
+            match result {
+                Ok(output) if output.status.success() => {
+                    println!("Daemon stopped successfully");
+                    Ok(())
+                }
+                Ok(output) => {
+                    anyhow::bail!("Failed to stop daemon: {}", String::from_utf8_lossy(&output.stderr));
+                }
+                Err(e) => {
+                    anyhow::bail!("Failed to stop daemon: {}", e);
+                }
+            }
+        }
+    } else {
+        println!("No daemon is currently running");
+
+        // Clean up stale socket if it exists
+        if config.socket_path.exists() {
+            println!("Removing stale socket file...");
+            let _ = fs::remove_file(&config.socket_path);
+        }
+
+        Ok(())
+    }
+}
+
+/// Start daemon in background (daemonized)
+fn start_daemonized() -> Result<()> {
+    let current_exe = std::env::current_exe()
+        .context("Failed to get current executable path")?;
+
+    println!("Starting daemon in background...");
+
+    #[cfg(unix)]
+    {
+        // Fork and detach on Unix
+        let child = Command::new(&current_exe)
+            .arg("start")
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .context("Failed to spawn daemon process")?;
+
+        println!("Daemon started in background (PID: {})", child.id());
+        println!("Use 'secd status' to check if it's running");
+    }
+
+    #[cfg(windows)]
+    {
+        // On Windows, use CREATE_NO_WINDOW flag
+        use std::os::windows::process::CommandExt;
+        let child = Command::new(&current_exe)
+            .arg("start")
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW
+            .spawn()
+            .context("Failed to spawn daemon process")?;
+
+        println!("Daemon started in background (PID: {})", child.id());
+    }
+
+    Ok(())
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Initialize logging
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"))
-        )
-        .init();
+    let cli = Cli::parse();
 
-    info!("Secretariat Daemon v{}", env!("CARGO_PKG_VERSION"));
-
-    // Load configuration
+    // Load configuration first (needed for all commands)
     let config = Config::default()
         .context("Failed to load configuration")?;
 
-    // Initialize daemon
-    let daemon = Daemon::new(config)
-        .context("Failed to initialize daemon")?;
+    match cli.command {
+        // No subcommand = start in foreground (same as `secd start`)
+        None | Some(Commands::Start { daemonize: false }) => {
+            // Initialize logging
+            tracing_subscriber::fmt()
+                .with_env_filter(
+                    tracing_subscriber::EnvFilter::try_from_default_env()
+                        .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info"))
+                )
+                .init();
 
-    // Run daemon
-    daemon.run().await
-        .context("Daemon encountered an error")?;
+            info!("Secretariat Daemon v{}", env!("CARGO_PKG_VERSION"));
 
-    info!("Daemon stopped");
+            // Initialize daemon
+            let daemon = Daemon::new(config)
+                .context("Failed to initialize daemon")?;
+
+            // Run daemon
+            daemon.run().await
+                .context("Daemon encountered an error")?;
+        }
+
+        Some(Commands::Start { daemonize: true }) => {
+            // Check if already running first
+            if let (true, Some(pid)) = check_daemon_status(&config) {
+                println!("Daemon is already running (PID: {})", pid);
+                return Ok(());
+            }
+
+            start_daemonized()?;
+        }
+
+        Some(Commands::Stop) => {
+            stop_daemon(&config)?;
+        }
+
+        Some(Commands::Status) => {
+            let (running, pid) = check_daemon_status(&config);
+
+            if running {
+                println!("Daemon is running (PID: {})", pid.unwrap());
+                println!("Socket: {}", config.socket_path.display());
+                println!("Database: {}", config.db_path.display());
+            } else {
+                println!("Daemon is not running");
+
+                if config.socket_path.exists() {
+                    println!("Warning: Stale socket file exists at {}", config.socket_path.display());
+                }
+                if config.pid_path.exists() {
+                    println!("Warning: Stale PID file exists at {}", config.pid_path.display());
+                }
+            }
+        }
+    }
 
     Ok(())
 }

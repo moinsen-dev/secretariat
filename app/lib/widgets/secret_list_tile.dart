@@ -77,8 +77,19 @@ class _SecretListTileState extends State<SecretListTile> {
 
   /// F208-F212: Handle clipboard copy with auto-clear timer
   void _handleCopy(BuildContext context) {
-    // F209: Copy to clipboard
-    Clipboard.setData(ClipboardData(text: widget.secret.value));
+    // F209: Copy to clipboard (only if value is available)
+    final value = widget.secret.value;
+    if (value == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Secret value not loaded'),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    Clipboard.setData(ClipboardData(text: value));
 
     // F212: Show SnackBar confirmation
     ScaffoldMessenger.of(context).showSnackBar(
@@ -178,7 +189,9 @@ class _SecretListTileState extends State<SecretListTile> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: _getProviderColor(widget.secret.provider).withValues(alpha: 0.1),
+                  color: _getProviderColor(
+                    widget.secret.provider,
+                  ).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
@@ -209,7 +222,8 @@ class _SecretListTileState extends State<SecretListTile> {
                           ),
                         ),
                         // Provider badge
-                        if (widget.showProvider && widget.secret.provider != null) ...[
+                        if (widget.showProvider &&
+                            widget.secret.provider != null) ...[
                           const SizedBox(width: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(
@@ -244,17 +258,18 @@ class _SecretListTileState extends State<SecretListTile> {
                           Icon(
                             Icons.circle,
                             size: 8,
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 4),
                           Text(
                             widget.secret.environment!,
                             style: TextStyle(
                               fontSize: 11,
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -265,18 +280,22 @@ class _SecretListTileState extends State<SecretListTile> {
                           Icon(
                             Icons.access_time,
                             size: 12,
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
-                              _formatTimestamp(widget.secret.updatedAt ?? widget.secret.createdAt),
+                              _formatTimestamp(
+                                widget.secret.updatedAt ??
+                                    widget.secret.createdAt,
+                              ),
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -286,7 +305,8 @@ class _SecretListTileState extends State<SecretListTile> {
                     ),
 
                     // Notes preview
-                    if (widget.secret.notes != null && widget.secret.notes!.isNotEmpty) ...[
+                    if (widget.secret.notes != null &&
+                        widget.secret.notes!.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
                         widget.secret.notes!,

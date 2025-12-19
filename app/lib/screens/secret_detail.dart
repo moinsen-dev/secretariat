@@ -62,7 +62,7 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     final secret = ModalRoute.of(context)!.settings.arguments as Secret;
-    _valueController = TextEditingController(text: secret.value);
+    _valueController = TextEditingController(text: secret.value ?? '');
     _notesController = TextEditingController(text: secret.notes ?? '');
     _editingProvider = secret.provider ?? '';
   }
@@ -164,7 +164,10 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
 
     if (confirmed == true && context.mounted) {
       try {
-        final vaultProvider = Provider.of<VaultProvider>(context, listen: false);
+        final vaultProvider = Provider.of<VaultProvider>(
+          context,
+          listen: false,
+        );
         await vaultProvider.deleteSecret(secret.name);
 
         if (context.mounted) {
@@ -207,9 +210,9 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to save secret: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to save secret: $e')));
       }
     }
   }
@@ -307,9 +310,11 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.copy),
-                                    onPressed: () {
-                                      _copyToClipboard(secret.value);
-                                    },
+                                    onPressed: secret.value != null
+                                        ? () {
+                                            _copyToClipboard(secret.value!);
+                                          }
+                                        : null,
                                     tooltip: 'Copy to clipboard',
                                   ),
                                 ],
@@ -338,11 +343,15 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              _isValueVisible ? secret.value : '•' * 24,
+                              _isValueVisible
+                                  ? (secret.value ?? 'Value not loaded')
+                                  : '•' * 24,
                               style: const TextStyle(
                                 fontFamily: 'monospace',
                                 fontSize: 14,
@@ -412,7 +421,8 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
                 const SizedBox(height: 16),
 
                 // Notes
-                if (_isEditMode || (secret.notes != null && secret.notes!.isNotEmpty))
+                if (_isEditMode ||
+                    (secret.notes != null && secret.notes!.isNotEmpty))
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(16.0),
@@ -438,7 +448,9 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
                             Text(
                               secret.notes!,
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                             ),
                         ],
@@ -500,7 +512,7 @@ class _TimestampRow extends StatelessWidget {
       'Sep',
       'Oct',
       'Nov',
-      'Dec'
+      'Dec',
     ];
     return '${months[timestamp.month - 1]} ${timestamp.day}, ${timestamp.year} at ${timestamp.hour.toString().padLeft(2, '0')}:${timestamp.minute.toString().padLeft(2, '0')}';
   }
@@ -529,9 +541,7 @@ class _TimestampRow extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 formatTimestamp(timestamp),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.w500),
               ),
               Text(
                 _formatFullDate(timestamp),

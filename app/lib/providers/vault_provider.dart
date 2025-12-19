@@ -14,6 +14,7 @@ import 'package:flutter/foundation.dart';
 import '../models/secret.dart';
 import '../models/application.dart';
 import '../services/daemon_client.dart';
+import '../services/daemon_manager.dart';
 
 /// F152: Define VaultProvider extends ChangeNotifier
 ///
@@ -51,11 +52,17 @@ class VaultProvider extends ChangeNotifier {
   /// Daemon client for communication
   final DaemonClient _daemonClient = DaemonClient();
 
+  /// Daemon manager for lifecycle control
+  final DaemonManager _daemonManager = DaemonManager.instance;
+
   /// Whether the provider is currently loading data
   bool _isLoading = false;
 
   /// Error message if the last operation failed
   String? _errorMessage;
+
+  /// Current daemon status
+  DaemonStatus _daemonStatus = DaemonStatus.unknown;
 
   /// F153: Getter for isLocked
   bool get isLocked => _isLocked;
@@ -75,18 +82,47 @@ class VaultProvider extends ChangeNotifier {
   /// Whether the daemon client is connected
   bool get isConnected => _daemonClient.isConnected;
 
+  /// Current daemon status
+  DaemonStatus get daemonStatus => _daemonStatus;
+
+  /// Whether the daemon is running
+  bool get isDaemonRunning => _daemonStatus == DaemonStatus.running;
+
   /// Connect to the daemon
   ///
   /// Must be called before any other operations.
+  /// If autoStart is true (default), will attempt to start the daemon if not running.
   ///
   /// Example:
   /// ```dart
   /// final provider = VaultProvider();
   /// await provider.connect();
   /// ```
-  Future<void> connect() async {
+  Future<void> connect({bool autoStart = true}) async {
     try {
       _errorMessage = null;
+
+      // Check daemon status first
+      _daemonStatus = await _daemonManager.checkStatus();
+      notifyListeners();
+
+      // Auto-start daemon if not running
+      if (_daemonStatus != DaemonStatus.running && autoStart) {
+        debugPrint(
+          '[VaultProvider] Daemon not running, attempting auto-start...',
+        );
+        final started = await _daemonManager.ensureRunning();
+        if (started) {
+          _daemonStatus = DaemonStatus.running;
+          debugPrint('[VaultProvider] Daemon started successfully');
+        } else {
+          _daemonStatus = DaemonStatus.stopped;
+          _errorMessage = 'Failed to start daemon';
+          notifyListeners();
+          throw StateError('Failed to start daemon. Please start it manually.');
+        }
+      }
+
       await _daemonClient.connect();
       // F156: Call notifyListeners() after state changes
       notifyListeners();
@@ -95,6 +131,54 @@ class VaultProvider extends ChangeNotifier {
       notifyListeners();
       rethrow;
     }
+  }
+
+  /// Check daemon status
+  ///
+  /// Updates the internal daemon status and returns it.
+  Future<DaemonStatus> checkDaemonStatus() async {
+    _daemonStatus = await _daemonManager.checkStatus();
+    notifyListeners();
+    return _daemonStatus;
+  }
+
+  /// Start the daemon manually
+  ///
+  /// Returns true if daemon started successfully.
+  Future<bool> startDaemon() async {
+    _daemonStatus = DaemonStatus.starting;
+    notifyListeners();
+
+    final success = await _daemonManager.startDaemon();
+    _daemonStatus = success ? DaemonStatus.running : DaemonStatus.stopped;
+    notifyListeners();
+
+    return success;
+  }
+
+  /// Stop the daemon
+  ///
+  /// Returns true if daemon stopped successfully.
+  Future<bool> stopDaemon() async {
+    final success = await _daemonManager.stopDaemon();
+    if (success) {
+      _daemonStatus = DaemonStatus.stopped;
+      await disconnect();
+    }
+    return success;
+  }
+
+  /// Check if LaunchAgent is installed (macOS auto-start)
+  bool get isAutoStartEnabled => _daemonManager.isLaunchAgentInstalled();
+
+  /// Enable auto-start (installs LaunchAgent on macOS)
+  Future<bool> enableAutoStart() async {
+    return await _daemonManager.installLaunchAgent();
+  }
+
+  /// Disable auto-start (uninstalls LaunchAgent on macOS)
+  Future<bool> disableAutoStart() async {
+    return await _daemonManager.uninstallLaunchAgent();
   }
 
   /// Disconnect from the daemon
@@ -325,7 +409,9 @@ class VaultProvider extends ChangeNotifier {
       final appsJson = await _daemonClient.listApplications();
 
       // Convert JSON to Application objects
-      _applications = appsJson.map((json) => Application.fromJson(json)).toList();
+      _applications = appsJson
+          .map((json) => Application.fromJson(json))
+          .toList();
 
       // Notify listeners
       notifyListeners();

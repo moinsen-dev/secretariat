@@ -12,10 +12,12 @@
 //! - F106: Read response with timeout
 //! - F107: Parse response and extract result/error
 //! - F108: Exponential backoff retry (3 attempts, 100ms/200ms/400ms)
+//! - Auto-start daemon if not running
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
+use std::process::{Command, Stdio};
 use std::time::Duration;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::UnixStream;
@@ -79,6 +81,7 @@ impl DaemonClient {
     /// F102, F108: Connect to the daemon with exponential backoff retry
     ///
     /// Establishes a connection to the daemon's Unix domain socket.
+    /// If the daemon is not running, automatically starts it in the background.
     /// Retries connection with exponential backoff on failure.
     ///
     /// # Returns
@@ -88,15 +91,38 @@ impl DaemonClient {
     /// # Errors
     ///
     /// Returns an error if:
-    /// - The socket doesn't exist (daemon not running)
+    /// - The daemon cannot be started
     /// - Connection fails after all retry attempts
     ///
     /// Retry strategy:
     /// - Attempt 1: Immediate
     /// - Attempt 2: After 100ms delay
     /// - Attempt 3: After 200ms delay (total 300ms)
-    /// - Attempt 4: After 400ms delay (total 700ms)
+    /// - If all fail and daemon not running: auto-start daemon
+    /// - Then retry with longer delays for daemon startup
     pub async fn connect(&self) -> Result<UnixStream> {
+        // First, try to connect normally
+        match self.try_connect().await {
+            Ok(stream) => return Ok(stream),
+            Err(_) => {
+                // Connection failed, try to start the daemon
+                if self.start_daemon_if_needed().await? {
+                    // Daemon was started, wait a bit longer for it to initialize
+                    eprintln!("Starting daemon...");
+                    tokio::time::sleep(Duration::from_millis(500)).await;
+
+                    // Retry with more attempts and longer delays for daemon startup
+                    self.try_connect_with_startup_delay().await
+                } else {
+                    // Daemon was already running but we couldn't connect
+                    self.try_connect().await
+                }
+            }
+        }
+    }
+
+    /// Try to connect with standard retry logic
+    async fn try_connect(&self) -> Result<UnixStream> {
         let mut last_error = None;
 
         for attempt in 0..self.max_retries {
@@ -131,11 +157,142 @@ impl DaemonClient {
         // All retries exhausted
         Err(last_error.unwrap()).with_context(|| {
             format!(
-                "Failed to connect to daemon at {} after {} attempts. Is the daemon running? Try 'secd' to start it.",
+                "Failed to connect to daemon at {} after {} attempts",
                 self.socket_path.display(),
                 self.max_retries
             )
         })
+    }
+
+    /// Try to connect with longer delays for daemon startup
+    async fn try_connect_with_startup_delay(&self) -> Result<UnixStream> {
+        let startup_attempts = 10; // More attempts during startup
+        let startup_delay_ms = 500; // 500ms between attempts
+
+        for attempt in 0..startup_attempts {
+            match UnixStream::connect(&self.socket_path).await {
+                Ok(stream) => {
+                    eprintln!("Daemon started successfully");
+                    return Ok(stream);
+                }
+                Err(e) => {
+                    if attempt < startup_attempts - 1 {
+                        tracing::debug!(
+                            "Waiting for daemon startup, attempt {} of {}",
+                            attempt + 1,
+                            startup_attempts
+                        );
+                        tokio::time::sleep(Duration::from_millis(startup_delay_ms)).await;
+                    } else {
+                        return Err(e).with_context(|| {
+                            format!(
+                                "Daemon started but failed to connect after {}s. Check daemon logs.",
+                                (startup_attempts * startup_delay_ms) / 1000
+                            )
+                        });
+                    }
+                }
+            }
+        }
+
+        unreachable!()
+    }
+
+    /// Check if daemon is running and start it if not
+    ///
+    /// Returns true if daemon was started, false if already running
+    async fn start_daemon_if_needed(&self) -> Result<bool> {
+        // Check if socket exists - if not, daemon is likely not running
+        if !self.socket_path.exists() {
+            return self.start_daemon().await.map(|_| true);
+        }
+
+        // Socket exists but we couldn't connect - might be stale
+        // Try to start daemon anyway (it will handle duplicate detection)
+        match self.start_daemon().await {
+            Ok(_) => Ok(true),
+            Err(e) => {
+                // If daemon reports already running, that's fine
+                let err_str = e.to_string();
+                if err_str.contains("already running") {
+                    Ok(false)
+                } else {
+                    Err(e)
+                }
+            }
+        }
+    }
+
+    /// Start the daemon in the background
+    async fn start_daemon(&self) -> Result<()> {
+        // Find the secd binary - check common locations
+        let secd_path = self.find_secd_binary()?;
+
+        tracing::debug!("Starting daemon from: {}", secd_path.display());
+
+        // Start daemon in background (daemonized mode)
+        let child = Command::new(&secd_path)
+            .arg("start")
+            .arg("-d") // Daemonize
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::piped())
+            .spawn()
+            .with_context(|| format!("Failed to start daemon from {}", secd_path.display()))?;
+
+        // Wait briefly for the command to complete (it should exit quickly in daemon mode)
+        let output = child.wait_with_output()
+            .context("Failed to wait for daemon start command")?;
+
+        if !output.status.success() {
+            let stderr = String::from_utf8_lossy(&output.stderr);
+            // Check if error is "already running" which is fine
+            if stderr.contains("already running") {
+                tracing::debug!("Daemon already running");
+                return Ok(());
+            }
+            anyhow::bail!("Failed to start daemon: {}", stderr);
+        }
+
+        Ok(())
+    }
+
+    /// Find the secd binary
+    fn find_secd_binary(&self) -> Result<PathBuf> {
+        // Check if secd is in PATH
+        if let Ok(path) = which::which("secd") {
+            return Ok(path);
+        }
+
+        // Check common locations
+        let home = dirs::home_dir().context("Failed to get home directory")?;
+
+        let candidates = [
+            home.join("bin/secd"),
+            home.join(".local/bin/secd"),
+            PathBuf::from("/usr/local/bin/secd"),
+        ];
+
+        for candidate in &candidates {
+            if candidate.exists() {
+                return Ok(candidate.clone());
+            }
+        }
+
+        // As a fallback, assume it's in the same directory as sec
+        if let Ok(current_exe) = std::env::current_exe() {
+            if let Some(parent) = current_exe.parent() {
+                let sibling = parent.join("secd");
+                if sibling.exists() {
+                    return Ok(sibling);
+                }
+            }
+        }
+
+        anyhow::bail!(
+            "Could not find secd binary. Please ensure it's installed and in your PATH, \
+             or run 'secd' manually to start the daemon."
+        )
     }
 
     /// F103-F105: Send a JSON-RPC request to the daemon

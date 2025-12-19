@@ -55,9 +55,6 @@ export interface SecretariatOptions {
  * ```
  */
 export class Secretariat {
-  /** Default socket path on Unix systems */
-  private static readonly DEFAULT_SOCKET_PATH = '/tmp/secretariat.sock';
-
   /** Default named pipe path on Windows */
   private static readonly DEFAULT_PIPE_PATH = '\\\\.\\pipe\\secretariat';
 
@@ -87,10 +84,16 @@ export class Secretariat {
    * Get the default socket path based on platform
    */
   private getDefaultSocketPath(): string {
-    if (os.platform() === 'win32') {
+    const platform = os.platform();
+    if (platform === 'win32') {
       return Secretariat.DEFAULT_PIPE_PATH;
+    } else if (platform === 'darwin') {
+      // macOS: ~/Library/Application Support/Secretariat/secretariat.sock
+      return `${os.homedir()}/Library/Application Support/Secretariat/secretariat.sock`;
+    } else {
+      // Linux and other Unix-like: ~/.local/share/secretariat/secretariat.sock
+      return `${os.homedir()}/.local/share/secretariat/secretariat.sock`;
     }
-    return Secretariat.DEFAULT_SOCKET_PATH;
   }
 
   // F244: Connect with net.createConnection({ path: socketPath })
@@ -225,10 +228,10 @@ export class Secretariat {
    * console.log('API Key:', apiKey);
    * ```
    */
-  async get(key: string): Promise<string> {
+  async get(key: string, appId: string = 'node-sdk'): Promise<string> {
     const result = await this.sendRequest<{ value: string }>(
       'secret.get',
-      { key }
+      { name: key, app_id: appId }
     );
 
     if (!result || typeof result.value !== 'string') {
@@ -282,6 +285,41 @@ export class Secretariat {
     }
 
     return result.secrets;
+  }
+
+  /**
+   * Set/create a secret
+   *
+   * @param key - Secret name/key (e.g., 'OPENAI_API_KEY')
+   * @param value - Secret value to store (will be encrypted)
+   *
+   * @example
+   * ```typescript
+   * await client.set('API_KEY', 'sk-123456789');
+   * ```
+   */
+  async set(key: string, value: string): Promise<void> {
+    await this.sendRequest<{ name: string; status: string }>(
+      'secret.set',
+      { name: key, value }
+    );
+  }
+
+  /**
+   * Delete a secret
+   *
+   * @param key - Secret name/key to delete
+   *
+   * @example
+   * ```typescript
+   * await client.delete('OLD_API_KEY');
+   * ```
+   */
+  async delete(key: string): Promise<void> {
+    await this.sendRequest<{ name: string; status: string }>(
+      'secret.delete',
+      { name: key }
+    );
   }
 
   /**

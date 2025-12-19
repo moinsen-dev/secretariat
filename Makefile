@@ -44,7 +44,7 @@ DEBUG_DIR := $(TARGET_DIR)/debug
 
 # Service locations (macOS)
 RESOURCES_DIR := $(ROOT_DIR)/resources
-LAUNCHD_PLIST := com.secretariat.daemon.plist
+LAUNCHD_PLIST := dev.moinsen.secretariat.daemon.plist
 LAUNCHD_SRC := $(RESOURCES_DIR)/macos/$(LAUNCHD_PLIST)
 LAUNCHD_DST := $(HOME)/Library/LaunchAgents/$(LAUNCHD_PLIST)
 
@@ -61,7 +61,7 @@ help:
 	@echo "  $(GREEN)make test$(NC)         - Run all tests"
 	@echo "  $(GREEN)make release$(NC)      - Build optimized release binaries"
 	@echo "  $(GREEN)make install$(NC)      - Install to /usr/local/bin (requires sudo)"
-	@echo "  $(GREEN)make install-local$(NC) - Install to ~/.local/bin (no sudo)"
+	@echo "  $(GREEN)make install-local$(NC) - Install to ~/bin (no sudo)"
 	@echo ""
 	@echo "$(YELLOW)Rust targets:$(NC)"
 	@echo "  $(GREEN)make rust$(NC)         - Build Rust components (daemon + CLI)"
@@ -124,12 +124,12 @@ install: release
 	@echo "$(GREEN)✓ Installed secd and sec to /usr/local/bin$(NC)"
 
 install-local: release
-	@echo "$(BLUE)Installing binaries to ~/.local/bin...$(NC)"
-	@mkdir -p $(HOME)/.local/bin
-	@cp $(RELEASE_DIR)/secd $(HOME)/.local/bin/secd
-	@cp $(RELEASE_DIR)/sec $(HOME)/.local/bin/sec
-	@echo "$(GREEN)✓ Installed secd and sec to ~/.local/bin$(NC)"
-	@echo "$(YELLOW)Make sure ~/.local/bin is in your PATH$(NC)"
+	@echo "$(BLUE)Installing binaries to ~/bin...$(NC)"
+	@mkdir -p $(HOME)/bin
+	@cp $(RELEASE_DIR)/secd $(HOME)/bin/secd
+	@cp $(RELEASE_DIR)/sec $(HOME)/bin/sec
+	@echo "$(GREEN)✓ Installed secd and sec to ~/bin$(NC)"
+	@echo "$(YELLOW)Make sure ~/bin is in your PATH$(NC)"
 
 release: rust-release
 	@echo "$(GREEN)✓ Release build complete!$(NC)"
@@ -382,9 +382,9 @@ service-start:
 		echo "$(RED)✗ Launch Agent not installed. Run 'make service-install' first.$(NC)"; \
 		exit 1; \
 	fi
-	@launchctl start com.secretariat.daemon
+	@launchctl start dev.moinsen.secretariat.daemon
 	@sleep 1
-	@if launchctl list | grep -q com.secretariat.daemon; then \
+	@if launchctl list | grep -q dev.moinsen.secretariat.daemon; then \
 		echo "$(GREEN)✓ Daemon started$(NC)"; \
 	else \
 		echo "$(YELLOW)⚠ Daemon may not have started. Check logs with 'make service-logs'$(NC)"; \
@@ -392,7 +392,7 @@ service-start:
 
 service-stop:
 	@echo "$(BLUE)Stopping Secretariat daemon...$(NC)"
-	@launchctl stop com.secretariat.daemon 2>/dev/null || true
+	@launchctl stop dev.moinsen.secretariat.daemon 2>/dev/null || true
 	@echo "$(GREEN)✓ Daemon stopped$(NC)"
 
 service-status:
@@ -405,9 +405,9 @@ service-status:
 	else \
 		echo "$(YELLOW)○$(NC) Launch Agent not installed"; \
 	fi
-	@if launchctl list 2>/dev/null | grep -q com.secretariat.daemon; then \
+	@if launchctl list 2>/dev/null | grep -q dev.moinsen.secretariat.daemon; then \
 		echo "$(GREEN)✓$(NC) Daemon is running"; \
-		PID=$$(launchctl list | grep com.secretariat.daemon | awk '{print $$1}'); \
+		PID=$$(launchctl list | grep dev.moinsen.secretariat.daemon | awk '{print $$1}'); \
 		if [ "$$PID" != "-" ] && [ -n "$$PID" ]; then \
 			echo "  PID: $$PID"; \
 		fi; \

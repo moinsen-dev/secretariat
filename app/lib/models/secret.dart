@@ -18,7 +18,8 @@ class Secret {
   final String name;
 
   /// Secret value (encrypted in storage, decrypted in memory)
-  final String value;
+  /// Null when listing secrets (secret.list returns metadata only)
+  final String? value;
 
   /// Provider name (e.g., openai, stripe, anthropic)
   final String? provider;
@@ -42,7 +43,7 @@ class Secret {
   const Secret({
     required this.id,
     required this.name,
-    required this.value,
+    this.value,
     this.provider,
     this.environment,
     required this.createdAt,
@@ -70,7 +71,7 @@ class Secret {
     return Secret(
       id: json['id'] as String,
       name: json['name'] as String,
-      value: json['value'] as String,
+      value: json['value'] as String?,
       provider: json['provider'] as String?,
       environment: json['environment'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),

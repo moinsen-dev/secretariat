@@ -75,7 +75,9 @@ class Secretariat:
     """
 
     # Default socket paths by platform
-    _DEFAULT_SOCKET_PATH = "/tmp/secretariat.sock"
+    # macOS: ~/Library/Application Support/Secretariat/secretariat.sock
+    # Linux: ~/.local/share/secretariat/secretariat.sock
+    # Windows: \\.\pipe\secretariat
     _DEFAULT_PIPE_PATH = r"\\.\pipe\secretariat"
 
     def __init__(
@@ -102,9 +104,15 @@ class Secretariat:
         if self._socket_path:
             return self._socket_path
 
-        if platform.system() == "Windows":
+        system = platform.system()
+        if system == "Windows":
             return self._DEFAULT_PIPE_PATH
-        return self._DEFAULT_SOCKET_PATH
+        elif system == "Darwin":  # macOS
+            home = os.path.expanduser("~")
+            return os.path.join(home, "Library", "Application Support", "Secretariat", "secretariat.sock")
+        else:  # Linux and other Unix-like systems
+            home = os.path.expanduser("~")
+            return os.path.join(home, ".local", "share", "secretariat", "secretariat.sock")
 
     # F227: Connect to Unix socket using socket.socket(AF_UNIX)
     def _connect(self) -> None:
@@ -221,12 +229,13 @@ class Secretariat:
         return response.get("result", {})
 
     # F226: Implement get(self, key: str) -> str method
-    def get(self, key: str) -> str:
+    def get(self, key: str, app_id: str = "python-sdk") -> str:
         """
         Get secret value by key.
 
         Args:
             key: Secret name/key (e.g., 'OPENAI_API_KEY')
+            app_id: Application identifier for permission checks (default: 'python-sdk')
 
         Returns:
             Decrypted secret value
@@ -239,7 +248,7 @@ class Secretariat:
             >>> client = Secretariat()
             >>> api_key = client.get('OPENAI_API_KEY')
         """
-        result = self._send_request("secret.get", {"key": key})
+        result = self._send_request("secret.get", {"name": key, "app_id": app_id})
 
         if "value" not in result:
             raise SecretariatError("Invalid response: missing value")
@@ -285,6 +294,37 @@ class Secretariat:
             raise SecretariatError("Invalid response: missing secrets")
 
         return result["secrets"]
+
+    def set(self, key: str, value: str) -> None:
+        """
+        Set/create a secret.
+
+        Args:
+            key: Secret name/key (e.g., 'OPENAI_API_KEY')
+            value: Secret value to store (will be encrypted)
+
+        Raises:
+            SecretariatError: On communication or storage error
+
+        Example:
+            >>> client.set('API_KEY', 'sk-123456789')
+        """
+        self._send_request("secret.set", {"name": key, "value": value})
+
+    def delete(self, key: str) -> None:
+        """
+        Delete a secret.
+
+        Args:
+            key: Secret name/key to delete
+
+        Raises:
+            SecretariatError: If secret not found or communication error
+
+        Example:
+            >>> client.delete('OLD_API_KEY')
+        """
+        self._send_request("secret.delete", {"name": key})
 
     def close(self) -> None:
         """

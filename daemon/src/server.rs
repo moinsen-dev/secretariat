@@ -133,13 +133,39 @@ impl ServerState {
     }
 }
 
+/// JSON-RPC request ID (can be string, number, or null per JSON-RPC 2.0 spec)
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(untagged)]
+pub enum RequestId {
+    String(String),
+    Number(i64),
+    Null,
+}
+
+impl std::fmt::Display for RequestId {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RequestId::String(s) => write!(f, "{}", s),
+            RequestId::Number(n) => write!(f, "{}", n),
+            RequestId::Null => write!(f, "null"),
+        }
+    }
+}
+
+impl From<RequestId> for String {
+    fn from(id: RequestId) -> Self {
+        id.to_string()
+    }
+}
+
 /// JSON-RPC request structure
 ///
 /// Represents an incoming request from a client following JSON-RPC style.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Request {
     /// Unique request identifier (used to match request with response)
-    pub id: String,
+    /// Accepts string, number, or null per JSON-RPC 2.0 specification
+    pub id: RequestId,
     /// Method name to invoke (e.g., "secret.get", "app.register")
     pub method: String,
     /// Method parameters as a JSON value
@@ -174,6 +200,7 @@ impl ErrorInfo {
     }
 
     /// Create an error for invalid request structure
+    #[allow(dead_code)] // Available for JSON-RPC protocol compliance
     pub fn invalid_request(message: impl Into<String>) -> Self {
         Self::new(-32600, message)
     }
@@ -200,7 +227,7 @@ impl ErrorInfo {
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Response {
     /// Request ID this response corresponds to
-    pub id: String,
+    pub id: RequestId,
     /// Successful result (mutually exclusive with error)
     #[serde(skip_serializing_if = "Option::is_none")]
     pub result: Option<serde_json::Value>,
@@ -211,7 +238,7 @@ pub struct Response {
 
 impl Response {
     /// Create a successful response
-    pub fn success(id: String, result: serde_json::Value) -> Self {
+    pub fn success(id: RequestId, result: serde_json::Value) -> Self {
         Self {
             id,
             result: Some(result),
@@ -220,7 +247,7 @@ impl Response {
     }
 
     /// Create an error response
-    pub fn error(id: String, error: ErrorInfo) -> Self {
+    pub fn error(id: RequestId, error: ErrorInfo) -> Self {
         Self {
             id,
             result: None,
@@ -596,6 +623,39 @@ fn route_request(request: Request, storage: &crate::storage::Storage, master_key
                 })
             )
         }
+        "vault.init" => {
+            // Initialize vault with master password
+            let password = match request.params.get("password").and_then(|v| v.as_str()) {
+                Some(p) => p,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: password")
+                    );
+                }
+            };
+
+            // Pass current master_key for re-encryption if secrets exist
+            let old_key = if storage.has_secrets().unwrap_or(false) {
+                Some(master_key)
+            } else {
+                None
+            };
+
+            match crate::handlers::handle_vault_init(password, storage, old_key) {
+                Ok(result) => Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "vault_path": result.vault_path,
+                        "secrets_migrated": result.secrets_migrated
+                    })
+                ),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to initialize vault: {}", e))
+                ),
+            }
+        }
         _ => {
             // Unknown method
             Response::error(
@@ -686,7 +746,7 @@ async fn handle_connection(mut stream: UnixStream, server_state: ServerState) {
                                             if !rate_limiter.allow_request() {
                                                 warn!("Rate limit exceeded, rejecting request");
                                                 let response = Response::error(
-                                                    "unknown".to_string(),
+                                                    RequestId::Null,
                                                     ErrorInfo::new(-32000, "Rate limit exceeded. Maximum 100 requests per second.")
                                                 );
                                                 if let Err(e) = send_response(response, &mut stream).await {
@@ -707,7 +767,7 @@ async fn handle_connection(mut stream: UnixStream, server_state: ServerState) {
                                                     // F049: Handle malformed JSON with descriptive error
                                                     error!("Failed to parse request (malformed JSON): {}", e);
                                                     Response::error(
-                                                        "unknown".to_string(),
+                                                        RequestId::Null,
                                                         ErrorInfo::parse_error(format!("Malformed JSON request: {}", e))
                                                     )
                                                 }
@@ -724,7 +784,7 @@ async fn handle_connection(mut stream: UnixStream, server_state: ServerState) {
                                         // F049: Handle invalid UTF-8 with error response
                                         error!("Received invalid UTF-8 data: {}", e);
                                         let response = Response::error(
-                                            "unknown".to_string(),
+                                            RequestId::Null,
                                             ErrorInfo::parse_error("Invalid UTF-8 encoding in request")
                                         );
                                         if let Err(e) = send_response(response, &mut stream).await {

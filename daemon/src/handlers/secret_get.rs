@@ -74,8 +74,16 @@ pub fn handle_secret_get(name: &str, app_id: &str, storage: &Storage, master_key
     // F060: Look up secret by name
     let secret = storage.get_secret_by_name(name)?;
 
+    // Special case: Trusted local interfaces have administrative access to all secrets
+    // These are CLI and SDK clients running on the local machine
+    let is_trusted = matches!(
+        app_id,
+        "cli" | "python-sdk" | "node-sdk" | "dart-sdk" | "rust-sdk" | "flutter-app"
+    );
+
     // F058: Check if the app has permission to access this secret
-    let has_permission = storage.check_permission(app_id, &secret.id)?;
+    // Skip permission check for trusted local interfaces
+    let has_permission = is_trusted || storage.check_permission(app_id, &secret.id)?;
 
     // F059: Return PermissionDenied error if no permission exists
     if !has_permission {

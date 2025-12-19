@@ -1,4 +1,4 @@
-package com.secretariat.secretariat_app
+package dev.moinsen.secretariat
 
 import io.flutter.embedding.android.FlutterActivity
 

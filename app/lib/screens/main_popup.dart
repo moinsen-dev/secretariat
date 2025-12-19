@@ -60,11 +60,14 @@ class _MainPopupState extends State<MainPopup> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final vaultProvider = Provider.of<VaultProvider>(context, listen: false);
       if (!vaultProvider.isConnected) {
-        vaultProvider.connect().then((_) {
-          vaultProvider.loadSecrets();
-        }).catchError((e) {
-          _showError('Failed to connect: $e');
-        });
+        vaultProvider
+            .connect()
+            .then((_) {
+              vaultProvider.loadSecrets();
+            })
+            .catchError((e) {
+              _showError('Failed to connect: $e');
+            });
       } else {
         vaultProvider.loadSecrets().catchError((e) {
           _showError('Failed to load secrets: $e');
@@ -104,10 +107,7 @@ class _MainPopupState extends State<MainPopup> {
   void _showError(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-      ),
+      SnackBar(content: Text(message), backgroundColor: Colors.red),
     );
   }
 
@@ -131,8 +131,10 @@ class _MainPopupState extends State<MainPopup> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              final vaultProvider =
-                  Provider.of<VaultProvider>(context, listen: false);
+              final vaultProvider = Provider.of<VaultProvider>(
+                context,
+                listen: false,
+              );
               vaultProvider.refreshSecrets();
             },
             tooltip: 'Refresh secrets',
@@ -155,7 +157,9 @@ class _MainPopupState extends State<MainPopup> {
           if (_searchController.text.isEmpty) {
             _filteredSecrets = vaultProvider.secrets;
           } else {
-            _filteredSecrets = vaultProvider.filterSecrets(_searchController.text);
+            _filteredSecrets = vaultProvider.filterSecrets(
+              _searchController.text,
+            );
           }
 
           return Column(
@@ -181,7 +185,9 @@ class _MainPopupState extends State<MainPopup> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     filled: true,
-                    fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    fillColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                   ),
                 ),
               ),
@@ -189,13 +195,12 @@ class _MainPopupState extends State<MainPopup> {
               // Loading indicator
               if (vaultProvider.isLoading)
                 const Expanded(
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
 
               // Error message
-              if (vaultProvider.errorMessage != null && !vaultProvider.isLoading)
+              if (vaultProvider.errorMessage != null &&
+                  !vaultProvider.isLoading)
                 Expanded(
                   child: Center(
                     child: Padding(
@@ -230,7 +235,8 @@ class _MainPopupState extends State<MainPopup> {
                 ),
 
               // F162: Display recent secrets (last 5) or filtered list
-              if (!vaultProvider.isLoading && vaultProvider.errorMessage == null)
+              if (!vaultProvider.isLoading &&
+                  vaultProvider.errorMessage == null)
                 Expanded(
                   child: _filteredSecrets.isEmpty
                       ? Center(
@@ -240,7 +246,9 @@ class _MainPopupState extends State<MainPopup> {
                                 : 'No secrets match "${_searchController.text}"',
                             textAlign: TextAlign.center,
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
                             ),
                           ),
                         )
@@ -250,19 +258,33 @@ class _MainPopupState extends State<MainPopup> {
                             // F162: Show "Recent Secrets" header when not searching
                             if (_searchController.text.isEmpty)
                               Padding(
-                                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  8,
+                                  16,
+                                  8,
+                                ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
                                       'Recent Secrets',
-                                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
                                           ),
                                     ),
                                     TextButton(
                                       onPressed: () {
-                                        Navigator.pushNamed(context, '/secrets-list');
+                                        Navigator.pushNamed(
+                                          context,
+                                          '/secrets-list',
+                                        );
                                       },
                                       child: const Text('View All'),
                                     ),
@@ -276,7 +298,8 @@ class _MainPopupState extends State<MainPopup> {
                                     ? _getRecentSecrets(_filteredSecrets).length
                                     : _filteredSecrets.length,
                                 itemBuilder: (context, index) {
-                                  final displaySecrets = _searchController.text.isEmpty
+                                  final displaySecrets =
+                                      _searchController.text.isEmpty
                                       ? _getRecentSecrets(_filteredSecrets)
                                       : _filteredSecrets;
                                   final secret = displaySecrets[index];
@@ -293,13 +316,14 @@ class _MainPopupState extends State<MainPopup> {
 
               // Status bar
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   border: Border(
-                    top: BorderSide(
-                      color: Theme.of(context).dividerColor,
-                    ),
+                    top: BorderSide(color: Theme.of(context).dividerColor),
                   ),
                 ),
                 child: Row(
@@ -310,14 +334,18 @@ class _MainPopupState extends State<MainPopup> {
                         Icon(
                           vaultProvider.isLocked ? Icons.lock : Icons.lock_open,
                           size: 16,
-                          color: vaultProvider.isLocked ? Colors.red : Colors.green,
+                          color: vaultProvider.isLocked
+                              ? Colors.red
+                              : Colors.green,
                         ),
                         const SizedBox(width: 8),
                         Text(
                           vaultProvider.isLocked ? 'Locked' : 'Unlocked',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],
@@ -356,10 +384,7 @@ class _SecretListItem extends StatelessWidget {
   final Secret secret;
   final VoidCallback onCopy;
 
-  const _SecretListItem({
-    required this.secret,
-    required this.onCopy,
-  });
+  const _SecretListItem({required this.secret, required this.onCopy});
 
   @override
   Widget build(BuildContext context) {

@@ -157,9 +157,7 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
       body: Consumer<VaultProvider>(
         builder: (context, vaultProvider, child) {
           if (vaultProvider.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (vaultProvider.errorMessage != null) {
@@ -200,7 +198,9 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
                   Icon(
                     Icons.apps,
                     size: 64,
-                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -211,8 +211,8 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
                   Text(
                     'Applications will appear here when they\nrequest access to your secrets',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                        ),
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -249,7 +249,8 @@ class _ApplicationTile extends StatelessWidget {
   final List<Secret> secrets;
   final String Function(DateTime) formatTimestamp;
   final String Function(String, List<Secret>) getSecretName;
-  final Future<void> Function(String appId, String secretId, String secretName) onRevokePermission;
+  final Future<void> Function(String appId, String secretId, String secretName)
+  onRevokePermission;
 
   const _ApplicationTile({
     required this.application,
@@ -277,10 +278,7 @@ class _ApplicationTile extends StatelessWidget {
         ),
         title: Text(
           application.name,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -340,7 +338,9 @@ class _ApplicationTile extends StatelessWidget {
                           fontSize: 11,
                           fontWeight: FontWeight.w500,
                           color: hasPermissions
-                              ? Theme.of(context).colorScheme.onSecondaryContainer
+                              ? Theme.of(
+                                  context,
+                                ).colorScheme.onSecondaryContainer
                               : Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
@@ -387,8 +387,8 @@ class _ApplicationTile extends StatelessWidget {
                   Text(
                     'Granted Permissions',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   // List of permissions

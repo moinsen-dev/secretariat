@@ -7,7 +7,7 @@
 use anyhow::Result;
 
 /// Service name for keychain entries
-const SERVICE_NAME: &str = "com.secretariat.daemon";
+const SERVICE_NAME: &str = "dev.moinsen.secretariat.daemon";
 
 /// Account name for the master key in keychain
 const ACCOUNT_NAME: &str = "master_key";
@@ -15,7 +15,7 @@ const ACCOUNT_NAME: &str = "master_key";
 /// F030: Store master key in macOS Keychain
 ///
 /// Stores the master encryption key securely in the system keychain.
-/// The key is stored with the service name "com.secretariat.daemon"
+/// The key is stored with the service name "dev.moinsen.secretariat.daemon"
 /// and account name "master_key".
 ///
 /// # Arguments
@@ -113,6 +113,7 @@ pub fn retrieve_master_key() -> Result<[u8; 32]> {
 /// Returns `Ok(())` if the key is successfully deleted or doesn't exist.
 /// Returns `Err` if deletion fails.
 #[cfg(target_os = "macos")]
+#[allow(dead_code)] // Used for vault reset and re-initialization
 pub fn delete_master_key() -> Result<()> {
     use security_framework::passwords::delete_generic_password;
 

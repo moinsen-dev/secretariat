@@ -17,11 +17,7 @@ import '../providers/vault_provider.dart';
 import '../widgets/empty_state.dart';
 
 /// Sort order options for secrets list
-enum SecretSortOrder {
-  name,
-  created,
-  updated,
-}
+enum SecretSortOrder { name, created, updated }
 
 /// F164: Create lib/screens/secrets_list.dart file
 ///
@@ -112,7 +108,9 @@ class _SecretsListScreenState extends State<SecretsListScreen> {
 
     switch (_sortOrder) {
       case SecretSortOrder.name:
-        sorted.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        sorted.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
         break;
       case SecretSortOrder.created:
         sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -285,7 +283,9 @@ class _SecretsListScreenState extends State<SecretsListScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     filled: true,
-                    fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    fillColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                   ),
                 ),
               ),
@@ -293,13 +293,12 @@ class _SecretsListScreenState extends State<SecretsListScreen> {
               // Loading indicator
               if (vaultProvider.isLoading)
                 const Expanded(
-                  child: Center(
-                    child: CircularProgressIndicator(),
-                  ),
+                  child: Center(child: CircularProgressIndicator()),
                 ),
 
               // Error message
-              if (vaultProvider.errorMessage != null && !vaultProvider.isLoading)
+              if (vaultProvider.errorMessage != null &&
+                  !vaultProvider.isLoading)
                 Expanded(
                   child: Center(
                     child: Padding(
@@ -332,11 +331,14 @@ class _SecretsListScreenState extends State<SecretsListScreen> {
                 ),
 
               // F166: Build ListView.builder with secrets (style)
-              if (!vaultProvider.isLoading && vaultProvider.errorMessage == null)
+              if (!vaultProvider.isLoading &&
+                  vaultProvider.errorMessage == null)
                 Expanded(
                   child: _displaySecrets.isEmpty
                       ? EmptyState(
-                          icon: _searchQuery.isEmpty ? Icons.vpn_key_off : Icons.search_off,
+                          icon: _searchQuery.isEmpty
+                              ? Icons.vpn_key_off
+                              : Icons.search_off,
                           title: _searchQuery.isEmpty
                               ? 'No secrets yet'
                               : 'No matching secrets',
@@ -351,7 +353,9 @@ class _SecretsListScreenState extends State<SecretsListScreen> {
                             // F167: Implement ListTile for each secret with name and provider
                             return ListTile(
                               leading: CircleAvatar(
-                                backgroundColor: _getProviderColor(secret.provider),
+                                backgroundColor: _getProviderColor(
+                                  secret.provider,
+                                ),
                                 child: Icon(
                                   _getProviderIcon(secret.provider),
                                   color: Colors.white,
@@ -369,13 +373,17 @@ class _SecretsListScreenState extends State<SecretsListScreen> {
                                       secret.provider!,
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurfaceVariant,
                                       ),
                                     )
                                   : null,
                               trailing: Icon(
                                 Icons.chevron_right,
-                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
                               ),
                               // F170: Implement onTap to navigate to SecretDetail screen
                               onTap: () {
@@ -392,13 +400,14 @@ class _SecretsListScreenState extends State<SecretsListScreen> {
 
               // Status bar
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   border: Border(
-                    top: BorderSide(
-                      color: Theme.of(context).dividerColor,
-                    ),
+                    top: BorderSide(color: Theme.of(context).dividerColor),
                   ),
                 ),
                 child: Row(

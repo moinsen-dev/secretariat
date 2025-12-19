@@ -102,7 +102,7 @@ secretariat/
 - **Database**: `~/Library/Application Support/Secretariat/vault.db`
 - **Socket**: `~/Library/Application Support/Secretariat/secretariat.sock`
 - **Logs**: `~/Library/Logs/Secretariat/`
-- **Preferences**: `~/Library/Preferences/com.secretariat.app.plist`
+- **Preferences**: `~/Library/Preferences/dev.moinsen.secretariat.plist`
 
 ## Features Database
 

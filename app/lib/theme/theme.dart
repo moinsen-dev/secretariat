@@ -61,9 +61,7 @@ ThemeData get lightTheme {
     // Card Theme
     cardTheme: CardThemeData(
       elevation: 1,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
     ),
 
@@ -97,9 +95,7 @@ ThemeData get lightTheme {
         foregroundColor: Colors.white,
         elevation: 2,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     ),
 
@@ -211,10 +207,7 @@ ThemeData get lightTheme {
     ),
 
     // Icon Theme
-    iconTheme: const IconThemeData(
-      color: textPrimaryLight,
-      size: 24,
-    ),
+    iconTheme: const IconThemeData(color: textPrimaryLight, size: 24),
   );
 }
 
@@ -271,9 +264,7 @@ ThemeData get darkTheme {
     // Card Theme
     cardTheme: CardThemeData(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
       color: surfaceVariantDark,
     ),
@@ -308,9 +299,7 @@ ThemeData get darkTheme {
         foregroundColor: primaryColorDark,
         elevation: 2,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     ),
 
@@ -422,9 +411,6 @@ ThemeData get darkTheme {
     ),
 
     // Icon Theme
-    iconTheme: const IconThemeData(
-      color: textPrimaryDark,
-      size: 24,
-    ),
+    iconTheme: const IconThemeData(color: textPrimaryDark, size: 24),
   );
 }

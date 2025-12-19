@@ -66,13 +66,17 @@ class EmptyState extends StatelessWidget {
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primaryContainer.withValues(alpha: 0.3),
                 shape: BoxShape.circle,
               ),
               child: Icon(
                 icon,
                 size: 64,
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.6),
               ),
             ),
 
@@ -82,9 +86,9 @@ class EmptyState extends StatelessWidget {
             Text(
               title,
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
               textAlign: TextAlign.center,
             ),
 
@@ -94,8 +98,8 @@ class EmptyState extends StatelessWidget {
               Text(
                 message!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
                 textAlign: TextAlign.center,
               ),
             ],

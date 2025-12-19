@@ -90,8 +90,23 @@ impl std::error::Error for Error {
     }
 }
 
-/// Default socket path on Unix systems
-const DEFAULT_SOCKET_PATH: &str = "/tmp/secretariat.sock";
+/// Get default socket path based on platform
+fn get_default_socket_path() -> PathBuf {
+    #[cfg(target_os = "macos")]
+    {
+        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
+        PathBuf::from(format!("{}/Library/Application Support/Secretariat/secretariat.sock", home))
+    }
+    #[cfg(target_os = "linux")]
+    {
+        let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
+        PathBuf::from(format!("{}/.local/share/secretariat/secretariat.sock", home))
+    }
+    #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+    {
+        PathBuf::from("/tmp/secretariat.sock")
+    }
+}
 
 /// F232: Define pub struct Secretariat with socket path field
 pub struct Secretariat {
@@ -106,7 +121,9 @@ pub struct Secretariat {
 impl Secretariat {
     /// Create a new Secretariat client with default settings.
     ///
-    /// Uses the default socket path `/tmp/secretariat.sock` on Unix.
+    /// Uses the platform-specific default socket path:
+    /// - macOS: ~/Library/Application Support/Secretariat/secretariat.sock
+    /// - Linux: ~/.local/share/secretariat/secretariat.sock
     ///
     /// # Example
     ///
@@ -116,7 +133,7 @@ impl Secretariat {
     /// let client = Secretariat::new().expect("Failed to create client");
     /// ```
     pub fn new() -> Result<Self, Error> {
-        Self::with_socket_path(DEFAULT_SOCKET_PATH)
+        Self::with_socket_path(get_default_socket_path())
     }
 
     /// Create a new Secretariat client with custom socket path.
@@ -266,7 +283,7 @@ impl Secretariat {
     /// println!("API Key: {}", api_key);
     /// ```
     pub fn get(&self, key: &str) -> Result<String, Error> {
-        let params = serde_json::json!({ "key": key });
+        let params = serde_json::json!({ "name": key, "app_id": "rust-sdk" });
         let result = self.send_request("secret.get", params)?;
 
         result["value"]
@@ -324,14 +341,57 @@ impl Secretariat {
             .as_array()
             .ok_or_else(|| Error::InvalidResponse("Missing secrets in response".to_string()))?;
 
+        // Each secret is an object with a "name" field
         secrets
             .iter()
             .map(|s| {
-                s.as_str()
+                s["name"]
+                    .as_str()
                     .map(|s| s.to_string())
-                    .ok_or_else(|| Error::InvalidResponse("Invalid secret name".to_string()))
+                    .ok_or_else(|| Error::InvalidResponse("Invalid secret format".to_string()))
             })
             .collect()
+    }
+
+    /// Set/create a secret.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - Secret name (e.g., "OPENAI_API_KEY")
+    /// * `value` - Secret value to store (will be encrypted)
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use secretariat::Secretariat;
+    ///
+    /// let client = Secretariat::new().unwrap();
+    /// client.set("API_KEY", "sk-123456789").unwrap();
+    /// ```
+    pub fn set(&self, key: &str, value: &str) -> Result<(), Error> {
+        let params = serde_json::json!({ "name": key, "value": value });
+        self.send_request("secret.set", params)?;
+        Ok(())
+    }
+
+    /// Delete a secret.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - Secret name to delete
+    ///
+    /// # Example
+    ///
+    /// ```no_run
+    /// use secretariat::Secretariat;
+    ///
+    /// let client = Secretariat::new().unwrap();
+    /// client.delete("OLD_API_KEY").unwrap();
+    /// ```
+    pub fn delete(&self, key: &str) -> Result<(), Error> {
+        let params = serde_json::json!({ "name": key });
+        self.send_request("secret.delete", params)?;
+        Ok(())
     }
 }
 

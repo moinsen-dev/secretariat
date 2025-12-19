@@ -7,7 +7,7 @@
 use anyhow::{Context, Result};
 use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// Metadata for a secret (without encrypted value)
 ///
@@ -35,6 +35,7 @@ pub struct SecretMetadata {
 /// ## Wave 12 Features:
 /// - F060: Secret structure for get_secret_by_name() method
 #[derive(Debug, Clone)]
+#[allow(dead_code)] // Fields populated from database query, used for complete record representation
 pub struct Secret {
     /// Unique identifier for the secret
     pub id: String,
@@ -74,6 +75,7 @@ pub struct AppInfo {
 /// Storage backend for managing secrets in an encrypted SQLite database
 pub struct Storage {
     conn: Connection,
+    db_path: PathBuf,
 }
 
 impl Storage {
@@ -104,10 +106,18 @@ impl Storage {
         conn.pragma_update(None, "cipher_page_size", "4096")
             .context("Failed to set cipher page size")?;
 
-        let mut storage = Storage { conn };
+        let mut storage = Storage {
+            conn,
+            db_path: db_path.as_ref().to_path_buf(),
+        };
         storage.initialize_schema()?;
 
         Ok(storage)
+    }
+
+    /// Get the path to the database file
+    pub fn path(&self) -> &Path {
+        &self.db_path
     }
 
     /// Initialize the database schema
@@ -209,6 +219,23 @@ impl Storage {
 
             -- Additional index for filtering by action type
             CREATE INDEX IF NOT EXISTS idx_audit_log_action ON audit_log(action);
+
+            -- Vault metadata table for storing configuration like salt
+            -- Used for password-based key derivation and vault state
+            CREATE TABLE IF NOT EXISTS vault_metadata (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            -- Trigger to update updated_at timestamp on vault_metadata
+            CREATE TRIGGER IF NOT EXISTS update_vault_metadata_timestamp
+            AFTER UPDATE ON vault_metadata
+            FOR EACH ROW
+            BEGIN
+                UPDATE vault_metadata SET updated_at = CURRENT_TIMESTAMP WHERE key = NEW.key;
+            END;
             "#,
         )
         .context("Failed to initialize database schema")?;
@@ -219,6 +246,7 @@ impl Storage {
     /// Get a reference to the underlying database connection
     ///
     /// Useful for executing custom queries or transactions
+    #[allow(dead_code)] // Used in tests and available for future custom queries
     pub fn connection(&self) -> &Connection {
         &self.conn
     }
@@ -235,6 +263,126 @@ impl Storage {
         tracing::debug!("Health check passed: {} secrets in database", count);
         Ok(())
     }
+
+    // ==========================================================================
+    // Vault Metadata Methods
+    // ==========================================================================
+
+    /// Set a vault metadata value
+    ///
+    /// Stores a key-value pair in the vault_metadata table.
+    /// If the key already exists, its value is updated.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - The metadata key (e.g., "salt")
+    /// * `value` - The metadata value
+    pub fn set_vault_metadata(&self, key: &str, value: &str) -> Result<()> {
+        self.conn.execute(
+            "INSERT OR REPLACE INTO vault_metadata (key, value) VALUES (?, ?)",
+            [key, value],
+        )
+        .context("Failed to set vault metadata")?;
+
+        Ok(())
+    }
+
+    /// Get a vault metadata value
+    ///
+    /// Retrieves a value from the vault_metadata table by key.
+    ///
+    /// # Arguments
+    ///
+    /// * `key` - The metadata key to look up
+    ///
+    /// # Returns
+    ///
+    /// `Some(value)` if the key exists, `None` otherwise
+    #[allow(dead_code)] // Used for vault.unlock (to be implemented)
+    pub fn get_vault_metadata(&self, key: &str) -> Result<Option<String>> {
+        let result = self.conn.query_row(
+            "SELECT value FROM vault_metadata WHERE key = ?",
+            [key],
+            |row| row.get(0),
+        );
+
+        match result {
+            Ok(value) => Ok(Some(value)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(e).context("Failed to get vault metadata"),
+        }
+    }
+
+    /// Check if the vault is initialized
+    ///
+    /// A vault is considered initialized if a salt has been stored.
+    #[allow(dead_code)] // Used for vault state checks (to be implemented)
+    pub fn is_vault_initialized(&self) -> Result<bool> {
+        Ok(self.get_vault_metadata("salt")?.is_some())
+    }
+
+    /// Check if any secrets exist in the vault
+    pub fn has_secrets(&self) -> Result<bool> {
+        let count: i64 = self.conn
+            .query_row("SELECT COUNT(*) FROM secrets", [], |row| row.get(0))
+            .context("Failed to count secrets")?;
+        Ok(count > 0)
+    }
+
+    /// List all secrets with encrypted values (for migration/re-encryption)
+    ///
+    /// Returns all secrets including their encrypted values.
+    /// This is used internally for vault re-initialization.
+    ///
+    /// # Security Note
+    ///
+    /// This method returns encrypted values and should only be used
+    /// for internal operations like key migration.
+    pub fn list_secrets_raw(&self) -> Result<Vec<Secret>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT id, name, value_encrypted, provider, environment, created_at FROM secrets"
+        )?;
+
+        let secrets = stmt.query_map([], |row| {
+            Ok(Secret {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                value_encrypted: row.get(2)?,
+                provider: row.get(3)?,
+                environment: row.get(4)?,
+                created_at: row.get(5)?,
+            })
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(secrets)
+    }
+
+    /// Update only the encrypted value of a secret
+    ///
+    /// Used for re-encryption during vault re-initialization.
+    ///
+    /// # Arguments
+    ///
+    /// * `id` - The secret's unique identifier
+    /// * `encrypted_value` - The new encrypted value (nonce + ciphertext)
+    pub fn update_secret_encrypted(&self, id: &str, encrypted_value: &[u8]) -> Result<()> {
+        let rows_affected = self.conn.execute(
+            "UPDATE secrets SET value_encrypted = ? WHERE id = ?",
+            rusqlite::params![encrypted_value, id],
+        )
+        .context("Failed to update secret encrypted value")?;
+
+        if rows_affected == 0 {
+            anyhow::bail!("Secret not found: {}", id);
+        }
+
+        Ok(())
+    }
+
+    // ==========================================================================
+    // Database Statistics
+    // ==========================================================================
 
     /// Get database statistics
     ///

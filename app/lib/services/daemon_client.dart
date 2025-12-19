@@ -26,7 +26,7 @@ class DaemonClient {
   /// F144: Socket connection to the daemon
   Socket? _socket;
 
-  /// Stream controller for incoming messages
+  /// Stream controller for incoming messages (broadcast to allow multiple listeners)
   StreamController<Map<String, dynamic>>? _messageController;
 
   /// Stream subscription for socket data
@@ -56,19 +56,36 @@ class DaemonClient {
   /// ```
   Future<void> connect() async {
     if (_socket != null) {
+      _log('Already connected to daemon');
       return; // Already connected
     }
 
     // Get socket path based on platform
     final socketPath = _getSocketPath();
+    _log('Connecting to daemon at: $socketPath');
+
+    // Check if socket file exists
+    final socketFile = File(socketPath);
+    if (!socketFile.existsSync()) {
+      _log('ERROR: Socket file does not exist at $socketPath');
+      _log('Make sure the Secretariat daemon is running (make service-start)');
+      throw SocketException(
+        'Daemon socket not found at $socketPath. Is the daemon running?',
+      );
+    }
 
     try {
       // F145: Connect to Unix socket
-      final address = InternetAddress(socketPath, type: InternetAddressType.unix);
+      final address = InternetAddress(
+        socketPath,
+        type: InternetAddressType.unix,
+      );
+      _log('Attempting socket connection...');
       _socket = await Socket.connect(address, 0);
+      _log('Socket connected successfully');
 
-      // Initialize message stream
-      _messageController = StreamController<Map<String, dynamic>>();
+      // Initialize message stream as broadcast to allow multiple listeners
+      _messageController = StreamController<Map<String, dynamic>>.broadcast();
 
       // Listen for incoming data
       _socketSubscription = _socket!.listen(
@@ -76,15 +93,21 @@ class DaemonClient {
         onError: _handleError,
         onDone: _handleDone,
       );
+      _log('Daemon client ready');
     } catch (e) {
-      throw SocketException(
-        'Failed to connect to daemon at $socketPath: $e',
-      );
+      _log('ERROR: Failed to connect to daemon: $e');
+      throw SocketException('Failed to connect to daemon at $socketPath: $e');
     }
+  }
+
+  /// Log a message (uses debugPrint in debug mode)
+  void _log(String message) {
+    debugPrint('[DaemonClient] $message');
   }
 
   /// Disconnect from the daemon
   Future<void> disconnect() async {
+    _log('Disconnecting from daemon...');
     await _socketSubscription?.cancel();
     await _socket?.close();
     await _messageController?.close();
@@ -93,6 +116,7 @@ class DaemonClient {
     _socket = null;
     _messageController = null;
     _buffer = '';
+    _log('Disconnected');
   }
 
   /// F146: Send a JSON-RPC request to the daemon
@@ -112,6 +136,7 @@ class DaemonClient {
     Map<String, dynamic> params,
   ) async {
     if (_socket == null) {
+      _log('ERROR: Not connected to daemon');
       throw StateError('Not connected to daemon. Call connect() first.');
     }
 
@@ -122,6 +147,8 @@ class DaemonClient {
       'params': params,
       'id': DateTime.now().millisecondsSinceEpoch,
     };
+
+    _log('Sending request: $method');
 
     // F147: Serialize request to JSON and write to socket
     final requestJson = json.encode(request);
@@ -134,19 +161,31 @@ class DaemonClient {
       if (message['id'] == request['id']) {
         // F149: Parse response JSON and extract result
         if (message.containsKey('error')) {
-          completer.completeError(
-            DaemonException(message['error']['message'] as String),
-          );
+          final errorMsg = message['error']['message'] as String;
+          _log('ERROR: Request $method failed: $errorMsg');
+          completer.completeError(DaemonException(errorMsg));
         } else {
+          _log('Request $method succeeded');
           completer.complete(message['result'] as Map<String, dynamic>);
         }
       }
     });
 
     // Clean up subscription after response
-    final result = await completer.future;
-    await subscription.cancel();
-    return result;
+    try {
+      final result = await completer.future.timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          _log('ERROR: Request $method timed out');
+          throw DaemonException('Request timed out');
+        },
+      );
+      await subscription.cancel();
+      return result;
+    } catch (e) {
+      await subscription.cancel();
+      rethrow;
+    }
   }
 
   /// Legacy alias for sendRequest
@@ -181,7 +220,10 @@ class DaemonClient {
   /// final secret = await client.getSecret('OPENAI_API_KEY');
   /// ```
   Future<Map<String, dynamic>> getSecret(String name) async {
-    return await sendRequest('secret.get', {'name': name});
+    return await sendRequest('secret.get', {
+      'name': name,
+      'app_id': 'flutter-app',
+    });
   }
 
   /// Set a secret
@@ -246,10 +288,7 @@ class DaemonClient {
   /// await client.revokePermission('app-id-123', 'secret-id-456');
   /// ```
   Future<void> revokePermission(String appId, String secretId) async {
-    await sendRequest('app.revoke', {
-      'app_id': appId,
-      'secret_id': secretId,
-    });
+    await sendRequest('app.revoke', {'app_id': appId, 'secret_id': secretId});
   }
 
   /// Handle incoming socket data
@@ -266,22 +305,24 @@ class DaemonClient {
 
       try {
         final message = json.decode(line) as Map<String, dynamic>;
+        _log('Received response for request ${message['id']}');
         _messageController?.add(message);
       } catch (e) {
-        debugPrint('Failed to parse JSON message: $e');
+        _log('ERROR: Failed to parse JSON message: $e');
+        _log('Raw message: $line');
       }
     }
   }
 
   /// Handle socket errors
   void _handleError(dynamic error) {
-    debugPrint('Socket error: $error');
+    _log('ERROR: Socket error: $error');
     disconnect();
   }
 
   /// Handle socket close
   void _handleDone() {
-    debugPrint('Socket closed');
+    _log('Socket connection closed by daemon');
     disconnect();
   }
 
@@ -299,7 +340,9 @@ class DaemonClient {
       // Windows: Named pipe (not implemented yet)
       throw UnsupportedError('Windows named pipes not yet implemented');
     } else {
-      throw UnsupportedError('Unsupported platform: ${Platform.operatingSystem}');
+      throw UnsupportedError(
+        'Unsupported platform: ${Platform.operatingSystem}',
+      );
     }
   }
 }

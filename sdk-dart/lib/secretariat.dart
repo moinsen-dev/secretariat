@@ -29,12 +29,6 @@ import 'dart:io';
 /// print('API Key: $apiKey');
 /// ```
 class Secretariat {
-  /// F217: Socket connection to daemon
-  Socket? _socket;
-
-  /// Path to Unix domain socket (macOS/Linux)
-  static const String _defaultSocketPath = '/tmp/secretariat.sock';
-
   /// Named pipe path (Windows)
   static const String _defaultPipePath = r'\\.\pipe\secretariat';
 
@@ -63,36 +57,24 @@ class Secretariat {
     // Use platform-specific default path
     if (Platform.isWindows) {
       return _defaultPipePath;
+    } else if (Platform.isMacOS) {
+      // macOS: ~/Library/Application Support/Secretariat/secretariat.sock
+      final home = Platform.environment['HOME'] ?? '/tmp';
+      return '$home/Library/Application Support/Secretariat/secretariat.sock';
     } else {
-      return _defaultSocketPath;
-    }
-  }
-
-  /// F219: Connect to the daemon Unix socket
-  Future<void> _connect() async {
-    if (_socket != null) return;
-
-    try {
-      // Connect to Unix domain socket or named pipe
-      _socket = await Socket.connect(
-        InternetAddress(_socketPath, type: InternetAddressType.unix),
-        0,
-        timeout: timeout,
-      );
-    } catch (e) {
-      throw SecretariatException(
-        'Failed to connect to Secretariat daemon at $_socketPath: $e',
-      );
+      // Linux and other Unix-like: ~/.local/share/secretariat/secretariat.sock
+      final home = Platform.environment['HOME'] ?? '/tmp';
+      return '$home/.local/share/secretariat/secretariat.sock';
     }
   }
 
   /// F220: Send JSON-RPC request to daemon
+  ///
+  /// Each request creates a new connection to avoid stream reuse issues.
   Future<Map<String, dynamic>> _sendRequest(
     String method,
     Map<String, dynamic> params,
   ) async {
-    await _connect();
-
     final requestId = ++_requestId;
 
     // F220: Build JSON-RPC 2.0 request
@@ -105,71 +87,90 @@ class Secretariat {
 
     final requestJson = jsonEncode(request);
 
-    // Send request
-    _socket!.write('$requestJson\n');
-    await _socket!.flush();
+    // Create a fresh connection for each request to avoid stream reuse issues
+    Socket socket;
+    try {
+      socket = await Socket.connect(
+        InternetAddress(_socketPath, type: InternetAddressType.unix),
+        0,
+        timeout: timeout,
+      );
+    } catch (e) {
+      throw SecretariatException(
+        'Failed to connect to Secretariat daemon at $_socketPath: $e',
+      );
+    }
 
-    // Read response
-    final completer = Completer<Map<String, dynamic>>();
-    final responseBuffer = StringBuffer();
+    try {
+      // Send request
+      socket.write('$requestJson\n');
+      await socket.flush();
 
-    _socket!.listen(
-      (data) {
-        responseBuffer.write(utf8.decode(data));
-        final responseStr = responseBuffer.toString();
+      // Read response
+      final completer = Completer<Map<String, dynamic>>();
+      final responseBuffer = StringBuffer();
 
-        // Check if we have a complete JSON response (ends with newline)
-        if (responseStr.endsWith('\n')) {
-          try {
-            final response = jsonDecode(responseStr.trim()) as Map<String, dynamic>;
+      socket.listen(
+        (data) {
+          responseBuffer.write(utf8.decode(data));
+          final responseStr = responseBuffer.toString();
 
-            // Validate response
-            if (response['id'] != requestId) {
+          // Check if we have a complete JSON response (ends with newline)
+          if (responseStr.endsWith('\n')) {
+            try {
+              final response =
+                  jsonDecode(responseStr.trim()) as Map<String, dynamic>;
+
+              // Validate response
+              if (response['id'] != requestId) {
+                completer.completeError(
+                  SecretariatException('Response ID mismatch'),
+                );
+                return;
+              }
+
+              if (response.containsKey('error')) {
+                final error = response['error'] as Map<String, dynamic>;
+                completer.completeError(
+                  SecretariatException(
+                    error['message'] as String? ?? 'Unknown error',
+                    code: error['code'] as int?,
+                  ),
+                );
+                return;
+              }
+
+              completer.complete(response);
+            } catch (e) {
               completer.completeError(
-                SecretariatException('Response ID mismatch'),
+                SecretariatException('Failed to parse response: $e'),
               );
-              return;
             }
-
-            if (response.containsKey('error')) {
-              final error = response['error'] as Map<String, dynamic>;
-              completer.completeError(
-                SecretariatException(
-                  error['message'] as String? ?? 'Unknown error',
-                  code: error['code'] as int?,
-                ),
-              );
-              return;
-            }
-
-            completer.complete(response);
-          } catch (e) {
+          }
+        },
+        onError: (error) {
+          completer.completeError(
+            SecretariatException('Socket error: $error'),
+          );
+        },
+        onDone: () {
+          if (!completer.isCompleted) {
             completer.completeError(
-              SecretariatException('Failed to parse response: $e'),
+              SecretariatException('Connection closed unexpectedly'),
             );
           }
-        }
-      },
-      onError: (error) {
-        completer.completeError(
-          SecretariatException('Socket error: $error'),
-        );
-      },
-      onDone: () {
-        if (!completer.isCompleted) {
-          completer.completeError(
-            SecretariatException('Connection closed unexpectedly'),
-          );
-        }
-      },
-    );
+        },
+      );
 
-    return completer.future.timeout(
-      timeout,
-      onTimeout: () {
-        throw SecretariatException('Request timed out');
-      },
-    );
+      return await completer.future.timeout(
+        timeout,
+        onTimeout: () {
+          throw SecretariatException('Request timed out');
+        },
+      );
+    } finally {
+      await socket.close();
+    }
   }
 
   /// F218: Get secret value by key
@@ -196,9 +197,10 @@ class Secretariat {
   ///   print('Error: $e');
   /// }
   /// ```
-  Future<String> get(String key) async {
+  Future<String> get(String key, {String appId = 'dart-sdk'}) async {
     // F220: Send secret.get JSON-RPC request
-    final response = await _sendRequest('secret.get', {'key': key});
+    final response =
+        await _sendRequest('secret.get', {'name': key, 'app_id': appId});
 
     // Extract result from response
     if (!response.containsKey('result')) {
@@ -266,15 +268,42 @@ class Secretariat {
     }
 
     final secrets = result['secrets'] as List<dynamic>;
-    return secrets.map((s) => s as String).toList();
+    // Each secret is an object with a 'name' field
+    return secrets
+        .map((s) => (s as Map<String, dynamic>)['name'] as String)
+        .toList();
+  }
+
+  /// Set/create a secret
+  ///
+  /// [key] - Secret name (e.g., 'OPENAI_API_KEY')
+  /// [value] - Secret value to store (will be encrypted)
+  ///
+  /// Example:
+  /// ```dart
+  /// await client.set('API_KEY', 'sk-123456789');
+  /// ```
+  Future<void> set(String key, String value) async {
+    await _sendRequest('secret.set', {'name': key, 'value': value});
+  }
+
+  /// Delete a secret
+  ///
+  /// [key] - Secret name to delete
+  ///
+  /// Example:
+  /// ```dart
+  /// await client.delete('OLD_API_KEY');
+  /// ```
+  Future<void> delete(String key) async {
+    await _sendRequest('secret.delete', {'name': key});
   }
 
   /// Close the connection to the daemon
   ///
-  /// Call this when you're done using the client to free resources.
+  /// Note: With per-request connections, this is a no-op but kept for API compatibility.
   Future<void> close() async {
-    await _socket?.close();
-    _socket = null;
+    // Connections are now closed after each request, so nothing to do here
   }
 }
 
