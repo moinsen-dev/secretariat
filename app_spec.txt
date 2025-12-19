@@ -1,0 +1,435 @@
+# Secretariat - App Specification
+# Phase 1: Core Implementation
+
+## Product Overview
+
+Secretariat is a local-first secrets manager that eliminates .env files entirely.
+One encrypted vault on your machine. All your API keys in one place. Every project just works.
+
+**Tagline:** Stop copy-pasting API keys.
+
+**Primary Persona:** The Multi-Project Developer
+- Works on 3+ projects simultaneously
+- Uses AI APIs (OpenAI, Anthropic), payment processors (Stripe), cloud services
+- Has the same keys scattered across dozens of .env files
+- Feels the pain: "I spend more time managing API keys than I should."
+
+## Technology Stack
+
+- **Platform:** macOS, Windows, Linux (all desktop platforms from v1)
+- **Daemon:** Rust (performance, memory safety, system integration)
+- **CLI:** Rust (shares core with daemon)
+- **Desktop App:** Flutter Desktop (cross-platform, shares code with Dart SDK)
+- **SDKs:** Dart, Python, Rust, JavaScript/TypeScript
+- **Storage:** SQLite with encryption (SQLCipher)
+- **IPC:** Unix domain sockets (macOS/Linux), Named pipes (Windows)
+- **Encryption:** AES-256-GCM, keys in OS keychain (Keychain/Credential Manager/Secret Service)
+
+## Phase 1 Deliverables (Must Have)
+
+### 1. Local Daemon (secd)
+
+Background service that manages all secrets.
+
+**Core Features:**
+- Starts automatically on macOS boot (launchd)
+- Encrypted SQLite database for secret storage
+- Unix socket IPC for SDK/CLI communication
+- Graceful shutdown and restart
+- Health check endpoint
+- Minimal resource footprint (<50MB RAM, <1% CPU idle)
+
+**API Endpoints (via Unix socket):**
+- `secret.list` - List all secrets (names only)
+- `secret.get` - Get secret value (requires app authorization)
+- `secret.set` - Create/update secret
+- `secret.delete` - Delete secret
+- `secret.rotate` - Rotate secret value
+- `app.register` - Register application for access
+- `app.authorize` - Grant app access to secrets
+- `app.revoke` - Revoke app access
+- `app.list` - List registered applications
+- `audit.log` - Get access audit log
+- `health.check` - Daemon health status
+
+**Security Features:**
+- All secrets encrypted at rest (AES-256-GCM)
+- Master key stored in macOS Keychain
+- First unlock requires Touch ID or password
+- Application identity verification via process info
+- Audit log for all secret access
+
+### 2. Command-Line Interface (sec)
+
+Developer-friendly CLI for secret management.
+
+**Commands:**
+```
+sec init                          # Initialize vault (first run)
+sec list                          # List all secrets
+sec get <KEY>                     # Get secret value
+sec set <KEY> <VALUE>             # Set secret
+sec set <KEY> --stdin             # Set secret from stdin
+sec delete <KEY>                  # Delete secret
+sec rotate <KEY>                  # Rotate secret
+sec grant <APP> <KEY>             # Grant app access to secret
+sec revoke <APP> <KEY>            # Revoke app access
+sec apps                          # List registered apps
+sec audit                         # View access log
+sec audit --app <APP>             # View access log for specific app
+sec explain <APP>                 # Show what secrets app would receive
+sec import <FILE>                 # Import from .env file
+sec import --scan <DIR>           # Scan directory for .env files
+sec cleanup --dry-run             # Show .env files that can be removed
+sec cleanup --execute             # Remove imported .env files
+sec status                        # Daemon status
+sec unlock                        # Unlock vault (Touch ID/password)
+sec lock                          # Lock vault
+sec version                       # Show version
+```
+
+**Output Formats:**
+- Human-readable (default)
+- JSON (--json flag)
+- Quiet mode for scripts (--quiet)
+
+### 3. Desktop App (Secretariat)
+
+Cross-platform Flutter Desktop application with system tray integration.
+
+**Features:**
+- Menu bar icon showing vault status (locked/unlocked)
+- Quick access popup (click menu bar icon)
+- Secret list view with search
+- Add/edit/delete secrets
+- Copy secret to clipboard (with auto-clear after 30s)
+- Application permissions manager
+- Access audit viewer
+- Import wizard (drag & drop .env files)
+- Settings panel
+- First-run onboarding flow
+
+**UI Screens:**
+1. **Main Popup** - Quick actions, search, recent secrets
+2. **Secrets List** - Full list with filtering and sorting
+3. **Secret Detail** - View/edit individual secret
+4. **Add Secret** - Create new secret with provider detection
+5. **Applications** - Manage app permissions
+6. **Audit Log** - View access history
+7. **Import Wizard** - Step-by-step .env import
+8. **Settings** - Preferences, security options
+9. **Onboarding** - First-run setup flow
+
+**Keyboard Shortcuts:**
+- Cmd+Shift+S: Open Secretariat popup
+- Cmd+F: Focus search
+- Cmd+N: Add new secret
+- Cmd+C: Copy selected secret
+- Esc: Close popup
+
+### 4. SDKs (4 Languages)
+
+Lightweight client libraries for application integration.
+
+#### 4.1 Dart SDK (secretariat_dart)
+
+```dart
+import 'package:secretariat/secretariat.dart';
+
+final client = Secretariat();
+final apiKey = await client.get('OPENAI_API_KEY');
+final secrets = await client.getMany(['OPENAI_API_KEY', 'DATABASE_URL']);
+```
+
+**Features:**
+- Async-first API
+- Automatic daemon connection
+- Graceful fallback (env vars if daemon unavailable)
+- Type-safe secret access
+- Flutter plugin for easy integration
+
+#### 4.2 Python SDK (secretariat)
+
+```python
+from secretariat import Secretariat
+
+client = Secretariat()
+api_key = client.get('OPENAI_API_KEY')
+secrets = client.get_many(['OPENAI_API_KEY', 'DATABASE_URL'])
+```
+
+**Features:**
+- Sync and async APIs
+- Context manager support
+- Environment variable fallback
+- Type hints
+- pip installable
+
+#### 4.3 Rust SDK (secretariat)
+
+```rust
+use secretariat::Secretariat;
+
+let client = Secretariat::new()?;
+let api_key = client.get("OPENAI_API_KEY")?;
+let secrets = client.get_many(&["OPENAI_API_KEY", "DATABASE_URL"])?;
+```
+
+**Features:**
+- Zero-cost abstractions
+- Async with tokio
+- Result-based error handling
+- Cargo installable
+
+#### 4.4 JavaScript/TypeScript SDK (@secretariat/node)
+
+```typescript
+import { Secretariat } from '@secretariat/node';
+
+const client = new Secretariat();
+const apiKey = await client.get('OPENAI_API_KEY');
+const secrets = await client.getMany(['OPENAI_API_KEY', 'DATABASE_URL']);
+```
+
+**Features:**
+- Promise-based async API
+- TypeScript types included
+- Node.js native addon for Unix socket
+- Environment variable fallback
+- npm installable
+
+### 5. Import Wizard
+
+Smooth migration from .env files.
+
+**CLI Import:**
+```
+sec import ~/projects/my-app/.env
+# Interactive review of detected secrets
+# Option to merge with existing or create new
+# Provider auto-detection (OpenAI, Stripe, etc.)
+```
+
+**Bulk Import:**
+```
+sec import --scan ~/projects
+# Finds all .env files
+# Shows duplicates and unique values
+# Interactive consolidation
+```
+
+**UI Import:**
+- Drag & drop .env file onto menu bar icon
+- Step-by-step wizard
+- Preview before import
+- Duplicate detection
+
+## Data Model
+
+### Secrets Table
+```sql
+CREATE TABLE secrets (
+    id TEXT PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,
+    value_encrypted BLOB NOT NULL,
+    provider TEXT,           -- 'openai', 'stripe', 'anthropic', etc.
+    environment TEXT DEFAULT 'default',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    rotated_at TIMESTAMP,
+    notes TEXT
+);
+```
+
+### Applications Table
+```sql
+CREATE TABLE applications (
+    id TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    path TEXT,
+    bundle_id TEXT,
+    fingerprint TEXT,        -- Stable identifier
+    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_access TIMESTAMP
+);
+```
+
+### Permissions Table
+```sql
+CREATE TABLE permissions (
+    id TEXT PRIMARY KEY,
+    app_id TEXT REFERENCES applications(id),
+    secret_id TEXT REFERENCES secrets(id),
+    granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    granted_by TEXT,         -- 'user', 'auto'
+    UNIQUE(app_id, secret_id)
+);
+```
+
+### Audit Log Table
+```sql
+CREATE TABLE audit_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    app_id TEXT,
+    secret_name TEXT,
+    action TEXT,             -- 'read', 'write', 'delete', 'grant', 'revoke'
+    success BOOLEAN,
+    details TEXT
+);
+```
+
+## Security Requirements
+
+1. **Encryption at Rest**
+   - All secret values encrypted with AES-256-GCM
+   - Master key never stored in plaintext
+   - Master key protected by macOS Keychain
+
+2. **Access Control**
+   - Each app must be explicitly authorized
+   - Authorization stored per-app, per-secret
+   - Revocation is immediate
+
+3. **Authentication**
+   - Touch ID or system password for first unlock
+   - Configurable re-auth timeout (default: 8 hours)
+   - Auto-lock on system sleep
+
+4. **Audit Trail**
+   - All access logged with timestamp
+   - Log includes app identity and secret name
+   - Logs retained for 30 days (configurable)
+
+## Installation & Setup
+
+**First Run Flow:**
+1. Download Secretariat.app from website
+2. Move to /Applications
+3. Launch app - daemon auto-starts
+4. Create master password (stored in Keychain)
+5. Enable Touch ID (optional)
+6. Import first secret or .env file
+
+**Developer Setup:**
+```bash
+# Install CLI (via Homebrew)
+brew install secretariat
+
+# Initialize vault
+sec init
+
+# Import existing secrets
+sec import --scan ~/projects
+```
+
+## Success Criteria (Phase 1)
+
+1. **Functional:**
+   - Daemon runs stably for 24+ hours
+   - All CLI commands work correctly
+   - Menu bar app is responsive
+   - SDKs connect and retrieve secrets
+   - Import wizard successfully migrates .env files
+
+2. **Performance:**
+   - Secret retrieval < 10ms
+   - Daemon memory < 50MB
+   - App launch < 500ms
+   - CLI response < 100ms
+
+3. **Security:**
+   - Secrets never written in plaintext to disk
+   - Master key protected by Keychain
+   - Audit log captures all access
+   - Revocation is immediate
+
+4. **User Experience:**
+   - Onboarding completes in < 5 minutes
+   - Import wizard handles 90% of .env files
+   - Search finds secrets instantly
+   - Copy-to-clipboard works reliably
+
+## Out of Scope (Phase 1)
+
+- Cloud sync / team features
+- AI agent access control
+- MCP server integration
+- Provider onboarding wizards
+- Environment management (dev/staging/prod)
+- Windows/Linux support
+- Mobile support
+- Browser extension
+
+## File Structure
+
+```
+secretariat/
+├── daemon/                 # Rust daemon (secd)
+│   ├── src/
+│   │   ├── main.rs
+│   │   ├── server.rs       # IPC server
+│   │   ├── storage.rs      # SQLite + encryption
+│   │   ├── crypto.rs       # AES-256-GCM
+│   │   ├── keychain.rs     # macOS Keychain integration
+│   │   ├── auth.rs         # App authentication
+│   │   └── audit.rs        # Audit logging
+│   └── Cargo.toml
+├── cli/                    # Rust CLI (sec)
+│   ├── src/
+│   │   ├── main.rs
+│   │   ├── commands/
+│   │   │   ├── list.rs
+│   │   │   ├── get.rs
+│   │   │   ├── set.rs
+│   │   │   ├── import.rs
+│   │   │   └── ...
+│   │   └── client.rs       # Daemon client
+│   └── Cargo.toml
+├── app/                    # Flutter Desktop App
+│   ├── lib/
+│   │   ├── main.dart
+│   │   ├── screens/
+│   │   │   ├── main_popup.dart
+│   │   │   ├── secrets_list.dart
+│   │   │   ├── secret_detail.dart
+│   │   │   ├── import_wizard.dart
+│   │   │   └── ...
+│   │   ├── models/
+│   │   ├── services/
+│   │   │   └── daemon_client.dart
+│   │   └── widgets/
+│   └── pubspec.yaml
+├── sdk-dart/               # Dart SDK
+│   ├── lib/
+│   │   └── secretariat.dart
+│   └── pubspec.yaml
+├── sdk-python/             # Python SDK
+│   ├── secretariat/
+│   │   └── __init__.py
+│   └── pyproject.toml
+├── sdk-rust/               # Rust SDK
+│   ├── src/
+│   │   └── lib.rs
+│   └── Cargo.toml
+├── sdk-node/               # Node.js SDK
+│   ├── src/
+│   │   └── index.ts
+│   └── package.json
+└── docs/                   # Documentation
+    ├── getting-started.md
+    ├── cli-reference.md
+    └── sdk-guides/
+```
+
+## Development Notes
+
+- Use workspace for Rust crates (daemon, cli, sdk-rust share code)
+- Flutter app shares Dart SDK code where applicable
+- Platform-specific paths:
+  - **macOS:** ~/Library/Application Support/Secretariat/
+  - **Linux:** ~/.local/share/secretariat/
+  - **Windows:** %APPDATA%\Secretariat\
+- Socket/pipe location: {data_dir}/secretariat.sock (or named pipe on Windows)
+- Database at: {data_dir}/vault.db
+- Logs at: {data_dir}/logs/

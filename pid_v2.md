@@ -1,18 +1,33 @@
-# Product Identification Document (PID) v2.1
+# Product Identification Document (PID) v2.2
 
 ## Secretariat
 
-**Version:** 2.1 (Consolidated)
+**Version:** 2.2 (Refined Positioning)
 **Date:** December 2025
 **Status:** Draft for Review
 
 ---
 
+## The Hook
+
+> **"Do you hate maintaining .env files?"**
+
+Every developer who hears this thinks: *YES.*
+
+---
+
 ## Executive Summary
 
-**Secretariat** is a local-first, developer-centric secrets management system designed to **eliminate `.env` files entirely** while maintaining developer velocity. It provides a unified, secure, and auditable way to manage API keys, tokens, and credentials across multiple projects from a single point of control.
+**Stop copy-pasting API keys. Secretariat manages them all from one place.**
 
-In an era of AI coding assistants, Secretariat also provides critical infrastructure for **controlling what secrets AI agents can access** - a capability that becomes essential as autonomous coding tools gain broader access to developer environments.
+Secretariat is a local-first secrets manager that eliminates `.env` files entirely. One encrypted vault on your machine. All your API keys in one place. Every project just works.
+
+No more:
+- Copy-pasting the same OpenAI key into 15 different projects
+- Wondering "where did I put that Stripe API key?"
+- Duplicating secrets into GitHub Actions, Vercel, and Netlify
+- Keeping a spreadsheet or notes file of your credentials
+- Having your password manager open but *outside* your dev workflow
 
 ---
 
@@ -70,23 +85,46 @@ Modern AI coding assistants (Cursor, Claude Code, GitHub Copilot, etc.) are incr
 
 ## 2. Vision
 
-> **Eliminate `.env` files.** Create infrastructure that disappears while giving developers and teams full control over their secrets - including control over what AI agents can access.
+> **One place for all your API keys. No more .env files. Just works.**
+
+Secretariat is the secrets manager that fits *inside* your dev workflow - not alongside it.
 
 ### Core Principles
 
-1. **Local-First:** Everything works offline, on your machine, under your control
-2. **Zero Friction:** Faster than copy-pasting `.env` files
+1. **One Source of Truth:** All your secrets in one encrypted vault on your machine
+2. **Zero Friction:** Faster than copy-pasting from `.env` files
 3. **No More `.env` Files:** Secrets never touch the filesystem in plain text
-4. **Explicit & Auditable:** Know exactly what's being used where, by whom (human or AI)
-5. **Secure by Default:** Best practices without extra effort
-6. **AI-Ready:** First-class support for controlling AI agent access
+4. **Local-First:** Everything works offline, on your machine, under your control
+5. **Just Works:** New project? It already has access to your keys
+6. **Secure by Default:** Best practices without extra effort
 7. **Scalable:** From indie hacker to enterprise team
 
 ---
 
 ## 3. Target Users
 
-### Primary (Launch Focus)
+### Primary Persona: The Multi-Project Developer
+
+The developer who juggles multiple projects and feels the pain every day.
+
+**Profile:**
+- Works on 3+ projects simultaneously (side projects, client work, experiments)
+- Uses AI APIs (OpenAI, Anthropic), payment processors (Stripe), cloud services
+- Constantly spinning up new projects for prototyping
+- Has the same keys scattered across dozens of `.env` files
+- Uses GitHub Actions / CI-CD and has to duplicate secrets there too
+- Has a password manager (1Password, Bitwarden) but it's *outside* the dev workflow
+
+**The Pain (in their words):**
+> *"I spend more time managing API keys than I should."*
+
+**What they do today:**
+- Copy-paste from other projects
+- Keep a notes file or spreadsheet with keys
+- Dig through old `.env` files to find credentials
+- Manually add the same secrets to GitHub, Vercel, Netlify...
+
+### Launch Focus (First 100 Users)
 - **Indie Developers** - Multiple side projects, rapid prototyping
 - **Freelancers** - Juggling client projects with different credentials
 - **Prototype Builders** - Need speed without sacrificing organization
@@ -158,7 +196,14 @@ The heart of the system - a persistent background service.
 
 ### 5.2 User Interface (UI)
 
-Native macOS application for visual management.
+Cross-platform Flutter Desktop application for visual management.
+
+**Why Flutter Desktop:**
+- Cross-platform from day one (macOS, Windows, Linux)
+- Shares code with Dart SDK
+- Single codebase for all desktop platforms
+- Native-feeling UI with `macos_ui` and platform-adaptive widgets
+- System tray integration via `tray_manager` package
 
 **Features:**
 - Secret management (CRUD)
@@ -167,6 +212,8 @@ Native macOS application for visual management.
 - Key lifecycle actions (rotate, revoke, replace)
 - Provider onboarding wizards
 - Usage analytics and audit trails
+- System tray / menu bar integration
+- Platform-native look and feel
 
 ### 5.3 Command-Line Interface (CLI)
 
@@ -193,14 +240,18 @@ sec agent grant cursor OPENAI_API_KEY  # Grant AI agent access
 
 Lightweight SDKs for application integration.
 
-**Initial Platform Support:**
+**Phase 1 SDK Support (Must Have):**
 | Language | Framework | Priority |
 |----------|-----------|----------|
-| Dart | Flutter | High |
-| Rust | Native | High |
-| Go | Native | High |
-| JavaScript | Node.js | High |
-| Python | Native | High |
+| Dart | Flutter | Phase 1 |
+| Python | Native | Phase 1 |
+| Rust | Native | Phase 1 |
+| JavaScript/TypeScript | Node.js | Phase 1 |
+
+**Future SDK Support:**
+| Language | Framework | Priority |
+|----------|-----------|----------|
+| Go | Native | Phase 2 |
 
 **SDK Design Principles:**
 - Minimal dependencies
@@ -358,21 +409,20 @@ Pre-configured best practices per provider:
 
 ---
 
-## 11. AI Agent Access Control
+## 11. AI Agent Access Control (Bonus Feature)
 
-A dedicated system for managing what secrets AI coding assistants can access.
+> *"Wait, it also controls what my AI can see?"*
 
-### 11.1 The Problem with AI Agents
+A discovered benefit: because Secretariat controls all secret access, it can also control what AI coding assistants see.
 
-AI coding assistants are powerful tools that:
-- Read and modify code
-- Execute terminal commands
-- Access environment variables
-- Make API calls on your behalf
+### 11.1 Why This Matters (Increasingly)
 
-**Without Secretariat:** AI agents have unrestricted access to every secret in your `.env` files - production credentials, API keys, database passwords - everything.
+AI coding assistants are becoming more powerful:
+- They read and modify code
+- They execute terminal commands
+- They access environment variables
 
-**With Secretariat:** You explicitly control which secrets each AI agent can access, with full audit trails.
+With `.env` files, AI agents see *everything*. With Secretariat, you control what they can access - a benefit that becomes more valuable as AI tools become more autonomous.
 
 ### 11.2 Agent Registration
 
@@ -439,13 +489,13 @@ Track AI agent behavior separately:
 
 ## 12. Security Model
 
-### 11.1 Encryption
+### 12.1 Encryption
 
 - All secrets encrypted at rest using industry-standard encryption
 - Encryption key protected by macOS Keychain
 - Transparent encryption/decryption by daemon
 
-### 11.2 Authentication
+### 12.2 Authentication
 
 **Local Authentication Options:**
 - Passkeys
@@ -457,7 +507,7 @@ Track AI agent behavior separately:
 - Sensitive operations (export, bulk delete)
 - Configurable re-authentication intervals
 
-### 11.3 Runtime Access Control
+### 12.3 Runtime Access Control
 
 Instant control capabilities:
 - Revoke access to specific apps
@@ -465,7 +515,7 @@ Instant control capabilities:
 - Disable specific keys globally
 - **Security Kill-Switch:** Panic button to revoke ALL secrets for ALL apps instantly
 
-### 11.4 Zero-Trust Principles
+### 12.4 Zero-Trust Principles
 
 - No implicit trust between applications
 - Explicit grants required
@@ -474,16 +524,16 @@ Instant control capabilities:
 
 ---
 
-## 12. Key Lifecycle Management
+## 13. Key Lifecycle Management
 
-### 12.1 Rotation
+### 13.1 Rotation
 
 - Scheduled rotation reminders
 - One-click rotation with automatic propagation
 - Version history maintained
 - Rollback capability
 
-### 12.2 Compromise Response
+### 13.2 Compromise Response
 
 When a key is leaked:
 1. Instant revocation across all apps
@@ -491,7 +541,7 @@ When a key is leaked:
 3. Guided re-creation flow
 4. Audit of exposure window
 
-### 12.3 Versioning
+### 13.3 Versioning
 
 - Keep history of previous key values
 - Controlled rollout of new keys
@@ -499,18 +549,18 @@ When a key is leaked:
 
 ---
 
-## 13. Audit & Monitoring
+## 14. Audit & Monitoring
 
-### 13.1 Usage Tracking
+### 14.1 Usage Tracking
 
 Track every access:
-- Which application
+- Which application (or AI agent)
 - Which secret
 - Which environment
 - Timestamp
 - Success/failure
 
-### 13.2 Dry-Run & Explain Mode
+### 14.2 Dry-Run & Explain Mode
 
 Developer UX feature for transparency:
 ```bash
@@ -529,42 +579,105 @@ sec explain --agent cursor
 #   STRIPE_KEY        → denied (no AI access)
 ```
 
-### 13.3 Anomaly Detection
+### 14.3 Anomaly Detection
 
 Basic signals for misuse detection:
 - Unusual access patterns
 - High-frequency requests
-- Access from unexpected apps
+- Access from unexpected apps or AI agents
 - After-hours activity (configurable)
 
 ---
 
-## 14. Virtual Environment Emulation
+## 15. Migration & Import
 
-### 14.1 Secrets as Virtual Env
+Smooth transition path from existing `.env` file chaos to Secretariat.
+
+### 15.1 Import Wizard
+
+One-click migration from existing `.env` files:
+
+```bash
+sec import ~/projects/my-app/.env
+# Output:
+# Found 12 secrets in .env file:
+#   OPENAI_API_KEY      → Detected: OpenAI (existing match found)
+#   DATABASE_URL        → Detected: PostgreSQL connection string
+#   STRIPE_SECRET_KEY   → Detected: Stripe (new)
+#   ...
+#
+# Import options:
+#   [1] Import all as app-specific secrets
+#   [2] Match with existing global secrets where possible
+#   [3] Interactive review (recommended)
+```
+
+### 15.2 Bulk Import
+
+Scan and import from multiple projects:
+
+```bash
+sec import --scan ~/projects
+# Output:
+# Found 47 .env files across 23 projects
+# Identified 156 total secrets (67 unique)
+#
+# Common secrets found:
+#   OPENAI_API_KEY      → 18 projects (same value)
+#   ANTHROPIC_API_KEY   → 12 projects (same value)
+#   DATABASE_URL        → 8 projects (3 unique values)
+```
+
+### 15.3 Post-Import Cleanup
+
+After successful migration:
+
+```bash
+sec cleanup --dry-run
+# Output:
+# The following .env files can be safely removed:
+#   ~/projects/my-app/.env (all secrets imported)
+#   ~/projects/other-app/.env (all secrets imported)
+#
+# Run 'sec cleanup --execute' to remove files
+# Or 'sec cleanup --archive' to move to secure backup
+```
+
+### 15.4 Gradual Adoption
+
+Support hybrid mode during transition:
+- Some secrets in Secretariat
+- Some secrets still in `.env` (temporarily)
+- Clear visibility of migration status per project
+
+---
+
+## 16. Virtual Environment Emulation
+
+### 16.1 Secrets as Virtual Env
 
 Drop-in replacement for `.env` files:
 - Applications see standard environment variables
 - No actual files written to disk
 - Full compatibility with existing tools
 
-### 14.2 Integration Modes
+### 16.2 Integration Modes
 
 | Mode | Description |
 |------|-------------|
 | **SDK** | Native integration, recommended |
 | **Env Injection** | Inject vars at process start |
-| **File Emulation** | Virtual `.env` for legacy tools |
+| **File Emulation** | Virtual `.env` for legacy tools (transitional only) |
 
 ---
 
-## 15. Team Features (Cloud Extension)
+## 17. Team Features (Cloud Extension)
 
-### 15.1 Purpose
+### 17.1 Purpose
 
 Enable team and organization workflows while preserving local-first operation.
 
-### 15.2 Capabilities
+### 17.2 Capabilities
 
 - **Secret Synchronization:** Sync across team members' machines
 - **Team Access Control:** Role-based permissions
@@ -573,7 +686,7 @@ Enable team and organization workflows while preserving local-first operation.
 - **Offboarding:** Instant access revocation when team members leave
 - **Team Templates:** Pre-configured secret sets for common project types
 
-### 15.3 Architecture
+### 17.3 Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -591,7 +704,7 @@ Enable team and organization workflows while preserving local-first operation.
     └─────────┘        └─────────┘        └─────────┘
 ```
 
-### 15.4 Offline-First Guarantee
+### 17.4 Offline-First Guarantee
 
 - Local development works **100% without cloud**
 - Cloud is additive, never mandatory
@@ -600,9 +713,9 @@ Enable team and organization workflows while preserving local-first operation.
 
 ---
 
-## 16. Business Model
+## 18. Business Model
 
-### 16.1 Pricing Tiers
+### 18.1 Pricing Tiers
 
 | Tier | Price | Features |
 |------|-------|----------|
@@ -611,7 +724,7 @@ Enable team and organization workflows while preserving local-first operation.
 | **Team** | $Y/user/month | Team features, shared secrets, audit logs |
 | **Enterprise** | Custom | SSO, compliance, dedicated support, SLAs |
 
-### 16.2 Open Source Strategy
+### 18.2 Open Source Strategy
 
 **OSS Core + Paid Control Plane:**
 - Daemon and SDKs: Open source (permissive license)
@@ -624,7 +737,7 @@ Enable team and organization workflows while preserving local-first operation.
 - Low barrier to adoption
 - Clear upgrade path for teams
 
-### 16.3 Target Customers
+### 18.3 Target Customers
 
 | Segment | Value Proposition |
 |---------|-------------------|
@@ -635,23 +748,26 @@ Enable team and organization workflows while preserving local-first operation.
 
 ---
 
-## 17. Strategic Value
+## 19. Strategic Value
 
-### 17.1 Market Positioning
+### 19.1 Market Positioning
 
 - **Not a vault replacement:** Complements, doesn't compete with HashiCorp Vault
 - **Not enterprise-first:** Developer-first, enterprise-capable
 - **Not cloud-dependent:** Local-first with cloud benefits
+- **Inside the workflow:** Unlike password managers, it's where you code
 
-### 17.2 Competitive Advantages
+### 19.2 Competitive Advantages
 
-1. **Developer Experience:** Faster than manual `.env` management
-2. **Security:** Better than status quo without friction
-3. **Flexibility:** Works for indie devs AND teams
-4. **Transparency:** Open source core builds trust
-5. **Modern Stack:** Built for today's multi-project, multi-environment reality
+1. **Solves daily pain:** Every developer knows the `.env` struggle
+2. **Zero friction:** Faster than the status quo (copy-paste)
+3. **Fits the workflow:** Not another tab, not another app - it's just *there*
+4. **Secure by default:** Better security without extra effort
+5. **Flexibility:** Works for solo devs AND teams
+6. **Open source core:** Community trust and transparency
+7. **Bonus: AI control:** Future-proof for AI-assisted development
 
-### 17.3 Growth Vectors
+### 19.3 Growth Vectors
 
 ```
 Indie Dev → Multiple Machines → Team → Organization
@@ -662,14 +778,15 @@ Indie Dev → Multiple Machines → Team → Organization
 
 ---
 
-## 18. Technical Constraints & Decisions
+## 20. Technical Constraints & Decisions
 
-### 18.1 Platform
+### 20.1 Platform
 
-- **Initial:** macOS only
-- **Future:** Linux, Windows (based on demand)
+- **Desktop (v1):** macOS, Windows, Linux (all via Flutter Desktop)
+- **Mobile:** Not in scope for v1
+- **UI Framework:** Flutter Desktop with platform-adaptive widgets
 
-### 18.2 Not In Scope (v1)
+### 20.2 Not In Scope (v1)
 
 - Detailed cryptographic specifications
 - Exact IPC protocol design
@@ -677,31 +794,32 @@ Indie Dev → Multiple Machines → Team → Organization
 - Compliance certifications (SOC2, etc.)
 - Mobile platform support
 
-### 18.3 Open Questions
+### 20.3 Open Questions
 
 - [ ] Exact encryption algorithm selection
 - [ ] IPC protocol (Unix sockets vs. gRPC vs. HTTP)
 - [ ] SDK distribution strategy
 - [ ] Pricing specifics
-- [ ] Brand name finalization
 
 ---
 
-## 19. Success Metrics
+## 21. Success Metrics
 
-### 19.1 Adoption
+### 21.1 Adoption
 
 - Daily active developers
 - Projects connected
 - Secrets managed
+- AI agents registered
 
-### 19.2 Engagement
+### 21.2 Engagement
 
 - Access requests per day
 - UI vs CLI usage ratio
 - Feature utilization
+- AI agent access patterns
 
-### 19.3 Business
+### 21.3 Business
 
 - Free to paid conversion
 - Team tier adoption
@@ -709,7 +827,7 @@ Indie Dev → Multiple Machines → Team → Organization
 
 ---
 
-## 20. Next Steps
+## 22. Next Steps
 
 ### Immediate (PID → PRD)
 
@@ -717,15 +835,16 @@ Indie Dev → Multiple Machines → Team → Organization
 2. Security model specification
 3. UX/UI design exploration
 4. SDK interface design
-5. Pricing validation research
+5. AI agent integration design (MCP server)
+6. Pricing validation research
 
 ### Development Phases
 
 | Phase | Focus | Deliverable |
 |-------|-------|-------------|
-| 1 | Core | Daemon + CLI + 2 SDKs |
-| 2 | UX | Native macOS UI |
-| 3 | Polish | Remaining SDKs, providers |
+| 1 | Core | Daemon + CLI + macOS Menu Bar App + 4 SDKs (Dart, Python, Rust, JS/TS) + Import Wizard |
+| 2 | Polish | Go SDK, provider onboarding |
+| 3 | AI | AI agent access control (bonus feature) |
 | 4 | Teams | Cloud sync, team features |
 
 ---
@@ -739,19 +858,28 @@ Indie Dev → Multiple Machines → Team → Organization
 | **Provider** | External service requiring authentication (OpenAI, Stripe) |
 | **Environment** | Context for secret variants (dev, staging, prod) |
 | **Trust** | Established permission for an app to access secrets |
+| **AI Agent** | AI coding assistant (Cursor, Claude Code, Copilot) registered for access control |
+| **MCP** | Model Context Protocol - standard for AI tool integration |
+| **Kill Switch** | Emergency button to revoke all secret access instantly |
 
 ---
 
 ## Appendix B: User Stories
 
 ### Indie Developer
-> "I start a new Flutter project. Instead of copying my OpenAI key from another project, the app requests it from my local secrets daemon. I approve once, and it just works."
+> "I start a new Flutter project. Instead of copying my OpenAI key from another project, the app requests it from Secretariat. I approve once, and it just works."
 
 ### Team Lead
 > "A contractor's engagement ends. I remove them from our team in the cloud dashboard. Their local daemon instantly loses access to all shared secrets."
 
 ### Security-Conscious Dev
 > "I notice suspicious activity on my OpenAI account. I hit the kill switch, and within seconds, no app on my machine can access any API key until I re-authorize."
+
+### AI-Assisted Developer
+> "I'm using Cursor to help build an integration. I've granted it access to my dev OpenAI key, but it can't see my production database credentials or my Stripe keys. I can see exactly which secrets it accessed in the audit log."
+
+### Migration User
+> "I ran `sec import --scan ~/projects` and it found 47 .env files with 67 unique secrets. After a 5-minute import wizard, all my secrets are centralized and I can finally delete those scattered .env files."
 
 ---
 
@@ -761,15 +889,20 @@ Indie Dev → Multiple Machines → Team → Organization
 |---------|-----------|-------------|--------------|
 | Encrypted local storage | ✓ | | |
 | Daemon + CLI | ✓ | | |
-| Basic SDK (2 languages) | ✓ | | |
-| macOS UI | | ✓ | |
+| SDKs (4 languages: Dart, Python, Rust, JS/TS) | ✓ | | |
+| Import wizard | ✓ | | |
+| macOS Menu Bar App | ✓ | | |
 | Provider onboarding | | ✓ | |
 | Environment management | | ✓ | |
+| AI agent access control | | ✓ | |
+| MCP server integration | | | ✓ |
 | Cloud sync | | | ✓ |
 | Team features | | | ✓ |
 | Ephemeral secrets | | | ✓ |
 
 ---
 
-*Document Version: 2.0*
+*Document Version: 2.2*
+*Product Name: Secretariat*
+*Tagline: Stop copy-pasting API keys.*
 *Last Updated: December 2025*

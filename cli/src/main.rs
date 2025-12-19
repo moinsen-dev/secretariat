@@ -1,0 +1,444 @@
+//! Secretariat CLI - Command-line interface for secret management
+//!
+//! Wave 16: F087-F100 - CLI Foundation
+//! Wave 17: F101-F115 - CLI Client & Commands
+//!
+//! This CLI provides a developer-friendly interface to the Secretariat daemon
+//! for managing secrets, applications, and access control.
+
+use anyhow::Result;
+use clap::{Parser, Subcommand};
+
+mod client;
+mod commands;
+
+use client::DaemonClient;
+
+// F088-F089: Cli struct with Clap derive macro and Commands enum
+/// Secretariat - Local-first secrets manager
+///
+/// Manage API keys, tokens, and secrets securely without .env files.
+#[derive(Parser)]
+#[command(name = "sec")]
+#[command(author = "Secretariat Team")]
+#[command(version = "0.1.0")]
+#[command(about = "Local-first secrets manager", long_about = None)]
+struct Cli {
+    /// Command to execute
+    #[command(subcommand)]
+    command: Commands,
+}
+
+// F090: Commands enum with variants for all 17 commands
+/// Available commands
+#[derive(Subcommand)]
+enum Commands {
+    /// Initialize vault (first run)
+    Init(InitCommand),
+
+    /// List all secrets
+    List(ListCommand),
+
+    /// Get secret value
+    Get(GetCommand),
+
+    /// Set secret value
+    Set(SetCommand),
+
+    /// Delete secret
+    Delete(DeleteCommand),
+
+    /// Rotate secret value
+    Rotate(RotateCommand),
+
+    /// Grant app access to secret
+    Grant(GrantCommand),
+
+    /// Revoke app access
+    Revoke(RevokeCommand),
+
+    /// List registered apps
+    Apps(AppsCommand),
+
+    /// View access log
+    Audit(AuditCommand),
+
+    /// Show what secrets app would receive
+    Explain(ExplainCommand),
+
+    /// Import from .env file
+    Import(ImportCommand),
+
+    /// Cleanup old .env files
+    Cleanup(CleanupCommand),
+
+    /// Show daemon status
+    Status(StatusCommand),
+
+    /// Unlock vault (Touch ID/password)
+    Unlock(UnlockCommand),
+
+    /// Lock vault
+    Lock(LockCommand),
+
+    /// Show version
+    Version(VersionCommand),
+}
+
+// F091: InitCommand struct for sec init
+/// Initialize the secrets vault
+#[derive(Parser)]
+struct InitCommand {
+    /// Skip interactive prompts and use defaults
+    #[arg(short, long)]
+    yes: bool,
+}
+
+// F092: ListCommand struct for sec list with --json flag
+/// List all secrets
+#[derive(Parser)]
+struct ListCommand {
+    /// Output in JSON format
+    #[arg(long)]
+    json: bool,
+
+    /// Filter by provider (e.g., openai, stripe)
+    #[arg(short, long)]
+    provider: Option<String>,
+
+    /// Filter by environment
+    #[arg(short, long)]
+    environment: Option<String>,
+}
+
+// F093: GetCommand struct for sec get with key: String argument
+/// Get secret value
+#[derive(Parser)]
+struct GetCommand {
+    /// Secret key to retrieve
+    key: String,
+
+    /// Don't print newline after value (for scripting)
+    #[arg(short = 'n', long)]
+    no_newline: bool,
+}
+
+// F094: SetCommand struct for sec set with key, value, --stdin flag
+/// Set secret value
+#[derive(Parser)]
+struct SetCommand {
+    /// Secret key
+    key: String,
+
+    /// Secret value (omit to read from stdin)
+    value: Option<String>,
+
+    /// Read value from stdin
+    #[arg(long)]
+    stdin: bool,
+
+    /// Provider name (e.g., openai, stripe)
+    #[arg(short, long)]
+    provider: Option<String>,
+
+    /// Environment (default: 'default')
+    #[arg(short, long)]
+    environment: Option<String>,
+
+    /// Notes about this secret
+    #[arg(short, long)]
+    notes: Option<String>,
+}
+
+// F095: DeleteCommand struct with key and --force flag
+/// Delete secret
+#[derive(Parser)]
+struct DeleteCommand {
+    /// Secret key to delete
+    key: String,
+
+    /// Skip confirmation prompt
+    #[arg(short, long)]
+    force: bool,
+}
+
+/// Rotate secret value
+#[derive(Parser)]
+struct RotateCommand {
+    /// Secret key to rotate
+    key: String,
+
+    /// New value (omit for interactive prompt)
+    new_value: Option<String>,
+}
+
+/// Grant app access to secret
+#[derive(Parser)]
+struct GrantCommand {
+    /// Application name or ID
+    app: String,
+
+    /// Secret key to grant access to
+    key: String,
+}
+
+/// Revoke app access
+#[derive(Parser)]
+struct RevokeCommand {
+    /// Application name or ID
+    app: String,
+
+    /// Secret key to revoke access from
+    key: String,
+}
+
+/// List registered apps
+#[derive(Parser)]
+struct AppsCommand {
+    /// Output in JSON format
+    #[arg(long)]
+    json: bool,
+}
+
+/// View access log
+#[derive(Parser)]
+struct AuditCommand {
+    /// Filter by application
+    #[arg(short, long)]
+    app: Option<String>,
+
+    /// Filter by secret
+    #[arg(short, long)]
+    secret: Option<String>,
+
+    /// Limit number of entries
+    #[arg(short, long, default_value = "50")]
+    limit: usize,
+
+    /// Output in JSON format
+    #[arg(long)]
+    json: bool,
+}
+
+/// Show what secrets app would receive
+#[derive(Parser)]
+struct ExplainCommand {
+    /// Application name or ID
+    app: String,
+}
+
+// F096: ImportCommand struct with file path and --scan flag
+/// Import from .env file
+#[derive(Parser)]
+struct ImportCommand {
+    /// Path to .env file or directory to scan
+    path: String,
+
+    /// Scan directory for all .env files
+    #[arg(long)]
+    scan: bool,
+
+    /// Skip confirmation prompts
+    #[arg(short, long)]
+    yes: bool,
+}
+
+/// Cleanup old .env files
+#[derive(Parser)]
+struct CleanupCommand {
+    /// Show what would be deleted without deleting
+    #[arg(long)]
+    dry_run: bool,
+
+    /// Execute cleanup (delete files)
+    #[arg(long)]
+    execute: bool,
+}
+
+// F097: StatusCommand struct for sec status
+/// Show daemon status
+#[derive(Parser)]
+struct StatusCommand {
+    /// Output in JSON format
+    #[arg(long)]
+    json: bool,
+}
+
+/// Unlock vault
+#[derive(Parser)]
+struct UnlockCommand {
+    /// Use password instead of Touch ID
+    #[arg(long)]
+    password: bool,
+}
+
+/// Lock vault
+#[derive(Parser)]
+struct LockCommand {}
+
+/// Show version
+#[derive(Parser)]
+struct VersionCommand {
+    /// Show verbose version info
+    #[arg(short, long)]
+    verbose: bool,
+}
+
+// F098: Implement main() function that matches command and dispatches
+#[tokio::main]
+async fn main() -> Result<()> {
+    // Initialize tracing for logging
+    tracing_subscriber::fmt()
+        .with_env_filter(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
+        )
+        .init();
+
+    // Parse CLI arguments
+    let cli = Cli::parse();
+
+    // Create daemon client
+    let client = DaemonClient::new()?;
+
+    // Dispatch to appropriate command handler
+    match cli.command {
+        Commands::Init(cmd) => handle_init(client, cmd).await,
+        Commands::List(cmd) => handle_list(client, cmd).await,
+        Commands::Get(cmd) => handle_get(client, cmd).await,
+        Commands::Set(cmd) => handle_set(client, cmd).await,
+        Commands::Delete(cmd) => handle_delete(client, cmd).await,
+        Commands::Rotate(cmd) => handle_rotate(client, cmd).await,
+        Commands::Grant(cmd) => handle_grant(client, cmd).await,
+        Commands::Revoke(cmd) => handle_revoke(client, cmd).await,
+        Commands::Apps(cmd) => handle_apps(client, cmd).await,
+        Commands::Audit(cmd) => handle_audit(client, cmd).await,
+        Commands::Explain(cmd) => handle_explain(client, cmd).await,
+        Commands::Import(cmd) => handle_import(client, cmd).await,
+        Commands::Cleanup(cmd) => handle_cleanup(client, cmd).await,
+        Commands::Status(cmd) => handle_status(client, cmd).await,
+        Commands::Unlock(cmd) => handle_unlock(client, cmd).await,
+        Commands::Lock(cmd) => handle_lock(client, cmd).await,
+        Commands::Version(cmd) => handle_version(client, cmd).await,
+    }
+}
+
+// Command handlers
+
+// F109-F113: Init command - implemented in commands/init.rs
+async fn handle_init(client: DaemonClient, cmd: InitCommand) -> Result<()> {
+    let cmd_args = commands::init::InitCommand { yes: cmd.yes };
+    commands::handle_init(client, cmd_args).await
+}
+
+// F114-F115: List command - implemented in commands/list.rs
+async fn handle_list(client: DaemonClient, cmd: ListCommand) -> Result<()> {
+    let cmd_args = commands::list::ListCommand {
+        json: cmd.json,
+        provider: cmd.provider,
+        environment: cmd.environment,
+    };
+    commands::handle_list(client, cmd_args).await
+}
+
+// F119-F122: Get command - implemented in commands/get.rs
+async fn handle_get(client: DaemonClient, cmd: GetCommand) -> Result<()> {
+    let cmd_args = commands::get::GetCommand {
+        key: cmd.key,
+        no_newline: cmd.no_newline,
+    };
+    commands::handle_get(client, cmd_args).await
+}
+
+// F123-F126: Set command - implemented in commands/set.rs
+async fn handle_set(client: DaemonClient, cmd: SetCommand) -> Result<()> {
+    let cmd_args = commands::set::SetCommand {
+        key: cmd.key,
+        value: cmd.value,
+        stdin: cmd.stdin,
+        provider: cmd.provider,
+        environment: cmd.environment,
+        notes: cmd.notes,
+    };
+    commands::handle_set(client, cmd_args).await
+}
+
+// F127-F130: Delete command - implemented in commands/delete.rs
+async fn handle_delete(client: DaemonClient, cmd: DeleteCommand) -> Result<()> {
+    let cmd_args = commands::delete::DeleteCommand {
+        key: cmd.key,
+        force: cmd.force,
+    };
+    commands::handle_delete(client, cmd_args).await
+}
+
+async fn handle_rotate(_client: DaemonClient, _cmd: RotateCommand) -> Result<()> {
+    println!("TODO: Implement rotate command");
+    Ok(())
+}
+
+async fn handle_grant(_client: DaemonClient, _cmd: GrantCommand) -> Result<()> {
+    println!("TODO: Implement grant command");
+    Ok(())
+}
+
+async fn handle_revoke(_client: DaemonClient, _cmd: RevokeCommand) -> Result<()> {
+    println!("TODO: Implement revoke command");
+    Ok(())
+}
+
+async fn handle_apps(_client: DaemonClient, _cmd: AppsCommand) -> Result<()> {
+    println!("TODO: Implement apps command");
+    Ok(())
+}
+
+async fn handle_audit(_client: DaemonClient, _cmd: AuditCommand) -> Result<()> {
+    println!("TODO: Implement audit command");
+    Ok(())
+}
+
+async fn handle_explain(_client: DaemonClient, _cmd: ExplainCommand) -> Result<()> {
+    println!("TODO: Implement explain command");
+    Ok(())
+}
+
+// F131-F134: Import command - implemented in commands/import.rs
+async fn handle_import(client: DaemonClient, cmd: ImportCommand) -> Result<()> {
+    let cmd_args = commands::import::ImportCommand {
+        path: cmd.path,
+        scan: cmd.scan,
+        yes: cmd.yes,
+    };
+    commands::handle_import(client, cmd_args).await
+}
+
+async fn handle_cleanup(_client: DaemonClient, _cmd: CleanupCommand) -> Result<()> {
+    println!("TODO: Implement cleanup command");
+    Ok(())
+}
+
+async fn handle_status(_client: DaemonClient, _cmd: StatusCommand) -> Result<()> {
+    println!("TODO: Implement status command");
+    Ok(())
+}
+
+async fn handle_unlock(_client: DaemonClient, _cmd: UnlockCommand) -> Result<()> {
+    println!("TODO: Implement unlock command");
+    Ok(())
+}
+
+async fn handle_lock(_client: DaemonClient, _cmd: LockCommand) -> Result<()> {
+    println!("TODO: Implement lock command");
+    Ok(())
+}
+
+async fn handle_version(_client: DaemonClient, cmd: VersionCommand) -> Result<()> {
+    if cmd.verbose {
+        println!("sec version {}", env!("CARGO_PKG_VERSION"));
+        println!("Platform: {}", std::env::consts::OS);
+        println!("Architecture: {}", std::env::consts::ARCH);
+    } else {
+        println!("{}", env!("CARGO_PKG_VERSION"));
+    }
+    Ok(())
+}

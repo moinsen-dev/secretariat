@@ -1,0 +1,27 @@
+[package]
+name = "secretariat"
+version = "0.1.0"
+edition = "2021"
+description = "Rust SDK for Secretariat local secrets manager"
+license = "MIT"
+repository = "https://github.com/secretariat/secretariat"
+documentation = "https://secretariat.dev/docs/sdk/rust"
+keywords = ["secrets", "security", "api-keys", "credentials", "vault"]
+categories = ["authentication", "development-tools"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# Optional async runtime
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"], optional = true }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
+
+[features]
+default = []
+# Async support via tokio (optional)
+async = ["dep:tokio"]
+
+[package.metadata.docs.rs]
+all-features = true

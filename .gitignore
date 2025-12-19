@@ -1,0 +1,50 @@
+# Rust build artifacts
+target/
+
+# Node.js
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Dart/Flutter
+.dart_tool/
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+**/doc/api/
+coverage/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+*.egg
+.venv/
+venv/
+.pytest_cache/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files (may contain secrets)
+.env
+.env.local
+.env.*.local
+
+# Claude Code local config
+.claude/

@@ -1,0 +1,30 @@
+[package]
+name = "sec"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "sec"
+path = "src/main.rs"
+
+[dependencies]
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+
+# F087: CLI argument parsing with clap derive macro
+clap = { version = "4", features = ["derive"] }
+
+# F110: Password input without echo
+rpassword = "7.3"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Cross-platform directory paths (for socket location)
+dirs = "5.0"

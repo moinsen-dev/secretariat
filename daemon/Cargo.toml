@@ -1,0 +1,54 @@
+[package]
+name = "secd"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "secd"
+path = "src/main.rs"
+
+[dependencies]
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+
+# SQLite with SQLCipher support for encryption
+rusqlite = { version = "0.31", features = ["bundled-sqlcipher"] }
+
+# For AES-256-GCM encryption
+aes-gcm = "0.10"
+
+# Random number generation for IDs and IVs
+rand = "0.8"
+
+# UUID generation for secret IDs
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+
+# Cross-platform directory paths
+dirs = "5.0"
+
+# F026: Argon2 for password-based key derivation
+argon2 = "0.5"
+
+# F027: Zeroize for secure memory cleanup
+zeroize = { version = "1.7", features = ["derive"] }
+
+# Base64 encoding for binary data transport over JSON-RPC
+base64 = "0.21"
+
+# F075: SHA-256 hashing for application fingerprints
+sha2 = "0.10"
+hex = "0.4"
+
+# F028: macOS Keychain integration (platform-specific)
+[target.'cfg(target_os = "macos")'.dependencies]
+security-framework = "2.9"
+core-foundation = "0.9"

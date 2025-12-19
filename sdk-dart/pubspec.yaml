@@ -1,0 +1,14 @@
+name: secretariat
+description: Dart SDK for Secretariat - Local secrets manager daemon client
+version: 0.1.0
+repository: https://github.com/secretariat/secretariat
+
+environment:
+  sdk: ^3.0.0
+
+# No external dependencies - minimal SDK as required
+dependencies:
+
+dev_dependencies:
+  lints: ^4.0.0
+  test: ^1.25.0

@@ -1,0 +1,41 @@
+{
+  "name": "@secretariat/node",
+  "version": "0.1.0",
+  "description": "Node.js SDK for Secretariat local secrets manager",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "test": "jest",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "secrets",
+    "security",
+    "api-keys",
+    "credentials",
+    "vault",
+    "secretariat"
+  ],
+  "author": "Secretariat Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/secretariat/secretariat.git"
+  },
+  "homepage": "https://secretariat.dev/docs/sdk/node",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "typescript": "^5"
+  },
+  "peerDependencies": {}
+}
