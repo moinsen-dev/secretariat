@@ -153,12 +153,15 @@ pub fn delete_master_key() -> Result<()> {
 /// - **Linux**: Not yet implemented (returns Ok(true) as placeholder)
 /// - **Windows**: Not yet implemented (returns Ok(true) as placeholder)
 #[cfg(target_os = "macos")]
+#[allow(dead_code)] // Will be used in Phase 2 for biometric unlock
 pub fn authenticate_with_biometric(reason: &str) -> Result<bool> {
     use std::process::Command;
 
     // Use osascript to trigger system authentication dialog
     // This will use Touch ID if available, otherwise falls back to password
-    let script = format!(
+    // Note: This AppleScript approach is prepared but not used yet
+    // We use the simpler security command approach below
+    let _script = format!(
         r#"
         use framework "LocalAuthentication"
 
@@ -207,6 +210,7 @@ pub fn authenticate_with_biometric(_reason: &str) -> Result<bool> {
 ///
 /// Returns `true` if Touch ID (or other biometric) is available and configured.
 #[cfg(target_os = "macos")]
+#[allow(dead_code)] // Will be used in Phase 2 for biometric unlock
 pub fn is_biometric_available() -> bool {
     use std::process::Command;
 

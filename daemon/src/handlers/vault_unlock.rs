@@ -10,6 +10,7 @@ use crate::crypto;
 
 /// Result of vault unlock operation
 pub struct VaultUnlockResult {
+    #[allow(dead_code)]
     pub status: String,
     pub master_key: [u8; 32],
 }

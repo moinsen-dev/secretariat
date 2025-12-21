@@ -8,8 +8,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/vault_provider.dart';
 import 'import_wizard.dart';
+
+/// Key for storing onboarding completion status (must match main.dart)
+const String _onboardingCompleteKey = 'onboarding_complete';
 
 /// Onboarding Screen
 ///
@@ -224,9 +228,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   /// Complete onboarding
-  void _completeOnboarding() {
-    // Mark onboarding as complete (would save to preferences)
-    Navigator.of(context).pushReplacementNamed('/home');
+  Future<void> _completeOnboarding() async {
+    // Mark onboarding as complete in SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_onboardingCompleteKey, true);
+
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed('/home');
+    }
   }
 
   /// Build welcome step

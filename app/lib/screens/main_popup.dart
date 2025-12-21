@@ -7,6 +7,7 @@
 // - F160: Add TextField with autofocus: true for search
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/secret.dart';
 import '../providers/vault_provider.dart';
@@ -111,15 +112,69 @@ class _MainPopupState extends State<MainPopup> {
     );
   }
 
-  /// Copy secret value to clipboard
-  void _copySecret(Secret secret) {
-    // TODO: Implement clipboard copy with auto-clear after 30s
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Copied ${secret.name} to clipboard'),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+  /// Copy secret value to clipboard with auto-clear after 30 seconds
+  Future<void> _copySecret(Secret secret) async {
+    try {
+      // Get the full secret with value from the daemon
+      final vaultProvider = Provider.of<VaultProvider>(context, listen: false);
+      final fullSecret = await vaultProvider.getSecret(secret.name);
+
+      if (fullSecret == null || fullSecret.value == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to retrieve secret value'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        return;
+      }
+
+      // Copy to clipboard
+      await Clipboard.setData(ClipboardData(text: fullSecret.value!));
+
+      if (!mounted) return;
+
+      // Show success message with countdown hint
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Copied ${secret.name} to clipboard (clears in 30s)'),
+          duration: const Duration(seconds: 3),
+          action: SnackBarAction(
+            label: 'Clear Now',
+            onPressed: () async {
+              await Clipboard.setData(const ClipboardData(text: ''));
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Clipboard cleared'),
+                    duration: Duration(seconds: 1),
+                  ),
+                );
+              }
+            },
+          ),
+        ),
+      );
+
+      // Schedule auto-clear after 30 seconds
+      Future.delayed(const Duration(seconds: 30), () async {
+        // Clear clipboard by setting empty data
+        // Note: We can't verify if the same data is still there,
+        // so we just clear it. This is a security best practice.
+        await Clipboard.setData(const ClipboardData(text: ''));
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to copy: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -142,10 +197,7 @@ class _MainPopupState extends State<MainPopup> {
           IconButton(
             icon: const Icon(Icons.add),
             onPressed: () {
-              // TODO: Navigate to add secret screen
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Add secret - Coming soon')),
-              );
+              Navigator.pushNamed(context, '/add-secret');
             },
             tooltip: 'Add secret',
           ),
@@ -367,10 +419,7 @@ class _MainPopupState extends State<MainPopup> {
       // F163: Add "Add Secret" FloatingActionButton
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Navigate to add secret screen when implemented
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Add secret - Coming soon')),
-          );
+          Navigator.pushNamed(context, '/add-secret');
         },
         tooltip: 'Add Secret',
         child: const Icon(Icons.add),
@@ -412,9 +461,10 @@ class _SecretListItem extends StatelessWidget {
         tooltip: 'Copy to clipboard',
       ),
       onTap: () {
-        // TODO: Navigate to secret detail screen
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('View ${secret.name} - Coming soon')),
+        Navigator.pushNamed(
+          context,
+          '/secret-detail',
+          arguments: secret,
         );
       },
     );

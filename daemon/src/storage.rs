@@ -909,6 +909,7 @@ impl Storage {
     /// # Returns
     ///
     /// A vector of secret names
+    #[allow(dead_code)] // Will be used to enhance app.list response in Phase 2
     pub fn get_app_permissions(&self, app_id: &str) -> Result<Vec<String>> {
         let mut stmt = self.conn.prepare(
             r#"

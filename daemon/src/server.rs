@@ -16,7 +16,7 @@ use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 use std::time::{Duration, Instant};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::{UnixListener, UnixStream};
@@ -86,8 +86,10 @@ pub struct ServerState {
     shutdown_tx: broadcast::Sender<()>,
     /// Shared reference to storage layer (protected by mutex for thread safety)
     storage: Arc<Mutex<crate::storage::Storage>>,
-    /// Master encryption key (from keychain)
-    master_key: [u8; 32],
+    /// Master encryption key (from keychain) - wrapped in RwLock for lock/unlock
+    master_key: Arc<tokio::sync::RwLock<Option<[u8; 32]>>>,
+    /// Whether the vault is currently locked
+    is_locked: Arc<AtomicBool>,
 }
 
 impl ServerState {
@@ -103,7 +105,8 @@ impl ServerState {
             active_connections: Arc::new(AtomicUsize::new(0)),
             shutdown_tx,
             storage,
-            master_key,
+            master_key: Arc::new(tokio::sync::RwLock::new(Some(master_key))),
+            is_locked: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -130,6 +133,37 @@ impl ServerState {
     /// Subscribe to shutdown signal
     fn subscribe_shutdown(&self) -> broadcast::Receiver<()> {
         self.shutdown_tx.subscribe()
+    }
+
+    /// Lock the vault - clears master key from memory
+    pub async fn lock_vault(&self) {
+        let mut key_guard = self.master_key.write().await;
+        // Zero out the key before clearing
+        if let Some(ref mut key) = *key_guard {
+            key.fill(0);
+        }
+        *key_guard = None;
+        self.is_locked.store(true, Ordering::SeqCst);
+        info!("Vault locked - master key cleared from memory");
+    }
+
+    /// Unlock the vault with a new master key
+    pub async fn unlock_vault(&self, new_key: [u8; 32]) {
+        let mut key_guard = self.master_key.write().await;
+        *key_guard = Some(new_key);
+        self.is_locked.store(false, Ordering::SeqCst);
+        info!("Vault unlocked - master key loaded");
+    }
+
+    /// Check if the vault is locked
+    pub fn is_vault_locked(&self) -> bool {
+        self.is_locked.load(Ordering::SeqCst)
+    }
+
+    /// Get the master key if vault is unlocked
+    pub async fn get_master_key(&self) -> Option<[u8; 32]> {
+        let key_guard = self.master_key.read().await;
+        *key_guard
     }
 }
 
@@ -371,8 +405,105 @@ pub async fn send_response(response: Response, stream: &mut UnixStream) -> Resul
 /// # Returns
 ///
 /// A response containing either the result or an error
-fn route_request(request: Request, storage: &crate::storage::Storage, master_key: &[u8; 32]) -> Response {
-    debug!("Routing request: method={}, id={}", request.method, request.id);
+///
+/// This is the top-level async request handler that coordinates:
+/// 1. Checking vault lock state
+/// 2. Getting master key (async)
+/// 3. Calling vault.lock/unlock (async for server state update)
+/// 4. Locking storage and calling sync route_request for other methods
+async fn handle_request(request: Request, server_state: &ServerState) -> Response {
+    debug!("Handling request: method={}, id={}", request.method, request.id);
+
+    // Check vault lock state for operations that need the master key
+    let requires_unlock = matches!(
+        request.method.as_str(),
+        "secret.get" | "secret.set" | "secret.delete" | "secret.rotate"
+    );
+
+    if requires_unlock && server_state.is_vault_locked() {
+        return Response::error(
+            request.id,
+            ErrorInfo::new(-32002, "Vault is locked. Please unlock first with 'sec unlock'")
+        );
+    }
+
+    // Handle vault.lock specially - async operation
+    if request.method == "vault.lock" {
+        if server_state.is_vault_locked() {
+            return Response::success(
+                request.id,
+                serde_json::json!({
+                    "status": "already_locked"
+                })
+            );
+        }
+        server_state.lock_vault().await;
+        return Response::success(
+            request.id,
+            serde_json::json!({
+                "status": "locked"
+            })
+        );
+    }
+
+    // Handle vault.unlock specially - async operation
+    if request.method == "vault.unlock" {
+        if !server_state.is_vault_locked() {
+            return Response::success(
+                request.id,
+                serde_json::json!({
+                    "status": "already_unlocked"
+                })
+            );
+        }
+
+        let password = match request.params.get("password").and_then(|v| v.as_str()) {
+            Some(p) => p,
+            None => {
+                return Response::error(
+                    request.id,
+                    ErrorInfo::invalid_params("Missing required parameter: password")
+                );
+            }
+        };
+
+        // Need storage for password verification
+        let storage = server_state.storage.lock().await;
+        match crate::handlers::handle_vault_unlock(password, &storage) {
+            Ok(result) => {
+                drop(storage); // Release storage lock before async operation
+                server_state.unlock_vault(result.master_key).await;
+                return Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "status": "unlocked"
+                    })
+                );
+            },
+            Err(e) => {
+                return Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to unlock vault: {}", e))
+                );
+            }
+        }
+    }
+
+    // Get master key (may be None if locked)
+    let master_key_opt = server_state.get_master_key().await;
+
+    // Lock storage and call sync route_request
+    let storage = server_state.storage.lock().await;
+    route_request(request, &storage, &master_key_opt, server_state.is_vault_locked())
+}
+
+/// Route request to the appropriate handler (synchronous)
+fn route_request(
+    request: Request,
+    storage: &crate::storage::Storage,
+    master_key_opt: &Option<[u8; 32]>,
+    is_locked: bool,
+) -> Response {
 
     match request.method.as_str() {
         "secret.list" => {
@@ -413,6 +544,8 @@ fn route_request(request: Request, storage: &crate::storage::Storage, master_key
                 }
             };
 
+            // master_key is guaranteed to be Some since we checked requires_unlock above
+            let master_key = master_key_opt.as_ref().unwrap();
             match crate::handlers::handle_secret_get(name, app_id, storage, master_key) {
                 Ok(decrypted_value) => Response::success(
                     request.id,
@@ -460,6 +593,8 @@ fn route_request(request: Request, storage: &crate::storage::Storage, master_key
                 }
             };
 
+            // master_key is guaranteed to be Some since we checked requires_unlock above
+            let master_key = master_key_opt.as_ref().unwrap();
             match crate::handlers::handle_secret_set(name, value, storage, master_key) {
                 Ok(()) => Response::success(
                     request.id,
@@ -523,6 +658,8 @@ fn route_request(request: Request, storage: &crate::storage::Storage, master_key
                 }
             };
 
+            // master_key is guaranteed to be Some since we checked requires_unlock above
+            let master_key = master_key_opt.as_ref().unwrap();
             match crate::handlers::handle_secret_rotate(name, new_value, storage, master_key) {
                 Ok(result) => Response::success(
                     request.id,
@@ -703,7 +840,7 @@ fn route_request(request: Request, storage: &crate::storage::Storage, master_key
 
             // Pass current master_key for re-encryption if secrets exist
             let old_key = if storage.has_secrets().unwrap_or(false) {
-                Some(master_key)
+                master_key_opt.as_ref()
             } else {
                 None
             };
@@ -722,56 +859,17 @@ fn route_request(request: Request, storage: &crate::storage::Storage, master_key
                 ),
             }
         }
-        "vault.lock" => {
-            // Lock the vault (clears master key from memory)
-            // Note: The actual key clearing happens at server level
-            match crate::handlers::handle_vault_lock() {
-                Ok(result) => Response::success(
-                    request.id,
-                    serde_json::json!({
-                        "status": result.status
-                    })
-                ),
-                Err(e) => Response::error(
-                    request.id,
-                    ErrorInfo::internal_error(format!("Failed to lock vault: {}", e))
-                ),
-            }
-        }
-        "vault.unlock" => {
-            // Unlock the vault with password
-            let password = match request.params.get("password").and_then(|v| v.as_str()) {
-                Some(p) => p,
-                None => {
-                    return Response::error(
-                        request.id,
-                        ErrorInfo::invalid_params("Missing required parameter: password")
-                    );
-                }
-            };
-
-            match crate::handlers::handle_vault_unlock(password, storage) {
-                Ok(result) => {
-                    // Note: The caller (main.rs) needs to store the returned master_key
-                    // For now, we just return success status
-                    Response::success(
-                        request.id,
-                        serde_json::json!({
-                            "status": result.status
-                        })
-                    )
-                },
-                Err(e) => Response::error(
-                    request.id,
-                    ErrorInfo::internal_error(format!("Failed to unlock vault: {}", e))
-                ),
-            }
+        // vault.lock and vault.unlock are handled in handle_request (async operations)
+        "vault.lock" | "vault.unlock" => {
+            // Should not reach here - handled in handle_request
+            Response::error(
+                request.id,
+                ErrorInfo::internal_error("Method should be handled by async handler")
+            )
         }
         "vault.status" => {
             // Get vault status (state, secret count, app count)
-            // Note: is_locked would come from server state, but we don't have access here
-            // For now, assume unlocked since we have a master_key
-            let is_locked = false; // TODO: Get from actual server state
+            // is_locked is passed from handle_request
             match crate::handlers::handle_vault_status(storage, is_locked) {
                 Ok(result) => Response::success(
                     request.id,
@@ -890,9 +988,8 @@ async fn handle_connection(mut stream: UnixStream, server_state: ServerState) {
                                             // F049: Parse request with improved error handling
                                             let response = match parse_request(&message) {
                                                 Ok(request) => {
-                                                    // Lock storage mutex and route to handler
-                                                    let storage = server_state.storage.lock().await;
-                                                    route_request(request, &storage, &server_state.master_key)
+                                                    // Handle the request - this may need async for vault lock/unlock
+                                                    handle_request(request, &server_state).await
                                                 }
                                                 Err(e) => {
                                                     // F049: Handle malformed JSON with descriptive error

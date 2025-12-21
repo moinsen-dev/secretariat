@@ -8,10 +8,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
 import 'dart:io' show Platform, exit;
 import 'providers/vault_provider.dart';
-import 'screens/main_popup.dart';
+import 'screens/main_shell.dart';
 import 'screens/secrets_list.dart';
 import 'screens/secret_detail.dart';
 import 'screens/add_secret.dart';
@@ -22,6 +23,9 @@ import 'screens/import_wizard.dart';
 import 'screens/onboarding.dart';
 import 'theme/theme.dart';
 
+/// Key for storing onboarding completion status
+const String _onboardingCompleteKey = 'onboarding_complete';
+
 void main() async {
   // F192: Ensure Flutter is initialized before system tray setup
   WidgetsFlutterBinding.ensureInitialized();
@@ -29,11 +33,18 @@ void main() async {
   // F192: Initialize system tray on app start
   await _initSystemTray();
 
+  // Check if onboarding has been completed
+  final prefs = await SharedPreferences.getInstance();
+  final onboardingComplete = prefs.getBool(_onboardingCompleteKey) ?? false;
+
   // Initialize VaultProvider and ensure daemon is running
   final vaultProvider = VaultProvider();
   await _ensureDaemonRunning(vaultProvider);
 
-  runApp(SecretariatApp(vaultProvider: vaultProvider));
+  runApp(SecretariatApp(
+    vaultProvider: vaultProvider,
+    showOnboarding: !onboardingComplete,
+  ));
 }
 
 /// Ensure daemon is running at app startup
@@ -115,8 +126,13 @@ Future<void> updateTrayIcon(bool isLocked) async {
 
 class SecretariatApp extends StatefulWidget {
   final VaultProvider vaultProvider;
+  final bool showOnboarding;
 
-  const SecretariatApp({super.key, required this.vaultProvider});
+  const SecretariatApp({
+    super.key,
+    required this.vaultProvider,
+    this.showOnboarding = false,
+  });
 
   @override
   State<SecretariatApp> createState() => _SecretariatAppState();
@@ -194,11 +210,13 @@ class _SecretariatAppState extends State<SecretariatApp> with TrayListener {
         theme: lightTheme,
         darkTheme: darkTheme,
         themeMode: ThemeMode.system,
-        // Set MainPopup as home screen with keyboard shortcuts
-        home: const KeyboardShortcutHandler(child: MainPopup()),
+        // Show onboarding on first run, otherwise show main shell with tabs
+        home: widget.showOnboarding
+            ? const OnboardingScreen()
+            : const KeyboardShortcutHandler(child: MainShell()),
         // Define routes for navigation
         routes: {
-          '/home': (context) => const KeyboardShortcutHandler(child: MainPopup()),
+          '/home': (context) => const KeyboardShortcutHandler(child: MainShell()),
           '/secrets-list': (context) => const SecretsListScreen(),
           '/secret-detail': (context) => const SecretDetailScreen(),
           '/add-secret': (context) => const AddSecretScreen(),

@@ -217,6 +217,114 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
     }
   }
 
+  /// Rotate secret - prompts for new value and creates a new version
+  Future<void> _rotateSecret(BuildContext context, Secret secret) async {
+    final newValueController = TextEditingController();
+    bool isValueVisible = false;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Rotate Secret'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Enter a new value for "${secret.name}". '
+                'The previous value will be preserved in case you need to rollback.',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: newValueController,
+                obscureText: !isValueVisible,
+                decoration: InputDecoration(
+                  labelText: 'New Secret Value',
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      isValueVisible ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setDialogState(() {
+                        isValueVisible = !isValueVisible;
+                      });
+                    },
+                  ),
+                ),
+                maxLines: 1,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () {
+                if (newValueController.text.isEmpty) {
+                  ScaffoldMessenger.of(dialogContext).showSnackBar(
+                    const SnackBar(
+                      content: Text('Please enter a new value'),
+                    ),
+                  );
+                  return;
+                }
+                Navigator.of(dialogContext).pop(true);
+              },
+              child: const Text('Rotate'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        final vaultProvider = Provider.of<VaultProvider>(
+          context,
+          listen: false,
+        );
+
+        final result = await vaultProvider.rotateSecret(
+          secret.name,
+          newValueController.text,
+        );
+
+        if (context.mounted) {
+          final newVersion = result['version'] ?? 'new';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Secret rotated successfully to version $newVersion'),
+            ),
+          );
+
+          // Update the value controller with new value
+          _valueController.text = newValueController.text;
+
+          // Go back to refresh the list
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to rotate secret: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
+
+    newValueController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Get secret from arguments
@@ -466,12 +574,7 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
                     child: OutlinedButton.icon(
                       icon: const Icon(Icons.refresh),
                       label: const Text('Rotate Secret'),
-                      onPressed: () {
-                        // TODO: Implement secret rotation
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Rotate - Coming soon')),
-                        );
-                      },
+                      onPressed: () => _rotateSecret(context, secret),
                     ),
                   ),
                 ],

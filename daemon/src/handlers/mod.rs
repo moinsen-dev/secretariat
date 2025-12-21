@@ -46,6 +46,6 @@ pub use app_authorize::handle_app_authorize;
 pub use app_list::handle_app_list;
 pub use app_revoke::handle_app_revoke;
 pub use vault_init::handle_vault_init;
-pub use vault_lock::handle_vault_lock;
+// vault_lock is handled directly in server.rs (async for memory clearing)
 pub use vault_unlock::handle_vault_unlock;
-pub use vault_status::{handle_vault_status, VaultState};
+pub use vault_status::handle_vault_status;

@@ -3,15 +3,20 @@
 //! Locks the vault by clearing the master key from memory.
 //!
 //! Milestone 3: Vault Lock/Unlock
+//!
+//! Note: Vault locking is now handled directly in server.rs as an async
+//! operation for proper memory clearing. This module is kept for reference.
 
 use anyhow::Result;
 
 /// Result of vault lock operation
+#[allow(dead_code)]
 pub struct VaultLockResult {
     pub status: String,
 }
 
 /// Handle vault.lock method
+#[allow(dead_code)]
 ///
 /// Locks the vault by signaling that the master key should be cleared.
 /// Note: The actual key clearing happens at the server level since

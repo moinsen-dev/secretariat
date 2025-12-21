@@ -1,109 +1,89 @@
+// Settings Tab - Configuration and management for bottom navigation
+//
+// Embedded version of SettingsScreen for use in MainShell.
+// Shows daemon control, vault status, and navigation to sub-screens.
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/vault_provider.dart';
 import '../services/daemon_manager.dart';
 import '../theme/colors.dart';
 
-/// Settings screen for Secretariat app preferences and daemon management
-class SettingsScreen extends StatefulWidget {
-  const SettingsScreen({super.key});
+/// Settings tab content showing app configuration
+///
+/// This is the body content for the Settings tab in MainShell.
+/// Does not include Scaffold or AppBar (provided by shell).
+class SettingsTab extends StatefulWidget {
+  const SettingsTab({super.key});
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  State<SettingsTab> createState() => _SettingsTabState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class _SettingsTabState extends State<SettingsTab> {
   bool _isLoading = false;
   String? _statusMessage;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: backgroundDark,
-      appBar: AppBar(
-        backgroundColor: surfaceDark,
-        title: Text(
-          'Settings',
-          style: TextStyle(
-            color: textPrimaryDark,
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: textPrimaryDark),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ),
-      body: Consumer<VaultProvider>(
-        builder: (context, provider, _) {
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              // Daemon Status Section
-              _buildSectionHeader('Daemon'),
-              _buildDaemonStatusTile(provider),
-              _buildAutoStartTile(provider),
-              const SizedBox(height: 24),
+    return Consumer<VaultProvider>(
+      builder: (context, provider, _) {
+        return ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            // Daemon Status Section
+            _buildSectionHeader('Daemon'),
+            _buildDaemonStatusTile(provider),
+            _buildAutoStartTile(provider),
+            const SizedBox(height: 24),
 
-              // Vault Section
-              _buildSectionHeader('Vault'),
-              _buildVaultStatusTile(provider),
-              _buildLockVaultTile(provider),
-              const SizedBox(height: 24),
+            // Vault Section
+            _buildSectionHeader('Vault'),
+            _buildVaultStatusTile(provider),
+            _buildLockVaultTile(provider),
+            const SizedBox(height: 24),
 
-              // Security & Access Section
-              _buildSectionHeader('Security & Access'),
-              _buildNavigationTile(
-                icon: Icons.apps,
-                iconColor: primaryColor,
-                title: 'Applications',
-                subtitle: 'Manage app permissions and access',
-                onTap: () => Navigator.pushNamed(context, '/applications'),
-              ),
-              _buildNavigationTile(
-                icon: Icons.history,
-                iconColor: warningColor,
-                title: 'Audit Log',
-                subtitle: 'View secret access history',
-                onTap: () => Navigator.pushNamed(context, '/audit-log'),
-              ),
-              _buildNavigationTile(
-                icon: Icons.file_download,
-                iconColor: successColor,
-                title: 'Import Secrets',
-                subtitle: 'Import from .env files',
-                onTap: () => Navigator.pushNamed(context, '/import'),
-              ),
-              const SizedBox(height: 24),
+            // Security & Access Section
+            _buildSectionHeader('Security & Access'),
+            _buildNavigationTile(
+              icon: Icons.history,
+              iconColor: warningColor,
+              title: 'Audit Log',
+              subtitle: 'View secret access history',
+              onTap: () => Navigator.pushNamed(context, '/audit-log'),
+            ),
+            _buildNavigationTile(
+              icon: Icons.file_download,
+              iconColor: successColor,
+              title: 'Import Secrets',
+              subtitle: 'Import from .env files',
+              onTap: () => Navigator.pushNamed(context, '/import'),
+            ),
+            const SizedBox(height: 24),
 
-              // About Section
-              _buildSectionHeader('About'),
-              _buildAboutTile(),
-              _buildVersionTile(),
+            // About Section
+            _buildSectionHeader('About'),
+            _buildAboutTile(),
+            _buildVersionTile(),
 
-              if (_statusMessage != null) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: surfaceVariantDark,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(
-                    _statusMessage!,
-                    style: TextStyle(
-                      color: textSecondaryDark,
-                      fontSize: 13,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
+            if (_statusMessage != null) ...[
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: surfaceVariantDark,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-              ],
+                child: Text(
+                  _statusMessage!,
+                  style: TextStyle(color: textSecondaryDark, fontSize: 13),
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ],
-          );
-        },
-      ),
+          ],
+        );
+      },
     );
   }
 
@@ -166,10 +146,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ? const SizedBox(
                 width: 24,
                 height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: accentColor,
-                ),
+                child: CircularProgressIndicator(strokeWidth: 2, color: accentColor),
               )
             : TextButton(
                 onPressed: () async {
@@ -191,10 +168,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 },
                 child: Text(
                   isRunning ? 'Stop' : 'Start',
-                  style: TextStyle(
-                    color: accentColor,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(color: accentColor, fontWeight: FontWeight.w500),
                 ),
               ),
       ),
@@ -219,11 +193,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: primaryColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            Icons.play_arrow,
-            color: primaryColor,
-            size: 20,
-          ),
+          child: Icon(Icons.play_arrow, color: primaryColor, size: 20),
         ),
         title: Text(
           'Start on Login',
@@ -235,13 +205,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         subtitle: Text(
           isEnabled ? 'Daemon starts automatically' : 'Start daemon manually',
-          style: TextStyle(
-            color: textSecondaryDark,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: textSecondaryDark, fontSize: 12),
         ),
         value: isEnabled,
-        activeColor: accentColor,
+        activeTrackColor: accentColor.withValues(alpha: 0.5),
+        activeThumbColor: accentColor,
         onChanged: (value) async {
           setState(() => _isLoading = true);
           try {
@@ -313,10 +281,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             subtitle: Text(
               '$stateText - $secretCount secrets, $appCount apps',
-              style: TextStyle(
-                color: textSecondaryDark,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: textSecondaryDark, fontSize: 12),
             ),
           ),
         );
@@ -340,11 +305,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: errorColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            Icons.lock_outline,
-            color: errorColor,
-            size: 20,
-          ),
+          child: Icon(Icons.lock_outline, color: errorColor, size: 20),
         ),
         title: Text(
           'Lock Vault',
@@ -356,10 +317,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         subtitle: Text(
           'Clear master key from memory',
-          style: TextStyle(
-            color: textSecondaryDark,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: textSecondaryDark, fontSize: 12),
         ),
         trailing: TextButton(
           onPressed: () async {
@@ -391,9 +349,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             if (confirm == true) {
               try {
                 await provider.lockVault();
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                }
+                _showStatus('Vault locked');
               } catch (e) {
                 _showStatus('Failed to lock: $e');
               }
@@ -401,10 +357,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           },
           child: Text(
             'Lock Now',
-            style: TextStyle(
-              color: errorColor,
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(color: errorColor, fontWeight: FontWeight.w500),
           ),
         ),
       ),
@@ -433,11 +386,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: iconColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            color: iconColor,
-            size: 20,
-          ),
+          child: Icon(icon, color: iconColor, size: 20),
         ),
         title: Text(
           title,
@@ -449,15 +398,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         subtitle: Text(
           subtitle,
-          style: TextStyle(
-            color: textSecondaryDark,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: textSecondaryDark, fontSize: 12),
         ),
-        trailing: Icon(
-          Icons.chevron_right,
-          color: textSecondaryDark,
-        ),
+        trailing: Icon(Icons.chevron_right, color: textSecondaryDark),
         onTap: onTap,
       ),
     );
@@ -479,11 +422,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: secretColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            Icons.security,
-            color: secretColor,
-            size: 20,
-          ),
+          child: Icon(Icons.security, color: secretColor, size: 20),
         ),
         title: Text(
           'Secretariat',
@@ -495,10 +434,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         subtitle: Text(
           'Local-first secrets management',
-          style: TextStyle(
-            color: textSecondaryDark,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: textSecondaryDark, fontSize: 12),
         ),
       ),
     );
@@ -520,11 +456,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: infoColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            Icons.info_outline,
-            color: infoColor,
-            size: 20,
-          ),
+          child: Icon(Icons.info_outline, color: infoColor, size: 20),
         ),
         title: Text(
           'Version',
@@ -536,10 +468,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         subtitle: Text(
           '0.1.0 (Phase 1)',
-          style: TextStyle(
-            color: textSecondaryDark,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: textSecondaryDark, fontSize: 12),
         ),
       ),
     );

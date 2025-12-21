@@ -44,7 +44,6 @@ impl SystemEventMonitor {
     /// On macOS, it uses IOKit power management notifications.
     #[cfg(target_os = "macos")]
     pub fn start(&self) -> anyhow::Result<()> {
-        use std::process::Command;
         use std::thread;
         use std::time::Duration;
 
@@ -53,38 +52,20 @@ impl SystemEventMonitor {
         }
 
         let is_running = self.is_running.clone();
-        let on_sleep = self.on_sleep.clone();
+        // Note: The polling approach below is a fallback; the log stream monitor (below)
+        // is the primary sleep detection mechanism
 
-        // Spawn a thread to monitor for sleep events
+        // Spawn a thread to keep the monitor alive
+        // The actual sleep detection is done by the log stream thread
         thread::spawn(move || {
-            info!("[SystemEvents] Starting sleep monitor");
-
-            // Use pmset -g assertions to monitor power state
-            // This is a polling approach; a proper implementation would use
-            // IOKit's IORegisterForSystemPower
-            let mut last_sleep_time: Option<std::time::Instant> = None;
+            debug!("[SystemEvents] Starting sleep monitor keepalive");
 
             while is_running.load(Ordering::SeqCst) {
-                // Check system idle/sleep state using pmset
-                let output = Command::new("pmset")
-                    .args(["-g", "assertions"])
-                    .output();
-
-                if let Ok(result) = output {
-                    let output_str = String::from_utf8_lossy(&result.stdout);
-
-                    // Check if system is about to sleep (PreventUserIdleSystemSleep is 0)
-                    if output_str.contains("PreventUserIdleSystemSleep") &&
-                       output_str.contains("PreventUserIdleSystemSleep             0") {
-                        // System might be idle, but we need a different approach for sleep detection
-                    }
-                }
-
-                // Sleep for a short interval before next check
+                // Just keep the thread alive - actual detection is in log stream
                 thread::sleep(Duration::from_secs(5));
             }
 
-            info!("[SystemEvents] Sleep monitor stopped");
+            debug!("[SystemEvents] Sleep monitor keepalive stopped");
         });
 
         // Also spawn a thread that uses log stream to detect sleep events
