@@ -237,20 +237,65 @@ pub fn is_biometric_available() -> bool {
     false
 }
 
-// Placeholder implementations for non-macOS platforms
+// Platform-specific implementations for non-macOS
+//
+// Linux: Uses Secret Service API (libsecret) - planned for future release
+// Windows: Uses Credential Manager - planned for future release
+//
+// For now, these return errors with clear guidance for users.
+
 #[cfg(not(target_os = "macos"))]
 pub fn store_master_key(_key: &[u8; 32]) -> Result<()> {
-    anyhow::bail!("Keychain storage not yet implemented for this platform. Use environment variable fallback.");
+    #[cfg(target_os = "linux")]
+    anyhow::bail!(
+        "Secure keychain storage on Linux requires the Secret Service API.\n\
+         This feature is planned for a future release.\n\
+         For now, Secretariat uses password-based key derivation.\n\
+         Your master password is used to encrypt/decrypt secrets."
+    );
+
+    #[cfg(target_os = "windows")]
+    anyhow::bail!(
+        "Secure keychain storage on Windows requires the Credential Manager.\n\
+         This feature is planned for a future release.\n\
+         For now, Secretariat uses password-based key derivation.\n\
+         Your master password is used to encrypt/decrypt secrets."
+    );
+
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    anyhow::bail!(
+        "Secure keychain storage is not available on this platform.\n\
+         Secretariat uses password-based key derivation to protect your secrets."
+    );
 }
 
 #[cfg(not(target_os = "macos"))]
 pub fn retrieve_master_key() -> Result<[u8; 32]> {
-    anyhow::bail!("Keychain retrieval not yet implemented for this platform. Use environment variable fallback.");
+    #[cfg(target_os = "linux")]
+    anyhow::bail!(
+        "Secure keychain retrieval on Linux requires the Secret Service API.\n\
+         This feature is planned for a future release.\n\
+         Please unlock the vault with your master password using 'sec unlock'."
+    );
+
+    #[cfg(target_os = "windows")]
+    anyhow::bail!(
+        "Secure keychain retrieval on Windows requires the Credential Manager.\n\
+         This feature is planned for a future release.\n\
+         Please unlock the vault with your master password using 'sec unlock'."
+    );
+
+    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    anyhow::bail!(
+        "Secure keychain retrieval is not available on this platform.\n\
+         Please unlock the vault with your master password using 'sec unlock'."
+    );
 }
 
 #[cfg(not(target_os = "macos"))]
 pub fn delete_master_key() -> Result<()> {
-    anyhow::bail!("Keychain deletion not yet implemented for this platform.");
+    // Silently succeed - there's no keychain entry to delete
+    Ok(())
 }
 
 #[cfg(test)]
@@ -292,10 +337,12 @@ mod tests {
     #[test]
     #[cfg(not(target_os = "macos"))]
     fn test_unsupported_platform() {
-        // On non-macOS platforms, operations should return errors
+        // On non-macOS platforms, store and retrieve should return errors
+        // but delete should succeed (no-op since there's nothing to delete)
         let key = [0u8; 32];
         assert!(store_master_key(&key).is_err());
         assert!(retrieve_master_key().is_err());
-        assert!(delete_master_key().is_err());
+        // delete_master_key() returns Ok(()) on non-macOS - it's a no-op
+        assert!(delete_master_key().is_ok());
     }
 }

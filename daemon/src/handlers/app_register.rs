@@ -43,9 +43,22 @@ fn get_process_info(pid: u32) -> Result<(String, Option<String>)> {
         get_process_info_linux(pid)
     }
 
-    #[cfg(not(any(target_os = "macos", target_os = "linux")))]
+    #[cfg(target_os = "windows")]
     {
-        bail!("Process info extraction not supported on this platform")
+        bail!(
+            "Application registration on Windows requires process info APIs.\n\
+             This feature is planned for a future release.\n\
+             For now, Secretariat is only fully supported on macOS and Linux."
+        );
+    }
+
+    #[cfg(not(any(target_os = "macos", target_os = "linux", target_os = "windows")))]
+    {
+        bail!(
+            "Application registration is not supported on this platform ({}).\n\
+             Secretariat currently supports macOS and Linux.",
+            std::env::consts::OS
+        );
     }
 }
 

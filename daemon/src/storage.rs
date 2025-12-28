@@ -124,7 +124,7 @@ pub struct Storage {
 }
 
 impl Storage {
-    /// Initialize the storage layer
+    /// Initialize the storage layer (legacy - with SQLCipher encryption)
     ///
     /// Creates or opens the SQLite database at the specified path and sets up
     /// the schema including the secrets table.
@@ -138,6 +138,7 @@ impl Storage {
     /// - Database file cannot be created/opened
     /// - Schema creation fails
     /// - Encryption key is invalid
+    #[allow(dead_code)] // Kept for backwards compatibility
     pub fn new<P: AsRef<Path>>(db_path: P, encryption_key: &str) -> Result<Self> {
         let conn = Connection::open(db_path.as_ref())
             .context("Failed to open database connection")?;
@@ -150,6 +151,36 @@ impl Storage {
         // Use modern cipher (AES-256)
         conn.pragma_update(None, "cipher_page_size", "4096")
             .context("Failed to set cipher page size")?;
+
+        let mut storage = Storage {
+            conn,
+            db_path: db_path.as_ref().to_path_buf(),
+        };
+        storage.initialize_schema()?;
+
+        Ok(storage)
+    }
+
+    /// Initialize the storage layer without SQLCipher encryption
+    ///
+    /// Creates or opens the SQLite database at the specified path.
+    /// Individual secrets are encrypted at the application level using AES-256-GCM
+    /// with keys derived from the user's master password via Argon2.
+    ///
+    /// # Arguments
+    /// * `db_path` - Path to the SQLite database file
+    ///
+    /// # Errors
+    /// Returns an error if:
+    /// - Database file cannot be created/opened
+    /// - Schema creation fails
+    pub fn new_without_key<P: AsRef<Path>>(db_path: P) -> Result<Self> {
+        let conn = Connection::open(db_path.as_ref())
+            .context("Failed to open database connection")?;
+
+        // Set WAL mode for better concurrency
+        conn.pragma_update(None, "journal_mode", "WAL")
+            .context("Failed to set WAL mode")?;
 
         let mut storage = Storage {
             conn,

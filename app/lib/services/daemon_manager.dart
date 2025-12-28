@@ -71,20 +71,40 @@ class DaemonManager {
   }
 
   /// Find daemon in development workspace
+  ///
+  /// Looks for the daemon binary in development locations relative to the app bundle.
+  /// This is only used during development - production installations should place
+  /// the daemon in /usr/local/bin/secd or ~/bin/secd.
   String? _findDevelopmentDaemon() {
-    // Try to find in parent directories (development setup)
-    final home = Platform.environment['HOME'];
-    if (home != null) {
-      final devPaths = [
-        '$home/work/moinsen/ideas/local_secrets_orchestrator/target/release/secd',
-        '$home/work/moinsen/ideas/local_secrets_orchestrator/target/debug/secd',
-      ];
-      for (final p in devPaths) {
-        if (File(p).existsSync()) {
-          return p;
-        }
-      }
+    // In development mode, check if SECRETARIAT_DEV_PATH is set
+    final devPath = Platform.environment['SECRETARIAT_DEV_PATH'];
+    if (devPath != null) {
+      final releasePath = '$devPath/target/release/secd';
+      final debugPath = '$devPath/target/debug/secd';
+      if (File(releasePath).existsSync()) return releasePath;
+      if (File(debugPath).existsSync()) return debugPath;
     }
+
+    // Check relative to app bundle (for development builds)
+    // This allows the app to find the daemon when run from the same workspace
+    final executable = Platform.resolvedExecutable;
+    final appDir = File(executable).parent;
+
+    // Try going up from app bundle to find workspace root
+    var current = appDir;
+    for (var i = 0; i < 5; i++) {
+      final cargoToml = File('${current.path}/Cargo.toml');
+      if (cargoToml.existsSync()) {
+        // Found workspace root
+        final releasePath = '${current.path}/target/release/secd';
+        final debugPath = '${current.path}/target/debug/secd';
+        if (File(releasePath).existsSync()) return releasePath;
+        if (File(debugPath).existsSync()) return debugPath;
+        break;
+      }
+      current = current.parent;
+    }
+
     return null;
   }
 

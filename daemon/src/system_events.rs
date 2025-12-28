@@ -130,10 +130,30 @@ impl SystemEventMonitor {
         Ok(())
     }
 
-    /// Start monitoring (non-macOS placeholder)
+    /// Start monitoring (non-macOS platforms)
+    ///
+    /// On Linux/Windows, sleep monitoring is not yet implemented.
+    /// The vault will not auto-lock on system sleep.
+    /// Users should manually lock the vault with 'sec lock' before leaving their computer.
     #[cfg(not(target_os = "macos"))]
     pub fn start(&self) -> anyhow::Result<()> {
-        warn!("[SystemEvents] Sleep monitoring not implemented for this platform");
+        #[cfg(target_os = "linux")]
+        {
+            info!("[SystemEvents] Auto-lock on sleep not yet available on Linux");
+            info!("[SystemEvents] Tip: Use 'sec lock' to manually lock your vault before leaving");
+        }
+
+        #[cfg(target_os = "windows")]
+        {
+            info!("[SystemEvents] Auto-lock on sleep not yet available on Windows");
+            info!("[SystemEvents] Tip: Use 'sec lock' to manually lock your vault before leaving");
+        }
+
+        #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+        {
+            info!("[SystemEvents] Auto-lock on sleep not available on this platform");
+        }
+
         Ok(())
     }
 

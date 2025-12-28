@@ -201,17 +201,18 @@ mod tests {
 
         // Note: This test will fail if keychain access is not available
         // In CI environments, we may need to skip this test
-        if result.is_err() {
-            let err = result.unwrap_err();
-            // Check if it's a keychain error (expected in CI)
-            if err.to_string().contains("keychain") || err.to_string().contains("Keychain") {
-                eprintln!("Skipping test: keychain not available");
-                return;
+        let result = match result {
+            Ok(r) => r,
+            Err(err) => {
+                // Check if it's a keychain error (expected in CI)
+                if err.to_string().contains("keychain") || err.to_string().contains("Keychain") {
+                    eprintln!("Skipping test: keychain not available");
+                    return;
+                }
+                // Fail the test with a proper assertion
+                panic!("Unexpected error during vault init: {}", err);
             }
-            panic!("Unexpected error: {}", err);
-        }
-
-        let result = result.unwrap();
+        };
         assert_eq!(result.secrets_migrated, 0);
         assert!(result.vault_path.contains("test_vault.db"));
 

@@ -204,12 +204,9 @@ impl Daemon {
 
         info!("Initializing daemon with data directory: {}", config.data_dir.display());
 
-        // TODO: In production, the encryption key should come from the system keychain
-        // For now, using a placeholder for initial implementation
-        let encryption_key = "development_key_change_in_production";
-
-        // Initialize storage
-        let storage = Storage::new(&config.db_path, encryption_key)
+        // Initialize storage without encryption key - encryption is handled by vault unlock
+        // The actual encryption key comes from the master password via Argon2 derivation
+        let storage = Storage::new_without_key(&config.db_path)
             .context("Failed to initialize storage")?;
 
         info!("Storage initialized at: {}", config.db_path.display());
@@ -253,23 +250,38 @@ impl Daemon {
         info!("Daemon is ready");
         info!("Database: {}", self.config.db_path.display());
 
-        // F061: Retrieve master key from keychain (or use development key)
+        // F061: Retrieve master key from keychain
+        // The vault starts in "locked" state - users must unlock with their master password
+        // The master key in keychain is only used if vault was previously unlocked and system
+        // keychain has the key cached
         let master_key = match keychain::retrieve_master_key() {
             Ok(key) => {
-                info!("Master key retrieved from keychain");
-                key
+                info!("Master key retrieved from keychain - vault will start unlocked");
+                Some(key)
             }
             Err(e) => {
-                // For development, generate a temporary key
-                // In production, this should fail if keychain access fails
-                info!("Failed to retrieve master key from keychain: {}", e);
-                info!("Using development master key (WARNING: NOT SECURE FOR PRODUCTION)");
-                crypto::generate_master_key()
+                // No keychain key means vault is locked - this is the normal secure state
+                // User must unlock with their master password
+                info!("No master key in keychain ({}), vault will start locked", e);
+                None
             }
         };
 
+        // Determine initial vault state
+        let vault_starts_locked = master_key.is_none();
+        if vault_starts_locked {
+            info!("Vault is locked - unlock with 'sec unlock' to access secrets");
+        }
+
+        // Use a zeroed key if locked - actual key comes from unlock operation
+        let initial_key = master_key.unwrap_or([0u8; 32]);
+
         // F047: Create server state for graceful shutdown coordination
-        let server_state = server::ServerState::new(self.storage.clone(), master_key);
+        let server_state = server::ServerState::new_with_lock_state(
+            self.storage.clone(),
+            initial_key,
+            vault_starts_locked,
+        );
 
         // Start IPC server
         let listener = server::start_server()

@@ -93,20 +93,38 @@ pub struct ServerState {
 }
 
 impl ServerState {
-    /// Create a new server state
+    /// Create a new server state (vault starts unlocked)
     ///
     /// # Arguments
     ///
     /// * `storage` - Reference to the storage layer
     /// * `master_key` - The 32-byte master encryption key from keychain
+    #[allow(dead_code)] // Used for testing and backwards compatibility
     pub fn new(storage: Arc<Mutex<crate::storage::Storage>>, master_key: [u8; 32]) -> Self {
+        Self::new_with_lock_state(storage, master_key, false)
+    }
+
+    /// Create a new server state with explicit lock state
+    ///
+    /// # Arguments
+    ///
+    /// * `storage` - Reference to the storage layer
+    /// * `master_key` - The 32-byte master encryption key (may be zeroed if locked)
+    /// * `starts_locked` - Whether the vault starts in locked state
+    pub fn new_with_lock_state(
+        storage: Arc<Mutex<crate::storage::Storage>>,
+        master_key: [u8; 32],
+        starts_locked: bool,
+    ) -> Self {
         let (shutdown_tx, _) = broadcast::channel(16);
+        let initial_key = if starts_locked { None } else { Some(master_key) };
+
         Self {
             active_connections: Arc::new(AtomicUsize::new(0)),
             shutdown_tx,
             storage,
-            master_key: Arc::new(tokio::sync::RwLock::new(Some(master_key))),
-            is_locked: Arc::new(AtomicBool::new(false)),
+            master_key: Arc::new(tokio::sync::RwLock::new(initial_key)),
+            is_locked: Arc::new(AtomicBool::new(starts_locked)),
         }
     }
 
@@ -306,12 +324,19 @@ pub fn get_socket_path() -> Result<PathBuf> {
             .context("Failed to get home directory")?
             .join(".local/share/secretariat/secretariat.sock")
     } else if cfg!(target_os = "windows") {
-        // Windows will use named pipes instead of Unix sockets
-        // Named pipe path: \\.\pipe\secretariat
-        // For now, return a placeholder path
-        anyhow::bail!("Windows named pipes not yet implemented");
+        // Windows is not yet supported
+        anyhow::bail!(
+            "Secretariat is not yet available for Windows.\n\
+             Currently supported platforms: macOS, Linux.\n\
+             Windows support (using named pipes) is planned for a future release.\n\
+             For updates, visit: https://github.com/moinsen/secretariat"
+        );
     } else {
-        anyhow::bail!("Unsupported operating system");
+        anyhow::bail!(
+            "Unsupported operating system: {}.\n\
+             Secretariat currently supports macOS and Linux only.",
+            std::env::consts::OS
+        );
     };
 
     Ok(socket_path)

@@ -59,6 +59,7 @@ pub struct EncryptedValue {
 /// let master_key = generate_master_key();
 /// // Store master_key in system keychain
 /// ```
+#[allow(dead_code)] // Kept for API completeness - key generation may be needed for new keychain entries
 pub fn generate_master_key() -> [u8; KEY_SIZE] {
     let mut key = [0u8; KEY_SIZE];
     OsRng.fill_bytes(&mut key);

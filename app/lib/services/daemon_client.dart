@@ -434,11 +434,16 @@ class DaemonClient {
       final home = Platform.environment['HOME'];
       return '$home/.local/share/secretariat/secretariat.sock';
     } else if (Platform.isWindows) {
-      // Windows: Named pipe (not implemented yet)
-      throw UnsupportedError('Windows named pipes not yet implemented');
+      // Windows is not yet supported
+      throw UnsupportedError(
+        'Secretariat is not yet available for Windows.\n'
+        'Currently supported platforms: macOS, Linux.\n'
+        'Windows support is planned for a future release.',
+      );
     } else {
       throw UnsupportedError(
-        'Unsupported platform: ${Platform.operatingSystem}',
+        'Unsupported platform: ${Platform.operatingSystem}.\n'
+        'Secretariat currently supports macOS and Linux only.',
       );
     }
   }
