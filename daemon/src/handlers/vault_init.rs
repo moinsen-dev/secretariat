@@ -83,6 +83,30 @@ pub fn handle_vault_init(
     storage.set_vault_metadata("salt", &salt)
         .context("Failed to store salt in vault metadata")?;
 
+    // 4b. Store password verification value (encrypted known string)
+    // This allows us to verify the password is correct during unlock
+    let verification_plaintext = "SECRETARIAT_VAULT_VERIFICATION_V1";
+    let verification_encrypted = encrypt(verification_plaintext, &new_master_key)
+        .context("Failed to create verification value")?;
+
+    // Store as base64-encoded nonce+ciphertext
+    let mut verification_bytes = Vec::with_capacity(
+        verification_encrypted.nonce.len() + verification_encrypted.ciphertext.len()
+    );
+    verification_bytes.extend_from_slice(&verification_encrypted.nonce);
+    verification_bytes.extend_from_slice(&verification_encrypted.ciphertext);
+
+    use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+    let verification_b64 = BASE64.encode(&verification_bytes);
+    storage.set_vault_metadata("password_verification", &verification_b64)
+        .context("Failed to store password verification")?;
+
+    // 4c. Reset failed attempt counter on successful init
+    storage.set_vault_metadata("failed_attempts", "0")
+        .context("Failed to reset failed attempts")?;
+    storage.set_vault_metadata("lockout_until", "")
+        .context("Failed to clear lockout")?;
+
     // 5. Store new master key in keychain (replaces old if exists)
     keychain::store_master_key(&new_master_key)
         .context("Failed to store master key in keychain")?;

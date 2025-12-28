@@ -489,6 +489,58 @@ async fn handle_request(request: Request, server_state: &ServerState) -> Respons
         }
     }
 
+    // Handle vault.change_password specially - async operation to update master key
+    if request.method == "vault.change_password" {
+        if server_state.is_vault_locked() {
+            return Response::error(
+                request.id,
+                ErrorInfo::internal_error("Vault is locked. Unlock first before changing password.")
+            );
+        }
+
+        let current_password = match request.params.get("current_password").and_then(|v| v.as_str()) {
+            Some(p) => p,
+            None => {
+                return Response::error(
+                    request.id,
+                    ErrorInfo::invalid_params("Missing required parameter: current_password")
+                );
+            }
+        };
+
+        let new_password = match request.params.get("new_password").and_then(|v| v.as_str()) {
+            Some(p) => p,
+            None => {
+                return Response::error(
+                    request.id,
+                    ErrorInfo::invalid_params("Missing required parameter: new_password")
+                );
+            }
+        };
+
+        let storage = server_state.storage.lock().await;
+        match crate::handlers::handle_vault_change_password(current_password, new_password, &storage) {
+            Ok(result) => {
+                drop(storage); // Release storage lock before async operation
+                // Update server state with new master key
+                server_state.unlock_vault(result.new_master_key).await;
+                return Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "secrets_migrated": result.secrets_migrated,
+                        "status": "password_changed"
+                    })
+                );
+            },
+            Err(e) => {
+                return Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to change password: {}", e))
+                );
+            }
+        }
+    }
+
     // Get master key (may be None if locked)
     let master_key_opt = server_state.get_master_key().await;
 
@@ -859,7 +911,7 @@ fn route_request(
                 ),
             }
         }
-        // vault.lock and vault.unlock are handled in handle_request (async operations)
+        // vault.lock, vault.unlock, vault.change_password are handled in handle_request (async operations)
         "vault.lock" | "vault.unlock" => {
             // Should not reach here - handled in handle_request
             Response::error(
@@ -884,6 +936,13 @@ fn route_request(
                     ErrorInfo::internal_error(format!("Failed to get vault status: {}", e))
                 ),
             }
+        }
+        // vault.change_password is handled in handle_request (async operation for state update)
+        "vault.change_password" => {
+            Response::error(
+                request.id,
+                ErrorInfo::internal_error("Method should be handled by async handler")
+            )
         }
         _ => {
             // Unknown method
@@ -1082,6 +1141,14 @@ pub async fn start_server() -> Result<UnixListener> {
             std::fs::create_dir_all(parent)
                 .context("Failed to create socket parent directory")?;
         }
+        // SECURITY: Ensure directory is user-only (0o700)
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let dir_permissions = std::fs::Permissions::from_mode(0o700);
+            std::fs::set_permissions(parent, dir_permissions)
+                .context("Failed to set socket directory permissions")?;
+        }
     }
 
     // Remove stale socket file if it exists
@@ -1094,6 +1161,17 @@ pub async fn start_server() -> Result<UnixListener> {
     // Bind UnixListener to socket path
     let listener = UnixListener::bind(&socket_path)
         .context("Failed to bind UnixListener to socket path")?;
+
+    // SECURITY: Set socket permissions to user-only (0o600)
+    // This prevents other users on the system from connecting to the socket
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let permissions = std::fs::Permissions::from_mode(0o600);
+        std::fs::set_permissions(&socket_path, permissions)
+            .context("Failed to set socket permissions")?;
+        info!("Socket permissions set to 0600 (user-only access)");
+    }
 
     info!("IPC server listening on: {}", socket_path.display());
 

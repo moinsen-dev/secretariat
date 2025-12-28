@@ -35,6 +35,7 @@ pub mod vault_init;
 pub mod vault_lock;
 pub mod vault_unlock;
 pub mod vault_status;
+pub mod vault_change_password;
 
 pub use secret_list::handle_secret_list;
 pub use secret_get::{handle_secret_get, PermissionDeniedError};
@@ -49,3 +50,4 @@ pub use vault_init::handle_vault_init;
 // vault_lock is handled directly in server.rs (async for memory clearing)
 pub use vault_unlock::handle_vault_unlock;
 pub use vault_status::handle_vault_status;
+pub use vault_change_password::handle_vault_change_password;

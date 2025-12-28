@@ -600,6 +600,53 @@ class VaultProvider extends ChangeNotifier {
     }
   }
 
+  /// Initialize the vault with a master password
+  ///
+  /// This must be called on first run to set up the vault.
+  /// Returns the vault path and number of migrated secrets.
+  Future<Map<String, dynamic>> initializeVault(String password) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      final result = await _daemonClient.initVault(password);
+
+      // Vault is now initialized and unlocked
+      _isLocked = false;
+      notifyListeners();
+
+      return result;
+    } catch (e) {
+      _errorMessage = 'Failed to initialize vault: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Change the vault master password
+  ///
+  /// Re-encrypts all secrets with the new password.
+  Future<Map<String, dynamic>> changePassword(String currentPassword, String newPassword) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      final result = await _daemonClient.changePassword(currentPassword, newPassword);
+      notifyListeners();
+      return result;
+    } catch (e) {
+      _errorMessage = 'Failed to change password: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
   @override
   void dispose() {
     _daemonClient.disconnect();

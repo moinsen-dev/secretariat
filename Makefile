@@ -82,6 +82,11 @@ help:
 	@echo "  $(GREEN)make sdk-rust$(NC)     - Build Rust SDK"
 	@echo "  $(GREEN)make sdk-node$(NC)     - Build Node.js SDK"
 	@echo ""
+	@echo "$(YELLOW)Testing:$(NC)"
+	@echo "  $(GREEN)make test-quick$(NC)   - Run quick integration tests (~30s)"
+	@echo "  $(GREEN)make test-full$(NC)    - Run full integration tests with edge cases (~60s)"
+	@echo "  $(GREEN)make test$(NC)         - Run all tests (Rust unit + Flutter + integration)"
+	@echo ""
 	@echo "$(YELLOW)Development:$(NC)"
 	@echo "  $(GREEN)make dev$(NC)          - Start development environment"
 	@echo "  $(GREEN)make dev-daemon$(NC)   - Run daemon in development mode"
@@ -263,6 +268,20 @@ test-permissions:
 	@if [ -f $(TESTS_DIR)/test_permissions.sh ]; then \
 		chmod +x $(TESTS_DIR)/test_permissions.sh && \
 		$(TESTS_DIR)/test_permissions.sh || echo "$(YELLOW)⚠ Permission tests require running daemon$(NC)"; \
+	fi
+
+test-full:
+	@echo "$(BLUE)Running full test suite...$(NC)"
+	@if [ -f $(TESTS_DIR)/test_full_suite.sh ]; then \
+		chmod +x $(TESTS_DIR)/test_full_suite.sh && \
+		$(TESTS_DIR)/test_full_suite.sh --full; \
+	fi
+
+test-quick:
+	@echo "$(BLUE)Running quick test suite...$(NC)"
+	@if [ -f $(TESTS_DIR)/test_full_suite.sh ]; then \
+		chmod +x $(TESTS_DIR)/test_full_suite.sh && \
+		$(TESTS_DIR)/test_full_suite.sh --quick; \
 	fi
 
 # ============================================================================

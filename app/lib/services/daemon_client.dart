@@ -358,6 +358,36 @@ class DaemonClient {
     return await sendRequest('secret.rotate', {'name': name, 'value': newValue});
   }
 
+  /// Initialize the vault with a master password
+  ///
+  /// This must be called on first run to set up the vault.
+  /// The password will be used to derive the master encryption key.
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = await client.initVault('my-secure-password');
+  /// // result = {'vault_path': '/path/to/vault.db', 'secrets_migrated': 0}
+  /// ```
+  Future<Map<String, dynamic>> initVault(String password) async {
+    return await sendRequest('vault.init', {'password': password});
+  }
+
+  /// Change the vault master password
+  ///
+  /// Re-encrypts all secrets with the new password.
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = await client.changePassword('old-password', 'new-password');
+  /// // result = {'secrets_migrated': 5, 'status': 'password_changed'}
+  /// ```
+  Future<Map<String, dynamic>> changePassword(String currentPassword, String newPassword) async {
+    return await sendRequest('vault.change_password', {
+      'current_password': currentPassword,
+      'new_password': newPassword,
+    });
+  }
+
   /// Handle incoming socket data
   void _handleData(List<int> data) {
     _buffer += utf8.decode(data);

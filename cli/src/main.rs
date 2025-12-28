@@ -81,6 +81,9 @@ enum Commands {
     /// Lock vault
     Lock(LockCommand),
 
+    /// Change master password
+    ChangePassword(ChangePasswordCommand),
+
     /// Show version
     Version(VersionCommand),
 }
@@ -276,6 +279,10 @@ struct UnlockCommand {
 #[derive(Parser)]
 struct LockCommand {}
 
+/// Change master password
+#[derive(Parser)]
+struct ChangePasswordCommand {}
+
 /// Show version
 #[derive(Parser)]
 struct VersionCommand {
@@ -319,6 +326,7 @@ async fn main() -> Result<()> {
         Commands::Status(cmd) => handle_status(client, cmd).await,
         Commands::Unlock(cmd) => handle_unlock(client, cmd).await,
         Commands::Lock(cmd) => handle_lock(client, cmd).await,
+        Commands::ChangePassword(cmd) => handle_change_password(client, cmd).await,
         Commands::Version(cmd) => handle_version(client, cmd).await,
     }
 }
@@ -457,6 +465,11 @@ async fn handle_unlock(client: DaemonClient, cmd: UnlockCommand) -> Result<()> {
 async fn handle_lock(client: DaemonClient, _cmd: LockCommand) -> Result<()> {
     let cmd_args = commands::lock::LockCommand {};
     commands::handle_lock(client, cmd_args).await
+}
+
+async fn handle_change_password(client: DaemonClient, _cmd: ChangePasswordCommand) -> Result<()> {
+    let cmd_args = commands::change_password::ChangePasswordCommand;
+    commands::handle_change_password(client, cmd_args).await
 }
 
 async fn handle_version(_client: DaemonClient, cmd: VersionCommand) -> Result<()> {

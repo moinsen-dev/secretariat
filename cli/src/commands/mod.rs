@@ -5,6 +5,7 @@
 
 pub mod apps;
 pub mod audit;
+pub mod change_password;
 pub mod cleanup;
 pub mod delete;
 pub mod explain;
@@ -22,6 +23,7 @@ pub mod unlock;
 
 pub use apps::handle_apps;
 pub use audit::handle_audit;
+pub use change_password::handle_change_password;
 pub use cleanup::handle_cleanup;
 pub use delete::handle_delete;
 pub use explain::handle_explain;

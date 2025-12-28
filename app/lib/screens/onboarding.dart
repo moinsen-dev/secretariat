@@ -205,9 +205,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       await vaultProvider.connect();
 
       // Initialize vault with password
-      // Note: This calls vault.init on the daemon
-      // For now, we'll just load secrets to test connection
-      await vaultProvider.loadSecrets();
+      // This calls vault.init on the daemon which:
+      // 1. Generates a random salt
+      // 2. Derives master key from password using Argon2id
+      // 3. Stores salt in database, key in Keychain
+      await vaultProvider.initializeVault(password);
 
       if (mounted) {
         _nextStep();
