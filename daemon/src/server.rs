@@ -405,7 +405,6 @@ pub async fn send_response(response: Response, stream: &mut UnixStream) -> Resul
 /// Route a request to the appropriate handler function
 ///
 /// Dispatches method calls to their corresponding handler functions.
-/// Currently returns placeholder responses for all methods.
 ///
 /// # Supported Methods
 ///

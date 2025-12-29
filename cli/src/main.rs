@@ -288,9 +288,21 @@ struct ScanCommand {
     #[arg(long)]
     provider: Option<String>,
 
-    /// Export results to file
+    /// Export results to JSON file
     #[arg(long)]
     export: Option<std::path::PathBuf>,
+
+    /// Export results as HTML report
+    #[arg(long)]
+    html: Option<std::path::PathBuf>,
+
+    /// Fix security issues by adding .env* to .gitignore files
+    #[arg(long)]
+    fix: bool,
+
+    /// Dry run for fix (show what would be changed without modifying files)
+    #[arg(long)]
+    fix_dry_run: bool,
 
     /// Maximum depth to scan (default: 10)
     #[arg(long, default_value = "10")]
@@ -487,6 +499,9 @@ async fn handle_scan(cmd: ScanCommand) -> Result<()> {
         security: cmd.security,
         provider: cmd.provider,
         export: cmd.export,
+        html: cmd.html,
+        fix: cmd.fix,
+        fix_dry_run: cmd.fix_dry_run,
         max_depth: cmd.max_depth,
     };
     commands::handle_scan(cmd_args).await

@@ -195,7 +195,11 @@ impl DaemonClient {
             }
         }
 
-        unreachable!()
+        // This is logically unreachable since the for loop always returns,
+        // but we provide a proper error for safety instead of panicking
+        Err(anyhow::anyhow!(
+            "Unexpected state: daemon startup loop completed without returning"
+        ))
     }
 
     /// Check if daemon is running and start it if not

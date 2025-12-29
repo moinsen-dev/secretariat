@@ -35,6 +35,12 @@ pub struct ScanCommand {
     pub provider: Option<String>,
     /// Export results to file
     pub export: Option<PathBuf>,
+    /// Export as HTML report
+    pub html: Option<PathBuf>,
+    /// Fix security issues (add .env* to .gitignore)
+    pub fix: bool,
+    /// Dry run for fix (show what would be changed)
+    pub fix_dry_run: bool,
     /// Maximum depth to scan
     pub max_depth: usize,
 }
@@ -190,7 +196,8 @@ pub async fn handle_scan(cmd: ScanCommand) -> Result<()> {
     let root_path = PathBuf::from(&cmd.path).canonicalize()
         .with_context(|| format!("Invalid path: {}", cmd.path))?;
 
-    if !cmd.json && !cmd.summary {
+    let is_quiet = cmd.json || cmd.fix_dry_run;
+    if !is_quiet && !cmd.summary {
         println!("Scanning {} for .env files...", root_path.display());
         println!();
     }
@@ -198,13 +205,25 @@ pub async fn handle_scan(cmd: ScanCommand) -> Result<()> {
     // Perform the scan
     let report = scan_directory(&root_path, cmd.max_depth, cmd.provider.as_deref())?;
 
-    // Handle output
+    // Handle fix mode first (dry-run or actual fix)
+    if cmd.fix_dry_run || cmd.fix {
+        return handle_fix_mode(&report, cmd.fix_dry_run);
+    }
+
+    // Handle output exports
     if let Some(export_path) = &cmd.export {
         let json = serde_json::to_string_pretty(&report)?;
         fs::write(export_path, &json)?;
         if !cmd.json {
             println!("Report exported to {}", export_path.display());
         }
+    }
+
+    if let Some(html_path) = &cmd.html {
+        let html = generate_html_report(&report)?;
+        fs::write(html_path, &html)?;
+        println!("HTML report generated: {}", html_path.display());
+        println!("Open in browser: file://{}", html_path.canonicalize()?.display());
     }
 
     if cmd.json {
@@ -237,7 +256,18 @@ fn scan_directory(root: &Path, max_depth: usize, provider_filter: Option<&str>) 
         .into_iter()
         .filter_entry(|e| !is_hidden(e) && !is_ignored_dir(e))
     {
-        let entry = entry?;
+        // Skip entries we can't access (permission denied, etc.)
+        let entry = match entry {
+            Ok(e) => e,
+            Err(err) => {
+                // Log the error but continue scanning
+                if let Some(path) = err.path() {
+                    eprintln!("Warning: Skipping {} ({})", path.display(),
+                        err.io_error().map(|e| e.to_string()).unwrap_or_else(|| "unknown error".to_string()));
+                }
+                continue;
+            }
+        };
         let path = entry.path();
 
         if is_env_file(path) {
@@ -1028,6 +1058,678 @@ fn truncate_str(s: &str, max_len: usize) -> String {
     } else {
         format!("{}…", &s[..max_len - 1])
     }
+}
+
+/// Handle fix mode - add .env* to .gitignore files
+fn handle_fix_mode(report: &ScanReport, dry_run: bool) -> Result<()> {
+    if report.security_issues.is_empty() {
+        println!("✓ No security issues to fix. All .env files are properly gitignored.");
+        return Ok(());
+    }
+
+    // Group issues by git repository root
+    let mut repos_to_fix: HashMap<PathBuf, Vec<&SecurityIssue>> = HashMap::new();
+
+    for issue in &report.security_issues {
+        // Only fix NotInGitignore issues (tracked files need manual intervention)
+        if issue.issue_type == SecurityIssueType::NotInGitignore {
+            if let Some(git_root) = find_git_root(&issue.file) {
+                repos_to_fix.entry(git_root).or_default().push(issue);
+            }
+        }
+    }
+
+    if repos_to_fix.is_empty() {
+        println!("No automatically fixable issues found.");
+        println!();
+        println!("Issues that require manual intervention:");
+        for issue in &report.security_issues {
+            if issue.issue_type == SecurityIssueType::GitTracked {
+                println!("  • {} - File is tracked by git", issue.file.display());
+                println!("    Fix: git rm --cached {} && add to .gitignore", issue.file.display());
+            }
+        }
+        return Ok(());
+    }
+
+    let mode_str = if dry_run { "DRY RUN" } else { "FIXING" };
+    println!("{}: Adding .env* to .gitignore files", mode_str);
+    println!("{}", "─".repeat(60));
+    println!();
+
+    let mut fixed_count = 0;
+    let mut skipped_count = 0;
+
+    for (git_root, issues) in &repos_to_fix {
+        let gitignore_path = git_root.join(".gitignore");
+        let project_name = get_project_name(git_root);
+
+        // Check if .gitignore already has .env* pattern
+        let already_has_pattern = if gitignore_path.exists() {
+            fs::read_to_string(&gitignore_path)
+                .map(|content| {
+                    content.lines().any(|line| {
+                        let trimmed = line.trim();
+                        trimmed == ".env*" || trimmed == ".env" || trimmed == "*.env"
+                    })
+                })
+                .unwrap_or(false)
+        } else {
+            false
+        };
+
+        if already_has_pattern {
+            println!("  ⏭️  {} - .gitignore already has .env pattern", project_name);
+            skipped_count += 1;
+            continue;
+        }
+
+        println!("  📁 {} ({} issue(s))", project_name, issues.len());
+        println!("     Path: {}", gitignore_path.display());
+
+        for issue in issues {
+            let file_name = issue.file.file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("?");
+            println!("     • {}", file_name);
+        }
+
+        if dry_run {
+            println!("     → Would add '.env*' to .gitignore");
+        } else {
+            // Actually add to .gitignore
+            let entry = "\n# Environment files (added by sec scan --fix)\n.env*\n";
+            let mut file = fs::OpenOptions::new()
+                .create(true)
+                .append(true)
+                .open(&gitignore_path)
+                .with_context(|| format!("Failed to open {}", gitignore_path.display()))?;
+
+            use std::io::Write;
+            file.write_all(entry.as_bytes())
+                .with_context(|| format!("Failed to write to {}", gitignore_path.display()))?;
+
+            println!("     ✓ Added '.env*' to .gitignore");
+        }
+
+        fixed_count += 1;
+        println!();
+    }
+
+    println!("{}", "─".repeat(60));
+    println!();
+
+    if dry_run {
+        println!("DRY RUN SUMMARY:");
+        println!("  Would fix: {} repository(ies)", fixed_count);
+        println!("  Skipped:   {} (already configured)", skipped_count);
+        println!();
+        println!("To apply these fixes, run: sec scan --fix");
+    } else {
+        println!("FIX SUMMARY:");
+        println!("  Fixed:   {} repository(ies)", fixed_count);
+        println!("  Skipped: {} (already configured)", skipped_count);
+    }
+
+    // Show tracked files that need manual intervention
+    let tracked_issues: Vec<_> = report.security_issues.iter()
+        .filter(|i| i.issue_type == SecurityIssueType::GitTracked)
+        .collect();
+
+    if !tracked_issues.is_empty() {
+        println!();
+        println!("⚠️  {} file(s) are TRACKED by git and need manual intervention:", tracked_issues.len());
+        for issue in tracked_issues {
+            println!("  • {}", issue.file.display());
+        }
+        println!();
+        println!("To fix tracked files:");
+        println!("  1. git rm --cached <file>");
+        println!("  2. Commit the removal");
+        println!("  3. Rotate any exposed secrets!");
+    }
+
+    Ok(())
+}
+
+/// Generate HTML report
+fn generate_html_report(report: &ScanReport) -> Result<String> {
+    let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
+    let html = format!(r#"<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secretariat Scan Report</title>
+    <style>
+        :root {{
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --border-color: #30363d;
+            --accent: #58a6ff;
+            --success: #3fb950;
+            --warning: #d29922;
+            --error: #f85149;
+            --critical: #ff7b72;
+        }}
+
+        * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+        }}
+
+        .container {{ max-width: 1200px; margin: 0 auto; }}
+
+        header {{
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }}
+
+        header h1 {{
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }}
+
+        header h1::before {{
+            content: '🔐';
+            font-size: 28px;
+        }}
+
+        .meta {{ color: var(--text-secondary); font-size: 14px; }}
+
+        .stats {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }}
+
+        .stat-card {{
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }}
+
+        .stat-card .value {{
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--accent);
+        }}
+
+        .stat-card.warning .value {{ color: var(--warning); }}
+        .stat-card.error .value {{ color: var(--error); }}
+        .stat-card.success .value {{ color: var(--success); }}
+
+        .stat-card .label {{
+            color: var(--text-secondary);
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+
+        section {{
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 24px;
+            overflow: hidden;
+        }}
+
+        section h2 {{
+            background: var(--bg-tertiary);
+            padding: 16px 20px;
+            font-size: 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }}
+
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+        }}
+
+        th, td {{
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }}
+
+        th {{
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }}
+
+        tr:last-child td {{ border-bottom: none; }}
+        tr:hover td {{ background: var(--bg-tertiary); }}
+
+        .badge {{
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }}
+
+        .badge-critical {{ background: rgba(255, 123, 114, 0.2); color: var(--critical); }}
+        .badge-high {{ background: rgba(248, 81, 73, 0.2); color: var(--error); }}
+        .badge-medium {{ background: rgba(210, 153, 34, 0.2); color: var(--warning); }}
+        .badge-low {{ background: rgba(63, 185, 80, 0.2); color: var(--success); }}
+        .badge-duplicate {{ background: rgba(210, 153, 34, 0.2); color: var(--warning); }}
+        .badge-unique {{ background: rgba(63, 185, 80, 0.2); color: var(--success); }}
+        .badge-provider {{ background: rgba(88, 166, 255, 0.2); color: var(--accent); }}
+
+        .provider-list {{ display: flex; gap: 4px; flex-wrap: wrap; }}
+
+        .mono {{ font-family: 'SF Mono', Monaco, 'Cascadia Code', monospace; font-size: 13px; }}
+
+        .empty {{ padding: 40px; text-align: center; color: var(--text-secondary); }}
+
+        .security-item {{
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }}
+
+        .security-item:last-child {{ border-bottom: none; }}
+
+        .security-item .header {{
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }}
+
+        .security-item .file {{ font-weight: 500; }}
+        .security-item .details {{ color: var(--text-secondary); font-size: 14px; }}
+
+        footer {{
+            text-align: center;
+            padding: 24px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }}
+
+        footer a {{ color: var(--accent); text-decoration: none; }}
+        footer a:hover {{ text-decoration: underline; }}
+
+        .btn {{
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }}
+
+        .btn-vscode {{
+            background: rgba(0, 122, 204, 0.15);
+            color: #007ACC;
+            border-color: rgba(0, 122, 204, 0.3);
+        }}
+
+        .btn-vscode:hover {{
+            background: rgba(0, 122, 204, 0.25);
+            border-color: rgba(0, 122, 204, 0.5);
+        }}
+
+        .btn-vscode svg {{
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }}
+
+        @media (max-width: 768px) {{
+            .stats {{ grid-template-columns: repeat(2, 1fr); }}
+            th, td {{ padding: 8px 12px; font-size: 14px; }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Secretariat Scan Report</h1>
+            <p class="meta">Generated: {timestamp} | Path: {root_path}</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="value">{total_files}</div>
+                <div class="label">Files Scanned</div>
+            </div>
+            <div class="stat-card">
+                <div class="value">{total_projects}</div>
+                <div class="label">Projects Found</div>
+            </div>
+            <div class="stat-card">
+                <div class="value">{unique_variables}</div>
+                <div class="label">Unique Variables</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="value">{duplicate_count}</div>
+                <div class="label">Duplicates</div>
+            </div>
+            <div class="stat-card {security_class}">
+                <div class="value">{security_issue_count}</div>
+                <div class="label">Security Issues</div>
+            </div>
+        </div>
+
+        {security_section}
+
+        {projects_section}
+
+        {variables_section}
+
+        {duplicates_section}
+
+        <footer>
+            <p>Generated by <a href="https://github.com/secretariat">Secretariat</a> &mdash; Local-first secrets management</p>
+        </footer>
+    </div>
+</body>
+</html>"#,
+        timestamp = timestamp,
+        root_path = report.root_path.display(),
+        total_files = report.summary.total_files,
+        total_projects = report.summary.total_projects,
+        unique_variables = report.summary.unique_variables,
+        duplicate_count = report.summary.duplicate_count,
+        security_issue_count = report.summary.security_issue_count,
+        security_class = if report.summary.security_issue_count > 0 { "error" } else { "success" },
+        security_section = generate_html_security_section(&report.security_issues),
+        projects_section = generate_html_projects_section(&report.projects),
+        variables_section = generate_html_variables_section(&report.variables),
+        duplicates_section = generate_html_duplicates_section(&report.duplicates),
+    );
+
+    Ok(html)
+}
+
+/// Generate HTML security section
+fn generate_html_security_section(issues: &[SecurityIssue]) -> String {
+    if issues.is_empty() {
+        return r#"
+        <section>
+            <h2>🛡️ Security Status</h2>
+            <div class="empty">✅ No security issues found. All .env files are properly gitignored.</div>
+        </section>
+        "#.to_string();
+    }
+
+    let mut rows = String::new();
+    for issue in issues {
+        let severity_badge = match issue.severity {
+            Severity::Critical => r#"<span class="badge badge-critical">🔴 Critical</span>"#,
+            Severity::High => r#"<span class="badge badge-high">🟠 High</span>"#,
+            Severity::Medium => r#"<span class="badge badge-medium">🟡 Medium</span>"#,
+            Severity::Low => r#"<span class="badge badge-low">🔵 Low</span>"#,
+        };
+
+        let file_name = issue.file.file_name()
+            .and_then(|n| n.to_str())
+            .unwrap_or("?");
+
+        let sensitive = if issue.has_sensitive_providers { "🔑" } else { "" };
+
+        rows.push_str(&format!(
+            r#"<tr>
+                <td>{severity}</td>
+                <td class="mono">{project}/{file} {sensitive}</td>
+                <td>{issue_type}</td>
+                <td>{variables}</td>
+            </tr>"#,
+            severity = severity_badge,
+            project = html_escape(&issue.project),
+            file = html_escape(file_name),
+            sensitive = sensitive,
+            issue_type = issue.issue_type,
+            variables = issue.variable_count,
+        ));
+    }
+
+    format!(
+        r#"
+        <section>
+            <h2>🛡️ Security Issues ({count})</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>File</th>
+                        <th>Issue</th>
+                        <th>Variables</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows}
+                </tbody>
+            </table>
+        </section>
+        "#,
+        count = issues.len(),
+        rows = rows,
+    )
+}
+
+/// Generate HTML projects section
+fn generate_html_projects_section(projects: &[Project]) -> String {
+    if projects.is_empty() {
+        return String::new();
+    }
+
+    let mut rows = String::new();
+    for project in projects {
+        let providers = if project.providers.is_empty() {
+            "-".to_string()
+        } else {
+            project.providers.iter()
+                .map(|p| format!(r#"<span class="badge badge-provider">{}</span>"#, html_escape(p)))
+                .collect::<Vec<_>>()
+                .join(" ")
+        };
+
+        // VS Code URL for opening project folder
+        let vscode_url = format!("vscode://file{}", html_escape(&project.path.to_string_lossy()));
+
+        rows.push_str(&format!(
+            r#"<tr>
+                <td class="mono">{name}</td>
+                <td>{files}</td>
+                <td>{variables}</td>
+                <td class="provider-list">{providers}</td>
+                <td>
+                    <a href="{vscode_url}" class="btn btn-vscode" title="Open in VS Code">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M17.583 2.91a1.89 1.89 0 0 1 2.385.458l2.33 2.94a1.89 1.89 0 0 1-.252 2.646L9.218 19.093a1.89 1.89 0 0 1-1.247.407l-4.1-.21a1.89 1.89 0 0 1-1.754-1.562L.536 8.972A1.89 1.89 0 0 1 1.5 6.823l3.147-1.4a1.89 1.89 0 0 1 1.577.044l4.524 2.262 6.835-4.82z"/>
+                        </svg>
+                        Open
+                    </a>
+                </td>
+            </tr>"#,
+            name = html_escape(&project.name),
+            files = project.files.len(),
+            variables = project.variable_count,
+            providers = providers,
+            vscode_url = vscode_url,
+        ));
+    }
+
+    format!(
+        r#"
+        <section>
+            <h2>📁 Projects ({count})</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Files</th>
+                        <th>Variables</th>
+                        <th>Providers</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows}
+                </tbody>
+            </table>
+        </section>
+        "#,
+        count = projects.len(),
+        rows = rows,
+    )
+}
+
+/// Generate HTML variables section
+fn generate_html_variables_section(variables: &[Variable]) -> String {
+    if variables.is_empty() {
+        return String::new();
+    }
+
+    let mut rows = String::new();
+    for var in variables {
+        let provider = var.provider.as_ref()
+            .map(|p| format!(r#"<span class="badge badge-provider">{}</span>"#, html_escape(p)))
+            .unwrap_or_else(|| "-".to_string());
+
+        let status = if var.is_duplicate {
+            r#"<span class="badge badge-duplicate">⚠️ Duplicate</span>"#
+        } else {
+            r#"<span class="badge badge-unique">✓ Unique</span>"#
+        };
+
+        rows.push_str(&format!(
+            r#"<tr>
+                <td class="mono">{name}</td>
+                <td>{occurrences}</td>
+                <td>{provider}</td>
+                <td>{status}</td>
+            </tr>"#,
+            name = html_escape(&var.name),
+            occurrences = var.occurrences.len(),
+            provider = provider,
+            status = status,
+        ));
+    }
+
+    format!(
+        r#"
+        <section>
+            <h2>🔑 Variables ({count})</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Occurrences</th>
+                        <th>Provider</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {rows}
+                </tbody>
+            </table>
+        </section>
+        "#,
+        count = variables.len(),
+        rows = rows,
+    )
+}
+
+/// Generate HTML duplicates section
+fn generate_html_duplicates_section(duplicates: &[Duplicate]) -> String {
+    if duplicates.is_empty() {
+        return String::new();
+    }
+
+    let mut items = String::new();
+    for dup in duplicates {
+        let mut occurrences_html = String::new();
+        for occ in &dup.occurrences {
+            let file_name = occ.file.file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("?");
+            occurrences_html.push_str(&format!(
+                r#"<tr>
+                    <td class="mono">{project}/{file}</td>
+                    <td class="mono">{value}</td>
+                </tr>"#,
+                project = html_escape(&occ.project),
+                file = html_escape(file_name),
+                value = html_escape(&occ.masked_value),
+            ));
+        }
+
+        items.push_str(&format!(
+            r#"
+            <div class="security-item">
+                <div class="header">
+                    <span class="badge badge-duplicate">⚠️ {unique_values} different value(s)</span>
+                    <span class="file mono">{name}</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Location</th>
+                            <th>Value (masked)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {occurrences}
+                    </tbody>
+                </table>
+            </div>
+            "#,
+            name = html_escape(&dup.name),
+            unique_values = dup.unique_values,
+            occurrences = occurrences_html,
+        ));
+    }
+
+    format!(
+        r#"
+        <section>
+            <h2>⚠️ Duplicates ({count})</h2>
+            {items}
+        </section>
+        "#,
+        count = duplicates.len(),
+        items = items,
+    )
+}
+
+/// Escape HTML special characters
+fn html_escape(s: &str) -> String {
+    s.replace('&', "&amp;")
+        .replace('<', "&lt;")
+        .replace('>', "&gt;")
+        .replace('"', "&quot;")
+        .replace('\'', "&#39;")
 }
 
 #[cfg(test)]

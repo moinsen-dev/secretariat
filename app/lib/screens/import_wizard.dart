@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:desktop_drop/desktop_drop.dart';
 import '../providers/vault_provider.dart';
+import '../services/logger_service.dart';
 
 /// Secret entry parsed from .env file
 class EnvSecret {
@@ -202,7 +203,7 @@ class _ImportWizardScreenState extends State<ImportWizardScreen> {
         );
         _importedCount++;
       } catch (e) {
-        debugPrint('Failed to import ${secret.name}: $e');
+        Log.import_('Failed to import ${secret.name}', error: e);
       }
     }
 

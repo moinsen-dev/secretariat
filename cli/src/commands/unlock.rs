@@ -13,6 +13,7 @@ use crate::client::DaemonClient;
 
 /// UnlockCommand arguments
 pub struct UnlockCommand {
+    #[allow(dead_code)] // Reserved for Touch ID vs password unlock distinction
     pub password: bool,
 }
 

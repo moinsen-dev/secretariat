@@ -16,6 +16,7 @@ import '../models/application.dart';
 import '../models/audit_entry.dart';
 import '../services/daemon_client.dart';
 import '../services/daemon_manager.dart';
+import '../services/logger_service.dart';
 
 /// F152: Define VaultProvider extends ChangeNotifier
 ///
@@ -115,13 +116,11 @@ class VaultProvider extends ChangeNotifier {
 
       // Auto-start daemon if not running
       if (_daemonStatus != DaemonStatus.running && autoStart) {
-        debugPrint(
-          '[VaultProvider] Daemon not running, attempting auto-start...',
-        );
+        Log.vault('Daemon not running, attempting auto-start...');
         final started = await _daemonManager.ensureRunning();
         if (started) {
           _daemonStatus = DaemonStatus.running;
-          debugPrint('[VaultProvider] Daemon started successfully');
+          Log.vault('Daemon started successfully');
         } else {
           _daemonStatus = DaemonStatus.stopped;
           _errorMessage = 'Failed to start daemon';

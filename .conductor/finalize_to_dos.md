@@ -1,8 +1,8 @@
 # Placeholder Hunt Report
 
-> Generated on 2025-12-28
-> **Last Updated**: 2025-12-28 (All critical/high priority issues FIXED)
-> Scanned 57 source files (Rust, Dart, Shell)
+> Generated on 2025-12-29 (Updated scan)
+> Previous scan: 2025-12-28
+> Scanned ~55 source files (Rust + Dart/Flutter)
 > Scope: Full project scan
 > Project: Secretariat - Local Secrets Orchestrator
 
@@ -10,225 +10,394 @@
 
 ## Executive Summary
 
-| Category | Total | Fixed | Remaining |
-|----------|-------|-------|-----------|
-| Critical (P0) | 4 | ✅ 4 | 0 |
-| High (P1) | 8 | ✅ 8 | 0 |
-| Medium (P2) | 17 | ✅ 3 | 14 |
-| Low (P3) | 0 | 0 | 0 |
-| **Total** | **29** | **15** | **14** |
+| Category | Total | Critical (P0) | High (P1) | Medium (P2) | Low (P3) |
+|----------|-------|---------------|-----------|-------------|----------|
+| Platform Not Implemented | 4 | 0 | 4 | 0 | 0 |
+| Placeholder Code | 3 | 0 | 2 | 1 | 0 |
+| Debug Logging | 25+ | 0 | 0 | 25+ | 0 |
+| Android Build TODOs | 2 | 0 | 0 | 2 | 0 |
+| Documentation TODOs | 4 | 0 | 0 | 4 | 0 |
+| Dead Code (intentional) | 12 | 0 | 0 | 0 | 12 |
+| **Total** | **50+** | **0** | **6** | **32+** | **12** |
 
-**Status**: ✅ **PRODUCTION READY** - All critical and high priority issues resolved
-**Remaining Issues**: Medium priority debug logging (acceptable for initial release)
+**Status**: MEDIUM RISK - No critical security issues, but platform support gaps exist
+**Estimated Effort:** ~8-12 hours (for High priority items)
 
----
+### What's Good (Not Found)
 
-## Critical (P0) - ✅ ALL FIXED
-
-### 1. ✅ FIXED: Hardcoded Development Encryption Key
-
-- [x] **daemon/src/main.rs** - Removed hardcoded development encryption key
-
-  **Fix Applied:**
-  - Changed from `Storage::new(db_path, "development_key_...")` to `Storage::new_without_key(db_path)`
-  - Database encryption is now handled at the application layer via AES-256-GCM with password-derived keys
-  - Individual secrets are encrypted with keys derived from the user's master password via Argon2
-
-### 2. ✅ FIXED: Development Master Key Fallback in Production
-
-- [x] **daemon/src/main.rs:253-277** - Removed insecure master key fallback
-
-  **Fix Applied:**
-  - Changed fallback behavior from generating a random key to starting vault in **locked state**
-  - When keychain has no key, vault starts locked (secure default)
-  - User must unlock with master password via `sec unlock`
-  - Added `ServerState::new_with_lock_state()` for proper initialization
-
-### 3. ✅ FIXED: Windows Named Pipes Not Implemented
-
-- [x] **daemon/src/server.rs:326-333** - Added graceful Windows detection
-- [x] **app/lib/services/daemon_client.dart:436-448** - Added graceful Windows detection
-
-  **Fix Applied:**
-  - Clear, user-friendly error message explaining Windows is not yet supported
-  - Information about supported platforms (macOS, Linux)
-  - Link to project for updates on Windows support
-
-### 4. ✅ FIXED: TODO in Security-Critical Path
-
-- [x] **daemon/src/main.rs:207-209** - Removed TODO comment with implementation
-
-  **Fix Applied:**
-  - Removed the TODO comment about production encryption keys
-  - Implemented proper password-based key derivation
+- No hardcoded credentials in production code
+- No NotImplementedError/unimplemented!() macros in active code paths
+- No disabled tests (#[ignore] or skip: true)
+- No empty catch blocks - all have proper error handling
+- No fake data (lorem ipsum, example.com, John Doe) in production code
+- No todo!() macros
+- No magic numbers in business logic
 
 ---
 
-## High (P1) - ✅ ALL FIXED
+## Critical (P0) - Must Fix Before Production
 
-### 1. ✅ FIXED: Linux/Windows Keychain Not Implemented
+**No critical issues found in this scan.**
 
-- [x] **daemon/src/keychain.rs:240-299** - Added clear platform-specific error messages
-
-  **Fix Applied:**
-  - Clear error messages for Linux (Secret Service API not yet available)
-  - Clear error messages for Windows (Credential Manager not yet available)
-  - Guidance that password-based key derivation is used instead
-  - `delete_master_key()` returns success (no keychain to delete from)
-
-### 2. ✅ FIXED: Linux/Windows Sleep Monitoring Not Implemented
-
-- [x] **daemon/src/system_events.rs:133-158** - Added informative messages
-
-  **Fix Applied:**
-  - Informative log messages explaining auto-lock is not available
-  - Tip for users to manually lock vault with `sec lock`
-  - Uses `info!` level logging instead of warning spam
-
-### 3. ✅ FIXED: Hardcoded Development Paths in Flutter App
-
-- [x] **app/lib/services/daemon_manager.dart:73-109** - Removed hardcoded paths
-
-  **Fix Applied:**
-  - Removed hardcoded `/Users/udi/work/...` paths
-  - Added `SECRETARIAT_DEV_PATH` environment variable support
-  - Added relative path detection from app bundle location
-  - Searches up directory tree for workspace root (Cargo.toml)
-
-### 4. ✅ FIXED: App Register Windows Stub
-
-- [x] **daemon/src/handlers/app_register.rs:46-62** - Added clear error message
-
-  **Fix Applied:**
-  - Clear error message for Windows platform
-  - Information about planned future support
-  - Guidance that macOS and Linux are currently supported
+Previous critical issues (from 2025-12-28) have been addressed:
+- [x] Hardcoded development encryption key - FIXED
+- [x] Development master key fallback - FIXED
+- [x] Windows Named Pipes crash - FIXED (graceful error)
+- [x] TODO in security-critical path - FIXED
 
 ---
 
-## Medium (P2) - Partially Addressed
+## High (P1) - Fix Before Release
 
-### 1. Debug Logging in Production Code
+### 1. Platform Support Not Implemented - Linux/Windows Keychain
 
-These are acceptable for the initial release as they provide useful debugging information:
+**Files affected:**
+- `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/daemon/src/keychain.rs`
+- `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/daemon/src/system_events.rs`
+- `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/daemon/src/handlers/app_register.rs`
 
-| File | Status | Notes |
-|------|--------|-------|
-| app/lib/main.dart | Kept | System tray initialization logging |
-| app/lib/services/daemon_manager.dart | Kept | Daemon lifecycle logging |
-| app/lib/services/daemon_client.dart | Kept | Connection status logging |
-| app/lib/providers/vault_provider.dart | Kept | State transition logging |
-| daemon/src/main.rs | Kept | User-facing CLI output (println!) |
-| cli/src/client.rs | Kept | User-facing daemon startup messages |
+**Pattern:** "Not yet implemented" for Linux/Windows platforms
 
-**Note**: The `debugPrint` calls in Flutter only appear in debug mode. The `println!` calls in CLI are intentional user output.
-
-### 2. ✅ FIXED: Panic in Test Code
-
-- [x] **daemon/src/handlers/vault_init.rs:211-212** - Replaced panic with assertion
-
-  **Fix Applied:**
-  - Changed `panic!("Unexpected error: {}", err)` to `assert!(false, "Unexpected error...")`
-
-### 3. Test Database Paths
-
-The `/tmp/test_*.db` paths in test code are acceptable:
-- Tests run in isolated environments
-- Paths are for test databases only
-- Using `tempfile` crate would be nice-to-have
-
-### 4. ✅ FIXED: User-Facing Error Messages
-
-All "not yet implemented" messages have been replaced with user-friendly text:
-- Clear platform support information
-- Guidance on what users should do
-- Links to project for updates
-
----
-
-## Verification
-
-### Build Status
-
-```bash
-$ cargo build -p secd -p sec
-   Compiling secd v0.1.0
-   Compiling sec v0.1.0
-    Finished `dev` profile
-# 3 warnings (unused fields - benign)
-
-$ cd app && flutter analyze
-Analyzing app...
-2 issues found. (deprecated_member_use, use_build_context_synchronously)
-# Both are pre-existing and unrelated to security
+**daemon/src/keychain.rs:33-34**
+```rust
+/// - **Linux**: Not yet implemented (TODO: use Secret Service API)
+/// - **Windows**: Not yet implemented (TODO: use Credential Manager)
 ```
 
-### Tests Status
+**daemon/src/keychain.rs:153-154**
+```rust
+/// - **Linux**: Not yet implemented (returns Ok(true) as placeholder)
+/// - **Windows**: Not yet implemented (returns Ok(true) as placeholder)
+```
 
-All changes compile successfully. Security-critical paths have been addressed.
+**Risk:** Linux and Windows users will not have native keychain integration. Error messages are now user-friendly (from previous fix), but functionality is limited.
 
----
+**Suggested Fix:**
+- Linux: Implement using `secret-service` crate or `libsecret` bindings
+- Windows: Implement using `windows-credentials` crate
 
-## Changes Made
-
-### Files Modified
-
-1. **daemon/src/main.rs**
-   - Removed hardcoded encryption key
-   - Changed vault to start in locked state when keychain unavailable
-   - Added `new_with_lock_state` constructor usage
-
-2. **daemon/src/storage.rs**
-   - Added `new_without_key()` constructor for unencrypted SQLite with WAL mode
-
-3. **daemon/src/server.rs**
-   - Added `new_with_lock_state()` constructor
-   - Improved Windows platform error messages
-
-4. **daemon/src/keychain.rs**
-   - Rewrote non-macOS stubs with clear, helpful error messages
-   - Added platform-specific guidance
-
-5. **daemon/src/system_events.rs**
-   - Added informative messages for non-macOS platforms
-   - Provides guidance for manual vault locking
-
-6. **daemon/src/handlers/app_register.rs**
-   - Added Windows platform error message
-   - Clear guidance about supported platforms
-
-7. **daemon/src/handlers/vault_init.rs**
-   - Replaced panic with proper assertion in test
-
-8. **app/lib/services/daemon_manager.dart**
-   - Removed hardcoded development paths
-   - Added environment variable support
-   - Added relative path detection
-
-9. **app/lib/services/daemon_client.dart**
-   - Improved Windows platform error message
+**Effort:** 4-8 hours per platform
 
 ---
 
-## Security Assessment - UPDATED
+### 2. Touch ID Unlock Placeholder in Flutter App
 
-| Issue | Original Severity | Status |
-|-------|-------------------|--------|
-| Hardcoded encryption key | CRITICAL | ✅ FIXED |
-| Insecure key fallback | CRITICAL | ✅ FIXED |
-| Windows platform crash | CRITICAL | ✅ FIXED |
-| TODO in security path | CRITICAL | ✅ FIXED |
-| Linux/Windows keychain | HIGH | ✅ FIXED (graceful errors) |
-| Linux/Windows sleep | HIGH | ✅ FIXED (informative messages) |
-| Hardcoded dev paths | HIGH | ✅ FIXED |
-| App register Windows | HIGH | ✅ FIXED (graceful errors) |
+**File:** `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/app/lib/screens/main_shell.dart:142-143`
 
-**Status**: ✅ **Ready for production deployment on macOS and Linux**
+```dart
+// For now, this is a placeholder - full implementation would need
+// keychain integration to retrieve the password
+```
+
+**Context:**
+```dart
+onTouchIdUnlock: () async {
+  // Touch ID authentication is handled by the dialog
+  // After successful auth, we still need to unlock with stored password
+  // For now, this is a placeholder - full implementation would need
+  // keychain integration to retrieve the password
+  final provider = Provider.of<VaultProvider>(context, listen: false);
+  // In a full implementation, retrieve password from keychain here
+  await provider.loadSecrets();
+  await provider.loadApplications();
+```
+
+**Risk:** Touch ID unlock appears to work but doesn't actually unlock the vault securely - it bypasses the password requirement by loading data without proper decryption.
+
+**Suggested Fix:** Integrate with iOS/macOS keychain to store and retrieve the master password after biometric authentication.
+
+**Effort:** 2-4 hours
 
 ---
 
-**Generated**: 2025-12-28
-**Last Updated**: 2025-12-28
-**Fixed Issues**: 15 of 29
-**Remaining**: 14 (all Medium priority, acceptable for release)
-**Report Path**: .conductor/finalize_to_dos.md
+### 3. System Events Not Implemented - Linux/Windows
+
+**File:** `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/daemon/src/system_events.rs:9-10`
+
+```rust
+//! - **Linux**: Uses systemd-logind or UPower (not yet implemented)
+//! - **Windows**: Uses SetSuspendState/WM_POWERBROADCAST (not yet implemented)
+```
+
+**Line 135:**
+```rust
+/// On Linux/Windows, sleep monitoring is not yet implemented.
+```
+
+**Risk:** On Linux/Windows, the daemon won't auto-lock on system sleep, potentially leaving secrets accessible.
+
+**Suggested Fix:** Implement using D-Bus for Linux, Win32 API for Windows.
+
+**Effort:** 2-4 hours per platform
+
+---
+
+### 4. Unreachable Code in Client
+
+**File:** `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/cli/src/client.rs:198`
+
+```rust
+unreachable!()
+```
+
+**Context:** Located in retry loop for daemon startup. After exhausting retries, this `unreachable!()` is hit.
+
+**Risk:** If daemon startup fails after max retries, this will panic instead of returning a proper error.
+
+**Suggested Fix:** Return a proper `Err(anyhow!("Failed to start daemon after N attempts"))` instead of `unreachable!()`.
+
+**Effort:** 15 minutes
+
+---
+
+## Medium (P2) - Should Address
+
+### 1. Debug Logging Statements (debugPrint) - 25+ occurrences
+
+**Files affected:**
+- `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/app/lib/main.dart` (18 occurrences)
+- `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/app/lib/services/daemon_client.dart` (1 occurrence)
+- `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/app/lib/services/daemon_manager.dart` (1 occurrence)
+- `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/app/lib/providers/vault_provider.dart` (2 occurrences)
+- `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/app/lib/widgets/vault_unlock_dialog.dart` (2 occurrences)
+- `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/app/lib/screens/main_shell.dart` (1 occurrence)
+- `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/app/lib/screens/import_wizard.dart` (1 occurrence)
+- `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/app/test/daemon_client_integration_test.dart` (6 occurrences - test file, OK)
+
+**Example from app/lib/main.dart:**
+```dart
+debugPrint('[WindowManager] Initialized with minimum size 800x600');
+debugPrint('[WindowManager] Failed to initialize: $e');
+debugPrint('[Main] Checking daemon status...');
+debugPrint('[Main] Daemon status: $status');
+debugPrint('[SystemTray] Initialized successfully');
+```
+
+**Note:** Flutter's `debugPrint` only appears in debug builds, so this is less critical than raw `print()`.
+
+**Risk:** Potential information disclosure in debug builds, performance impact.
+
+**Suggested Fix:**
+- Replace with proper logging framework (e.g., `logger` package)
+- Or wrap in `kDebugMode` check for explicit control
+- Consider structured logging for production telemetry
+
+**Effort:** 1-2 hours
+
+---
+
+### 2. Android Build Configuration TODOs
+
+**File:** `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/app/android/app/build.gradle.kts`
+
+**Line 23:**
+```kotlin
+// TODO: Specify your own unique Application ID
+applicationId = "dev.moinsen.secretariat"
+```
+**Note:** The application ID is already set correctly. TODO comment is stale.
+
+**Line 35:**
+```kotlin
+// TODO: Add your own signing config for the release build.
+// Signing with the debug keys for now, so `flutter run --release` works.
+signingConfig = signingConfigs.getByName("debug")
+```
+**Note:** Release builds will use debug signing, not suitable for Play Store.
+
+**Suggested Fix:**
+- Remove first TODO (application ID is already correct)
+- Create proper release signing configuration before Play Store submission
+
+**Effort:** 30 minutes to remove TODO, 1 hour for signing config
+
+---
+
+### 3. Outdated Server Documentation
+
+**File:** `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/daemon/src/server.rs:408`
+
+```rust
+/// Currently returns placeholder responses for all methods.
+```
+
+**Risk:** This documentation is outdated - methods are actually implemented.
+
+**Suggested Fix:** Update documentation to reflect current implementation state.
+
+**Effort:** 10 minutes
+
+---
+
+### 4. SDK Documentation Examples Using unwrap()
+
+**File:** `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/sdk-rust/src/lib.rs` (multiple locations)
+
+Examples use `.unwrap()` extensively:
+```rust
+/// let client = Secretariat::new().unwrap();
+/// let api_key = client.get("OPENAI_API_KEY").unwrap();
+```
+
+**Risk:** Users copying examples may not handle errors properly in their applications.
+
+**Suggested Fix:** Show proper error handling with `?` operator or `expect()` with descriptive messages.
+
+**Effort:** 30 minutes
+
+---
+
+## Low (P3) - Nice to Have
+
+### 1. Dead Code Annotations (#[allow(dead_code)]) - 12 occurrences
+
+These are intentionally marked with explanatory comments and are acceptable:
+
+| File | Function/Field | Reason |
+|------|----------------|--------|
+| daemon/src/crypto.rs:62 | `generate_master_key()` | "Kept for API completeness" |
+| daemon/src/handlers/vault_unlock.rs:15 | `status` field | Part of result struct |
+| daemon/src/handlers/vault_lock.rs:13,19 | `VaultLockResult` | Handler coordination |
+| daemon/src/keychain.rs:116 | `delete_master_key()` | "Used for vault reset" |
+| daemon/src/keychain.rs:156,213 | biometric functions | "Phase 2 features" |
+| daemon/src/storage.rs:60,141,327,379,397,943 | Various methods | Future use documented |
+| daemon/src/server.rs:102,255 | Server methods | "Testing/compatibility" |
+| cli/src/commands/import.rs:49 | `SetResponse` | Deserialization validation |
+| cli/src/commands/explain.rs:36 | `app_id` field | API response structure |
+| cli/src/commands/unlock.rs:16 | `password` field | Reserved for future feature |
+
+**Assessment:** All are properly documented and intentional. No action needed.
+
+---
+
+### 2. Console Print Statements in CLI (Intentional)
+
+The CLI uses `println!()` and `eprintln!()` extensively for user-facing output. This is intentional and correct for command-line tools.
+
+**Files:** `cli/src/commands/*.rs`, `daemon/src/main.rs`
+
+---
+
+### 3. Unsafe Block in Daemon
+
+**File:** `/Users/udi/work/moinsen/ideas/local_secrets_orchestrator/daemon/src/main.rs:134`
+
+```rust
+let result = unsafe { libc::kill(pid as i32, 0) };
+```
+
+**Assessment:** This is a standard POSIX pattern for checking if a process exists (sending signal 0). The unsafe block is minimal and well-understood.
+
+**Risk:** Low - idiomatic Rust for POSIX operations.
+
+---
+
+## Quick Wins (< 15 minutes each)
+
+1. [ ] **cli/src/client.rs:198** - Replace `unreachable!()` with proper error return (~5 min)
+2. [ ] **daemon/src/server.rs:408** - Update outdated documentation (~5 min)
+3. [ ] **app/android/app/build.gradle.kts:23** - Remove resolved TODO comment (~2 min)
+
+**Total Quick Win Effort:** ~15 minutes
+
+---
+
+## Needs Implementation (> 1 hour each)
+
+| Task | Effort | Priority |
+|------|--------|----------|
+| Linux Keychain Support (Secret Service API) | 4-8 hours | HIGH |
+| Windows Keychain Support (Credential Manager) | 4-8 hours | HIGH |
+| Touch ID Unlock (keychain password storage) | 2-4 hours | HIGH |
+| Debug Logging Cleanup (proper logging framework) | 1-2 hours | MEDIUM |
+| Linux System Events (D-Bus integration) | 2-4 hours | MEDIUM |
+| Windows System Events (Win32 API) | 2-4 hours | MEDIUM |
+| Android Release Signing | 1 hour | MEDIUM |
+
+---
+
+## Needs Discussion
+
+1. **Platform Support Priority** - Should Linux or Windows be implemented first?
+2. **Debug Logging Strategy** - Use a logging framework, or just wrap in kDebugMode?
+3. **Touch ID Implementation** - Is the current placeholder behavior acceptable for initial macOS release?
+
+---
+
+## By File (for focused cleanup)
+
+### High Priority Files
+
+| File | Issues | Priority |
+|------|--------|----------|
+| daemon/src/keychain.rs | 3 platform TODOs | HIGH |
+| app/lib/screens/main_shell.dart | 1 Touch ID placeholder | HIGH |
+| cli/src/client.rs | 1 unreachable!() | HIGH |
+| daemon/src/system_events.rs | 2 platform TODOs | HIGH |
+
+### Medium Priority Files
+
+| File | Issues | Priority |
+|------|--------|----------|
+| app/lib/main.dart | 18 debugPrint calls | MEDIUM |
+| app/lib/services/*.dart | 2 debugPrint calls | MEDIUM |
+| app/android/app/build.gradle.kts | 2 stale TODOs | MEDIUM |
+| daemon/src/server.rs | 1 outdated doc | MEDIUM |
+
+---
+
+## Pattern Distribution
+
+```
+Platform Support Gaps:  ||||       4 issues (HIGH)
+Placeholder Code:       |||        3 issues (HIGH/MEDIUM)
+Debug Logging:          ||||||||||||||||||||||||| 25+ (MEDIUM)
+Build Config TODOs:     ||         2 issues (MEDIUM)
+Documentation TODOs:    ||||       4 issues (LOW)
+Dead Code (OK):         ||||||||||||  12 issues (intentional, LOW)
+```
+
+---
+
+## Recommendations
+
+### Immediate Actions (Before Next Release)
+1. **Replace unreachable!()** - Prevents potential panic in production
+2. **Review Touch ID behavior** - Decide if placeholder is acceptable
+3. **Update outdated docs** - Quick wins with high clarity impact
+
+### Short-Term (Next Sprint)
+1. **Implement logging framework** - Replace all debugPrint with proper logging
+2. **Android release signing** - Prepare for app store submission
+
+### Long-Term (Roadmap)
+1. **Linux platform support** - Keychain + system events
+2. **Windows platform support** - Keychain + system events
+
+### Process Improvements
+1. **Pre-commit hook** - Warn on `debugPrint` in non-test files
+2. **CI pipeline** - Flag `unreachable!()` or `panic!()` in non-test code
+3. **Platform tracking** - Create GitHub issues for Linux/Windows support
+
+---
+
+## Comparison with Previous Scan (2025-12-28)
+
+| Category | Previous | Current | Change |
+|----------|----------|---------|--------|
+| Critical (P0) | 4 (all fixed) | 0 | Maintained |
+| High (P1) | 8 (all fixed) | 6 new found | +6 edge cases |
+| Medium (P2) | 17 | 32+ | More thorough scan |
+| Low (P3) | 0 | 12 | Documented dead_code |
+
+**Notes:**
+- Previous critical/high fixes remain in place
+- This scan identified additional platform support gaps
+- debugPrint count increased due to more thorough scanning
+- #[allow(dead_code)] patterns now documented as intentional
+
+---
+
+**Generated**: 2025-12-29
+**Analysis Type**: placeholder-hunt
+**Report Path**: `.conductor/finalize_to_dos.md`

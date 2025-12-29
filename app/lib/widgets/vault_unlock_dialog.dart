@@ -14,6 +14,7 @@ import 'dart:io' show Platform, exit;
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import '../theme/colors.dart';
+import '../services/logger_service.dart';
 
 /// Modal dialog that blocks app access until vault is unlocked
 ///
@@ -95,9 +96,9 @@ class _VaultUnlockDialogState extends State<VaultUnlockDialog> {
         });
       }
     } on LocalAuthException catch (e) {
-      debugPrint('[VaultUnlockDialog] LocalAuth error: ${e.code} - ${e.description}');
+      Log.ui('LocalAuth error: ${e.code} - ${e.description}');
     } catch (e) {
-      debugPrint('[VaultUnlockDialog] Unexpected error checking biometrics: $e');
+      Log.ui('Unexpected error checking biometrics', error: e);
     }
   }
 

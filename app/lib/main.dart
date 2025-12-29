@@ -14,6 +14,7 @@ import 'package:tray_manager/tray_manager.dart';
 import 'package:window_manager/window_manager.dart';
 import 'dart:io' show Platform, exit;
 import 'providers/vault_provider.dart';
+import 'services/logger_service.dart';
 import 'screens/main_shell.dart';
 import 'screens/secrets_list.dart';
 import 'screens/secret_detail.dart';
@@ -77,30 +78,30 @@ Future<void> _initWindowManager() async {
     await windowManager.show();
     await windowManager.focus();
 
-    debugPrint('[WindowManager] Initialized with minimum size 800x600');
+    Log.window('Initialized with minimum size 800x600');
   } catch (e) {
-    debugPrint('[WindowManager] Failed to initialize: $e');
+    Log.window('Failed to initialize', error: e);
   }
 }
 
 /// Ensure daemon is running at app startup
 Future<void> _ensureDaemonRunning(VaultProvider vaultProvider) async {
   try {
-    debugPrint('[Main] Checking daemon status...');
+    Log.main('Checking daemon status...');
     final status = await vaultProvider.checkDaemonStatus();
-    debugPrint('[Main] Daemon status: $status');
+    Log.main('Daemon status: $status');
 
     if (!vaultProvider.isDaemonRunning) {
-      debugPrint('[Main] Daemon not running, attempting to start...');
+      Log.main('Daemon not running, attempting to start...');
       final started = await vaultProvider.startDaemon();
       if (started) {
-        debugPrint('[Main] Daemon started successfully');
+        Log.main('Daemon started successfully');
       } else {
-        debugPrint('[Main] WARNING: Failed to start daemon');
+        Log.warning('Failed to start daemon');
       }
     }
   } catch (e) {
-    debugPrint('[Main] Error checking/starting daemon: $e');
+    Log.main('Error checking/starting daemon', error: e);
   }
 }
 
@@ -135,9 +136,9 @@ Future<void> _initSystemTray() async {
     );
 
     await TrayManager.instance.setContextMenu(menu);
-    debugPrint('[SystemTray] Initialized successfully');
+    Log.tray('Initialized successfully');
   } catch (e) {
-    debugPrint('[SystemTray] Failed to initialize: $e');
+    Log.tray('Failed to initialize', error: e);
   }
 }
 
@@ -156,7 +157,7 @@ Future<void> updateTrayIcon(bool isLocked) async {
       isLocked ? 'Secretariat - Locked' : 'Secretariat - Unlocked',
     );
   } catch (e) {
-    debugPrint('[SystemTray] Failed to update icon: $e');
+    Log.tray('Failed to update icon', error: e);
   }
 }
 
@@ -218,7 +219,7 @@ class _SecretariatAppState extends State<SecretariatApp> with TrayListener {
   /// Handle menu item clicks
   @override
   void onTrayMenuItemClick(MenuItem menuItem) {
-    debugPrint('[SystemTray] Menu item clicked: ${menuItem.key}');
+    Log.tray('Menu item clicked: ${menuItem.key}');
     switch (menuItem.key) {
       case 'open':
         _handleOpenWindow();
@@ -238,30 +239,30 @@ class _SecretariatAppState extends State<SecretariatApp> with TrayListener {
 
   /// F195: Handle "Open" menu item - show main window
   void _handleOpenWindow() async {
-    debugPrint('[SystemTray] Open window requested');
+    Log.tray('Open window requested');
     try {
       await windowManager.show();
       await windowManager.focus();
     } catch (e) {
-      debugPrint('[SystemTray] Failed to show window: $e');
+      Log.tray('Failed to show window', error: e);
     }
   }
 
   /// F196: Handle "Lock" menu item - lock vault via daemon
   void _handleLockVault() async {
-    debugPrint('[SystemTray] Lock vault requested');
+    Log.tray('Lock vault requested');
     try {
       await widget.vaultProvider.lockVault();
       await updateTrayIcon(true);
       await _updateTrayMenu(isLocked: true);
     } catch (e) {
-      debugPrint('[SystemTray] Failed to lock vault: $e');
+      Log.tray('Failed to lock vault', error: e);
     }
   }
 
   /// F197: Handle "Quit" menu item - exit app
   void _handleQuit() {
-    debugPrint('[SystemTray] Quit requested');
+    Log.tray('Quit requested');
     exit(0);
   }
 
@@ -299,7 +300,7 @@ class _SecretariatAppState extends State<SecretariatApp> with TrayListener {
 
       await TrayManager.instance.setContextMenu(menu);
     } catch (e) {
-      debugPrint('[SystemTray] Failed to update menu: $e');
+      Log.tray('Failed to update menu', error: e);
     }
   }
 
@@ -499,7 +500,7 @@ class FocusSearchAction extends Action<FocusSearchIntent> {
   Object? invoke(FocusSearchIntent intent) {
     // This will be handled by the MainPopup widget which has the search field
     // We broadcast via a notification or use a global key
-    debugPrint('[KeyboardShortcuts] Focus search requested');
+    Log.ui('Focus search requested');
     return null;
   }
 }
@@ -582,7 +583,7 @@ class QuitAppIntent extends Intent {
 class QuitAppAction extends Action<QuitAppIntent> {
   @override
   Object? invoke(QuitAppIntent intent) {
-    debugPrint('[KeyboardShortcuts] Quit app requested');
+    Log.ui('Quit app requested');
     exit(0);
   }
 }
@@ -596,7 +597,7 @@ class MinimizeWindowIntent extends Intent {
 class MinimizeWindowAction extends Action<MinimizeWindowIntent> {
   @override
   Object? invoke(MinimizeWindowIntent intent) {
-    debugPrint('[KeyboardShortcuts] Minimize window requested');
+    Log.window('Minimize window requested');
     windowManager.minimize();
     return null;
   }
@@ -612,7 +613,7 @@ class NavigateToTabIntent extends Intent {
 class NavigateToTabAction extends Action<NavigateToTabIntent> {
   @override
   Object? invoke(NavigateToTabIntent intent) {
-    debugPrint('[KeyboardShortcuts] Navigate to tab ${intent.tabIndex}');
+    Log.ui('Navigate to tab ${intent.tabIndex}');
     // Use the global key to access MainShell state
     mainShellKey.currentState?.navigateToTab(intent.tabIndex);
     return null;

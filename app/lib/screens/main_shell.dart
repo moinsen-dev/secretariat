@@ -11,6 +11,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/vault_provider.dart';
+import '../services/logger_service.dart';
 import '../theme/colors.dart';
 import '../widgets/vault_unlock_dialog.dart';
 import 'home_tab.dart';
@@ -96,7 +97,7 @@ class MainShellState extends State<MainShell> {
         await provider.loadApplications();
       }
     } catch (e) {
-      debugPrint('[MainShell] Error checking vault status: $e');
+      Log.ui('Error checking vault status', error: e);
     }
   }
 

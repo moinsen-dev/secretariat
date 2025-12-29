@@ -9,7 +9,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
+import 'logger_service.dart';
 
 /// F144: Define DaemonClient class with Socket? _socket field
 ///
@@ -100,9 +100,9 @@ class DaemonClient {
     }
   }
 
-  /// Log a message (uses debugPrint in debug mode)
+  /// Log a message using centralized logging
   void _log(String message) {
-    debugPrint('[DaemonClient] $message');
+    Log.daemon(message);
   }
 
   /// Disconnect from the daemon

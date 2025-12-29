@@ -33,6 +33,7 @@ struct AppsResponse {
 
 #[derive(Debug, Deserialize)]
 struct AuditEntry {
+    #[allow(dead_code)] // Part of API response, used for filtering context
     app_id: String,
     secret_name: String,
     action: String,

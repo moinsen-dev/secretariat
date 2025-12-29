@@ -7,8 +7,8 @@
 // - Install/manage LaunchAgent (macOS)
 
 import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
+import 'logger_service.dart';
 
 /// Status of the Secretariat daemon
 enum DaemonStatus {
@@ -116,7 +116,7 @@ class DaemonManager {
 
   /// Log a message
   void _log(String message) {
-    debugPrint('[DaemonManager] $message');
+    Log.daemon(message);
   }
 
   /// Check if daemon is running by checking socket existence and connectivity

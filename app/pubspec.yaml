@@ -57,6 +57,9 @@ dependencies:
   # Biometric authentication - for Touch ID unlock
   local_auth: ^3.0.0
 
+  # Structured logging - replaces debugPrint with proper logging framework
+  talker: ^4.6.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
