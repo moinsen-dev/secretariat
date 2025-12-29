@@ -4,6 +4,7 @@
 //! - Discover what environment variables exist across projects
 //! - Detect which directories/projects use which secrets
 //! - Identify patterns: providers, duplicates, inconsistencies
+//! - Detect security issues: files not in .gitignore, committed secrets
 //! - Aid onboarding by helping users migrate secrets to Secretariat
 //!
 //! This command operates independently of the daemon (CLI-only).
@@ -15,6 +16,7 @@ use std::collections::{HashMap, HashSet};
 use std::fs;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
+use std::process::Command;
 use walkdir::WalkDir;
 
 /// ScanCommand arguments
@@ -27,6 +29,8 @@ pub struct ScanCommand {
     pub summary: bool,
     /// Show only duplicates
     pub duplicates: bool,
+    /// Show only security issues (files not in .gitignore)
+    pub security: bool,
     /// Filter by provider
     pub provider: Option<String>,
     /// Export results to file
@@ -43,6 +47,7 @@ pub struct ScanReport {
     pub projects: Vec<Project>,
     pub variables: Vec<Variable>,
     pub duplicates: Vec<Duplicate>,
+    pub security_issues: Vec<SecurityIssue>,
     pub summary: Summary,
 }
 
@@ -90,7 +95,49 @@ pub struct Summary {
     pub total_variables: usize,
     pub unique_variables: usize,
     pub duplicate_count: usize,
+    pub security_issue_count: usize,
     pub providers_found: Vec<String>,
+}
+
+/// Security issue - files that may be exposed
+#[derive(Debug, Clone, Serialize)]
+pub struct SecurityIssue {
+    pub file: PathBuf,
+    pub project: String,
+    pub issue_type: SecurityIssueType,
+    pub severity: Severity,
+    pub variable_count: usize,
+    pub has_sensitive_providers: bool,
+}
+
+/// Type of security issue
+#[derive(Debug, Clone, Serialize, PartialEq)]
+pub enum SecurityIssueType {
+    /// File is tracked by git (committed)
+    GitTracked,
+    /// File exists but not in .gitignore
+    NotInGitignore,
+    /// File is in .gitignore but was previously committed
+    WasCommitted,
+}
+
+impl std::fmt::Display for SecurityIssueType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            SecurityIssueType::GitTracked => write!(f, "Tracked by git"),
+            SecurityIssueType::NotInGitignore => write!(f, "Not in .gitignore"),
+            SecurityIssueType::WasCommitted => write!(f, "Previously committed"),
+        }
+    }
+}
+
+/// Severity level
+#[derive(Debug, Clone, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Severity {
+    Critical,  // File is tracked and has sensitive secrets
+    High,      // File is tracked
+    Medium,    // Not in .gitignore
+    Low,       // Was committed but now ignored
 }
 
 /// Internal struct for parsed secrets
@@ -166,6 +213,8 @@ pub async fn handle_scan(cmd: ScanCommand) -> Result<()> {
         display_summary(&report);
     } else if cmd.duplicates {
         display_duplicates_only(&report);
+    } else if cmd.security {
+        display_security_only(&report);
     } else {
         display_full_report(&report);
     }
@@ -178,6 +227,8 @@ fn scan_directory(root: &Path, max_depth: usize, provider_filter: Option<&str>) 
     let mut env_files: Vec<PathBuf> = Vec::new();
     let mut all_secrets: Vec<ParsedSecret> = Vec::new();
     let mut project_map: HashMap<PathBuf, Vec<PathBuf>> = HashMap::new();
+    let mut file_secrets_count: HashMap<PathBuf, usize> = HashMap::new();
+    let mut file_has_sensitive: HashMap<PathBuf, bool> = HashMap::new();
 
     // Walk directory tree
     for entry in WalkDir::new(root)
@@ -201,6 +252,12 @@ fn scan_directory(root: &Path, max_depth: usize, provider_filter: Option<&str>) 
 
             // Parse the file
             if let Ok(secrets) = parse_env_file(path, &project_root) {
+                let secret_count = secrets.len();
+                let has_sensitive = secrets.iter().any(|s| is_sensitive_provider(s.provider.as_deref()));
+
+                file_secrets_count.insert(path.to_path_buf(), secret_count);
+                file_has_sensitive.insert(path.to_path_buf(), has_sensitive);
+
                 for secret in secrets {
                     // Apply provider filter
                     if let Some(filter) = provider_filter {
@@ -220,6 +277,14 @@ fn scan_directory(root: &Path, max_depth: usize, provider_filter: Option<&str>) 
     // Build variable list with duplicate detection
     let (variables, duplicates) = build_variables(&all_secrets);
 
+    // Detect security issues
+    let security_issues = detect_security_issues(
+        &env_files,
+        &project_map,
+        &file_secrets_count,
+        &file_has_sensitive,
+    );
+
     // Build summary
     let summary = Summary {
         total_files: env_files.len(),
@@ -227,6 +292,7 @@ fn scan_directory(root: &Path, max_depth: usize, provider_filter: Option<&str>) 
         total_variables: all_secrets.len(),
         unique_variables: variables.len(),
         duplicate_count: duplicates.len(),
+        security_issue_count: security_issues.len(),
         providers_found: collect_providers(&all_secrets),
     };
 
@@ -236,6 +302,7 @@ fn scan_directory(root: &Path, max_depth: usize, provider_filter: Option<&str>) 
         projects,
         variables,
         duplicates,
+        security_issues,
         summary,
     })
 }
@@ -515,6 +582,130 @@ fn collect_providers(secrets: &[ParsedSecret]) -> Vec<String> {
     providers
 }
 
+/// Check if a provider is considered sensitive (API keys, payment, etc.)
+fn is_sensitive_provider(provider: Option<&str>) -> bool {
+    matches!(
+        provider,
+        Some("openai") | Some("anthropic") | Some("stripe") | Some("aws") |
+        Some("github") | Some("gitlab") | Some("twilio") | Some("sendgrid") |
+        Some("firebase") | Some("database") | Some("redis") | Some("supabase")
+    )
+}
+
+/// Detect security issues for .env files
+fn detect_security_issues(
+    env_files: &[PathBuf],
+    project_map: &HashMap<PathBuf, Vec<PathBuf>>,
+    file_secrets_count: &HashMap<PathBuf, usize>,
+    file_has_sensitive: &HashMap<PathBuf, bool>,
+) -> Vec<SecurityIssue> {
+    let mut issues: Vec<SecurityIssue> = Vec::new();
+
+    for file in env_files {
+        // Find the project for this file
+        let project_name = project_map
+            .iter()
+            .find(|(_, files)| files.contains(file))
+            .map(|(path, _)| get_project_name(path))
+            .unwrap_or_else(|| "unknown".to_string());
+
+        let variable_count = *file_secrets_count.get(file).unwrap_or(&0);
+        let has_sensitive = *file_has_sensitive.get(file).unwrap_or(&false);
+
+        // Check git status for this file
+        if let Some(issue_type) = check_git_status(file) {
+            let severity = match (&issue_type, has_sensitive) {
+                (SecurityIssueType::GitTracked, true) => Severity::Critical,
+                (SecurityIssueType::GitTracked, false) => Severity::High,
+                (SecurityIssueType::NotInGitignore, _) => Severity::Medium,
+                (SecurityIssueType::WasCommitted, _) => Severity::Low,
+            };
+
+            issues.push(SecurityIssue {
+                file: file.clone(),
+                project: project_name,
+                issue_type,
+                severity,
+                variable_count,
+                has_sensitive_providers: has_sensitive,
+            });
+        }
+    }
+
+    // Sort by severity (Critical first)
+    issues.sort_by(|a, b| a.severity.cmp(&b.severity));
+    issues
+}
+
+/// Check git status of a file
+/// Returns None if file is properly ignored, Some(issue_type) if there's a problem
+fn check_git_status(file: &Path) -> Option<SecurityIssueType> {
+    // Find the git repository root
+    let git_root = find_git_root(file)?;
+
+    // Get relative path from git root
+    let rel_path = file.strip_prefix(&git_root).ok()?;
+
+    // Check if file is tracked by git
+    let is_tracked = Command::new("git")
+        .args(["ls-files", "--error-unmatch"])
+        .arg(rel_path)
+        .current_dir(&git_root)
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+
+    if is_tracked {
+        return Some(SecurityIssueType::GitTracked);
+    }
+
+    // Check if file is ignored by .gitignore
+    let is_ignored = Command::new("git")
+        .args(["check-ignore", "-q"])
+        .arg(rel_path)
+        .current_dir(&git_root)
+        .output()
+        .map(|o| o.status.success())
+        .unwrap_or(false);
+
+    if !is_ignored {
+        // File exists but is not in .gitignore
+        // Check if it was ever committed (in git history)
+        let was_committed = Command::new("git")
+            .args(["log", "--follow", "--diff-filter=D", "--", rel_path.to_str().unwrap_or("")])
+            .current_dir(&git_root)
+            .output()
+            .map(|o| !o.stdout.is_empty())
+            .unwrap_or(false);
+
+        if was_committed {
+            return Some(SecurityIssueType::WasCommitted);
+        }
+
+        return Some(SecurityIssueType::NotInGitignore);
+    }
+
+    // File is properly ignored
+    None
+}
+
+/// Find the git repository root for a file
+fn find_git_root(file: &Path) -> Option<PathBuf> {
+    let dir = file.parent()?;
+
+    Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .current_dir(dir)
+        .output()
+        .ok()
+        .filter(|o| o.status.success())
+        .and_then(|o| {
+            String::from_utf8(o.stdout)
+                .ok()
+                .map(|s| PathBuf::from(s.trim()))
+        })
+}
+
 /// Get current timestamp
 fn chrono_now() -> String {
     use std::time::SystemTime;
@@ -592,6 +783,12 @@ fn display_full_report(report: &ScanReport) {
         display_duplicates_section(&report.duplicates);
     }
 
+    // Security issues
+    if !report.security_issues.is_empty() {
+        println!();
+        display_security_section(&report.security_issues);
+    }
+
     // Recommendations
     display_recommendations(report);
 
@@ -642,6 +839,22 @@ fn display_recommendations(report: &ScanReport) {
     println!("RECOMMENDATIONS");
     println!("{}", "─".repeat(70));
 
+    // Security recommendations first (highest priority)
+    let critical_count = report.security_issues.iter()
+        .filter(|i| i.severity == Severity::Critical)
+        .count();
+    let exposed_count = report.security_issues.iter()
+        .filter(|i| i.issue_type == SecurityIssueType::GitTracked)
+        .count();
+
+    if critical_count > 0 {
+        println!("• 🔴 URGENT: {} file(s) with sensitive secrets are tracked by git!", critical_count);
+    }
+
+    if exposed_count > 0 {
+        println!("• {} .env file(s) are tracked by git - run `sec scan --security` for details", exposed_count);
+    }
+
     let centralize_count = report.variables.iter()
         .filter(|v| v.occurrences.len() > 1)
         .count();
@@ -674,10 +887,116 @@ fn display_summary(report: &ScanReport) {
     println!("  Total variables:    {}", report.summary.total_variables);
     println!("  Unique variables:   {}", report.summary.unique_variables);
     println!("  Duplicates:         {}", report.summary.duplicate_count);
+    println!("  Security issues:    {}", report.summary.security_issue_count);
     if !report.summary.providers_found.is_empty() {
         println!("  Providers:          {}", report.summary.providers_found.join(", "));
     }
     println!("{}", "─".repeat(40));
+}
+
+/// Display security issues only
+fn display_security_only(report: &ScanReport) {
+    if report.security_issues.is_empty() {
+        println!("✓ No security issues found. All .env files are properly gitignored.");
+        return;
+    }
+
+    display_security_section(&report.security_issues);
+}
+
+/// Display security section
+fn display_security_section(issues: &[SecurityIssue]) {
+    println!("SECURITY ISSUES");
+    println!("{}", "─".repeat(80));
+
+    // Group by severity
+    let critical: Vec<_> = issues.iter().filter(|i| i.severity == Severity::Critical).collect();
+    let high: Vec<_> = issues.iter().filter(|i| i.severity == Severity::High).collect();
+    let medium: Vec<_> = issues.iter().filter(|i| i.severity == Severity::Medium).collect();
+    let low: Vec<_> = issues.iter().filter(|i| i.severity == Severity::Low).collect();
+
+    if !critical.is_empty() {
+        println!();
+        println!("🔴 CRITICAL ({}) - Secrets committed to git with sensitive API keys!", critical.len());
+        println!();
+        for issue in &critical {
+            display_security_issue(issue);
+        }
+    }
+
+    if !high.is_empty() {
+        println!();
+        println!("🟠 HIGH ({}) - Files tracked by git", high.len());
+        println!();
+        for issue in &high {
+            display_security_issue(issue);
+        }
+    }
+
+    if !medium.is_empty() {
+        println!();
+        println!("🟡 MEDIUM ({}) - Files not in .gitignore", medium.len());
+        println!();
+        for issue in &medium {
+            display_security_issue(issue);
+        }
+    }
+
+    if !low.is_empty() {
+        println!();
+        println!("🔵 LOW ({}) - Files were previously committed", low.len());
+        println!();
+        for issue in &low {
+            display_security_issue(issue);
+        }
+    }
+
+    println!();
+    println!("{}", "─".repeat(80));
+    println!();
+    println!("REMEDIATION STEPS:");
+    println!();
+
+    if !critical.is_empty() || !high.is_empty() {
+        println!("For tracked files:");
+        println!("  1. Add to .gitignore: echo '.env*' >> .gitignore");
+        println!("  2. Remove from git: git rm --cached <file>");
+        println!("  3. Rotate ALL secrets that were exposed");
+        println!("  4. Consider using BFG or git-filter-repo to remove from history");
+        println!();
+    }
+
+    if !medium.is_empty() {
+        println!("For untracked files not in .gitignore:");
+        println!("  1. Add to .gitignore: echo '.env*' >> .gitignore");
+        println!("  2. Or use global gitignore: git config --global core.excludesfile ~/.gitignore");
+        println!();
+    }
+
+    println!("To migrate secrets to Secretariat:");
+    println!("  sec import --scan .");
+}
+
+/// Display a single security issue
+fn display_security_issue(issue: &SecurityIssue) {
+    let sensitive_marker = if issue.has_sensitive_providers { " 🔑" } else { "" };
+    let file_name = issue.file.file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("?");
+
+    println!("  {} {}/{}{}",
+        match issue.severity {
+            Severity::Critical => "🔴",
+            Severity::High => "🟠",
+            Severity::Medium => "🟡",
+            Severity::Low => "🔵",
+        },
+        issue.project,
+        file_name,
+        sensitive_marker
+    );
+    println!("     Issue: {}", issue.issue_type);
+    println!("     Variables: {}", issue.variable_count);
 }
 
 /// Truncate string for display

@@ -280,6 +280,10 @@ struct ScanCommand {
     #[arg(long)]
     duplicates: bool,
 
+    /// Show only security issues (files not in .gitignore, tracked by git)
+    #[arg(long)]
+    security: bool,
+
     /// Filter by provider (e.g., openai, stripe)
     #[arg(long)]
     provider: Option<String>,
@@ -480,6 +484,7 @@ async fn handle_scan(cmd: ScanCommand) -> Result<()> {
         json: cmd.json,
         summary: cmd.summary,
         duplicates: cmd.duplicates,
+        security: cmd.security,
         provider: cmd.provider,
         export: cmd.export,
         max_depth: cmd.max_depth,
