@@ -69,6 +69,9 @@ enum Commands {
     /// Import from .env file
     Import(ImportCommand),
 
+    /// Scan directories for .env files (discovery/audit)
+    Scan(ScanCommand),
+
     /// Cleanup old .env files
     Cleanup(CleanupCommand),
 
@@ -258,6 +261,38 @@ struct CleanupCommand {
     execute: bool,
 }
 
+/// Scan directories for .env files (discovery/audit)
+#[derive(Parser)]
+struct ScanCommand {
+    /// Directory to scan (default: current directory)
+    #[arg(default_value = ".")]
+    path: String,
+
+    /// Output as JSON
+    #[arg(long)]
+    json: bool,
+
+    /// Show only summary
+    #[arg(long)]
+    summary: bool,
+
+    /// Show only duplicates
+    #[arg(long)]
+    duplicates: bool,
+
+    /// Filter by provider (e.g., openai, stripe)
+    #[arg(long)]
+    provider: Option<String>,
+
+    /// Export results to file
+    #[arg(long)]
+    export: Option<std::path::PathBuf>,
+
+    /// Maximum depth to scan (default: 10)
+    #[arg(long, default_value = "10")]
+    max_depth: usize,
+}
+
 // F097: StatusCommand struct for sec status
 /// Show daemon status
 #[derive(Parser)]
@@ -322,6 +357,7 @@ async fn main() -> Result<()> {
         Commands::Audit(cmd) => handle_audit(client, cmd).await,
         Commands::Explain(cmd) => handle_explain(client, cmd).await,
         Commands::Import(cmd) => handle_import(client, cmd).await,
+        Commands::Scan(cmd) => handle_scan(cmd).await,
         Commands::Cleanup(cmd) => handle_cleanup(client, cmd).await,
         Commands::Status(cmd) => handle_status(client, cmd).await,
         Commands::Unlock(cmd) => handle_unlock(client, cmd).await,
@@ -436,6 +472,19 @@ async fn handle_import(client: DaemonClient, cmd: ImportCommand) -> Result<()> {
         yes: cmd.yes,
     };
     commands::handle_import(client, cmd_args).await
+}
+
+async fn handle_scan(cmd: ScanCommand) -> Result<()> {
+    let cmd_args = commands::scan::ScanCommand {
+        path: cmd.path,
+        json: cmd.json,
+        summary: cmd.summary,
+        duplicates: cmd.duplicates,
+        provider: cmd.provider,
+        export: cmd.export,
+        max_depth: cmd.max_depth,
+    };
+    commands::handle_scan(cmd_args).await
 }
 
 async fn handle_cleanup(client: DaemonClient, cmd: CleanupCommand) -> Result<()> {

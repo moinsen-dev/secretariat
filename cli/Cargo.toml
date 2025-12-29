@@ -37,3 +37,7 @@ walkdir = "2.4"
 
 # Timestamps for archive naming
 chrono = "0.4"
+
+# Hashing for duplicate detection in scan command
+sha2 = "0.10"
+hex = "0.4"
