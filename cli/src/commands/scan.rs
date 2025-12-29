@@ -637,9 +637,31 @@ fn detect_security_issues(
     issues
 }
 
+/// Check if file is an example/template file (not a security concern)
+fn is_example_file(file: &Path) -> bool {
+    let name = file.file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("")
+        .to_lowercase();
+
+    // Example files with placeholder values - not security concerns
+    name.contains("example") ||
+    name.contains("sample") ||
+    name.contains("template") ||
+    name.contains(".dist") ||
+    name.ends_with(".example") ||
+    name.ends_with(".sample") ||
+    name.ends_with(".template")
+}
+
 /// Check git status of a file
 /// Returns None if file is properly ignored, Some(issue_type) if there's a problem
 fn check_git_status(file: &Path) -> Option<SecurityIssueType> {
+    // Skip example/template files - they're meant to be committed
+    if is_example_file(file) {
+        return None;
+    }
+
     // Find the git repository root
     let git_root = find_git_root(file)?;
 
@@ -1063,5 +1085,22 @@ mod tests {
 
         assert_ne!(hash1, hash2);
         assert_eq!(hash1, hash3);
+    }
+
+    #[test]
+    fn test_is_example_file() {
+        // Should be recognized as example files (excluded from security scan)
+        assert!(is_example_file(Path::new(".env.example")));
+        assert!(is_example_file(Path::new(".env.sample")));
+        assert!(is_example_file(Path::new(".env.template")));
+        assert!(is_example_file(Path::new(".env.dist")));
+        assert!(is_example_file(Path::new("example.env")));
+        assert!(is_example_file(Path::new(".env.local.example")));
+
+        // Should NOT be recognized as example files (included in security scan)
+        assert!(!is_example_file(Path::new(".env")));
+        assert!(!is_example_file(Path::new(".env.local")));
+        assert!(!is_example_file(Path::new(".env.production")));
+        assert!(!is_example_file(Path::new(".env.development")));
     }
 }
