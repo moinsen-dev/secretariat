@@ -94,8 +94,10 @@ class _VaultUnlockDialogState extends State<VaultUnlockDialog> {
           _canUseBiometrics = availableBiometrics.isNotEmpty;
         });
       }
+    } on LocalAuthException catch (e) {
+      debugPrint('[VaultUnlockDialog] LocalAuth error: ${e.code} - ${e.description}');
     } catch (e) {
-      debugPrint('[VaultUnlockDialog] Error checking biometrics: $e');
+      debugPrint('[VaultUnlockDialog] Unexpected error checking biometrics: $e');
     }
   }
 
@@ -139,10 +141,8 @@ class _VaultUnlockDialogState extends State<VaultUnlockDialog> {
     try {
       final didAuthenticate = await _localAuth.authenticate(
         localizedReason: 'Authenticate to unlock your Secretariat vault',
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-        ),
+        persistAcrossBackgrounding: true,
+        biometricOnly: true,
       );
 
       if (didAuthenticate) {
@@ -154,6 +154,11 @@ class _VaultUnlockDialogState extends State<VaultUnlockDialog> {
           _errorMessage = 'Touch ID authentication failed';
         });
       }
+    } on LocalAuthException catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Touch ID error: ${e.code.name}';
+      });
     } catch (e) {
       setState(() {
         _isLoading = false;

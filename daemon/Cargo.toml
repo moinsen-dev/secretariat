@@ -17,7 +17,7 @@ anyhow.workspace = true
 thiserror.workspace = true
 
 # SQLite with SQLCipher support for encryption
-rusqlite = { version = "0.31", features = ["bundled-sqlcipher"] }
+rusqlite = { version = "0.38", features = ["bundled-sqlcipher"] }
 
 # For AES-256-GCM encryption
 aes-gcm = "0.10"
