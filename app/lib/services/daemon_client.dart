@@ -288,7 +288,10 @@ class DaemonClient {
   /// await client.revokePermission('app-id-123', 'secret-name');
   /// ```
   Future<void> revokePermission(String appId, String secretName) async {
-    await sendRequest('app.revoke', {'app_id': appId, 'secret_name': secretName});
+    await sendRequest('app.revoke', {
+      'app_id': appId,
+      'secret_name': secretName,
+    });
   }
 
   /// Grant an application access to a secret
@@ -298,7 +301,10 @@ class DaemonClient {
   /// await client.grantPermission('app-id-123', 'OPENAI_API_KEY');
   /// ```
   Future<void> grantPermission(String appId, String secretName) async {
-    await sendRequest('app.authorize', {'app_id': appId, 'secret_name': secretName});
+    await sendRequest('app.authorize', {
+      'app_id': appId,
+      'secret_name': secretName,
+    });
   }
 
   /// Get vault status
@@ -338,7 +344,10 @@ class DaemonClient {
   /// ```dart
   /// final entries = await client.getAuditLog(limit: 50);
   /// ```
-  Future<List<Map<String, dynamic>>> getAuditLog({int limit = 100, String? appId}) async {
+  Future<List<Map<String, dynamic>>> getAuditLog({
+    int limit = 100,
+    String? appId,
+  }) async {
     final params = <String, dynamic>{'limit': limit};
     if (appId != null) {
       params['app_id'] = appId;
@@ -354,8 +363,14 @@ class DaemonClient {
   /// final result = await client.rotateSecret('OPENAI_API_KEY', 'new-secret-value');
   /// // result = {'name': 'OPENAI_API_KEY', 'version': 2, 'status': 'rotated'}
   /// ```
-  Future<Map<String, dynamic>> rotateSecret(String name, String newValue) async {
-    return await sendRequest('secret.rotate', {'name': name, 'value': newValue});
+  Future<Map<String, dynamic>> rotateSecret(
+    String name,
+    String newValue,
+  ) async {
+    return await sendRequest('secret.rotate', {
+      'name': name,
+      'value': newValue,
+    });
   }
 
   /// Initialize the vault with a master password
@@ -381,7 +396,10 @@ class DaemonClient {
   /// final result = await client.changePassword('old-password', 'new-password');
   /// // result = {'secrets_migrated': 5, 'status': 'password_changed'}
   /// ```
-  Future<Map<String, dynamic>> changePassword(String currentPassword, String newPassword) async {
+  Future<Map<String, dynamic>> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
     return await sendRequest('vault.change_password', {
       'current_password': currentPassword,
       'new_password': newPassword,

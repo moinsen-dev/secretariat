@@ -579,7 +579,10 @@ class VaultProvider extends ChangeNotifier {
   /// Rotate a secret's value
   ///
   /// Creates a new version of the secret while preserving the previous value.
-  Future<Map<String, dynamic>> rotateSecret(String name, String newValue) async {
+  Future<Map<String, dynamic>> rotateSecret(
+    String name,
+    String newValue,
+  ) async {
     try {
       _errorMessage = null;
 
@@ -629,7 +632,10 @@ class VaultProvider extends ChangeNotifier {
   /// Change the vault master password
   ///
   /// Re-encrypts all secrets with the new password.
-  Future<Map<String, dynamic>> changePassword(String currentPassword, String newPassword) async {
+  Future<Map<String, dynamic>> changePassword(
+    String currentPassword,
+    String newPassword,
+  ) async {
     try {
       _errorMessage = null;
 
@@ -637,7 +643,10 @@ class VaultProvider extends ChangeNotifier {
         await _daemonClient.connect();
       }
 
-      final result = await _daemonClient.changePassword(currentPassword, newPassword);
+      final result = await _daemonClient.changePassword(
+        currentPassword,
+        newPassword,
+      );
       notifyListeners();
       return result;
     } catch (e) {

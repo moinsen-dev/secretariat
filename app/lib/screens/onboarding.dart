@@ -266,9 +266,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           // Title
           Text(
             'Welcome to Secretariat',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -277,8 +277,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Text(
             'Stop copy-pasting API keys.',
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+              color: Theme.of(context).colorScheme.primary,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
@@ -289,8 +289,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             'All your API keys in one place.\n'
             'Every project just works.',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 48),
@@ -340,25 +340,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          child: Icon(icon, color: Theme.of(context).colorScheme.primary),
         ),
         const SizedBox(width: 16),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
               Text(
                 description,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -379,17 +373,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           // Header
           Text(
             'Create Master Password',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           Text(
             'This password protects all your secrets. '
             'It will be securely stored in your system keychain.',
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 32),
 
@@ -428,8 +422,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Expanded(
                   child: LinearProgressIndicator(
                     value: strength / 4,
-                    backgroundColor:
-                        Theme.of(context).colorScheme.surfaceContainerHighest,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest,
                     color: _getStrengthColor(strength),
                   ),
                 ),
@@ -443,12 +438,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Use at least 8 characters with uppercase, lowercase, and numbers',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+            const SizedBox(height: 12),
+            // Password requirements checklist (per wireframe 3.2)
+            _PasswordRequirementItem(
+              label: 'At least 12 characters',
+              isMet: _passwordController.text.length >= 12,
+            ),
+            _PasswordRequirementItem(
+              label: 'Contains uppercase and lowercase',
+              isMet:
+                  _passwordController.text.contains(RegExp(r'[A-Z]')) &&
+                  _passwordController.text.contains(RegExp(r'[a-z]')),
+            ),
+            _PasswordRequirementItem(
+              label: 'Contains numbers',
+              isMet: _passwordController.text.contains(RegExp(r'[0-9]')),
+            ),
+            _PasswordRequirementItem(
+              label: 'Contains special characters (recommended)',
+              isMet: _passwordController.text.contains(
+                RegExp(r'[!@#$%^&*(),.?":{}|<>]'),
+              ),
+              isRecommended: true,
             ),
           ],
           const SizedBox(height: 24),
@@ -561,9 +572,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           // Title
           Text(
             'Enable Touch ID',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -573,8 +584,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             'Use Touch ID to quickly unlock your vault\n'
             'instead of typing your password.',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
@@ -641,9 +652,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           // Title
           Text(
             'Import Your Secrets',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -653,8 +664,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             'Import your existing .env files to get started,\n'
             'or add secrets manually later.',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 48),
@@ -664,9 +675,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const ImportWizardScreen(),
-                ),
+                MaterialPageRoute(builder: (_) => const ImportWizardScreen()),
               );
             },
             icon: const Icon(Icons.upload_file),
@@ -715,15 +724,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   return Expanded(
                     child: Container(
                       height: 4,
-                      margin: EdgeInsets.only(
-                        right: index < 3 ? 8 : 0,
-                      ),
+                      margin: EdgeInsets.only(right: index < 3 ? 8 : 0),
                       decoration: BoxDecoration(
                         color: index <= _currentStep
                             ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context)
-                                .colorScheme
-                                .surfaceContainerHighest,
+                            : Theme.of(
+                                context,
+                              ).colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -747,6 +754,50 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Password requirement checklist item (per wireframe 3.2)
+class _PasswordRequirementItem extends StatelessWidget {
+  final String label;
+  final bool isMet;
+  final bool isRecommended;
+
+  const _PasswordRequirementItem({
+    required this.label,
+    required this.isMet,
+    this.isRecommended = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          Icon(
+            isMet ? Icons.check_circle : Icons.circle_outlined,
+            size: 16,
+            color: isMet
+                ? Colors.green
+                : (isRecommended
+                      ? Theme.of(context).colorScheme.onSurfaceVariant
+                      : Theme.of(context).colorScheme.onSurfaceVariant),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: isMet
+                    ? Colors.green
+                    : Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

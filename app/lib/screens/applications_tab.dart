@@ -84,14 +84,20 @@ class _ApplicationsTabState extends State<ApplicationsTab> {
     final secrets = vaultProvider.secrets;
     final app = vaultProvider.applications.firstWhere((a) => a.id == appId);
 
-    final availableSecrets = secrets.where(
-      (s) => !app.permissions.contains(s.id) && !app.permissions.contains(s.name),
-    ).toList();
+    final availableSecrets = secrets
+        .where(
+          (s) =>
+              !app.permissions.contains(s.id) &&
+              !app.permissions.contains(s.name),
+        )
+        .toList();
 
     if (availableSecrets.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('All secrets already granted to this app')),
+          const SnackBar(
+            content: Text('All secrets already granted to this app'),
+          ),
         );
       }
       return;
@@ -314,7 +320,7 @@ class _ApplicationTile extends StatelessWidget {
   final String Function(DateTime) formatTimestamp;
   final String Function(String, List<Secret>) getSecretName;
   final Future<void> Function(String appId, String secretId, String secretName)
-      onRevokePermission;
+  onRevokePermission;
   final Future<void> Function(String appId, String appName) onGrantPermission;
 
   const _ApplicationTile({
@@ -360,12 +366,19 @@ class _ApplicationTile extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.folder_outlined, size: 14, color: textSecondaryDark),
+                    Icon(
+                      Icons.folder_outlined,
+                      size: 14,
+                      color: textSecondaryDark,
+                    ),
                     const SizedBox(width: 4),
                     Expanded(
                       child: Text(
                         application.path!,
-                        style: TextStyle(fontSize: 12, color: textSecondaryDark),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: textSecondaryDark,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -377,7 +390,10 @@ class _ApplicationTile extends StatelessWidget {
                 children: [
                   // Permissions count badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 2,
+                    ),
                     decoration: BoxDecoration(
                       color: hasPermissions
                           ? successColor.withValues(alpha: 0.2)
@@ -390,7 +406,9 @@ class _ApplicationTile extends StatelessWidget {
                         Icon(
                           Icons.key,
                           size: 12,
-                          color: hasPermissions ? successColor : textSecondaryDark,
+                          color: hasPermissions
+                              ? successColor
+                              : textSecondaryDark,
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -398,7 +416,9 @@ class _ApplicationTile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
-                            color: hasPermissions ? successColor : textSecondaryDark,
+                            color: hasPermissions
+                                ? successColor
+                                : textSecondaryDark,
                           ),
                         ),
                       ],
@@ -441,12 +461,13 @@ class _ApplicationTile extends StatelessWidget {
                         ),
                       ),
                       TextButton.icon(
-                        onPressed: () => onGrantPermission(
-                          application.id,
-                          application.name,
-                        ),
+                        onPressed: () =>
+                            onGrantPermission(application.id, application.name),
                         icon: Icon(Icons.add, size: 18, color: accentColor),
-                        label: Text('Grant', style: TextStyle(color: accentColor)),
+                        label: Text(
+                          'Grant',
+                          style: TextStyle(color: accentColor),
+                        ),
                         style: TextButton.styleFrom(
                           visualDensity: VisualDensity.compact,
                         ),
@@ -474,7 +495,11 @@ class _ApplicationTile extends StatelessWidget {
                               ),
                             ),
                             IconButton(
-                              icon: Icon(Icons.close, size: 18, color: errorColor),
+                              icon: Icon(
+                                Icons.close,
+                                size: 18,
+                                color: errorColor,
+                              ),
                               onPressed: () => onRevokePermission(
                                 application.id,
                                 secretId,

@@ -94,14 +94,20 @@ class _ApplicationsScreenState extends State<ApplicationsScreen> {
     final app = vaultProvider.applications.firstWhere((a) => a.id == appId);
 
     // Filter out already granted secrets
-    final availableSecrets = secrets.where(
-      (s) => !app.permissions.contains(s.id) && !app.permissions.contains(s.name)
-    ).toList();
+    final availableSecrets = secrets
+        .where(
+          (s) =>
+              !app.permissions.contains(s.id) &&
+              !app.permissions.contains(s.name),
+        )
+        .toList();
 
     if (availableSecrets.isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('All secrets already granted to this app')),
+          const SnackBar(
+            content: Text('All secrets already granted to this app'),
+          ),
         );
       }
       return;
@@ -329,7 +335,7 @@ class _ApplicationTile extends StatelessWidget {
   final String Function(DateTime) formatTimestamp;
   final String Function(String, List<Secret>) getSecretName;
   final Future<void> Function(String appId, String secretId, String secretName)
-      onRevokePermission;
+  onRevokePermission;
   final Future<void> Function(String appId, String appName) onGrantPermission;
 
   const _ApplicationTile({
@@ -474,10 +480,8 @@ class _ApplicationTile extends StatelessWidget {
                       ),
                     ),
                     TextButton.icon(
-                      onPressed: () => onGrantPermission(
-                        application.id,
-                        application.name,
-                      ),
+                      onPressed: () =>
+                          onGrantPermission(application.id, application.name),
                       icon: const Icon(Icons.add, size: 18),
                       label: const Text('Grant'),
                       style: TextButton.styleFrom(

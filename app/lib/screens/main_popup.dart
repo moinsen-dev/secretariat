@@ -461,11 +461,7 @@ class _SecretListItem extends StatelessWidget {
         tooltip: 'Copy to clipboard',
       ),
       onTap: () {
-        Navigator.pushNamed(
-          context,
-          '/secret-detail',
-          arguments: secret,
-        );
+        Navigator.pushNamed(context, '/secret-detail', arguments: secret);
       },
     );
   }

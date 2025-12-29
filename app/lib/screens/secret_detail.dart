@@ -13,8 +13,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../models/application.dart';
 import '../models/secret.dart';
 import '../providers/vault_provider.dart';
+import '../theme/colors.dart';
 
 /// F171: Create lib/screens/secret_detail.dart file
 ///
@@ -269,9 +271,7 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
               onPressed: () {
                 if (newValueController.text.isEmpty) {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
-                    const SnackBar(
-                      content: Text('Please enter a new value'),
-                    ),
+                    const SnackBar(content: Text('Please enter a new value')),
                   );
                   return;
                 }
@@ -300,7 +300,9 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
           final newVersion = result['version'] ?? 'new';
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Secret rotated successfully to version $newVersion'),
+              content: Text(
+                'Secret rotated successfully to version $newVersion',
+              ),
             ),
           );
 
@@ -566,6 +568,12 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
                     ),
                   ),
 
+                // Applications with Access section (per wireframe 3.9)
+                if (!_isEditMode) ...[
+                  const SizedBox(height: 16),
+                  _ApplicationsWithAccessSection(secretName: secret.name),
+                ],
+
                 if (!_isEditMode) ...[
                   const SizedBox(height: 24),
                   // Action Buttons
@@ -658,5 +666,149 @@ class _TimestampRow extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// Widget showing applications that have access to this secret (wireframe 3.9)
+class _ApplicationsWithAccessSection extends StatelessWidget {
+  final String secretName;
+
+  const _ApplicationsWithAccessSection({required this.secretName});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<VaultProvider>(
+      builder: (context, vaultProvider, child) {
+        // Find applications that have permission to access this secret
+        final appsWithAccess = vaultProvider.applications
+            .where((app) => app.permissions.contains(secretName))
+            .toList();
+
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(Icons.apps, size: 20, color: applicationColor),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Applications with Access',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                if (appsWithAccess.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 18,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'No applications have been granted access to this secret yet.',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  ...appsWithAccess.map((app) => _AppAccessTile(app: app)),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// Individual application tile showing access info
+class _AppAccessTile extends StatelessWidget {
+  final Application app;
+
+  const _AppAccessTile({required this.app});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: applicationColor.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(Icons.apps, size: 18, color: applicationColor),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  app.name,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+                ),
+                if (app.lastAccess != null)
+                  Text(
+                    'Last access: ${_formatRelativeTime(app.lastAccess!)}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          Icon(Icons.check_circle, size: 18, color: successColor),
+        ],
+      ),
+    );
+  }
+
+  String _formatRelativeTime(DateTime timestamp) {
+    final now = DateTime.now();
+    final difference = now.difference(timestamp);
+
+    if (difference.inDays > 0) {
+      return '${difference.inDays}d ago';
+    } else if (difference.inHours > 0) {
+      return '${difference.inHours}h ago';
+    } else if (difference.inMinutes > 0) {
+      return '${difference.inMinutes}m ago';
+    } else {
+      return 'Just now';
+    }
   }
 }

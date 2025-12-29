@@ -40,9 +40,9 @@ class _HomeTabState extends State<HomeTab> {
             .then((_) => vaultProvider.loadSecrets())
             .catchError((e) => _showError('Failed to connect: $e'));
       } else {
-        vaultProvider
-            .loadSecrets()
-            .catchError((e) => _showError('Failed to load secrets: $e'));
+        vaultProvider.loadSecrets().catchError(
+          (e) => _showError('Failed to load secrets: $e'),
+        );
       }
     });
   }
@@ -142,7 +142,9 @@ class _HomeTabState extends State<HomeTab> {
         if (_searchController.text.isEmpty) {
           _filteredSecrets = vaultProvider.secrets;
         } else {
-          _filteredSecrets = vaultProvider.filterSecrets(_searchController.text);
+          _filteredSecrets = vaultProvider.filterSecrets(
+            _searchController.text,
+          );
         }
 
         return Column(
@@ -183,9 +185,7 @@ class _HomeTabState extends State<HomeTab> {
 
             // Loading indicator
             if (vaultProvider.isLoading)
-              const Expanded(
-                child: Center(child: CircularProgressIndicator()),
-              ),
+              const Expanded(child: Center(child: CircularProgressIndicator())),
 
             // Error message
             if (vaultProvider.errorMessage != null && !vaultProvider.isLoading)
@@ -196,7 +196,11 @@ class _HomeTabState extends State<HomeTab> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.error_outline, size: 48, color: errorColor),
+                        const Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: errorColor,
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           vaultProvider.errorMessage!,
@@ -255,7 +259,8 @@ class _HomeTabState extends State<HomeTab> {
                                   ? _getRecentSecrets(_filteredSecrets).length
                                   : _filteredSecrets.length,
                               itemBuilder: (context, index) {
-                                final displaySecrets = _searchController.text.isEmpty
+                                final displaySecrets =
+                                    _searchController.text.isEmpty
                                     ? _getRecentSecrets(_filteredSecrets)
                                     : _filteredSecrets;
                                 final secret = displaySecrets[index];
@@ -285,14 +290,18 @@ class _HomeTabState extends State<HomeTab> {
                       Icon(
                         vaultProvider.isLocked ? Icons.lock : Icons.lock_open,
                         size: 16,
-                        color: vaultProvider.isLocked ? lockedColor : unlockedColor,
+                        color: vaultProvider.isLocked
+                            ? lockedColor
+                            : unlockedColor,
                       ),
                       const SizedBox(width: 8),
                       Text(
                         vaultProvider.isLocked ? 'Locked' : 'Unlocked',
                         style: TextStyle(
                           fontSize: 12,
-                          color: vaultProvider.isLocked ? lockedColor : unlockedColor,
+                          color: vaultProvider.isLocked
+                              ? lockedColor
+                              : unlockedColor,
                         ),
                       ),
                     ],
@@ -332,7 +341,10 @@ class _SecretListItem extends StatelessWidget {
           backgroundColor: _getProviderColor(secret.provider),
           child: Text(
             secret.name.substring(0, 1).toUpperCase(),
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         title: Text(

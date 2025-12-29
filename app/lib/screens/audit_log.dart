@@ -85,10 +85,12 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
                   child: Text('All Applications'),
                 ),
                 const PopupMenuDivider(),
-                ...apps.map((app) => PopupMenuItem(
-                      value: app.fingerprint,
-                      child: Text(app.name),
-                    )),
+                ...apps.map(
+                  (app) => PopupMenuItem(
+                    value: app.fingerprint,
+                    child: Text(app.name),
+                  ),
+                ),
               ];
             },
           ),
@@ -98,11 +100,64 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
     );
   }
 
+  /// Group audit entries by date for display with headers (per wireframe 3.14)
+  List<dynamic> _groupEntriesByDate(List<AuditEntry> entries) {
+    if (entries.isEmpty) return [];
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+
+    final result = <dynamic>[];
+    String? lastDateLabel;
+
+    for (final entry in entries) {
+      final dt = entry.dateTime;
+      final entryDate = DateTime(dt.year, dt.month, dt.day);
+
+      String dateLabel;
+      if (entryDate == today) {
+        dateLabel = 'TODAY';
+      } else if (entryDate == yesterday) {
+        dateLabel = 'YESTERDAY';
+      } else {
+        // Format as "Dec 25, 2025"
+        dateLabel = _formatDateLabel(entryDate);
+      }
+
+      // Add header if this is a new date group
+      if (dateLabel != lastDateLabel) {
+        result.add(dateLabel);
+        lastDateLabel = dateLabel;
+      }
+
+      result.add(entry);
+    }
+
+    return result;
+  }
+
+  String _formatDateLabel(DateTime date) {
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
+
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(color: accentColor),
-      );
+      return const Center(child: CircularProgressIndicator(color: accentColor));
     }
 
     if (_error != null) {
@@ -110,11 +165,7 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 48,
-              color: errorColor,
-            ),
+            Icon(Icons.error_outline, size: 48, color: errorColor),
             const SizedBox(height: 16),
             Text(
               'Failed to load audit log',
@@ -127,18 +178,13 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
             const SizedBox(height: 8),
             Text(
               _error!,
-              style: TextStyle(
-                color: textSecondaryDark,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: textSecondaryDark, fontSize: 14),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _loadAuditLog,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: accentColor,
-              ),
+              style: ElevatedButton.styleFrom(backgroundColor: accentColor),
               child: const Text('Retry'),
             ),
           ],
@@ -171,22 +217,28 @@ class _AuditLogScreenState extends State<AuditLogScreen> {
             const SizedBox(height: 8),
             Text(
               'Secret access will be logged here',
-              style: TextStyle(
-                color: textSecondaryDark,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: textSecondaryDark, fontSize: 14),
             ),
           ],
         ),
       );
     }
 
+    // Group entries by date (per wireframe 3.14)
+    final groupedEntries = _groupEntriesByDate(entries);
+
     return ListView.builder(
       padding: const EdgeInsets.all(16),
-      itemCount: entries.length,
+      itemCount: groupedEntries.length,
       itemBuilder: (context, index) {
-        final entry = entries[index];
-        return _AuditEntryTile(entry: entry);
+        final item = groupedEntries[index];
+        if (item is String) {
+          // Date header
+          return _DateGroupHeader(label: item);
+        } else {
+          // Audit entry
+          return _AuditEntryTile(entry: item as AuditEntry);
+        }
       },
     );
   }
@@ -205,9 +257,7 @@ class _AuditEntryTile extends StatelessWidget {
         color: surfaceDark,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: entry.success
-              ? borderDark
-              : errorColor.withValues(alpha: 0.5),
+          color: entry.success ? borderDark : errorColor.withValues(alpha: 0.5),
         ),
       ),
       child: ListTile(
@@ -272,10 +322,7 @@ class _AuditEntryTile extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text(
                   'by ${_formatAppId(entry.appId)}',
-                  style: TextStyle(
-                    color: textSecondaryDark,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: textSecondaryDark, fontSize: 12),
                 ),
               ],
             ),
@@ -296,10 +343,7 @@ class _AuditEntryTile extends StatelessWidget {
         ),
         trailing: Text(
           entry.formattedTime,
-          style: TextStyle(
-            color: textSecondaryDark,
-            fontSize: 11,
-          ),
+          style: TextStyle(color: textSecondaryDark, fontSize: 11),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
@@ -360,5 +404,28 @@ class _AuditEntryTile extends StatelessWidget {
       return '${appId.substring(0, 8)}...';
     }
     return appId;
+  }
+}
+
+/// Date group header for audit log entries (per wireframe 3.14)
+class _DateGroupHeader extends StatelessWidget {
+  final String label;
+
+  const _DateGroupHeader({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16, bottom: 8),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: textSecondaryDark,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          letterSpacing: 0.5,
+        ),
+      ),
+    );
   }
 }

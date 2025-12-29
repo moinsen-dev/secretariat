@@ -4,12 +4,14 @@
 // Updated for Wave 23: Added theme (F204) and system tray initialization (F192-F199)
 // Updated for Phase 1 completion: Added keyboard shortcuts, onboarding, import wizard
 // Migrated from system_tray to tray_manager (actively maintained package)
+// Updated for Wireframes: Added window_manager, complete shortcuts, unlock dialog
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tray_manager/tray_manager.dart';
+import 'package:window_manager/window_manager.dart';
 import 'dart:io' show Platform, exit;
 import 'providers/vault_provider.dart';
 import 'screens/main_shell.dart';
@@ -27,8 +29,11 @@ import 'theme/theme.dart';
 const String _onboardingCompleteKey = 'onboarding_complete';
 
 void main() async {
-  // F192: Ensure Flutter is initialized before system tray setup
+  // Ensure Flutter is initialized before platform plugins
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize window manager for desktop platforms
+  await _initWindowManager();
 
   // F192: Initialize system tray on app start
   await _initSystemTray();
@@ -41,10 +46,41 @@ void main() async {
   final vaultProvider = VaultProvider();
   await _ensureDaemonRunning(vaultProvider);
 
-  runApp(SecretariatApp(
-    vaultProvider: vaultProvider,
-    showOnboarding: !onboardingComplete,
-  ));
+  runApp(
+    SecretariatApp(
+      vaultProvider: vaultProvider,
+      showOnboarding: !onboardingComplete,
+    ),
+  );
+}
+
+/// Initialize window manager with minimum size constraints
+Future<void> _initWindowManager() async {
+  // Only initialize on desktop platforms
+  if (!Platform.isMacOS && !Platform.isWindows && !Platform.isLinux) {
+    return;
+  }
+
+  try {
+    await windowManager.ensureInitialized();
+
+    // Set minimum window size (800x600 per wireframe spec)
+    await windowManager.setMinimumSize(const Size(800, 600));
+
+    // Set initial size if needed
+    await windowManager.setSize(const Size(900, 700));
+
+    // Center window on screen
+    await windowManager.center();
+
+    // Make window visible
+    await windowManager.show();
+    await windowManager.focus();
+
+    debugPrint('[WindowManager] Initialized with minimum size 800x600');
+  } catch (e) {
+    debugPrint('[WindowManager] Failed to initialize: $e');
+  }
 }
 
 /// Ensure daemon is running at app startup
@@ -144,12 +180,27 @@ class _SecretariatAppState extends State<SecretariatApp> with TrayListener {
     super.initState();
     // Register tray listener for menu clicks
     TrayManager.instance.addListener(this);
+    // Listen to vault state changes
+    widget.vaultProvider.addListener(_onVaultStateChanged);
+    // Initial tray menu setup
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _updateTrayMenu(isLocked: widget.vaultProvider.isLocked);
+      updateTrayIcon(widget.vaultProvider.isLocked);
+    });
   }
 
   @override
   void dispose() {
     TrayManager.instance.removeListener(this);
+    widget.vaultProvider.removeListener(_onVaultStateChanged);
     super.dispose();
+  }
+
+  /// Called when vault state changes - update tray icon and menu
+  void _onVaultStateChanged() {
+    final isLocked = widget.vaultProvider.isLocked;
+    updateTrayIcon(isLocked);
+    _updateTrayMenu(isLocked: isLocked);
   }
 
   /// Handle tray icon click - show context menu
@@ -175,6 +226,10 @@ class _SecretariatAppState extends State<SecretariatApp> with TrayListener {
       case 'lock':
         _handleLockVault();
         break;
+      case 'unlock':
+        // Open window and trigger unlock dialog via MainShell
+        _handleOpenWindow();
+        break;
       case 'quit':
         _handleQuit();
         break;
@@ -182,21 +237,70 @@ class _SecretariatAppState extends State<SecretariatApp> with TrayListener {
   }
 
   /// F195: Handle "Open" menu item - show main window
-  void _handleOpenWindow() {
-    // This will be implemented when we have proper window management
+  void _handleOpenWindow() async {
     debugPrint('[SystemTray] Open window requested');
+    try {
+      await windowManager.show();
+      await windowManager.focus();
+    } catch (e) {
+      debugPrint('[SystemTray] Failed to show window: $e');
+    }
   }
 
   /// F196: Handle "Lock" menu item - lock vault via daemon
-  void _handleLockVault() {
-    // This will be implemented with VaultProvider access
+  void _handleLockVault() async {
     debugPrint('[SystemTray] Lock vault requested');
+    try {
+      await widget.vaultProvider.lockVault();
+      await updateTrayIcon(true);
+      await _updateTrayMenu(isLocked: true);
+    } catch (e) {
+      debugPrint('[SystemTray] Failed to lock vault: $e');
+    }
   }
 
   /// F197: Handle "Quit" menu item - exit app
   void _handleQuit() {
     debugPrint('[SystemTray] Quit requested');
     exit(0);
+  }
+
+  /// Update tray menu based on vault state
+  Future<void> _updateTrayMenu({required bool isLocked}) async {
+    try {
+      final secretCount = widget.vaultProvider.secrets.length;
+      final Menu menu = Menu(
+        items: [
+          // Status header
+          MenuItem(
+            key: 'status',
+            label: isLocked ? 'Status: Locked' : 'Status: Unlocked',
+            disabled: true,
+          ),
+          if (!isLocked)
+            MenuItem(
+              key: 'secrets',
+              label: 'Secrets: $secretCount',
+              disabled: true,
+            ),
+          MenuItem.separator(),
+          // F195: "Open" menu item to show main window
+          MenuItem(key: 'open', label: 'Open Window'),
+          MenuItem.separator(),
+          // F196: Lock/Unlock menu item
+          isLocked
+              ? MenuItem(key: 'unlock', label: 'Unlock Vault...')
+              : MenuItem(key: 'lock', label: 'Lock Vault'),
+          MenuItem.separator(),
+          // F197: "Quit" menu item to exit app
+          MenuItem(key: 'quit', label: 'Quit'),
+        ],
+      );
+
+      await TrayManager.instance.setContextMenu(menu);
+    } catch (e) {
+      debugPrint('[SystemTray] Failed to update menu: $e');
+    }
   }
 
   @override
@@ -213,10 +317,11 @@ class _SecretariatAppState extends State<SecretariatApp> with TrayListener {
         // Show onboarding on first run, otherwise show main shell with tabs
         home: widget.showOnboarding
             ? const OnboardingScreen()
-            : const KeyboardShortcutHandler(child: MainShell()),
+            : KeyboardShortcutHandler(child: MainShell(key: mainShellKey)),
         // Define routes for navigation
         routes: {
-          '/home': (context) => const KeyboardShortcutHandler(child: MainShell()),
+          '/home': (context) =>
+              KeyboardShortcutHandler(child: MainShell(key: mainShellKey)),
           '/secrets-list': (context) => const SecretsListScreen(),
           '/secret-detail': (context) => const SecretDetailScreen(),
           '/add-secret': (context) => const AddSecretScreen(),
@@ -233,11 +338,16 @@ class _SecretariatAppState extends State<SecretariatApp> with TrayListener {
 
 /// Keyboard shortcuts handler for the app
 ///
-/// Implements keyboard shortcuts from app_spec.txt lines 123-128:
-/// - Cmd+Shift+S: Open Secretariat popup (handled by OS for global hotkey)
-/// - Cmd+F: Focus search
+/// Implements keyboard shortcuts from wireframe section 6.1:
+/// - Cmd+K: Quick search (focus)
+/// - Cmd+L: Lock vault
 /// - Cmd+N: Add new secret
-/// - Cmd+C: Copy selected secret (handled by widgets)
+/// - Cmd+F: Focus search (same as Cmd+K)
+/// - Cmd+Q: Quit application
+/// - Cmd+W: Close/minimize window
+/// - Cmd+1-4: Navigate to tabs
+/// - Cmd+,: Open settings
+/// - Cmd+I: Open import wizard
 /// - Esc: Close popup/dialog
 class KeyboardShortcutHandler extends StatelessWidget {
   final Widget child;
@@ -261,6 +371,70 @@ class KeyboardShortcutHandler extends StatelessWidget {
           meta: Platform.isMacOS,
           control: !Platform.isMacOS,
         ): const FocusSearchIntent(),
+
+        // Cmd+K / Ctrl+K: Quick search (same as Cmd+F)
+        SingleActivator(
+          LogicalKeyboardKey.keyK,
+          meta: Platform.isMacOS,
+          control: !Platform.isMacOS,
+        ): const FocusSearchIntent(),
+
+        // Cmd+L / Ctrl+L: Lock vault
+        SingleActivator(
+          LogicalKeyboardKey.keyL,
+          meta: Platform.isMacOS,
+          control: !Platform.isMacOS,
+        ): const LockVaultIntent(),
+
+        // Cmd+Q / Ctrl+Q: Quit application
+        SingleActivator(
+          LogicalKeyboardKey.keyQ,
+          meta: Platform.isMacOS,
+          control: !Platform.isMacOS,
+        ): const QuitAppIntent(),
+
+        // Cmd+W / Ctrl+W: Close/minimize window
+        SingleActivator(
+          LogicalKeyboardKey.keyW,
+          meta: Platform.isMacOS,
+          control: !Platform.isMacOS,
+        ): const MinimizeWindowIntent(),
+
+        // Cmd+1 / Ctrl+1: Go to Home tab
+        SingleActivator(
+          LogicalKeyboardKey.digit1,
+          meta: Platform.isMacOS,
+          control: !Platform.isMacOS,
+        ): const NavigateToTabIntent(
+          0,
+        ),
+
+        // Cmd+2 / Ctrl+2: Go to Secrets tab
+        SingleActivator(
+          LogicalKeyboardKey.digit2,
+          meta: Platform.isMacOS,
+          control: !Platform.isMacOS,
+        ): const NavigateToTabIntent(
+          1,
+        ),
+
+        // Cmd+3 / Ctrl+3: Go to Apps tab
+        SingleActivator(
+          LogicalKeyboardKey.digit3,
+          meta: Platform.isMacOS,
+          control: !Platform.isMacOS,
+        ): const NavigateToTabIntent(
+          2,
+        ),
+
+        // Cmd+4 / Ctrl+4: Go to Settings tab
+        SingleActivator(
+          LogicalKeyboardKey.digit4,
+          meta: Platform.isMacOS,
+          control: !Platform.isMacOS,
+        ): const NavigateToTabIntent(
+          3,
+        ),
 
         // Cmd+, / Ctrl+,: Open settings
         SingleActivator(
@@ -286,6 +460,10 @@ class KeyboardShortcutHandler extends StatelessWidget {
           OpenSettingsIntent: OpenSettingsAction(),
           OpenImportIntent: OpenImportAction(),
           CloseIntent: CloseAction(),
+          LockVaultIntent: LockVaultAction(),
+          QuitAppIntent: QuitAppAction(),
+          MinimizeWindowIntent: MinimizeWindowAction(),
+          NavigateToTabIntent: NavigateToTabAction(),
         },
         child: child,
       ),
@@ -373,6 +551,70 @@ class CloseAction extends Action<CloseIntent> {
     if (context != null && Navigator.of(context).canPop()) {
       Navigator.of(context).pop();
     }
+    return null;
+  }
+}
+
+/// Intent for locking vault (Cmd+L)
+class LockVaultIntent extends Intent {
+  const LockVaultIntent();
+}
+
+/// Action for locking vault
+class LockVaultAction extends Action<LockVaultIntent> {
+  @override
+  Object? invoke(LockVaultIntent intent) {
+    final context = primaryFocus?.context;
+    if (context != null) {
+      final provider = Provider.of<VaultProvider>(context, listen: false);
+      provider.lockVault();
+    }
+    return null;
+  }
+}
+
+/// Intent for quitting app (Cmd+Q)
+class QuitAppIntent extends Intent {
+  const QuitAppIntent();
+}
+
+/// Action for quitting app
+class QuitAppAction extends Action<QuitAppIntent> {
+  @override
+  Object? invoke(QuitAppIntent intent) {
+    debugPrint('[KeyboardShortcuts] Quit app requested');
+    exit(0);
+  }
+}
+
+/// Intent for minimizing window (Cmd+W)
+class MinimizeWindowIntent extends Intent {
+  const MinimizeWindowIntent();
+}
+
+/// Action for minimizing window
+class MinimizeWindowAction extends Action<MinimizeWindowIntent> {
+  @override
+  Object? invoke(MinimizeWindowIntent intent) {
+    debugPrint('[KeyboardShortcuts] Minimize window requested');
+    windowManager.minimize();
+    return null;
+  }
+}
+
+/// Intent for navigating to a specific tab (Cmd+1-4)
+class NavigateToTabIntent extends Intent {
+  final int tabIndex;
+  const NavigateToTabIntent(this.tabIndex);
+}
+
+/// Action for navigating to a specific tab
+class NavigateToTabAction extends Action<NavigateToTabIntent> {
+  @override
+  Object? invoke(NavigateToTabIntent intent) {
+    debugPrint('[KeyboardShortcuts] Navigate to tab ${intent.tabIndex}');
+    // Use the global key to access MainShell state
+    mainShellKey.currentState?.navigateToTab(intent.tabIndex);
     return null;
   }
 }

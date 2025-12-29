@@ -50,6 +50,9 @@ class SecretListTile extends StatefulWidget {
   /// Whether to show the last updated time (default: true)
   final bool showLastUpdated;
 
+  /// Whether to show the navigation chevron (default: true for Secrets tab)
+  final bool showChevron;
+
   const SecretListTile({
     super.key,
     required this.secret,
@@ -59,6 +62,7 @@ class SecretListTile extends StatefulWidget {
     this.showCopyButton = true,
     this.showProvider = true,
     this.showLastUpdated = true,
+    this.showChevron = false,
   });
 
   @override
@@ -175,173 +179,196 @@ class _SecretListTileState extends State<SecretListTile> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      child: InkWell(
-        onTap: widget.onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // F206: Provider icon
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: _getProviderColor(
-                    widget.secret.provider,
-                  ).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  _getProviderIcon(widget.secret.provider),
-                  color: _getProviderColor(widget.secret.provider),
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 12),
+    final providerLabel = widget.secret.provider ?? 'unknown';
 
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Secret name
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            widget.secret.name,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                              fontFamily: 'monospace',
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        // Provider badge
-                        if (widget.showProvider &&
-                            widget.secret.provider != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _getProviderColor(widget.secret.provider),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
+    return Semantics(
+      label: '${widget.secret.name} secret from $providerLabel provider',
+      button: true,
+      child: Card(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: InkWell(
+          onTap: widget.onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                // F206: Provider icon
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: _getProviderColor(
+                      widget.secret.provider,
+                    ).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    _getProviderIcon(widget.secret.provider),
+                    color: _getProviderColor(widget.secret.provider),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+
+                // Content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Secret name
+                      Row(
+                        children: [
+                          Flexible(
                             child: Text(
-                              widget.secret.provider!.toUpperCase(),
+                              widget.secret.name,
                               style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 15,
+                                fontFamily: 'monospace',
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          // Provider badge
+                          if (widget.showProvider &&
+                              widget.secret.provider != null) ...[
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getProviderColor(
+                                  widget.secret.provider,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                widget.secret.provider!.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
                               ),
                             ),
-                          ),
+                          ],
                         ],
-                      ],
-                    ),
+                      ),
 
-                    // Metadata
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        // Environment badge
-                        if (widget.secret.environment != null &&
-                            widget.secret.environment != 'default') ...[
-                          Icon(
-                            Icons.circle,
-                            size: 8,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            widget.secret.environment!,
-                            style: TextStyle(
-                              fontSize: 11,
+                      // Metadata
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          // Environment badge
+                          if (widget.secret.environment != null &&
+                              widget.secret.environment != 'default') ...[
+                            Icon(
+                              Icons.circle,
+                              size: 8,
                               color: Theme.of(
                                 context,
                               ).colorScheme.onSurfaceVariant,
                             ),
-                          ),
-                          const SizedBox(width: 8),
-                        ],
-
-                        // F207: Last accessed/updated with relative time
-                        if (widget.showLastUpdated) ...[
-                          Icon(
-                            Icons.access_time,
-                            size: 12,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              _formatTimestamp(
-                                widget.secret.updatedAt ??
-                                    widget.secret.createdAt,
-                              ),
+                            const SizedBox(width: 4),
+                            Text(
+                              widget.secret.environment!,
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Theme.of(
                                   context,
                                 ).colorScheme.onSurfaceVariant,
                               ),
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
-                        ],
-                      ],
-                    ),
+                            const SizedBox(width: 8),
+                          ],
 
-                    // Notes preview
-                    if (widget.secret.notes != null &&
-                        widget.secret.notes!.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.secret.notes!,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant,
-                          fontStyle: FontStyle.italic,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                          // F207: Last accessed/updated with relative time
+                          if (widget.showLastUpdated) ...[
+                            Icon(
+                              Icons.access_time,
+                              size: 12,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                _formatTimestamp(
+                                  widget.secret.updatedAt ??
+                                      widget.secret.createdAt,
+                                ),
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurfaceVariant,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
+
+                      // Notes preview
+                      if (widget.secret.notes != null &&
+                          widget.secret.notes!.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.secret.notes!,
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurfaceVariant,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
                     ],
+                  ),
+                ),
+
+                // Actions
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // F208: Copy IconButton with accessibility label
+                    if (widget.showCopyButton)
+                      Semantics(
+                        label: 'Copy ${widget.secret.name} to clipboard',
+                        button: true,
+                        child: IconButton(
+                          icon: const Icon(Icons.copy, size: 18),
+                          onPressed:
+                              widget.onCopy ?? () => _handleCopy(context),
+                          tooltip: 'Copy to clipboard',
+                          visualDensity: VisualDensity.compact,
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+
+                    // Custom trailing widget
+                    if (widget.trailing != null) widget.trailing!,
+
+                    // Chevron for navigation (per wireframe 3.6)
+                    if (widget.showChevron)
+                      Icon(
+                        Icons.chevron_right,
+                        size: 20,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
                   ],
                 ),
-              ),
-
-              // Actions
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // F208: Copy IconButton
-                  if (widget.showCopyButton)
-                    IconButton(
-                      icon: const Icon(Icons.copy, size: 18),
-                      onPressed: widget.onCopy ?? () => _handleCopy(context),
-                      tooltip: 'Copy to clipboard',
-                      visualDensity: VisualDensity.compact,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-
-                  // Custom trailing widget
-                  if (widget.trailing != null) widget.trailing!,
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

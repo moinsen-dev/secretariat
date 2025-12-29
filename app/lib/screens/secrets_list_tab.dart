@@ -76,7 +76,9 @@ class _SecretsListTabState extends State<SecretsListTab> {
     final sorted = List<Secret>.from(secrets);
     switch (_sortOrder) {
       case SecretSortOrder.name:
-        sorted.sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        sorted.sort(
+          (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+        );
         break;
       case SecretSortOrder.created:
         sorted.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -195,10 +197,16 @@ class _SecretsListTabState extends State<SecretsListTab> {
                       decoration: InputDecoration(
                         hintText: 'Search secrets...',
                         hintStyle: TextStyle(color: textHintDark),
-                        prefixIcon: Icon(Icons.search, color: textSecondaryDark),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: textSecondaryDark,
+                        ),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
-                                icon: Icon(Icons.clear, color: textSecondaryDark),
+                                icon: Icon(
+                                  Icons.clear,
+                                  color: textSecondaryDark,
+                                ),
                                 onPressed: () => _searchController.clear(),
                               )
                             : null,
@@ -216,7 +224,9 @@ class _SecretsListTabState extends State<SecretsListTab> {
                         ),
                         filled: true,
                         fillColor: surfaceVariantDark,
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                        ),
                       ),
                     ),
                   ),
@@ -232,9 +242,21 @@ class _SecretsListTabState extends State<SecretsListTab> {
                       });
                     },
                     itemBuilder: (context) => [
-                      _buildSortMenuItem(SecretSortOrder.name, Icons.sort_by_alpha, 'Name'),
-                      _buildSortMenuItem(SecretSortOrder.created, Icons.schedule, 'Created'),
-                      _buildSortMenuItem(SecretSortOrder.updated, Icons.update, 'Updated'),
+                      _buildSortMenuItem(
+                        SecretSortOrder.name,
+                        Icons.sort_by_alpha,
+                        'Name',
+                      ),
+                      _buildSortMenuItem(
+                        SecretSortOrder.created,
+                        Icons.schedule,
+                        'Created',
+                      ),
+                      _buildSortMenuItem(
+                        SecretSortOrder.updated,
+                        Icons.update,
+                        'Updated',
+                      ),
                     ],
                   ),
                 ],
@@ -243,9 +265,7 @@ class _SecretsListTabState extends State<SecretsListTab> {
 
             // Loading indicator
             if (vaultProvider.isLoading)
-              const Expanded(
-                child: Center(child: CircularProgressIndicator()),
-              ),
+              const Expanded(child: Center(child: CircularProgressIndicator())),
 
             // Error message
             if (vaultProvider.errorMessage != null && !vaultProvider.isLoading)
@@ -256,7 +276,11 @@ class _SecretsListTabState extends State<SecretsListTab> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.error_outline, size: 48, color: errorColor),
+                        const Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: errorColor,
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           vaultProvider.errorMessage!,
@@ -316,15 +340,14 @@ class _SecretsListTabState extends State<SecretsListTab> {
                   ),
                   Row(
                     children: [
-                      Icon(
-                        _getSortIcon(),
-                        size: 14,
-                        color: textSecondaryDark,
-                      ),
+                      Icon(_getSortIcon(), size: 14, color: textSecondaryDark),
                       const SizedBox(width: 4),
                       Text(
                         '${_displaySecrets.length} secret${_displaySecrets.length != 1 ? 's' : ''}',
-                        style: TextStyle(fontSize: 12, color: textSecondaryDark),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: textSecondaryDark,
+                        ),
                       ),
                     ],
                   ),
@@ -355,9 +378,7 @@ class _SecretsListTabState extends State<SecretsListTab> {
           const SizedBox(width: 12),
           Text(
             'Sort by $label',
-            style: TextStyle(
-              color: isSelected ? accentColor : textPrimaryDark,
-            ),
+            style: TextStyle(color: isSelected ? accentColor : textPrimaryDark),
           ),
         ],
       ),
@@ -376,7 +397,7 @@ class _SecretsListTabState extends State<SecretsListTab> {
   }
 }
 
-/// Secret list item widget
+/// Secret list item widget with accessibility support
 class _SecretListItem extends StatelessWidget {
   final Secret secret;
   final Color providerColor;
@@ -390,45 +411,61 @@ class _SecretListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: surfaceDark,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderDark),
-      ),
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: providerColor,
-          child: Text(
-            secret.name.substring(0, 1).toUpperCase(),
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
+    final providerLabel = secret.provider ?? 'unknown';
+
+    return Semantics(
+      label: '${secret.name} secret from $providerLabel provider',
+      button: true,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: surfaceDark,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: borderDark),
         ),
-        title: Text(
-          secret.name,
-          style: TextStyle(color: textPrimaryDark, fontWeight: FontWeight.w500),
-        ),
-        subtitle: secret.provider != null
-            ? Text(
-                secret.provider!,
-                style: TextStyle(fontSize: 12, color: textSecondaryDark),
-              )
-            : null,
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: Icon(Icons.copy, color: textSecondaryDark, size: 20),
-              onPressed: onCopy,
-              tooltip: 'Copy to clipboard',
+        child: ListTile(
+          leading: CircleAvatar(
+            backgroundColor: providerColor,
+            child: Text(
+              secret.name.substring(0, 1).toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            Icon(Icons.chevron_right, color: textSecondaryDark),
-          ],
+          ),
+          title: Text(
+            secret.name,
+            style: TextStyle(
+              color: textPrimaryDark,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          subtitle: secret.provider != null
+              ? Text(
+                  secret.provider!,
+                  style: TextStyle(fontSize: 12, color: textSecondaryDark),
+                )
+              : null,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Semantics(
+                label: 'Copy ${secret.name} to clipboard',
+                button: true,
+                child: IconButton(
+                  icon: Icon(Icons.copy, color: textSecondaryDark, size: 20),
+                  onPressed: onCopy,
+                  tooltip: 'Copy to clipboard',
+                ),
+              ),
+              Icon(Icons.chevron_right, color: textSecondaryDark),
+            ],
+          ),
+          onTap: () {
+            Navigator.pushNamed(context, '/secret-detail', arguments: secret);
+          },
         ),
-        onTap: () {
-          Navigator.pushNamed(context, '/secret-detail', arguments: secret);
-        },
       ),
     );
   }

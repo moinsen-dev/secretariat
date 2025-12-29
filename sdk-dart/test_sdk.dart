@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'lib/secretariat.dart';
 
 Future<void> main() async {

@@ -1,5 +1,7 @@
 // Example usage of the Secretariat Dart SDK
 
+// ignore_for_file: avoid_print
+
 import 'package:secretariat/secretariat.dart';
 
 void main() async {

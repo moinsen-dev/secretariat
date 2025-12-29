@@ -145,11 +145,9 @@ class _ImportWizardScreenState extends State<ImportWizardScreen> {
           continue;
         }
 
-        secrets.add(EnvSecret(
-          name: name,
-          value: value,
-          provider: _detectProvider(name),
-        ));
+        secrets.add(
+          EnvSecret(name: name, value: value, provider: _detectProvider(name)),
+        );
       }
 
       // Check for duplicates against existing secrets
@@ -270,8 +268,8 @@ class _ImportWizardScreenState extends State<ImportWizardScreen> {
             Text(
               'or',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             const SizedBox(height: 16),
             FilledButton.icon(
@@ -297,7 +295,8 @@ class _ImportWizardScreenState extends State<ImportWizardScreen> {
                         child: const Text('Cancel'),
                       ),
                       FilledButton(
-                        onPressed: () => Navigator.pop(context, controller.text),
+                        onPressed: () =>
+                            Navigator.pop(context, controller.text),
                         child: const Text('Open'),
                       ),
                     ],
@@ -369,8 +368,8 @@ class _ImportWizardScreenState extends State<ImportWizardScreen> {
                       Text(
                         '${_secrets.length} secrets found • $selectedCount selected',
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context).colorScheme.onSurfaceVariant,
-                            ),
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -407,7 +406,9 @@ class _ImportWizardScreenState extends State<ImportWizardScreen> {
                     child: Text(
                       '$duplicateCount secret(s) already exist and are deselected by default.',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onTertiaryContainer,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onTertiaryContainer,
                       ),
                     ),
                   ),
@@ -473,9 +474,13 @@ class _ImportWizardScreenState extends State<ImportWizardScreen> {
                           label: const Text('Exists'),
                           labelStyle: TextStyle(
                             fontSize: 10,
-                            color: Theme.of(context).colorScheme.onTertiaryContainer,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onTertiaryContainer,
                           ),
-                          backgroundColor: Theme.of(context).colorScheme.tertiaryContainer,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.tertiaryContainer,
                           padding: EdgeInsets.zero,
                           visualDensity: VisualDensity.compact,
                         ),
@@ -517,11 +522,8 @@ class _ImportWizardScreenState extends State<ImportWizardScreen> {
                               child: Text('Auto-detect'),
                             ),
                             ..._providerPatterns.values.toSet().map(
-                                  (p) => DropdownMenuItem(
-                                    value: p,
-                                    child: Text(p),
-                                  ),
-                                ),
+                              (p) => DropdownMenuItem(value: p, child: Text(p)),
+                            ),
                           ],
                           onChanged: (value) {
                             setState(() {
@@ -592,17 +594,15 @@ class _ImportWizardScreenState extends State<ImportWizardScreen> {
           ),
           const SizedBox(height: 24),
           Text(
-            success
-                ? 'Import Complete!'
-                : 'Import Partially Complete',
+            success ? 'Import Complete!' : 'Import Partially Complete',
             style: Theme.of(context).textTheme.headlineSmall,
           ),
           const SizedBox(height: 8),
           Text(
             '$_importedCount of $total secrets imported successfully',
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 32),
           Row(
@@ -696,8 +696,8 @@ class _ImportWizardScreenState extends State<ImportWizardScreen> {
         child: _currentStep == 0
             ? _buildFileSelectionStep()
             : _currentStep == 1
-                ? _buildReviewStep()
-                : _buildCompletionStep(),
+            ? _buildReviewStep()
+            : _buildCompletionStep(),
       ),
     );
   }
@@ -740,11 +740,11 @@ class _ImportWizardScreenState extends State<ImportWizardScreen> {
         Text(
           label,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: isCurrent
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-              ),
+            color: isCurrent
+                ? Theme.of(context).colorScheme.primary
+                : Theme.of(context).colorScheme.onSurfaceVariant,
+            fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+          ),
         ),
       ],
     );

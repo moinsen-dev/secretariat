@@ -170,7 +170,7 @@ Future<void> testListReturnsSecrets(SecretariatTestClient client) async {
     final secrets = await client.list();
 
     pass('list() returned a list of strings');
-  
+
     if (secrets.isNotEmpty) {
       pass('list() returned ${secrets.length} secrets');
     } else {

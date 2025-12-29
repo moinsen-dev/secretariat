@@ -118,7 +118,9 @@ class _SettingsTabState extends State<SettingsTab> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: (isRunning ? successColor : errorColor).withValues(alpha: 0.15),
+            color: (isRunning ? successColor : errorColor).withValues(
+              alpha: 0.15,
+            ),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -146,7 +148,10 @@ class _SettingsTabState extends State<SettingsTab> {
             ? const SizedBox(
                 width: 24,
                 height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2, color: accentColor),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: accentColor,
+                ),
               )
             : TextButton(
                 onPressed: () async {
@@ -168,7 +173,10 @@ class _SettingsTabState extends State<SettingsTab> {
                 },
                 child: Text(
                   isRunning ? 'Stop' : 'Start',
-                  style: TextStyle(color: accentColor, fontWeight: FontWeight.w500),
+                  style: TextStyle(
+                    color: accentColor,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ),
       ),
@@ -215,10 +223,16 @@ class _SettingsTabState extends State<SettingsTab> {
           try {
             if (value) {
               final success = await provider.enableAutoStart();
-              _showStatus(success ? 'Auto-start enabled' : 'Failed to enable auto-start');
+              _showStatus(
+                success ? 'Auto-start enabled' : 'Failed to enable auto-start',
+              );
             } else {
               final success = await provider.disableAutoStart();
-              _showStatus(success ? 'Auto-start disabled' : 'Failed to disable auto-start');
+              _showStatus(
+                success
+                    ? 'Auto-start disabled'
+                    : 'Failed to disable auto-start',
+              );
             }
           } catch (e) {
             _showStatus('Error: $e');
@@ -262,7 +276,9 @@ class _SettingsTabState extends State<SettingsTab> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: (isUnlocked ? unlockedColor : lockedColor).withValues(alpha: 0.15),
+                color: (isUnlocked ? unlockedColor : lockedColor).withValues(
+                  alpha: 0.15,
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -336,7 +352,10 @@ class _SettingsTabState extends State<SettingsTab> {
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
-                    child: Text('Cancel', style: TextStyle(color: textSecondaryDark)),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(color: textSecondaryDark),
+                    ),
                   ),
                   TextButton(
                     onPressed: () => Navigator.pop(context, true),

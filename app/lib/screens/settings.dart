@@ -92,10 +92,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   child: Text(
                     _statusMessage!,
-                    style: TextStyle(
-                      color: textSecondaryDark,
-                      fontSize: 13,
-                    ),
+                    style: TextStyle(color: textSecondaryDark, fontSize: 13),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -138,7 +135,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: (isRunning ? successColor : errorColor).withValues(alpha: 0.15),
+            color: (isRunning ? successColor : errorColor).withValues(
+              alpha: 0.15,
+            ),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
@@ -219,11 +218,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: primaryColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            Icons.play_arrow,
-            color: primaryColor,
-            size: 20,
-          ),
+          child: Icon(Icons.play_arrow, color: primaryColor, size: 20),
         ),
         title: Text(
           'Start on Login',
@@ -235,22 +230,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         subtitle: Text(
           isEnabled ? 'Daemon starts automatically' : 'Start daemon manually',
-          style: TextStyle(
-            color: textSecondaryDark,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: textSecondaryDark, fontSize: 12),
         ),
         value: isEnabled,
-        activeColor: accentColor,
+        activeThumbColor: accentColor,
         onChanged: (value) async {
           setState(() => _isLoading = true);
           try {
             if (value) {
               final success = await provider.enableAutoStart();
-              _showStatus(success ? 'Auto-start enabled' : 'Failed to enable auto-start');
+              _showStatus(
+                success ? 'Auto-start enabled' : 'Failed to enable auto-start',
+              );
             } else {
               final success = await provider.disableAutoStart();
-              _showStatus(success ? 'Auto-start disabled' : 'Failed to disable auto-start');
+              _showStatus(
+                success
+                    ? 'Auto-start disabled'
+                    : 'Failed to disable auto-start',
+              );
             }
           } catch (e) {
             _showStatus('Error: $e');
@@ -294,7 +292,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: (isUnlocked ? unlockedColor : lockedColor).withValues(alpha: 0.15),
+                color: (isUnlocked ? unlockedColor : lockedColor).withValues(
+                  alpha: 0.15,
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -313,10 +313,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             subtitle: Text(
               '$stateText - $secretCount secrets, $appCount apps',
-              style: TextStyle(
-                color: textSecondaryDark,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: textSecondaryDark, fontSize: 12),
             ),
           ),
         );
@@ -340,11 +337,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: errorColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            Icons.lock_outline,
-            color: errorColor,
-            size: 20,
-          ),
+          child: Icon(Icons.lock_outline, color: errorColor, size: 20),
         ),
         title: Text(
           'Lock Vault',
@@ -356,10 +349,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         subtitle: Text(
           'Clear master key from memory',
-          style: TextStyle(
-            color: textSecondaryDark,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: textSecondaryDark, fontSize: 12),
         ),
         trailing: TextButton(
           onPressed: () async {
@@ -378,7 +368,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context, false),
-                    child: Text('Cancel', style: TextStyle(color: textSecondaryDark)),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(color: textSecondaryDark),
+                    ),
                   ),
                   TextButton(
                     onPressed: () => Navigator.pop(context, true),
@@ -401,10 +394,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           },
           child: Text(
             'Lock Now',
-            style: TextStyle(
-              color: errorColor,
-              fontWeight: FontWeight.w500,
-            ),
+            style: TextStyle(color: errorColor, fontWeight: FontWeight.w500),
           ),
         ),
       ),
@@ -433,11 +423,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: iconColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            color: iconColor,
-            size: 20,
-          ),
+          child: Icon(icon, color: iconColor, size: 20),
         ),
         title: Text(
           title,
@@ -449,15 +435,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         subtitle: Text(
           subtitle,
-          style: TextStyle(
-            color: textSecondaryDark,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: textSecondaryDark, fontSize: 12),
         ),
-        trailing: Icon(
-          Icons.chevron_right,
-          color: textSecondaryDark,
-        ),
+        trailing: Icon(Icons.chevron_right, color: textSecondaryDark),
         onTap: onTap,
       ),
     );
@@ -479,11 +459,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: secretColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            Icons.security,
-            color: secretColor,
-            size: 20,
-          ),
+          child: Icon(Icons.security, color: secretColor, size: 20),
         ),
         title: Text(
           'Secretariat',
@@ -495,10 +471,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         subtitle: Text(
           'Local-first secrets management',
-          style: TextStyle(
-            color: textSecondaryDark,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: textSecondaryDark, fontSize: 12),
         ),
       ),
     );
@@ -520,11 +493,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: infoColor.withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            Icons.info_outline,
-            color: infoColor,
-            size: 20,
-          ),
+          child: Icon(Icons.info_outline, color: infoColor, size: 20),
         ),
         title: Text(
           'Version',
@@ -536,10 +505,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         subtitle: Text(
           '0.1.0 (Phase 1)',
-          style: TextStyle(
-            color: textSecondaryDark,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: textSecondaryDark, fontSize: 12),
         ),
       ),
     );

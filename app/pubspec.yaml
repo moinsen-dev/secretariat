@@ -51,6 +51,12 @@ dependencies:
   # Persistent storage for first-run detection and settings
   shared_preferences: ^2.5.4
 
+  # Window management - for window size constraints, show/hide/focus
+  window_manager: ^0.4.0
+
+  # Biometric authentication - for Touch ID unlock
+  local_auth: ^2.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
