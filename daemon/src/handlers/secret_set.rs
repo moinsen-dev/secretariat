@@ -79,6 +79,7 @@ fn detect_provider(name: &str) -> Option<&str> {
 /// * `master_key` - The 32-byte master encryption key from keychain
 /// * `environment` - Optional environment context (defaults to "default")
 /// * `provider_override` - Optional provider override (auto-detected if None)
+/// * `ttl_seconds` - Optional TTL in seconds for ephemeral secrets
 ///
 /// # Returns
 ///
@@ -129,6 +130,7 @@ pub fn handle_secret_set(
     master_key: &[u8; 32],
     environment: Option<&str>,
     provider_override: Option<&str>,
+    ttl_seconds: Option<u64>,
 ) -> Result<()> {
     // F065: Encrypt the value using AES-256-GCM with random nonce
     let encrypted = encrypt(value, master_key)
@@ -147,11 +149,18 @@ pub fn handle_secret_set(
     let env = environment.unwrap_or("default");
 
     // F064: Store the encrypted value in the database
-    storage.create_secret(name, &value_encrypted, provider, env)
-        .context("Failed to store secret")?;
+    // Use ephemeral storage if TTL is provided, otherwise regular storage
+    if let Some(ttl) = ttl_seconds {
+        storage.create_ephemeral_secret(name, &value_encrypted, provider, env, ttl)
+            .context("Failed to store ephemeral secret")?;
+    } else {
+        storage.create_secret(name, &value_encrypted, provider, env)
+            .context("Failed to store secret")?;
+    }
 
     // Log the secret creation/update
-    storage.log_audit("system", name, "write", true, None)
+    let action = if ttl_seconds.is_some() { "write_ephemeral" } else { "write" };
+    storage.log_audit("system", name, action, true, None)
         .context("Failed to log audit entry")?;
 
     Ok(())

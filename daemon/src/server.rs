@@ -824,21 +824,25 @@ fn route_request(
                 }
             };
 
-            // Extract optional environment and provider parameters
+            // Extract optional environment, provider, and ttl parameters
             let environment = request.params.get("environment").and_then(|v| v.as_str());
             let provider = request.params.get("provider").and_then(|v| v.as_str());
+            let ttl_seconds = request.params.get("ttl").and_then(|v| v.as_u64());
 
             // master_key is guaranteed to be Some since we checked requires_unlock above
             let master_key = master_key_opt.as_ref().unwrap();
-            match crate::handlers::handle_secret_set(name, value, storage, master_key, environment, provider) {
-                Ok(()) => Response::success(
-                    request.id,
-                    serde_json::json!({
+            match crate::handlers::handle_secret_set(name, value, storage, master_key, environment, provider, ttl_seconds) {
+                Ok(()) => {
+                    let mut response_data = serde_json::json!({
                         "name": name,
-                        "status": "created",
+                        "status": if ttl_seconds.is_some() { "created_ephemeral" } else { "created" },
                         "environment": environment.unwrap_or("default")
-                    })
-                ),
+                    });
+                    if let Some(ttl) = ttl_seconds {
+                        response_data["ttl_seconds"] = serde_json::json!(ttl);
+                    }
+                    Response::success(request.id, response_data)
+                }
                 Err(e) => Response::error(
                     request.id,
                     ErrorInfo::internal_error(format!("Failed to set secret: {}", e))
@@ -908,6 +912,92 @@ fn route_request(
                 Err(e) => Response::error(
                     request.id,
                     ErrorInfo::internal_error(format!("Failed to rotate secret: {}", e))
+                ),
+            }
+        }
+        "secret.rollback" => {
+            // Rollback a secret to its previous version
+            let name = match request.params.get("name").and_then(|v| v.as_str()) {
+                Some(n) => n,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: name")
+                    );
+                }
+            };
+
+            match storage.rollback_secret(name) {
+                Ok(new_version) => {
+                    // Log the rollback
+                    let _ = storage.log_audit("system", name, "rollback", true,
+                        Some(&format!("Rolled back to version {}", new_version)));
+                    Response::success(
+                        request.id,
+                        serde_json::json!({
+                            "name": name,
+                            "version": new_version,
+                            "status": "rolled_back"
+                        })
+                    )
+                },
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to rollback secret: {}", e))
+                ),
+            }
+        }
+        "secret.history" => {
+            // Get secret version history
+            let name = match request.params.get("name").and_then(|v| v.as_str()) {
+                Some(n) => n,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: name")
+                    );
+                }
+            };
+
+            match storage.get_secret_history(name) {
+                Ok(Some((version, has_previous, rotated_at))) => Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "name": name,
+                        "version": version,
+                        "has_previous": has_previous,
+                        "can_rollback": has_previous,
+                        "rotated_at": rotated_at
+                    })
+                ),
+                Ok(None) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Secret '{}' not found", name))
+                ),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to get secret history: {}", e))
+                ),
+            }
+        }
+        "secret.rotation_reminders" => {
+            // Get secrets needing rotation
+            let days = request.params.get("days")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(90); // Default: 90 days
+
+            match storage.get_secrets_needing_rotation(days) {
+                Ok(secrets) => Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "secrets": secrets,
+                        "threshold_days": days,
+                        "count": secrets.len()
+                    })
+                ),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to get rotation reminders: {}", e))
                 ),
             }
         }
@@ -1265,6 +1355,44 @@ fn route_request(
                 request.id,
                 ErrorInfo::internal_error("Method should be handled by async handler")
             )
+        }
+        "secret.cleanup" => {
+            // Cleanup expired ephemeral secrets
+            match storage.cleanup_expired_secrets() {
+                Ok(count) => Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "status": "cleaned",
+                        "removed_count": count
+                    })
+                ),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to cleanup expired secrets: {}", e))
+                ),
+            }
+        }
+        "secret.expiring" => {
+            // Get secrets expiring soon
+            let within_seconds = request.params.get("within_seconds")
+                .and_then(|v| v.as_u64())
+                .unwrap_or(3600); // Default: 1 hour
+
+            match storage.get_expiring_secrets(within_seconds) {
+                Ok(secrets) => Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "secrets": secrets.iter().map(|(name, expires)| {
+                            serde_json::json!({ "name": name, "expires_at": expires })
+                        }).collect::<Vec<_>>(),
+                        "within_seconds": within_seconds
+                    })
+                ),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to get expiring secrets: {}", e))
+                ),
+            }
         }
         _ => {
             // Unknown method

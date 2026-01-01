@@ -62,6 +62,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () => Navigator.pushNamed(context, '/applications'),
               ),
               _buildNavigationTile(
+                icon: Icons.smart_toy,
+                iconColor: accentColor,
+                title: 'AI Agents',
+                subtitle: 'Manage AI assistant access to secrets',
+                onTap: () => Navigator.pushNamed(context, '/agents'),
+              ),
+              _buildNavigationTile(
                 icon: Icons.history,
                 iconColor: warningColor,
                 title: 'Audit Log',
@@ -75,6 +82,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 subtitle: 'Import from .env files',
                 onTap: () => Navigator.pushNamed(context, '/import'),
               ),
+              const SizedBox(height: 24),
+
+              // Secret Health Section
+              _buildSectionHeader('Secret Health'),
+              _buildRotationRemindersTile(provider),
+              _buildExpiringSecretsTile(provider),
               const SizedBox(height: 24),
 
               // About Section
@@ -524,6 +537,353 @@ class _SettingsScreenState extends State<SettingsScreen> {
       case DaemonStatus.unknown:
         return 'Unknown';
     }
+  }
+
+  Widget _buildRotationRemindersTile(VaultProvider provider) {
+    final secretsNeedingRotation = provider.secretsNeedingRotation;
+    final count = secretsNeedingRotation.length;
+    final hasWarnings = count > 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: surfaceDark,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: hasWarnings ? warningColor.withValues(alpha: 0.5) : borderDark,
+        ),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: (hasWarnings ? warningColor : successColor).withValues(
+              alpha: 0.15,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                Icons.rotate_right,
+                color: hasWarnings ? warningColor : successColor,
+                size: 20,
+              ),
+              if (hasWarnings)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: warningColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        count > 9 ? '9+' : count.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        title: Text(
+          'Rotation Reminders',
+          style: TextStyle(
+            color: textPrimaryDark,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        subtitle: Text(
+          hasWarnings
+              ? '$count secret${count == 1 ? '' : 's'} need${count == 1 ? 's' : ''} rotation (90+ days old)'
+              : 'All secrets are recently rotated',
+          style: TextStyle(
+            color: hasWarnings ? warningColor : textSecondaryDark,
+            fontSize: 12,
+          ),
+        ),
+        trailing: hasWarnings
+            ? Icon(Icons.chevron_right, color: textSecondaryDark)
+            : Icon(Icons.check, color: successColor),
+        onTap: hasWarnings
+            ? () {
+                _showRotationRemindersDialog(secretsNeedingRotation);
+              }
+            : null,
+      ),
+    );
+  }
+
+  void _showRotationRemindersDialog(List secrets) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: surfaceDark,
+        title: Row(
+          children: [
+            Icon(Icons.rotate_right, color: warningColor),
+            const SizedBox(width: 12),
+            Text(
+              'Secrets Needing Rotation',
+              style: TextStyle(color: textPrimaryDark, fontSize: 16),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'These secrets have not been rotated in over 90 days:',
+                style: TextStyle(color: textSecondaryDark, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              ...secrets.take(10).map((secret) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.key, size: 16, color: warningColor),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            secret.name,
+                            style: TextStyle(
+                              color: textPrimaryDark,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          _formatDaysAgo(secret.rotatedAt ?? secret.createdAt),
+                          style: TextStyle(
+                            color: textSecondaryDark,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+              if (secrets.length > 10)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    '...and ${secrets.length - 10} more',
+                    style: TextStyle(
+                      color: textSecondaryDark,
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildExpiringSecretsTile(VaultProvider provider) {
+    final expiringSecrets = provider.secretsExpiringSoon;
+    final count = expiringSecrets.length;
+    final hasExpiring = count > 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: surfaceDark,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: hasExpiring ? errorColor.withValues(alpha: 0.5) : borderDark,
+        ),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: (hasExpiring ? errorColor : successColor).withValues(
+              alpha: 0.15,
+            ),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Icon(
+                Icons.timer,
+                color: hasExpiring ? errorColor : successColor,
+                size: 20,
+              ),
+              if (hasExpiring)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: errorColor,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        count > 9 ? '9+' : count.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        title: Text(
+          'Expiring Secrets',
+          style: TextStyle(
+            color: textPrimaryDark,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        subtitle: Text(
+          hasExpiring
+              ? '$count ephemeral secret${count == 1 ? '' : 's'} expiring within 1 hour'
+              : 'No ephemeral secrets expiring soon',
+          style: TextStyle(
+            color: hasExpiring ? errorColor : textSecondaryDark,
+            fontSize: 12,
+          ),
+        ),
+        trailing: hasExpiring
+            ? Icon(Icons.chevron_right, color: textSecondaryDark)
+            : Icon(Icons.check, color: successColor),
+        onTap: hasExpiring
+            ? () {
+                _showExpiringSecretsDialog(expiringSecrets);
+              }
+            : null,
+      ),
+    );
+  }
+
+  void _showExpiringSecretsDialog(List secrets) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: surfaceDark,
+        title: Row(
+          children: [
+            Icon(Icons.timer, color: errorColor),
+            const SizedBox(width: 12),
+            Text(
+              'Expiring Soon',
+              style: TextStyle(color: textPrimaryDark, fontSize: 16),
+            ),
+          ],
+        ),
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'These ephemeral secrets are expiring soon:',
+                style: TextStyle(color: textSecondaryDark, fontSize: 13),
+              ),
+              const SizedBox(height: 16),
+              ...secrets.take(10).map((secret) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        Icon(Icons.key, size: 16, color: errorColor),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            secret.name,
+                            style: TextStyle(
+                              color: textPrimaryDark,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          _formatTimeRemaining(secret.timeRemaining),
+                          style: TextStyle(
+                            color: errorColor,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+              if (secrets.length > 10)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    '...and ${secrets.length - 10} more',
+                    style: TextStyle(
+                      color: textSecondaryDark,
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatDaysAgo(DateTime date) {
+    final days = DateTime.now().difference(date).inDays;
+    if (days == 0) return 'today';
+    if (days == 1) return '1 day ago';
+    return '$days days ago';
+  }
+
+  String _formatTimeRemaining(Duration? duration) {
+    if (duration == null) return 'Unknown';
+    if (duration.isNegative || duration == Duration.zero) return 'Expired';
+
+    final minutes = duration.inMinutes;
+    if (minutes < 60) {
+      return '${minutes}m left';
+    }
+    final hours = duration.inHours;
+    final remainingMinutes = minutes % 60;
+    return '${hours}h ${remainingMinutes}m left';
   }
 
   void _showStatus(String message) {

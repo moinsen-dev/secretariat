@@ -530,6 +530,21 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
 
                 const SizedBox(height: 16),
 
+                // Version History & Rollback Section
+                _VersionHistorySection(secret: secret),
+
+                const SizedBox(height: 16),
+
+                // Expiration Warning (for ephemeral secrets)
+                if (secret.isEphemeral) _ExpirationWarningCard(secret: secret),
+
+                if (secret.isEphemeral) const SizedBox(height: 16),
+
+                // Rotation Warning
+                if (secret.needsRotation) _RotationWarningCard(secret: secret),
+
+                if (secret.needsRotation) const SizedBox(height: 16),
+
                 // Notes
                 if (_isEditMode ||
                     (secret.notes != null && secret.notes!.isNotEmpty))
@@ -810,5 +825,303 @@ class _AppAccessTile extends StatelessWidget {
     } else {
       return 'Just now';
     }
+  }
+}
+
+/// Version History Section widget showing version info and rollback option
+class _VersionHistorySection extends StatelessWidget {
+  final Secret secret;
+
+  const _VersionHistorySection({required this.secret});
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.history, size: 20, color: infoColor),
+                const SizedBox(width: 8),
+                Text(
+                  'Version History',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // Version info
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Current Version',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: primaryColor.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          'v${secret.version}',
+                          style: TextStyle(
+                            color: primaryColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (secret.hasPrevious) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Previous version available for rollback',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (secret.hasPrevious) ...[
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.undo),
+                  label: Text('Rollback to v${secret.version - 1}'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: warningColor,
+                    side: BorderSide(color: warningColor),
+                  ),
+                  onPressed: () => _showRollbackConfirmation(context),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showRollbackConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber, color: warningColor),
+            const SizedBox(width: 12),
+            const Text('Rollback Secret'),
+          ],
+        ),
+        content: Text(
+          'This will restore "${secret.name}" to version ${secret.version - 1}.\n\n'
+          'The current value will be replaced with the previous value.\n\n'
+          'Are you sure you want to proceed?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: warningColor,
+            ),
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              await _performRollback(context);
+            },
+            child: const Text('Rollback'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _performRollback(BuildContext context) async {
+    try {
+      final provider = Provider.of<VaultProvider>(context, listen: false);
+      final result = await provider.rollbackSecret(secret.name);
+
+      if (context.mounted) {
+        final newVersion = result['version'] ?? (secret.version - 1);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Rolled back to version $newVersion'),
+            backgroundColor: successColor,
+          ),
+        );
+        // Go back to refresh
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Rollback failed: $e'),
+            backgroundColor: errorColor,
+          ),
+        );
+      }
+    }
+  }
+}
+
+/// Expiration warning card for ephemeral secrets
+class _ExpirationWarningCard extends StatelessWidget {
+  final Secret secret;
+
+  const _ExpirationWarningCard({required this.secret});
+
+  @override
+  Widget build(BuildContext context) {
+    final isExpired = secret.isExpired;
+    final isExpiringSoon = secret.isExpiringSoon;
+    final timeRemaining = secret.timeRemaining;
+
+    final color = isExpired ? errorColor : (isExpiringSoon ? warningColor : infoColor);
+    final icon = isExpired ? Icons.error : (isExpiringSoon ? Icons.timer : Icons.schedule);
+
+    return Card(
+      color: color.withValues(alpha: 0.1),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    isExpired
+                        ? 'Expired'
+                        : (isExpiringSoon ? 'Expiring Soon' : 'Ephemeral Secret'),
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    isExpired
+                        ? 'This secret has expired and will be cleaned up'
+                        : 'Expires in ${_formatDuration(timeRemaining)}',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatDuration(Duration? duration) {
+    if (duration == null) return 'unknown';
+    if (duration.isNegative || duration == Duration.zero) return 'expired';
+
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes % 60;
+    final seconds = duration.inSeconds % 60;
+
+    if (hours > 0) {
+      return '${hours}h ${minutes}m';
+    } else if (minutes > 0) {
+      return '${minutes}m ${seconds}s';
+    } else {
+      return '${seconds}s';
+    }
+  }
+}
+
+/// Rotation warning card for secrets needing rotation
+class _RotationWarningCard extends StatelessWidget {
+  final Secret secret;
+
+  const _RotationWarningCard({required this.secret});
+
+  @override
+  Widget build(BuildContext context) {
+    final lastRotated = secret.rotatedAt ?? secret.createdAt;
+    final daysSinceRotation = DateTime.now().difference(lastRotated).inDays;
+
+    return Card(
+      color: warningColor.withValues(alpha: 0.1),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Row(
+          children: [
+            Icon(Icons.rotate_right, color: warningColor, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Rotation Recommended',
+                    style: TextStyle(
+                      color: warningColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'This secret hasn\'t been rotated in $daysSinceRotation days. '
+                    'Consider rotating it for security.',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

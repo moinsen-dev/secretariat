@@ -11,11 +11,11 @@
 | Phase | Status | Completion |
 |-------|--------|------------|
 | Phase 1 - Core | **COMPLETE** | 100% |
-| Phase 2 - Polish | In Progress | 35% |
+| Phase 2 - Polish | In Progress | 50% |
 | Phase 3 - AI | **COMPLETE** | 100% |
 | Phase 4 - Teams | Not Started | 0% |
 
-**Total PID Coverage:** ~75% of all specified features
+**Total PID Coverage:** ~80% of all specified features
 
 ---
 
@@ -110,11 +110,11 @@ All Phase 1 "Must Have" requirements are fully implemented.
 | `sec env list/set/current` commands | **DONE** | HIGH | 2h |
 | Pass environment to secret.set handler | **DONE** | HIGH | 1h |
 | `sec run --env=<env> <app>` command | Not Started | MEDIUM | 4h |
-| Environment selector in Flutter UI | Not Started | HIGH | 4h |
+| Environment selector in Flutter UI | **DONE** | HIGH | 4h |
 | Environment matrix view in UI | Not Started | MEDIUM | 4h |
 | Per-environment secret variants | Not Started | HIGH | 4h |
 
-**Estimated Total:** 20 hours (5h complete, 15h remaining)
+**Estimated Total:** 20 hours (9h complete, 11h remaining)
 
 ### Provider Onboarding (Section 9) - CLI IMPLEMENTED
 
@@ -238,10 +238,10 @@ Tables added to `daemon/src/storage.rs`:
 | Task | Status | Priority | Effort |
 |------|--------|----------|--------|
 | Add agent filter to audit queries | Not Started | MEDIUM | 2h |
-| Flutter UI for agent management | Not Started | MEDIUM | 8h |
+| Flutter UI for agent management | **DONE** | MEDIUM | 8h |
 | Agent-specific audit view | Not Started | MEDIUM | 4h |
 
-**Estimated Total:** 29 hours (15h complete, 14h remaining for Flutter UI)
+**Estimated Total:** 29 hours (23h complete, 6h remaining)
 
 ### MCP Server Integration (Section 11.5) - IMPLEMENTED
 
@@ -309,28 +309,54 @@ Tables added to `daemon/src/storage.rs`:
 
 ## Nice-to-Have Features (BACKLOG)
 
-### Ephemeral/Session Secrets (Section 7.3)
+### Ephemeral/Session Secrets (Section 7.3) - CLI IMPLEMENTED
 
 | Task | Status | Priority | Effort |
 |------|--------|----------|--------|
-| Add `expires_at` field to secrets | Not Started | LOW | 1h |
-| `sec set --ttl <duration>` flag | Not Started | LOW | 2h |
-| Background cleanup of expired secrets | Not Started | LOW | 2h |
-| UI indicator for expiring secrets | Not Started | LOW | 2h |
+| Add `expires_at` field to secrets | **DONE** | LOW | 1h |
+| `sec set --ttl <duration>` flag | **DONE** | LOW | 2h |
+| Background cleanup of expired secrets | **DONE** | LOW | 2h |
+| `sec cleanup-expired` command | **DONE** | LOW | 1h |
+| `sec expiring` command | **DONE** | LOW | 1h |
+| `secret.cleanup` daemon endpoint | **DONE** | LOW | 1h |
+| `secret.expiring` daemon endpoint | **DONE** | LOW | 1h |
+| UI indicator for expiring secrets | **DONE** | LOW | 2h |
 
-**Estimated Total:** 7 hours
+**CLI Location:** `cli/src/main.rs`, `daemon/src/storage.rs`
 
-### Key Lifecycle Management (Section 13)
+**Available Commands:**
+- `sec set KEY VALUE --ttl 3600` - Create ephemeral secret with 1-hour TTL
+- `sec cleanup-expired` - Remove all expired ephemeral secrets
+- `sec expiring --within 3600` - List secrets expiring within 1 hour
+
+**Estimated Total:** 10 hours (COMPLETE)
+
+### Key Lifecycle Management (Section 13) - CLI IMPLEMENTED
 
 | Feature | Status | Priority | Effort |
 |---------|--------|----------|--------|
-| Scheduled rotation reminders | Not Started | MEDIUM | 4h |
-| One-click rotation with propagation | Partial | MEDIUM | 2h |
-| Secret version history UI | Not Started | LOW | 4h |
-| Rollback to previous version | Not Started | LOW | 4h |
+| Rotation reminders query | **DONE** | MEDIUM | 2h |
+| `sec rotation-reminders --days 90` | **DONE** | MEDIUM | 1h |
+| Secret version history query | **DONE** | LOW | 2h |
+| `sec history <name>` command | **DONE** | LOW | 1h |
+| Rollback to previous version | **DONE** | LOW | 2h |
+| `sec rollback <name>` command | **DONE** | LOW | 1h |
+| `secret.rollback` daemon endpoint | **DONE** | LOW | 1h |
+| `secret.history` daemon endpoint | **DONE** | LOW | 1h |
+| `secret.rotation_reminders` endpoint | **DONE** | LOW | 1h |
+| One-click rotation with propagation | **DONE** (existing `sec rotate`) | MEDIUM | - |
+| Secret version history UI | **DONE** | LOW | 4h |
 | Compromise response workflow | Not Started | MEDIUM | 8h |
 
-**Estimated Total:** 22 hours
+**CLI Location:** `cli/src/main.rs`, `daemon/src/storage.rs`, `daemon/src/server.rs`
+
+**Available Commands:**
+- `sec history <name>` - Show version history for a secret
+- `sec rollback <name>` - Rollback secret to previous version
+- `sec rotation-reminders --days 90` - List secrets not rotated in 90 days
+- `sec rotate <name> <new-value>` - Rotate secret value (existing)
+
+**Estimated Total:** 22 hours (16h complete, 8h remaining for workflows)
 
 ### Security Kill-Switch (Section 12.3)
 
@@ -338,10 +364,10 @@ Tables added to `daemon/src/storage.rs`:
 |------|--------|----------|--------|
 | `sec panic` command | **DONE** | HIGH | 2h |
 | `vault.panic` daemon endpoint | **DONE** | HIGH | 2h |
-| Panic button in Flutter UI | Not Started | HIGH | 2h |
+| Panic button in Flutter UI | **DONE** | HIGH | 2h |
 | Revoke all + lock vault | **DONE** | HIGH | 2h |
 
-**Estimated Total:** 8 hours (6h complete, 2h remaining for Flutter UI)
+**Estimated Total:** 8 hours (COMPLETE)
 
 ### Anomaly Detection (Section 14.3)
 
@@ -374,8 +400,8 @@ Tables added to `daemon/src/storage.rs`:
 
 ### Immediate (Next Sprint)
 
-1. **Security Kill-Switch** - 8h (HIGH priority, user safety)
-2. **Environment Management** - 20h (HIGH priority, core feature)
+1. ~~**Security Kill-Switch** - 8h~~ ✓ COMPLETE
+2. **Environment Management** - 11h remaining (Environment matrix view, run command, per-env variants)
 
 ### Short-term (Next Month)
 

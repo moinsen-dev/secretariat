@@ -95,9 +95,79 @@ class MainShellState extends State<MainShell> {
         // Load secrets if vault is unlocked
         await provider.loadSecrets();
         await provider.loadApplications();
+        await provider.loadEnvironments();
       }
     } catch (e) {
       Log.ui('Error checking vault status', error: e);
+    }
+  }
+
+  /// Show panic confirmation dialog
+  void _showPanicConfirmation() {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: const Color(0xFF1E1E2E),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
+            SizedBox(width: 12),
+            Text(
+              'Emergency Lockdown',
+              style: TextStyle(color: Colors.white),
+            ),
+          ],
+        ),
+        content: const Text(
+          'This will immediately:\n\n'
+          '• Lock the vault\n'
+          '• Revoke ALL application permissions\n'
+          '• Log this emergency action\n\n'
+          'Are you sure you want to proceed?',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+            ),
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              await _executePanic();
+            },
+            child: const Text('PANIC'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Execute the panic command
+  Future<void> _executePanic() async {
+    final provider = Provider.of<VaultProvider>(context, listen: false);
+    try {
+      await provider.panic();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Emergency lockdown executed. Vault locked and all access revoked.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Panic failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -198,6 +268,44 @@ class MainShellState extends State<MainShell> {
     });
   }
 
+  /// Get icon for environment
+  IconData _getEnvironmentIcon(String env) {
+    switch (env.toLowerCase()) {
+      case 'prod':
+      case 'production':
+        return Icons.rocket_launch;
+      case 'staging':
+        return Icons.science;
+      case 'dev':
+      case 'development':
+        return Icons.code;
+      case 'test':
+      case 'testing':
+        return Icons.bug_report;
+      default:
+        return Icons.folder;
+    }
+  }
+
+  /// Get color for environment
+  Color _getEnvironmentColor(String env) {
+    switch (env.toLowerCase()) {
+      case 'prod':
+      case 'production':
+        return Colors.red;
+      case 'staging':
+        return Colors.orange;
+      case 'dev':
+      case 'development':
+        return Colors.green;
+      case 'test':
+      case 'testing':
+        return Colors.blue;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -213,6 +321,52 @@ class MainShellState extends State<MainShell> {
           ),
         ),
         actions: [
+          // Environment selector (visible on Home and Secrets tabs)
+          if (_currentIndex == 0 || _currentIndex == 1)
+            Consumer<VaultProvider>(
+              builder: (context, provider, child) {
+                if (provider.environments.isEmpty || provider.environments.length <= 1) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: DropdownButton<String>(
+                    value: provider.selectedEnvironment,
+                    dropdownColor: surfaceDark,
+                    underline: const SizedBox.shrink(),
+                    icon: Icon(Icons.arrow_drop_down, color: textSecondaryDark),
+                    items: provider.environments.map((env) {
+                      return DropdownMenuItem<String>(
+                        value: env,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _getEnvironmentIcon(env),
+                              size: 16,
+                              color: _getEnvironmentColor(env),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              env,
+                              style: TextStyle(
+                                color: textPrimaryDark,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        provider.setEnvironment(value);
+                      }
+                    },
+                  ),
+                );
+              },
+            ),
           // Refresh button (visible on Home and Secrets tabs)
           if (_currentIndex == 0 || _currentIndex == 1)
             IconButton(
@@ -235,6 +389,12 @@ class MainShellState extends State<MainShell> {
               },
               tooltip: 'Add Secret',
             ),
+          // Panic button (always visible)
+          IconButton(
+            icon: const Icon(Icons.emergency, color: Colors.red),
+            onPressed: _showPanicConfirmation,
+            tooltip: 'Emergency Lockdown',
+          ),
         ],
       ),
       body: IndexedStack(

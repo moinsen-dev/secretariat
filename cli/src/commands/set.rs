@@ -23,6 +23,7 @@ pub struct SetCommand {
     pub provider: Option<String>,
     pub environment: Option<String>,
     pub notes: Option<String>,
+    pub ttl: Option<u64>,
 }
 
 /// Response from secret.set
@@ -30,6 +31,8 @@ pub struct SetCommand {
 struct SetResponse {
     name: String,
     status: String,
+    #[serde(default)]
+    ttl_seconds: Option<u64>,
 }
 
 /// F123-F126: Handle the set command
@@ -109,16 +112,27 @@ pub async fn handle_set(client: DaemonClient, cmd: SetCommand) -> Result<()> {
         params["notes"] = json!(notes);
     }
 
+    if let Some(ttl) = cmd.ttl {
+        params["ttl"] = json!(ttl);
+    }
+
     let response: SetResponse = client
         .request("secret.set", params)
         .await
         .context("Failed to set secret")?;
 
     // F126: Display "Secret set successfully" message
-    println!("Secret set successfully");
+    if response.ttl_seconds.is_some() {
+        println!("Ephemeral secret set successfully");
+    } else {
+        println!("Secret set successfully");
+    }
     println!();
     println!("  Name:   {}", response.name);
     println!("  Status: {}", response.status);
+    if let Some(ttl) = response.ttl_seconds {
+        println!("  TTL:    {} seconds", ttl);
+    }
 
     Ok(())
 }

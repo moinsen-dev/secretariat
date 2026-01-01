@@ -441,6 +441,248 @@ class DaemonClient {
     });
   }
 
+  // ============================================================
+  // Ephemeral Secrets
+  // ============================================================
+
+  /// Set a secret with a time-to-live (ephemeral secret)
+  ///
+  /// The secret will be automatically deleted after [ttlSeconds].
+  ///
+  /// Example:
+  /// ```dart
+  /// await client.setSecretWithTtl('SESSION_TOKEN', 'abc123', ttlSeconds: 3600);
+  /// ```
+  Future<void> setSecretWithTtl(
+    String name,
+    String value, {
+    required int ttlSeconds,
+    String? provider,
+    String? environment,
+    String? notes,
+  }) async {
+    final params = {
+      'name': name,
+      'value': value,
+      'ttl': ttlSeconds,
+      if (provider != null) 'provider': provider,
+      if (environment != null) 'environment': environment,
+      if (notes != null) 'notes': notes,
+    };
+
+    await sendRequest('secret.set', params);
+  }
+
+  /// Get secrets that are expiring soon
+  ///
+  /// Returns secrets expiring within [withinMinutes] minutes.
+  ///
+  /// Example:
+  /// ```dart
+  /// final expiring = await client.getExpiringSecrets(withinMinutes: 60);
+  /// ```
+  Future<List<Map<String, dynamic>>> getExpiringSecrets({
+    int withinMinutes = 60,
+  }) async {
+    final result = await sendRequest('secret.expiring', {
+      'within_minutes': withinMinutes,
+    });
+    return List<Map<String, dynamic>>.from(result['secrets'] as List);
+  }
+
+  /// Clean up expired ephemeral secrets
+  ///
+  /// Returns the count of cleaned up secrets.
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = await client.cleanupExpiredSecrets();
+  /// // result = {'cleaned': 3}
+  /// ```
+  Future<Map<String, dynamic>> cleanupExpiredSecrets() async {
+    return await sendRequest('secret.cleanup', {});
+  }
+
+  // ============================================================
+  // Secret Version History & Rollback
+  // ============================================================
+
+  /// Get version history for a secret
+  ///
+  /// Returns version number, whether a previous version exists,
+  /// and the last rotation timestamp.
+  ///
+  /// Example:
+  /// ```dart
+  /// final history = await client.getSecretHistory('OPENAI_API_KEY');
+  /// // history = {'name': 'OPENAI_API_KEY', 'version': 3, 'has_previous': true, 'rotated_at': '...'}
+  /// ```
+  Future<Map<String, dynamic>> getSecretHistory(String name) async {
+    return await sendRequest('secret.history', {'name': name});
+  }
+
+  /// Rollback a secret to its previous version
+  ///
+  /// Returns the new (rolled back) version number.
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = await client.rollbackSecret('OPENAI_API_KEY');
+  /// // result = {'name': 'OPENAI_API_KEY', 'version': 2, 'status': 'rolled_back'}
+  /// ```
+  Future<Map<String, dynamic>> rollbackSecret(String name) async {
+    return await sendRequest('secret.rollback', {'name': name});
+  }
+
+  // ============================================================
+  // Rotation Reminders
+  // ============================================================
+
+  /// Get secrets that need rotation
+  ///
+  /// Returns secrets that haven't been rotated within [daysSinceRotation] days.
+  ///
+  /// Example:
+  /// ```dart
+  /// final stale = await client.getRotationReminders(daysSinceRotation: 90);
+  /// ```
+  Future<List<String>> getRotationReminders({int daysSinceRotation = 90}) async {
+    final result = await sendRequest('secret.rotation_reminders', {
+      'days': daysSinceRotation,
+    });
+    return List<String>.from(result['secrets'] as List);
+  }
+
+  // ============================================================
+  // Emergency Controls
+  // ============================================================
+
+  /// Emergency panic button - locks vault and revokes all access
+  ///
+  /// This is a security kill-switch that:
+  /// 1. Locks the vault immediately
+  /// 2. Revokes all application permissions
+  /// 3. Logs the emergency action
+  ///
+  /// Example:
+  /// ```dart
+  /// await client.panic();
+  /// ```
+  Future<Map<String, dynamic>> panic() async {
+    return await sendRequest('vault.panic', {});
+  }
+
+  // ============================================================
+  // AI Agent Access Control
+  // ============================================================
+
+  /// List all registered AI agents
+  ///
+  /// Example:
+  /// ```dart
+  /// final agents = await client.listAgents();
+  /// ```
+  Future<List<Map<String, dynamic>>> listAgents() async {
+    final result = await sendRequest('agent.list', {});
+    return List<Map<String, dynamic>>.from(result['agents'] as List);
+  }
+
+  /// Register a new AI agent
+  ///
+  /// Example:
+  /// ```dart
+  /// final result = await client.registerAgent('claude-code', description: 'Claude AI coding assistant');
+  /// ```
+  Future<Map<String, dynamic>> registerAgent(
+    String agentId, {
+    String? description,
+  }) async {
+    return await sendRequest('agent.register', {
+      'agent_id': agentId,
+      if (description != null) 'description': description,
+    });
+  }
+
+  /// Grant an AI agent access to a secret
+  ///
+  /// Example:
+  /// ```dart
+  /// await client.grantAgentAccess('claude-code', 'OPENAI_API_KEY');
+  /// ```
+  Future<void> grantAgentAccess(String agentId, String secretName) async {
+    await sendRequest('agent.grant', {
+      'agent_id': agentId,
+      'secret_name': secretName,
+    });
+  }
+
+  /// Revoke an AI agent's access to a secret
+  ///
+  /// Example:
+  /// ```dart
+  /// await client.revokeAgentAccess('claude-code', 'OPENAI_API_KEY');
+  /// ```
+  Future<void> revokeAgentAccess(String agentId, String secretName) async {
+    await sendRequest('agent.revoke', {
+      'agent_id': agentId,
+      'secret_name': secretName,
+    });
+  }
+
+  /// Revoke all access for an AI agent
+  ///
+  /// Example:
+  /// ```dart
+  /// await client.revokeAllAgentAccess('claude-code');
+  /// ```
+  Future<void> revokeAllAgentAccess(String agentId) async {
+    await sendRequest('agent.revoke_all', {'agent_id': agentId});
+  }
+
+  /// Get permissions for an AI agent
+  ///
+  /// Example:
+  /// ```dart
+  /// final permissions = await client.getAgentPermissions('claude-code');
+  /// ```
+  Future<List<String>> getAgentPermissions(String agentId) async {
+    final result = await sendRequest('agent.permissions', {
+      'agent_id': agentId,
+    });
+    return List<String>.from(result['secrets'] as List);
+  }
+
+  // ============================================================
+  // Environment Management
+  // ============================================================
+
+  /// List all environments
+  ///
+  /// Example:
+  /// ```dart
+  /// final environments = await client.listEnvironments();
+  /// // environments = ['default', 'dev', 'staging', 'prod']
+  /// ```
+  Future<List<String>> listEnvironments() async {
+    final result = await sendRequest('environment.list', {});
+    return List<String>.from(result['environments'] as List);
+  }
+
+  /// List secrets for a specific environment
+  ///
+  /// Example:
+  /// ```dart
+  /// final secrets = await client.listSecretsForEnvironment('prod');
+  /// ```
+  Future<List<Map<String, dynamic>>> listSecretsForEnvironment(
+    String environment,
+  ) async {
+    final result = await sendRequest('secret.list', {
+      'environment': environment,
+    });
+    return List<Map<String, dynamic>>.from(result['secrets'] as List);
+  }
+
   /// Handle incoming socket data
   void _handleData(List<int> data) {
     _buffer += utf8.decode(data);

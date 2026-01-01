@@ -6,7 +6,7 @@
 //! This CLI provides a developer-friendly interface to the Secretariat daemon
 //! for managing secrets, applications, and access control.
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 
 mod client;
@@ -99,6 +99,21 @@ enum Commands {
     /// Guided provider onboarding (OpenAI, Anthropic, Stripe, etc.)
     Provider(ProviderCommandStruct),
 
+    /// Cleanup expired ephemeral secrets
+    CleanupExpired(CleanupExpiredCommand),
+
+    /// List secrets expiring soon
+    Expiring(ExpiringCommand),
+
+    /// Show secret version history
+    History(HistoryCommand),
+
+    /// Rollback secret to previous version
+    Rollback(RollbackCommand),
+
+    /// Show secrets needing rotation
+    RotationReminders(RotationRemindersCommand),
+
     /// Show version
     Version(VersionCommand),
 }
@@ -166,6 +181,10 @@ struct SetCommand {
     /// Notes about this secret
     #[arg(short, long)]
     notes: Option<String>,
+
+    /// Time-to-live in seconds (ephemeral secret)
+    #[arg(long)]
+    ttl: Option<u64>,
 }
 
 // F095: DeleteCommand struct with key and --force flag
@@ -463,6 +482,60 @@ enum ProviderActionEnum {
     },
 }
 
+/// Cleanup expired ephemeral secrets
+#[derive(Parser)]
+struct CleanupExpiredCommand {
+    /// Output in JSON format
+    #[arg(long)]
+    json: bool,
+}
+
+/// List secrets expiring soon
+#[derive(Parser)]
+struct ExpiringCommand {
+    /// Time window in seconds (default: 3600 = 1 hour)
+    #[arg(short, long, default_value = "3600")]
+    within: u64,
+
+    /// Output in JSON format
+    #[arg(long)]
+    json: bool,
+}
+
+/// Show secret version history
+#[derive(Parser)]
+struct HistoryCommand {
+    /// Secret name
+    name: String,
+
+    /// Output in JSON format
+    #[arg(long)]
+    json: bool,
+}
+
+/// Rollback secret to previous version
+#[derive(Parser)]
+struct RollbackCommand {
+    /// Secret name
+    name: String,
+
+    /// Skip confirmation prompt
+    #[arg(short, long)]
+    force: bool,
+}
+
+/// Show secrets needing rotation
+#[derive(Parser)]
+struct RotationRemindersCommand {
+    /// Days since last rotation (default: 90)
+    #[arg(short, long, default_value = "90")]
+    days: u64,
+
+    /// Output in JSON format
+    #[arg(long)]
+    json: bool,
+}
+
 /// Show version
 #[derive(Parser)]
 struct VersionCommand {
@@ -512,6 +585,11 @@ async fn main() -> Result<()> {
         Commands::ChangePassword(cmd) => handle_change_password(client, cmd).await,
         Commands::Panic(cmd) => handle_panic(client, cmd).await,
         Commands::Provider(cmd) => handle_provider(client, cmd).await,
+        Commands::CleanupExpired(cmd) => handle_cleanup_expired(client, cmd).await,
+        Commands::Expiring(cmd) => handle_expiring(client, cmd).await,
+        Commands::History(cmd) => handle_history(client, cmd).await,
+        Commands::Rollback(cmd) => handle_rollback(client, cmd).await,
+        Commands::RotationReminders(cmd) => handle_rotation_reminders(client, cmd).await,
         Commands::Version(cmd) => handle_version(client, cmd).await,
     }
 }
@@ -552,6 +630,7 @@ async fn handle_set(client: DaemonClient, cmd: SetCommand) -> Result<()> {
         provider: cmd.provider,
         environment: cmd.environment,
         notes: cmd.notes,
+        ttl: cmd.ttl,
     };
     commands::handle_set(client, cmd_args).await
 }
@@ -726,6 +805,175 @@ async fn handle_provider(client: DaemonClient, cmd: ProviderCommandStruct) -> Re
 
     let cmd_args = ProviderCommand { action };
     commands::handle_provider(client, cmd_args).await
+}
+
+async fn handle_cleanup_expired(client: DaemonClient, cmd: CleanupExpiredCommand) -> Result<()> {
+    use serde::Deserialize;
+
+    #[derive(Debug, Deserialize)]
+    struct CleanupResponse {
+        status: String,
+        removed_count: usize,
+    }
+
+    let response: CleanupResponse = client
+        .request("secret.cleanup", serde_json::json!({}))
+        .await
+        .context("Failed to cleanup expired secrets")?;
+
+    if cmd.json {
+        println!("{}", serde_json::to_string_pretty(&serde_json::json!({
+            "status": response.status,
+            "removed_count": response.removed_count
+        }))?);
+    } else {
+        println!("Cleaned up {} expired secret(s)", response.removed_count);
+    }
+    Ok(())
+}
+
+async fn handle_expiring(client: DaemonClient, cmd: ExpiringCommand) -> Result<()> {
+    use serde::{Deserialize, Serialize};
+
+    #[derive(Debug, Deserialize, Serialize)]
+    struct ExpiringSecret {
+        name: String,
+        expires_at: String,
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct ExpiringResponse {
+        secrets: Vec<ExpiringSecret>,
+        #[allow(dead_code)]
+        within_seconds: u64,
+    }
+
+    let response: ExpiringResponse = client
+        .request("secret.expiring", serde_json::json!({ "within_seconds": cmd.within }))
+        .await
+        .context("Failed to get expiring secrets")?;
+
+    if cmd.json {
+        println!("{}", serde_json::to_string_pretty(&response.secrets)?);
+    } else if response.secrets.is_empty() {
+        println!("No secrets expiring within {} seconds", cmd.within);
+    } else {
+        println!("Secrets expiring within {} seconds:\n", cmd.within);
+        for secret in &response.secrets {
+            println!("  {} (expires: {})", secret.name, secret.expires_at);
+        }
+        println!("\nTotal: {} secret(s)", response.secrets.len());
+    }
+    Ok(())
+}
+
+async fn handle_history(client: DaemonClient, cmd: HistoryCommand) -> Result<()> {
+    use serde::Deserialize;
+
+    #[derive(Debug, Deserialize)]
+    struct HistoryResponse {
+        name: String,
+        version: i64,
+        has_previous: bool,
+        can_rollback: bool,
+        rotated_at: Option<String>,
+    }
+
+    let response: HistoryResponse = client
+        .request("secret.history", serde_json::json!({ "name": cmd.name }))
+        .await
+        .context("Failed to get secret history")?;
+
+    if cmd.json {
+        println!("{}", serde_json::to_string_pretty(&serde_json::json!({
+            "name": response.name,
+            "version": response.version,
+            "has_previous": response.has_previous,
+            "can_rollback": response.can_rollback,
+            "rotated_at": response.rotated_at
+        }))?);
+    } else {
+        println!("Secret: {}", response.name);
+        println!();
+        println!("  Version:      {}", response.version);
+        println!("  Can rollback: {}", if response.can_rollback { "yes" } else { "no" });
+        if let Some(rotated) = response.rotated_at {
+            println!("  Last rotated: {}", rotated);
+        } else {
+            println!("  Last rotated: never");
+        }
+    }
+    Ok(())
+}
+
+async fn handle_rollback(client: DaemonClient, cmd: RollbackCommand) -> Result<()> {
+    use serde::Deserialize;
+    use std::io::{self, Write};
+
+    if !cmd.force {
+        print!("Are you sure you want to rollback '{}' to the previous version? [y/N] ", cmd.name);
+        io::stdout().flush()?;
+        let mut input = String::new();
+        io::stdin().read_line(&mut input)?;
+        if !input.trim().eq_ignore_ascii_case("y") {
+            println!("Rollback cancelled");
+            return Ok(());
+        }
+    }
+
+    #[derive(Debug, Deserialize)]
+    struct RollbackResponse {
+        name: String,
+        version: i64,
+        status: String,
+    }
+
+    let response: RollbackResponse = client
+        .request("secret.rollback", serde_json::json!({ "name": cmd.name }))
+        .await
+        .context("Failed to rollback secret")?;
+
+    println!("Secret rolled back successfully");
+    println!();
+    println!("  Name:    {}", response.name);
+    println!("  Version: {}", response.version);
+    println!("  Status:  {}", response.status);
+
+    Ok(())
+}
+
+async fn handle_rotation_reminders(client: DaemonClient, cmd: RotationRemindersCommand) -> Result<()> {
+    use serde::Deserialize;
+
+    #[derive(Debug, Deserialize)]
+    struct RemindersResponse {
+        secrets: Vec<String>,
+        threshold_days: u64,
+        count: usize,
+    }
+
+    let response: RemindersResponse = client
+        .request("secret.rotation_reminders", serde_json::json!({ "days": cmd.days }))
+        .await
+        .context("Failed to get rotation reminders")?;
+
+    if cmd.json {
+        println!("{}", serde_json::to_string_pretty(&serde_json::json!({
+            "secrets": response.secrets,
+            "threshold_days": response.threshold_days,
+            "count": response.count
+        }))?);
+    } else if response.secrets.is_empty() {
+        println!("All secrets have been rotated within the last {} days", cmd.days);
+    } else {
+        println!("Secrets needing rotation (not rotated in {} days):\n", cmd.days);
+        for secret in &response.secrets {
+            println!("  ⚠ {}", secret);
+        }
+        println!("\nTotal: {} secret(s)", response.count);
+        println!("\nTip: Use 'sec rotate <name> <new-value>' to rotate a secret");
+    }
+    Ok(())
 }
 
 async fn handle_version(_client: DaemonClient, cmd: VersionCommand) -> Result<()> {

@@ -39,6 +39,15 @@ class Secret {
   /// Optional notes about the secret
   final String? notes;
 
+  /// When the ephemeral secret expires (null = permanent)
+  final DateTime? expiresAt;
+
+  /// Version number for rotation tracking
+  final int version;
+
+  /// Whether a previous version is available for rollback
+  final bool hasPrevious;
+
   /// Create a new Secret instance
   const Secret({
     required this.id,
@@ -50,7 +59,39 @@ class Secret {
     this.updatedAt,
     this.rotatedAt,
     this.notes,
+    this.expiresAt,
+    this.version = 1,
+    this.hasPrevious = false,
   });
+
+  /// Whether this is an ephemeral secret with TTL
+  bool get isEphemeral => expiresAt != null;
+
+  /// Whether this secret has expired
+  bool get isExpired =>
+      expiresAt != null && expiresAt!.isBefore(DateTime.now());
+
+  /// Time remaining until expiration (null if permanent)
+  Duration? get timeRemaining {
+    if (expiresAt == null) return null;
+    final remaining = expiresAt!.difference(DateTime.now());
+    return remaining.isNegative ? Duration.zero : remaining;
+  }
+
+  /// Whether this secret is expiring soon (within 1 hour)
+  bool get isExpiringSoon {
+    final remaining = timeRemaining;
+    return remaining != null && remaining.inHours < 1;
+  }
+
+  /// Whether this secret needs rotation (not rotated in 90+ days)
+  bool get needsRotation {
+    if (rotatedAt == null) {
+      // If never rotated, check if created more than 90 days ago
+      return createdAt.isBefore(DateTime.now().subtract(const Duration(days: 90)));
+    }
+    return rotatedAt!.isBefore(DateTime.now().subtract(const Duration(days: 90)));
+  }
 
   /// F137: Implement Secret.fromJson factory
   ///
@@ -82,6 +123,11 @@ class Secret {
           ? DateTime.parse(json['rotated_at'] as String)
           : null,
       notes: json['notes'] as String?,
+      expiresAt: json['expires_at'] != null
+          ? DateTime.parse(json['expires_at'] as String)
+          : null,
+      version: (json['version'] as int?) ?? 1,
+      hasPrevious: (json['has_previous'] as bool?) ?? false,
     );
   }
 
@@ -111,6 +157,9 @@ class Secret {
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
       if (rotatedAt != null) 'rotated_at': rotatedAt!.toIso8601String(),
       if (notes != null) 'notes': notes,
+      if (expiresAt != null) 'expires_at': expiresAt!.toIso8601String(),
+      'version': version,
+      'has_previous': hasPrevious,
     };
   }
 
@@ -143,6 +192,9 @@ class Secret {
     DateTime? updatedAt,
     DateTime? rotatedAt,
     String? notes,
+    DateTime? expiresAt,
+    int? version,
+    bool? hasPrevious,
   }) {
     return Secret(
       id: id ?? this.id,
@@ -154,12 +206,15 @@ class Secret {
       updatedAt: updatedAt ?? this.updatedAt,
       rotatedAt: rotatedAt ?? this.rotatedAt,
       notes: notes ?? this.notes,
+      expiresAt: expiresAt ?? this.expiresAt,
+      version: version ?? this.version,
+      hasPrevious: hasPrevious ?? this.hasPrevious,
     );
   }
 
   @override
   String toString() {
-    return 'Secret(id: $id, name: $name, provider: $provider, createdAt: $createdAt)';
+    return 'Secret(id: $id, name: $name, provider: $provider, version: $version, createdAt: $createdAt)';
   }
 
   @override
@@ -175,7 +230,10 @@ class Secret {
         other.createdAt == createdAt &&
         other.updatedAt == updatedAt &&
         other.rotatedAt == rotatedAt &&
-        other.notes == notes;
+        other.notes == notes &&
+        other.expiresAt == expiresAt &&
+        other.version == version &&
+        other.hasPrevious == hasPrevious;
   }
 
   @override
@@ -190,6 +248,9 @@ class Secret {
       updatedAt,
       rotatedAt,
       notes,
+      expiresAt,
+      version,
+      hasPrevious,
     );
   }
 }

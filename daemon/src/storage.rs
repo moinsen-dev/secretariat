@@ -223,6 +223,7 @@ impl Storage {
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 rotated_at TIMESTAMP,                   -- Last rotation timestamp
+                expires_at TIMESTAMP,                   -- Ephemeral secret expiration (NULL = permanent)
                 notes TEXT,                             -- Optional user notes
                 version INTEGER DEFAULT 1,              -- Version number for rotation tracking
                 previous_value_encrypted BLOB           -- Previous encrypted value for rollback
@@ -236,6 +237,10 @@ impl Storage {
 
             -- Index for filtering by environment
             CREATE INDEX IF NOT EXISTS idx_secrets_environment ON secrets(environment);
+
+            -- Index for ephemeral secret cleanup (find expired secrets)
+            CREATE INDEX IF NOT EXISTS idx_secrets_expires_at ON secrets(expires_at)
+                WHERE expires_at IS NOT NULL;
 
             -- Trigger to update updated_at timestamp automatically
             CREATE TRIGGER IF NOT EXISTS update_secrets_timestamp
@@ -1274,6 +1279,250 @@ impl Storage {
         ).context("Failed to rotate secret")?;
 
         Ok(())
+    }
+
+    /// Rollback a secret to its previous version
+    ///
+    /// Restores the previous encrypted value and decrements the version.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The secret name
+    ///
+    /// # Returns
+    ///
+    /// The new (rolled-back) version number
+    ///
+    /// # Errors
+    ///
+    /// Returns error if:
+    /// - Secret doesn't exist
+    /// - No previous version is available
+    pub fn rollback_secret(&self, name: &str) -> Result<i64> {
+        // Get current metadata to check if rollback is possible
+        let metadata = self.get_secret_metadata(name)?
+            .context(format!("Secret '{}' not found", name))?;
+
+        if !metadata.has_previous {
+            anyhow::bail!("No previous version available for secret '{}'", name);
+        }
+
+        let new_version = metadata.version.unwrap_or(1) - 1;
+        if new_version < 1 {
+            anyhow::bail!("Cannot rollback beyond version 1");
+        }
+
+        // Swap current with previous
+        self.conn.execute(
+            r#"
+            UPDATE secrets
+            SET value_encrypted = previous_value_encrypted,
+                previous_value_encrypted = NULL,
+                version = ?,
+                rotated_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE name = ?
+            "#,
+            rusqlite::params![new_version, name]
+        ).context("Failed to rollback secret")?;
+
+        Ok(new_version)
+    }
+
+    /// Get secret version history
+    ///
+    /// Returns version information for a secret.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The secret name
+    ///
+    /// # Returns
+    ///
+    /// A tuple of (current_version, has_previous, rotated_at)
+    pub fn get_secret_history(&self, name: &str) -> Result<Option<(i64, bool, Option<String>)>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT version, previous_value_encrypted, rotated_at FROM secrets WHERE name = ?"
+        )?;
+
+        let result = stmt.query_row([name], |row| {
+            Ok((
+                row.get::<_, Option<i64>>(0)?.unwrap_or(1),
+                row.get::<_, Option<Vec<u8>>>(1)?.is_some(),
+                row.get::<_, Option<String>>(2)?,
+            ))
+        });
+
+        match result {
+            Ok(r) => Ok(Some(r)),
+            Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+            Err(e) => Err(e.into()),
+        }
+    }
+
+    /// Get secrets due for rotation
+    ///
+    /// Returns secrets that haven't been rotated within the specified days.
+    ///
+    /// # Arguments
+    ///
+    /// * `days_since_rotation` - Number of days since last rotation
+    ///
+    /// # Returns
+    ///
+    /// List of secret names that need rotation
+    pub fn get_secrets_needing_rotation(&self, days_since_rotation: u64) -> Result<Vec<String>> {
+        let mut stmt = self.conn.prepare(
+            r#"
+            SELECT name FROM secrets
+            WHERE rotated_at IS NULL
+               OR rotated_at < datetime('now', '-' || ? || ' days')
+            ORDER BY rotated_at ASC NULLS FIRST
+            "#
+        )?;
+
+        let rows = stmt.query_map([days_since_rotation.to_string()], |row| {
+            row.get::<_, String>(0)
+        })?;
+
+        let mut secrets = Vec::new();
+        for row in rows {
+            secrets.push(row?);
+        }
+
+        Ok(secrets)
+    }
+
+    /// Create an ephemeral secret with a TTL (time-to-live)
+    ///
+    /// Ephemeral secrets automatically expire after the specified duration.
+    /// Use cleanup_expired_secrets() to remove expired secrets.
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the secret
+    /// * `value_encrypted` - The encrypted secret value
+    /// * `provider` - Optional provider identifier
+    /// * `environment` - Environment context
+    /// * `ttl_seconds` - Time-to-live in seconds
+    pub fn create_ephemeral_secret(
+        &self,
+        name: &str,
+        value_encrypted: &[u8],
+        provider: Option<&str>,
+        environment: &str,
+        ttl_seconds: u64,
+    ) -> Result<()> {
+        let id = uuid::Uuid::new_v4().to_string();
+
+        self.conn.execute(
+            r#"
+            INSERT INTO secrets (id, name, value_encrypted, provider, environment, expires_at)
+            VALUES (?, ?, ?, ?, ?, datetime('now', '+' || ? || ' seconds'))
+            ON CONFLICT(name) DO UPDATE SET
+                value_encrypted = excluded.value_encrypted,
+                provider = excluded.provider,
+                environment = excluded.environment,
+                expires_at = excluded.expires_at,
+                updated_at = CURRENT_TIMESTAMP
+            "#,
+            rusqlite::params![id, name, value_encrypted, provider, environment, ttl_seconds as i64]
+        ).context("Failed to create ephemeral secret")?;
+
+        Ok(())
+    }
+
+    /// Update the TTL of an existing secret
+    ///
+    /// # Arguments
+    ///
+    /// * `name` - The name of the secret
+    /// * `ttl_seconds` - New time-to-live in seconds (from now), or None to make permanent
+    pub fn set_secret_ttl(&self, name: &str, ttl_seconds: Option<u64>) -> Result<()> {
+        match ttl_seconds {
+            Some(ttl) => {
+                self.conn.execute(
+                    "UPDATE secrets SET expires_at = datetime('now', '+' || ? || ' seconds') WHERE name = ?",
+                    rusqlite::params![ttl as i64, name]
+                ).context("Failed to set secret TTL")?;
+            }
+            None => {
+                self.conn.execute(
+                    "UPDATE secrets SET expires_at = NULL WHERE name = ?",
+                    [name]
+                ).context("Failed to remove secret TTL")?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Clean up expired ephemeral secrets
+    ///
+    /// Deletes all secrets where expires_at is in the past.
+    /// Should be called periodically (e.g., on daemon startup, hourly, etc.)
+    ///
+    /// # Returns
+    ///
+    /// The number of secrets that were deleted
+    pub fn cleanup_expired_secrets(&self) -> Result<usize> {
+        // First, get IDs of expired secrets for cascade delete
+        let mut stmt = self.conn.prepare(
+            "SELECT id FROM secrets WHERE expires_at IS NOT NULL AND expires_at < datetime('now')"
+        )?;
+
+        let expired_ids: Vec<String> = stmt.query_map([], |row| row.get(0))?
+            .collect::<Result<Vec<_>, _>>()?;
+
+        if expired_ids.is_empty() {
+            return Ok(0);
+        }
+
+        // Delete associated permissions
+        for id in &expired_ids {
+            self.conn.execute("DELETE FROM permissions WHERE secret_id = ?", [id])?;
+            self.conn.execute("DELETE FROM agent_permissions WHERE secret_name = (SELECT name FROM secrets WHERE id = ?)", [id])?;
+        }
+
+        // Delete expired secrets
+        let deleted = self.conn.execute(
+            "DELETE FROM secrets WHERE expires_at IS NOT NULL AND expires_at < datetime('now')",
+            []
+        )?;
+
+        if deleted > 0 {
+            tracing::info!("Cleaned up {} expired ephemeral secrets", deleted);
+        }
+
+        Ok(deleted)
+    }
+
+    /// Get secrets that will expire soon (for warnings/notifications)
+    ///
+    /// # Arguments
+    ///
+    /// * `within_seconds` - Find secrets expiring within this many seconds
+    ///
+    /// # Returns
+    ///
+    /// List of secret names and their expiration times
+    pub fn get_expiring_secrets(&self, within_seconds: u64) -> Result<Vec<(String, String)>> {
+        let mut stmt = self.conn.prepare(
+            r#"
+            SELECT name, expires_at
+            FROM secrets
+            WHERE expires_at IS NOT NULL
+              AND expires_at > datetime('now')
+              AND expires_at <= datetime('now', '+' || ? || ' seconds')
+            ORDER BY expires_at ASC
+            "#
+        )?;
+
+        let results = stmt.query_map([within_seconds as i64], |row| {
+            Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+        })?
+        .collect::<Result<Vec<_>, _>>()?;
+
+        Ok(results)
     }
 }
 

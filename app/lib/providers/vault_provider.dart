@@ -720,6 +720,432 @@ class VaultProvider extends ChangeNotifier {
     }
   }
 
+  // ============================================================
+  // Ephemeral Secrets
+  // ============================================================
+
+  /// Set an ephemeral secret with time-to-live
+  ///
+  /// The secret will be automatically deleted after [ttlSeconds].
+  Future<void> setEphemeralSecret(
+    String name,
+    String value, {
+    required int ttlSeconds,
+    String? provider,
+    String? environment,
+    String? notes,
+  }) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      await _daemonClient.setSecretWithTtl(
+        name,
+        value,
+        ttlSeconds: ttlSeconds,
+        provider: provider,
+        environment: environment,
+        notes: notes,
+      );
+
+      // Reload secrets to get updated list
+      await loadSecrets();
+    } catch (e) {
+      _errorMessage = 'Failed to set ephemeral secret: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Get secrets that are expiring soon
+  ///
+  /// Returns secrets expiring within [withinMinutes] minutes.
+  Future<List<Secret>> getExpiringSecrets({int withinMinutes = 60}) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      final secretsJson = await _daemonClient.getExpiringSecrets(
+        withinMinutes: withinMinutes,
+      );
+
+      return secretsJson.map((json) => Secret.fromJson(json)).toList();
+    } catch (e) {
+      _errorMessage = 'Failed to get expiring secrets: $e';
+      notifyListeners();
+      return [];
+    }
+  }
+
+  /// Clean up expired ephemeral secrets
+  ///
+  /// Returns the count of cleaned up secrets.
+  Future<int> cleanupExpiredSecrets() async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      final result = await _daemonClient.cleanupExpiredSecrets();
+
+      // Reload secrets to reflect changes
+      await loadSecrets();
+
+      return result['cleaned'] as int? ?? 0;
+    } catch (e) {
+      _errorMessage = 'Failed to cleanup expired secrets: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  // ============================================================
+  // Secret Version History & Rollback
+  // ============================================================
+
+  /// Get version history for a secret
+  ///
+  /// Returns version info including version number, has_previous, and rotated_at.
+  Future<Map<String, dynamic>> getSecretHistory(String name) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      return await _daemonClient.getSecretHistory(name);
+    } catch (e) {
+      _errorMessage = 'Failed to get secret history: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Rollback a secret to its previous version
+  ///
+  /// Returns the new (rolled back) version number.
+  Future<Map<String, dynamic>> rollbackSecret(String name) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      final result = await _daemonClient.rollbackSecret(name);
+
+      // Reload secrets to get updated version
+      await loadSecrets();
+
+      return result;
+    } catch (e) {
+      _errorMessage = 'Failed to rollback secret: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  // ============================================================
+  // Rotation Reminders
+  // ============================================================
+
+  /// Get secrets that need rotation
+  ///
+  /// Returns secret names that haven't been rotated within [daysSinceRotation] days.
+  Future<List<String>> getRotationReminders({int daysSinceRotation = 90}) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      return await _daemonClient.getRotationReminders(
+        daysSinceRotation: daysSinceRotation,
+      );
+    } catch (e) {
+      _errorMessage = 'Failed to get rotation reminders: $e';
+      notifyListeners();
+      return [];
+    }
+  }
+
+  /// Get secrets that need rotation as Secret objects
+  ///
+  /// Filters the current secrets list by those that need rotation.
+  List<Secret> get secretsNeedingRotation {
+    return _secrets.where((s) => s.needsRotation).toList();
+  }
+
+  /// Get ephemeral secrets that are expiring soon
+  ///
+  /// Filters the current secrets list by those expiring within 1 hour.
+  List<Secret> get secretsExpiringSoon {
+    return _secrets.where((s) => s.isExpiringSoon).toList();
+  }
+
+  // ============================================================
+  // Emergency Controls
+  // ============================================================
+
+  /// Emergency panic button - locks vault and revokes all access
+  ///
+  /// This is a security kill-switch that:
+  /// 1. Locks the vault immediately
+  /// 2. Revokes all application permissions
+  /// 3. Logs the emergency action
+  Future<void> panic() async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      await _daemonClient.panic();
+
+      // Clear local state
+      _secrets = [];
+      _applications = [];
+      _isLocked = true;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Failed to execute panic: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  // ============================================================
+  // AI Agent Access Control
+  // ============================================================
+
+  /// List of registered AI agents
+  List<Map<String, dynamic>> _agents = [];
+
+  /// Getter for agents
+  List<Map<String, dynamic>> get agents => List.unmodifiable(_agents);
+
+  /// Load all registered AI agents
+  Future<void> loadAgents() async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      _agents = await _daemonClient.listAgents();
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Failed to load agents: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Register a new AI agent
+  Future<Map<String, dynamic>> registerAgent(
+    String agentId, {
+    String? description,
+  }) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      final result = await _daemonClient.registerAgent(
+        agentId,
+        description: description,
+      );
+
+      // Reload agents to reflect changes
+      await loadAgents();
+
+      return result;
+    } catch (e) {
+      _errorMessage = 'Failed to register agent: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Grant an AI agent access to a secret
+  Future<void> grantAgentAccess(String agentId, String secretName) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      await _daemonClient.grantAgentAccess(agentId, secretName);
+
+      // Reload agents to reflect changes
+      await loadAgents();
+    } catch (e) {
+      _errorMessage = 'Failed to grant agent access: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Revoke an AI agent's access to a secret
+  Future<void> revokeAgentAccess(String agentId, String secretName) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      await _daemonClient.revokeAgentAccess(agentId, secretName);
+
+      // Reload agents to reflect changes
+      await loadAgents();
+    } catch (e) {
+      _errorMessage = 'Failed to revoke agent access: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Revoke all access for an AI agent
+  Future<void> revokeAllAgentAccess(String agentId) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      await _daemonClient.revokeAllAgentAccess(agentId);
+
+      // Reload agents to reflect changes
+      await loadAgents();
+    } catch (e) {
+      _errorMessage = 'Failed to revoke all agent access: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Get permissions for an AI agent
+  Future<List<String>> getAgentPermissions(String agentId) async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      return await _daemonClient.getAgentPermissions(agentId);
+    } catch (e) {
+      _errorMessage = 'Failed to get agent permissions: $e';
+      notifyListeners();
+      return [];
+    }
+  }
+
+  // ============================================================
+  // Environment Management
+  // ============================================================
+
+  /// Current selected environment
+  String _selectedEnvironment = 'default';
+
+  /// Available environments
+  List<String> _environments = ['default'];
+
+  /// Getter for selected environment
+  String get selectedEnvironment => _selectedEnvironment;
+
+  /// Getter for available environments
+  List<String> get environments => List.unmodifiable(_environments);
+
+  /// Load available environments
+  Future<void> loadEnvironments() async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      _environments = await _daemonClient.listEnvironments();
+      if (!_environments.contains(_selectedEnvironment)) {
+        _selectedEnvironment = 'default';
+      }
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Failed to load environments: $e';
+      notifyListeners();
+      // Don't rethrow - environments are not critical
+    }
+  }
+
+  /// Set the selected environment
+  Future<void> setEnvironment(String environment) async {
+    if (environment == _selectedEnvironment) return;
+
+    _selectedEnvironment = environment;
+    notifyListeners();
+
+    // Reload secrets for the new environment
+    await loadSecretsForEnvironment(environment);
+  }
+
+  /// Load secrets for a specific environment
+  Future<void> loadSecretsForEnvironment(String environment) async {
+    if (_isLoading) return;
+
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      final secretsJson = await _daemonClient.listSecretsForEnvironment(
+        environment,
+      );
+
+      _secrets = secretsJson.map((json) => Secret.fromJson(json)).toList();
+      _isLocked = false;
+
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = 'Failed to load secrets: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Filter secrets by environment
+  ///
+  /// Returns secrets that belong to the specified environment.
+  List<Secret> filterSecretsByEnvironment(String environment) {
+    if (environment == 'all') {
+      return secrets;
+    }
+    return _secrets.where((s) => s.environment == environment).toList();
+  }
+
   @override
   void dispose() {
     _daemonClient.disconnect();

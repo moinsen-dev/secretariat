@@ -24,6 +24,7 @@ import 'screens/audit_log.dart';
 import 'screens/settings.dart';
 import 'screens/import_wizard.dart';
 import 'screens/onboarding.dart';
+import 'screens/agents.dart';
 import 'theme/theme.dart';
 
 /// Key for storing onboarding completion status
@@ -331,6 +332,7 @@ class _SecretariatAppState extends State<SecretariatApp> with TrayListener {
           '/settings': (context) => const SettingsScreen(),
           '/import': (context) => const ImportWizardScreen(),
           '/onboarding': (context) => const OnboardingScreen(),
+          '/agents': (context) => const AgentsScreen(),
         },
       ),
     );
