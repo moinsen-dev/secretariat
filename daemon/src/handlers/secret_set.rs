@@ -77,6 +77,8 @@ fn detect_provider(name: &str) -> Option<&str> {
 /// * `value` - The plaintext secret value to encrypt and store
 /// * `storage` - Reference to the storage layer
 /// * `master_key` - The 32-byte master encryption key from keychain
+/// * `environment` - Optional environment context (defaults to "default")
+/// * `provider_override` - Optional provider override (auto-detected if None)
 ///
 /// # Returns
 ///
@@ -117,10 +119,17 @@ fn detect_provider(name: &str) -> Option<&str> {
 /// let storage = Storage::new("vault.db", "encryption_key").unwrap();
 /// let master_key = [0u8; 32]; // In production, from keychain
 ///
-/// handle_secret_set("OPENAI_API_KEY", "sk-1234567890", &storage, &master_key)
+/// handle_secret_set("OPENAI_API_KEY", "sk-1234567890", &storage, &master_key, None, None)
 ///     .expect("Failed to set secret");
 /// ```
-pub fn handle_secret_set(name: &str, value: &str, storage: &Storage, master_key: &[u8; 32]) -> Result<()> {
+pub fn handle_secret_set(
+    name: &str,
+    value: &str,
+    storage: &Storage,
+    master_key: &[u8; 32],
+    environment: Option<&str>,
+    provider_override: Option<&str>,
+) -> Result<()> {
     // F065: Encrypt the value using AES-256-GCM with random nonce
     let encrypted = encrypt(value, master_key)
         .context("Failed to encrypt secret value")?;
@@ -131,11 +140,14 @@ pub fn handle_secret_set(name: &str, value: &str, storage: &Storage, master_key:
     value_encrypted.extend_from_slice(&encrypted.nonce);
     value_encrypted.extend_from_slice(&encrypted.ciphertext);
 
-    // Auto-detect provider from secret name
-    let provider = detect_provider(name);
+    // Use provider override if provided, otherwise auto-detect from secret name
+    let provider = provider_override.or_else(|| detect_provider(name));
+
+    // Use provided environment or default to "default"
+    let env = environment.unwrap_or("default");
 
     // F064: Store the encrypted value in the database
-    storage.create_secret(name, &value_encrypted, provider, "default")
+    storage.create_secret(name, &value_encrypted, provider, env)
         .context("Failed to store secret")?;
 
     // Log the secret creation/update

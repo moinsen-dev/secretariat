@@ -314,6 +314,35 @@ impl Storage {
             BEGIN
                 UPDATE vault_metadata SET updated_at = CURRENT_TIMESTAMP WHERE key = NEW.key;
             END;
+
+            -- AI Agents table for registered AI coding assistants
+            CREATE TABLE IF NOT EXISTS agents (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL UNIQUE,
+                agent_type TEXT NOT NULL DEFAULT 'ai-assistant',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_access TIMESTAMP
+            );
+
+            -- Index for fast lookups by name
+            CREATE INDEX IF NOT EXISTS idx_agents_name ON agents(name);
+
+            -- Agent permissions table for per-agent secret access control
+            CREATE TABLE IF NOT EXISTS agent_permissions (
+                id TEXT PRIMARY KEY,
+                agent_id TEXT NOT NULL,
+                secret_name TEXT NOT NULL,
+                environment TEXT DEFAULT 'default',
+                granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(agent_id, secret_name, environment),
+                FOREIGN KEY (agent_id) REFERENCES agents(id)
+            );
+
+            -- Index for fast lookups by agent_id
+            CREATE INDEX IF NOT EXISTS idx_agent_permissions_agent_id ON agent_permissions(agent_id);
+
+            -- Index for fast lookups by secret_name
+            CREATE INDEX IF NOT EXISTS idx_agent_permissions_secret_name ON agent_permissions(secret_name);
             "#,
         )
         .context("Failed to initialize database schema")?;

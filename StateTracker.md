@@ -106,14 +106,15 @@ All Phase 1 "Must Have" requirements are fully implemented.
 
 | Task | Status | Priority | Effort |
 |------|--------|----------|--------|
-| Add `environment` field to secrets schema | Not Started | HIGH | 2h |
-| `sec env set <environment>` command | Not Started | HIGH | 2h |
+| Add `environment` field to secrets schema | **DONE** | HIGH | 2h |
+| `sec env list/set/current` commands | **DONE** | HIGH | 2h |
+| Pass environment to secret.set handler | **DONE** | HIGH | 1h |
 | `sec run --env=<env> <app>` command | Not Started | MEDIUM | 4h |
 | Environment selector in Flutter UI | Not Started | HIGH | 4h |
 | Environment matrix view in UI | Not Started | MEDIUM | 4h |
 | Per-environment secret variants | Not Started | HIGH | 4h |
 
-**Estimated Total:** 20 hours
+**Estimated Total:** 20 hours (5h complete, 15h remaining)
 
 ### Provider Onboarding (Section 9)
 
@@ -175,73 +176,47 @@ All Phase 1 "Must Have" requirements are fully implemented.
 
 ---
 
-## Phase 3: AI Agent Access Control (NOT STARTED)
+## Phase 3: AI Agent Access Control (IMPLEMENTED)
 
 **PID Requirement (Section 11):** Control what AI coding assistants can access.
 
-### New CLI Commands Needed
+### CLI Commands - ALL DONE
 
 | Command | Status | Description |
 |---------|--------|-------------|
-| `sec agent list` | Not Started | List registered AI agents |
-| `sec agent register <name> --type ai-assistant` | Not Started | Register AI agent |
-| `sec agent grant <agent> <secret> [--env]` | Not Started | Grant agent access |
-| `sec agent revoke <agent> <secret>` | Not Started | Revoke agent access |
-| `sec agent revoke-all <agent>` | Not Started | Emergency revoke all |
-| `sec audit --agent <name>` | Not Started | Audit AI agent activity |
-| `sec explain --agent <agent>` | Not Started | Show agent permissions |
+| `sec agent list` | **DONE** | List registered AI agents |
+| `sec agent register <name> --type <type>` | **DONE** | Register AI agent |
+| `sec agent grant <agent> <secret> [--env]` | **DONE** | Grant agent access |
+| `sec agent revoke <agent> <secret>` | **DONE** | Revoke agent access |
+| `sec agent revoke-all <agent> [--force]` | **DONE** | Emergency revoke all |
+| `sec agent explain <agent>` | **DONE** | Show agent permissions |
 
-### New Daemon Endpoints Needed
+### Daemon Endpoints - ALL DONE
 
-| Method | Params | Response |
+| Method | Status | Response |
 |--------|--------|----------|
-| `agent.list` | none | `{agents: [...]}` |
-| `agent.register` | name, type | `{agent_id, name, type}` |
-| `agent.grant` | agent_id, secret_name, env? | `{status: "granted"}` |
-| `agent.revoke` | agent_id, secret_name | `{status: "revoked"}` |
-| `agent.revoke_all` | agent_id | `{status: "all_revoked", count}` |
+| `agent.list` | **DONE** | `{agents: [...]}` |
+| `agent.register` | **DONE** | `{agent_id, name, type}` |
+| `agent.grant` | **DONE** | `{status: "granted"}` |
+| `agent.revoke` | **DONE** | `{status: "revoked"}` |
+| `agent.revoke_all` | **DONE** | `{status: "all_revoked", count}` |
+| `agent.explain` | **DONE** | `{permissions: [...]}` |
 
-### Database Schema Changes
+### Database Schema - DONE
 
-```sql
--- New table for AI agents
-CREATE TABLE agents (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL UNIQUE,
-    type TEXT NOT NULL DEFAULT 'ai-assistant',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_access TIMESTAMP
-);
+Tables added to `daemon/src/storage.rs`:
+- `agents` - Registered AI agents (id, name, agent_type, created_at, last_access)
+- `agent_permissions` - Per-agent secret access (agent_id, secret_name, environment)
 
--- New table for agent permissions
-CREATE TABLE agent_permissions (
-    agent_id TEXT NOT NULL,
-    secret_name TEXT NOT NULL,
-    environment TEXT DEFAULT 'dev',
-    granted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (agent_id, secret_name, environment),
-    FOREIGN KEY (agent_id) REFERENCES agents(id),
-    FOREIGN KEY (secret_name) REFERENCES secrets(name)
-);
-```
-
-### Implementation Tasks
+### Remaining Tasks
 
 | Task | Status | Priority | Effort |
 |------|--------|----------|--------|
-| Add `agents` table to schema | Not Started | HIGH | 1h |
-| Add `agent_permissions` table | Not Started | HIGH | 1h |
-| Implement `agent.register` handler | Not Started | HIGH | 2h |
-| Implement `agent.list` handler | Not Started | HIGH | 1h |
-| Implement `agent.grant` handler | Not Started | HIGH | 2h |
-| Implement `agent.revoke` handler | Not Started | HIGH | 2h |
-| Implement `agent.revoke_all` handler | Not Started | HIGH | 2h |
 | Add agent filter to audit queries | Not Started | MEDIUM | 2h |
-| CLI `sec agent` commands | Not Started | HIGH | 4h |
 | Flutter UI for agent management | Not Started | MEDIUM | 8h |
 | Agent-specific audit view | Not Started | MEDIUM | 4h |
 
-**Estimated Total:** 29 hours
+**Estimated Total:** 29 hours (15h complete, 14h remaining for Flutter UI)
 
 ### MCP Server Integration (Section 11.5)
 
@@ -326,12 +301,12 @@ CREATE TABLE agent_permissions (
 
 | Task | Status | Priority | Effort |
 |------|--------|----------|--------|
-| `sec panic` command | Not Started | HIGH | 2h |
-| `vault.panic` daemon endpoint | Not Started | HIGH | 2h |
+| `sec panic` command | **DONE** | HIGH | 2h |
+| `vault.panic` daemon endpoint | **DONE** | HIGH | 2h |
 | Panic button in Flutter UI | Not Started | HIGH | 2h |
-| Revoke all + lock vault | Not Started | HIGH | 2h |
+| Revoke all + lock vault | **DONE** | HIGH | 2h |
 
-**Estimated Total:** 8 hours
+**Estimated Total:** 8 hours (6h complete, 2h remaining for Flutter UI)
 
 ### Anomaly Detection (Section 14.3)
 

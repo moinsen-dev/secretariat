@@ -36,6 +36,8 @@ pub mod vault_lock;
 pub mod vault_unlock;
 pub mod vault_status;
 pub mod vault_change_password;
+pub mod vault_panic;
+pub mod agent;
 
 pub use secret_list::handle_secret_list;
 pub use secret_get::{handle_secret_get, PermissionDeniedError};
@@ -51,3 +53,8 @@ pub use vault_init::handle_vault_init;
 pub use vault_unlock::handle_vault_unlock;
 pub use vault_status::handle_vault_status;
 pub use vault_change_password::handle_vault_change_password;
+pub use vault_panic::handle_vault_panic;
+pub use agent::{
+    handle_agent_register, handle_agent_list, handle_agent_grant,
+    handle_agent_revoke, handle_agent_revoke_all, handle_agent_explain,
+};

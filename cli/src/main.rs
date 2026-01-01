@@ -51,6 +51,9 @@ enum Commands {
     /// Rotate secret value
     Rotate(RotateCommand),
 
+    /// Manage environments (dev, staging, prod)
+    Env(EnvCommand),
+
     /// Grant app access to secret
     Grant(GrantCommand),
 
@@ -62,6 +65,9 @@ enum Commands {
 
     /// View access log
     Audit(AuditCommand),
+
+    /// Manage AI agent access control (Claude Code, Cursor, etc.)
+    Agent(AgentCommandStruct),
 
     /// Show what secrets app would receive
     Explain(ExplainCommand),
@@ -86,6 +92,9 @@ enum Commands {
 
     /// Change master password
     ChangePassword(ChangePasswordCommand),
+
+    /// Emergency kill-switch - revoke ALL access immediately
+    Panic(PanicCommand),
 
     /// Show version
     Version(VersionCommand),
@@ -178,6 +187,29 @@ struct RotateCommand {
     new_value: Option<String>,
 }
 
+/// Manage environments (dev, staging, prod)
+#[derive(Parser)]
+struct EnvCommand {
+    /// Subcommand
+    #[command(subcommand)]
+    action: EnvAction,
+}
+
+#[derive(clap::Subcommand)]
+enum EnvAction {
+    /// List all environments with secrets
+    List,
+    /// Show current environment
+    Current,
+    /// Set current environment
+    Set {
+        /// Environment name (e.g., dev, staging, prod)
+        name: String,
+    },
+    /// Show environment config path
+    Config,
+}
+
 /// Grant app access to secret
 #[derive(Parser)]
 struct GrantCommand {
@@ -224,6 +256,62 @@ struct AuditCommand {
     /// Output in JSON format
     #[arg(long)]
     json: bool,
+}
+
+/// Manage AI agent access control
+#[derive(Parser)]
+struct AgentCommandStruct {
+    /// Subcommand
+    #[command(subcommand)]
+    action: AgentActionEnum,
+}
+
+#[derive(clap::Subcommand)]
+enum AgentActionEnum {
+    /// List all registered AI agents
+    List {
+        /// Output in JSON format
+        #[arg(long)]
+        json: bool,
+    },
+    /// Register a new AI agent
+    Register {
+        /// Agent name (e.g., claude-code, cursor)
+        name: String,
+        /// Agent type (default: ai-assistant)
+        #[arg(long, name = "type")]
+        agent_type: Option<String>,
+    },
+    /// Grant agent access to a secret
+    Grant {
+        /// Agent name or ID
+        agent: String,
+        /// Secret name to grant access to
+        secret: String,
+        /// Environment (default: all environments agent has access to)
+        #[arg(short, long)]
+        environment: Option<String>,
+    },
+    /// Revoke agent access to a secret
+    Revoke {
+        /// Agent name or ID
+        agent: String,
+        /// Secret name to revoke access from
+        secret: String,
+    },
+    /// Revoke ALL permissions for an agent (emergency)
+    RevokeAll {
+        /// Agent name or ID
+        agent: String,
+        /// Skip confirmation prompt
+        #[arg(short, long)]
+        force: bool,
+    },
+    /// Show what secrets an agent can access
+    Explain {
+        /// Agent name or ID
+        agent: String,
+    },
 }
 
 /// Show what secrets app would receive
@@ -334,6 +422,14 @@ struct LockCommand {}
 #[derive(Parser)]
 struct ChangePasswordCommand {}
 
+/// Emergency kill-switch - revoke ALL access immediately
+#[derive(Parser)]
+struct PanicCommand {
+    /// Skip confirmation prompt (dangerous!)
+    #[arg(short, long)]
+    force: bool,
+}
+
 /// Show version
 #[derive(Parser)]
 struct VersionCommand {
@@ -367,10 +463,12 @@ async fn main() -> Result<()> {
         Commands::Set(cmd) => handle_set(client, cmd).await,
         Commands::Delete(cmd) => handle_delete(client, cmd).await,
         Commands::Rotate(cmd) => handle_rotate(client, cmd).await,
+        Commands::Env(cmd) => handle_env(client, cmd).await,
         Commands::Grant(cmd) => handle_grant(client, cmd).await,
         Commands::Revoke(cmd) => handle_revoke(client, cmd).await,
         Commands::Apps(cmd) => handle_apps(client, cmd).await,
         Commands::Audit(cmd) => handle_audit(client, cmd).await,
+        Commands::Agent(cmd) => handle_agent(client, cmd).await,
         Commands::Explain(cmd) => handle_explain(client, cmd).await,
         Commands::Import(cmd) => handle_import(client, cmd).await,
         Commands::Scan(cmd) => handle_scan(cmd).await,
@@ -379,6 +477,7 @@ async fn main() -> Result<()> {
         Commands::Unlock(cmd) => handle_unlock(client, cmd).await,
         Commands::Lock(cmd) => handle_lock(client, cmd).await,
         Commands::ChangePassword(cmd) => handle_change_password(client, cmd).await,
+        Commands::Panic(cmd) => handle_panic(client, cmd).await,
         Commands::Version(cmd) => handle_version(client, cmd).await,
     }
 }
@@ -440,6 +539,17 @@ async fn handle_rotate(client: DaemonClient, cmd: RotateCommand) -> Result<()> {
     commands::handle_rotate(client, cmd_args).await
 }
 
+async fn handle_env(client: DaemonClient, cmd: EnvCommand) -> Result<()> {
+    let action = match cmd.action {
+        EnvAction::List => commands::env::EnvAction::List,
+        EnvAction::Current => commands::env::EnvAction::Current,
+        EnvAction::Set { name } => commands::env::EnvAction::Set { name },
+        EnvAction::Config => commands::env::EnvAction::Config,
+    };
+    let cmd_args = commands::env::EnvCommand { action };
+    commands::handle_env(client, cmd_args).await
+}
+
 async fn handle_grant(client: DaemonClient, cmd: GrantCommand) -> Result<()> {
     let cmd_args = commands::grant::GrantCommand {
         app: cmd.app,
@@ -471,6 +581,29 @@ async fn handle_audit(client: DaemonClient, cmd: AuditCommand) -> Result<()> {
         json: cmd.json,
     };
     commands::handle_audit(client, cmd_args).await
+}
+
+async fn handle_agent(client: DaemonClient, cmd: AgentCommandStruct) -> Result<()> {
+    let action = match cmd.action {
+        AgentActionEnum::List { json } => commands::agent::AgentAction::List { json },
+        AgentActionEnum::Register { name, agent_type } => {
+            commands::agent::AgentAction::Register { name, agent_type }
+        }
+        AgentActionEnum::Grant { agent, secret, environment } => {
+            commands::agent::AgentAction::Grant { agent, secret, environment }
+        }
+        AgentActionEnum::Revoke { agent, secret } => {
+            commands::agent::AgentAction::Revoke { agent, secret }
+        }
+        AgentActionEnum::RevokeAll { agent, force } => {
+            commands::agent::AgentAction::RevokeAll { agent, force }
+        }
+        AgentActionEnum::Explain { agent } => {
+            commands::agent::AgentAction::Explain { agent }
+        }
+    };
+    let cmd_args = commands::agent::AgentCommand { action };
+    commands::handle_agent(client, cmd_args).await
 }
 
 async fn handle_explain(client: DaemonClient, cmd: ExplainCommand) -> Result<()> {
@@ -539,6 +672,13 @@ async fn handle_lock(client: DaemonClient, _cmd: LockCommand) -> Result<()> {
 async fn handle_change_password(client: DaemonClient, _cmd: ChangePasswordCommand) -> Result<()> {
     let cmd_args = commands::change_password::ChangePasswordCommand;
     commands::handle_change_password(client, cmd_args).await
+}
+
+async fn handle_panic(client: DaemonClient, cmd: PanicCommand) -> Result<()> {
+    let cmd_args = commands::panic::PanicCommand {
+        force: cmd.force,
+    };
+    commands::handle_panic(client, cmd_args).await
 }
 
 async fn handle_version(_client: DaemonClient, cmd: VersionCommand) -> Result<()> {

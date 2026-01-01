@@ -617,6 +617,57 @@ async fn handle_request(request: Request, server_state: &ServerState) -> Respons
         }
     }
 
+    // Handle vault.panic - Security Kill-Switch
+    // Revokes ALL permissions, locks vault, clears master key, disables biometric
+    if request.method == "vault.panic" {
+        tracing::warn!("SECURITY: vault.panic command received - initiating emergency lockdown");
+
+        // Lock storage and execute panic
+        let storage = server_state.storage.lock().await;
+        let panic_result = match crate::handlers::handle_vault_panic(&storage) {
+            Ok(result) => result,
+            Err(e) => {
+                return Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to execute panic: {}", e))
+                );
+            }
+        };
+        drop(storage); // Release storage lock before async operations
+
+        // Lock the vault (clear master key from memory)
+        server_state.lock_vault().await;
+
+        // Delete master key from keychain (disable biometric)
+        let biometric_disabled = match crate::keychain::delete_master_key() {
+            Ok(()) => {
+                tracing::info!("Biometric disabled during panic - master key removed from keychain");
+                true
+            }
+            Err(e) => {
+                tracing::warn!("Failed to disable biometric during panic: {}", e);
+                false
+            }
+        };
+
+        tracing::warn!(
+            "SECURITY: Panic complete. Revoked {} permissions for {} apps. Vault locked.",
+            panic_result.permissions_revoked,
+            panic_result.apps_affected
+        );
+
+        return Response::success(
+            request.id,
+            serde_json::json!({
+                "status": "panic_executed",
+                "permissions_revoked": panic_result.permissions_revoked,
+                "apps_affected": panic_result.apps_affected,
+                "vault_locked": true,
+                "biometric_disabled": biometric_disabled
+            })
+        );
+    }
+
     // Handle vault.change_password specially - async operation to update master key
     if request.method == "vault.change_password" {
         if server_state.is_vault_locked() {
@@ -773,14 +824,19 @@ fn route_request(
                 }
             };
 
+            // Extract optional environment and provider parameters
+            let environment = request.params.get("environment").and_then(|v| v.as_str());
+            let provider = request.params.get("provider").and_then(|v| v.as_str());
+
             // master_key is guaranteed to be Some since we checked requires_unlock above
             let master_key = master_key_opt.as_ref().unwrap();
-            match crate::handlers::handle_secret_set(name, value, storage, master_key) {
+            match crate::handlers::handle_secret_set(name, value, storage, master_key, environment, provider) {
                 Ok(()) => Response::success(
                     request.id,
                     serde_json::json!({
                         "name": name,
-                        "status": "created"
+                        "status": "created",
+                        "environment": environment.unwrap_or("default")
                     })
                 ),
                 Err(e) => Response::error(
@@ -993,6 +1049,144 @@ fn route_request(
                 Err(e) => Response::error(
                     request.id,
                     ErrorInfo::internal_error(format!("Failed to query audit log: {}", e))
+                ),
+            }
+        }
+        // AI Agent Access Control Commands
+        "agent.register" => {
+            let name = match request.params.get("name").and_then(|v| v.as_str()) {
+                Some(n) => n,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: name")
+                    );
+                }
+            };
+            let agent_type = request.params.get("type")
+                .and_then(|v| v.as_str())
+                .unwrap_or("ai-assistant");
+
+            match crate::handlers::handle_agent_register(storage, name, agent_type) {
+                Ok(result) => Response::success(request.id, serde_json::to_value(result).unwrap()),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to register agent: {}", e))
+                ),
+            }
+        }
+        "agent.list" => {
+            match crate::handlers::handle_agent_list(storage) {
+                Ok(agents) => Response::success(
+                    request.id,
+                    serde_json::json!({ "agents": agents })
+                ),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to list agents: {}", e))
+                ),
+            }
+        }
+        "agent.grant" => {
+            let agent_id = match request.params.get("agent_id").and_then(|v| v.as_str()) {
+                Some(id) => id,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: agent_id")
+                    );
+                }
+            };
+            let secret_name = match request.params.get("secret_name").and_then(|v| v.as_str()) {
+                Some(n) => n,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: secret_name")
+                    );
+                }
+            };
+            let environment = request.params.get("environment").and_then(|v| v.as_str());
+
+            match crate::handlers::handle_agent_grant(storage, agent_id, secret_name, environment) {
+                Ok(result) => Response::success(request.id, serde_json::to_value(result).unwrap()),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to grant agent access: {}", e))
+                ),
+            }
+        }
+        "agent.revoke" => {
+            let agent_id = match request.params.get("agent_id").and_then(|v| v.as_str()) {
+                Some(id) => id,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: agent_id")
+                    );
+                }
+            };
+            let secret_name = match request.params.get("secret_name").and_then(|v| v.as_str()) {
+                Some(n) => n,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: secret_name")
+                    );
+                }
+            };
+
+            match crate::handlers::handle_agent_revoke(storage, agent_id, secret_name) {
+                Ok(result) => Response::success(request.id, serde_json::to_value(result).unwrap()),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to revoke agent access: {}", e))
+                ),
+            }
+        }
+        "agent.revoke_all" => {
+            let agent_id = match request.params.get("agent_id").and_then(|v| v.as_str()) {
+                Some(id) => id,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: agent_id")
+                    );
+                }
+            };
+
+            match crate::handlers::handle_agent_revoke_all(storage, agent_id) {
+                Ok(result) => Response::success(request.id, serde_json::to_value(result).unwrap()),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to revoke all agent access: {}", e))
+                ),
+            }
+        }
+        "agent.explain" => {
+            let agent_id = match request.params.get("agent_id").and_then(|v| v.as_str()) {
+                Some(id) => id,
+                None => {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::invalid_params("Missing required parameter: agent_id")
+                    );
+                }
+            };
+
+            match crate::handlers::handle_agent_explain(storage, agent_id) {
+                Ok(permissions) => Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "agent_id": agent_id,
+                        "permissions": permissions.iter().map(|(s, e)| {
+                            serde_json::json!({ "secret": s, "environment": e })
+                        }).collect::<Vec<_>>()
+                    })
+                ),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to explain agent permissions: {}", e))
                 ),
             }
         }
