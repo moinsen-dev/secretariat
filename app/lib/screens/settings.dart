@@ -353,9 +353,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         trailing: TextButton(
           onPressed: () async {
+            // Capture navigator before async gap to avoid use_build_context_synchronously
+            final navigator = Navigator.of(context);
             final confirm = await showDialog<bool>(
               context: context,
-              builder: (context) => AlertDialog(
+              builder: (dialogContext) => AlertDialog(
                 backgroundColor: surfaceDark,
                 title: Text(
                   'Lock Vault?',
@@ -367,14 +369,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 actions: [
                   TextButton(
-                    onPressed: () => Navigator.pop(context, false),
+                    onPressed: () => Navigator.pop(dialogContext, false),
                     child: Text(
                       'Cancel',
                       style: TextStyle(color: textSecondaryDark),
                     ),
                   ),
                   TextButton(
-                    onPressed: () => Navigator.pop(context, true),
+                    onPressed: () => Navigator.pop(dialogContext, true),
                     child: Text('Lock', style: TextStyle(color: errorColor)),
                   ),
                 ],
@@ -385,7 +387,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               try {
                 await provider.lockVault();
                 if (context.mounted) {
-                  Navigator.of(context).pop();
+                  navigator.pop();
                 }
               } catch (e) {
                 _showStatus('Failed to lock: $e');

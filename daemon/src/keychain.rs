@@ -302,36 +302,71 @@ pub fn delete_master_key() -> Result<()> {
 mod tests {
     use super::*;
 
+    /// Test-only service name to avoid conflicts with production keychain items
+    #[cfg(target_os = "macos")]
+    const TEST_SERVICE_NAME: &str = "dev.moinsen.secretariat.daemon.test";
+
+    /// Store a test key using test-specific service name
+    #[cfg(target_os = "macos")]
+    fn store_test_key(key: &[u8; 32]) -> Result<()> {
+        use security_framework::passwords::set_generic_password;
+        set_generic_password(TEST_SERVICE_NAME, ACCOUNT_NAME, key)
+            .map_err(|e| anyhow::anyhow!("Failed to store test key: {}", e))
+    }
+
+    /// Retrieve a test key using test-specific service name
+    #[cfg(target_os = "macos")]
+    fn retrieve_test_key() -> Result<[u8; 32]> {
+        use security_framework::passwords::get_generic_password;
+        let data = get_generic_password(TEST_SERVICE_NAME, ACCOUNT_NAME)
+            .map_err(|e| anyhow::anyhow!("Failed to retrieve test key: {}", e))?;
+        if data.len() != 32 {
+            anyhow::bail!("Invalid key length");
+        }
+        let mut key = [0u8; 32];
+        key.copy_from_slice(&data);
+        Ok(key)
+    }
+
+    /// Delete a test key using test-specific service name
+    #[cfg(target_os = "macos")]
+    fn delete_test_key() -> Result<()> {
+        use security_framework::passwords::delete_generic_password;
+        match delete_generic_password(TEST_SERVICE_NAME, ACCOUNT_NAME) {
+            Ok(()) => Ok(()),
+            Err(e) if e.code() == -25300 => Ok(()), // errSecItemNotFound
+            Err(e) => Err(anyhow::anyhow!("Failed to delete test key: {}", e)),
+        }
+    }
+
     #[test]
     #[cfg(target_os = "macos")]
     fn test_keychain_round_trip() {
         use crate::crypto::generate_master_key;
 
-        // Clean up any existing key
-        let _ = delete_master_key();
+        // Clean up any existing test key (ignore errors)
+        let _ = delete_test_key();
 
         // Generate and store a key
         let key = generate_master_key();
-        store_master_key(&key).expect("Failed to store key");
+        store_test_key(&key).expect("Failed to store key");
 
         // Retrieve the key
-        let retrieved_key = retrieve_master_key().expect("Failed to retrieve key");
+        let retrieved_key = retrieve_test_key().expect("Failed to retrieve key");
 
         // Verify they match
         assert_eq!(key, retrieved_key, "Retrieved key should match stored key");
 
         // Clean up
-        delete_master_key().expect("Failed to delete key");
+        delete_test_key().expect("Failed to delete key");
     }
 
     #[test]
     #[cfg(target_os = "macos")]
     fn test_delete_nonexistent_key() {
-        // Ensure no key exists
-        let _ = delete_master_key();
-
-        // Deleting again should succeed (idempotent)
-        delete_master_key().expect("Delete should succeed even if key doesn't exist");
+        // Use test-specific delete that handles "item not found" gracefully
+        // This should always succeed whether or not a key exists
+        delete_test_key().expect("Delete should succeed even if key doesn't exist");
     }
 
     #[test]

@@ -555,7 +555,12 @@ class VaultProvider extends ChangeNotifier {
   /// Unlock the vault with password
   ///
   /// Sends unlock command to daemon with password.
-  Future<void> unlockVault(String password) async {
+  /// If [enableBiometric] is true, stores the master key in keychain
+  /// for future Touch ID unlock.
+  Future<void> unlockVault(
+    String password, {
+    bool enableBiometric = false,
+  }) async {
     try {
       _errorMessage = null;
 
@@ -563,13 +568,73 @@ class VaultProvider extends ChangeNotifier {
         await _daemonClient.connect();
       }
 
-      await _daemonClient.unlockVault(password);
+      await _daemonClient.unlockVault(
+        password,
+        storeForBiometric: enableBiometric,
+      );
 
       // Mark as unlocked and reload secrets
       _isLocked = false;
       await loadSecrets();
     } catch (e) {
       _errorMessage = 'Failed to unlock vault: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Unlock the vault using biometric authentication (Touch ID)
+  ///
+  /// This retrieves the master key from the system keychain, which
+  /// will trigger Touch ID authentication on macOS.
+  Future<void> unlockVaultBiometric() async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      await _daemonClient.unlockVaultBiometric();
+
+      // Mark as unlocked and reload secrets
+      _isLocked = false;
+      await loadSecrets();
+    } catch (e) {
+      _errorMessage = 'Failed to unlock with biometric: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Check if biometric unlock is available and enabled
+  ///
+  /// Returns a map with:
+  /// - available: true if Touch ID hardware is present
+  /// - enabled: true if a master key is stored in keychain
+  Future<Map<String, dynamic>> getBiometricStatus() async {
+    try {
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+      return await _daemonClient.getBiometricStatus();
+    } catch (e) {
+      Log.vault('Failed to get biometric status: $e');
+      return {'available': false, 'enabled': false};
+    }
+  }
+
+  /// Disable biometric unlock
+  ///
+  /// Removes the stored master key from the keychain.
+  Future<void> disableBiometric() async {
+    try {
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+      await _daemonClient.disableBiometric();
+    } catch (e) {
+      _errorMessage = 'Failed to disable biometric: $e';
       notifyListeners();
       rethrow;
     }

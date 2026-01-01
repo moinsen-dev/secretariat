@@ -491,16 +491,39 @@ async fn handle_request(request: Request, server_state: &ServerState) -> Respons
             }
         };
 
+        // Optional: store master key in keychain for biometric unlock
+        let store_for_biometric = request.params.get("store_for_biometric")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false);
+
         // Need storage for password verification
         let storage = server_state.storage.lock().await;
         match crate::handlers::handle_vault_unlock(password, &storage) {
             Ok(result) => {
                 drop(storage); // Release storage lock before async operation
+
+                // Store master key in keychain for Touch ID if requested
+                let biometric_enabled = if store_for_biometric {
+                    match crate::keychain::store_master_key(&result.master_key) {
+                        Ok(()) => {
+                            tracing::info!("Master key stored in keychain for biometric unlock");
+                            true
+                        }
+                        Err(e) => {
+                            tracing::warn!("Failed to store key in keychain: {}", e);
+                            false
+                        }
+                    }
+                } else {
+                    false
+                };
+
                 server_state.unlock_vault(result.master_key).await;
                 return Response::success(
                     request.id,
                     serde_json::json!({
-                        "status": "unlocked"
+                        "status": "unlocked",
+                        "biometric_enabled": biometric_enabled
                     })
                 );
             },
@@ -508,6 +531,87 @@ async fn handle_request(request: Request, server_state: &ServerState) -> Respons
                 return Response::error(
                     request.id,
                     ErrorInfo::internal_error(format!("Failed to unlock vault: {}", e))
+                );
+            }
+        }
+    }
+
+    // Handle vault.unlock_biometric - unlock using keychain-stored master key
+    if request.method == "vault.unlock_biometric" {
+        if !server_state.is_vault_locked() {
+            return Response::success(
+                request.id,
+                serde_json::json!({
+                    "status": "already_unlocked"
+                })
+            );
+        }
+
+        // Retrieve master key from keychain (requires Touch ID / system auth)
+        match crate::keychain::retrieve_master_key() {
+            Ok(master_key) => {
+                server_state.unlock_vault(master_key).await;
+                tracing::info!("Vault unlocked via biometric authentication");
+                return Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "status": "unlocked",
+                        "method": "biometric"
+                    })
+                );
+            }
+            Err(e) => {
+                tracing::warn!("Biometric unlock failed: {}", e);
+                return Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!(
+                        "Biometric unlock failed: {}. Please use password unlock.",
+                        e
+                    ))
+                );
+            }
+        }
+    }
+
+    // Handle vault.biometric_status - check if biometric unlock is available
+    if request.method == "vault.biometric_status" {
+        // Check if we're on macOS and if a master key is stored in keychain
+        let is_available = crate::keychain::is_biometric_available();
+        let is_enabled = if is_available {
+            // Try to check if key exists in keychain without actually retrieving it
+            // For now, we just report if biometric hardware is available
+            // The actual key retrieval will trigger Touch ID
+            crate::keychain::retrieve_master_key().is_ok()
+        } else {
+            false
+        };
+
+        return Response::success(
+            request.id,
+            serde_json::json!({
+                "available": is_available,
+                "enabled": is_enabled,
+                "platform": std::env::consts::OS
+            })
+        );
+    }
+
+    // Handle vault.biometric_disable - remove stored key from keychain
+    if request.method == "vault.biometric_disable" {
+        match crate::keychain::delete_master_key() {
+            Ok(()) => {
+                tracing::info!("Biometric unlock disabled - master key removed from keychain");
+                return Response::success(
+                    request.id,
+                    serde_json::json!({
+                        "status": "disabled"
+                    })
+                );
+            }
+            Err(e) => {
+                return Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to disable biometric: {}", e))
                 );
             }
         }
@@ -935,8 +1039,8 @@ fn route_request(
                 ),
             }
         }
-        // vault.lock, vault.unlock, vault.change_password are handled in handle_request (async operations)
-        "vault.lock" | "vault.unlock" => {
+        // vault.lock, vault.unlock, vault.unlock_biometric, vault.change_password are handled in handle_request (async operations)
+        "vault.lock" | "vault.unlock" | "vault.unlock_biometric" => {
             // Should not reach here - handled in handle_request
             Response::error(
                 request.id,

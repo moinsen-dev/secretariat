@@ -188,20 +188,6 @@ class DaemonClient {
     }
   }
 
-  /// Legacy alias for sendRequest
-  ///
-  /// Example:
-  /// ```dart
-  /// final response = await client.request('secret.list', {});
-  /// ```
-  @Deprecated('Use sendRequest instead')
-  Future<Map<String, dynamic>> request(
-    String method,
-    Map<String, dynamic> params,
-  ) async {
-    return sendRequest(method, params);
-  }
-
   /// List all secrets
   ///
   /// Example:
@@ -330,12 +316,61 @@ class DaemonClient {
 
   /// Unlock the vault with password
   ///
+  /// If [storeForBiometric] is true, the master key will be stored in the
+  /// system keychain for future Touch ID unlock.
+  ///
   /// Example:
   /// ```dart
-  /// await client.unlockVault('my-password');
+  /// await client.unlockVault('my-password', storeForBiometric: true);
   /// ```
-  Future<void> unlockVault(String password) async {
-    await sendRequest('vault.unlock', {'password': password});
+  Future<Map<String, dynamic>> unlockVault(
+    String password, {
+    bool storeForBiometric = false,
+  }) async {
+    return await sendRequest('vault.unlock', {
+      'password': password,
+      'store_for_biometric': storeForBiometric,
+    });
+  }
+
+  /// Unlock the vault using biometric authentication (Touch ID)
+  ///
+  /// Requires that biometric unlock was previously enabled by calling
+  /// [unlockVault] with [storeForBiometric] set to true.
+  ///
+  /// Example:
+  /// ```dart
+  /// await client.unlockVaultBiometric();
+  /// ```
+  Future<Map<String, dynamic>> unlockVaultBiometric() async {
+    return await sendRequest('vault.unlock_biometric', {});
+  }
+
+  /// Check if biometric unlock is available and enabled
+  ///
+  /// Returns status with:
+  /// - available: true if Touch ID hardware is present
+  /// - enabled: true if a master key is stored in keychain
+  ///
+  /// Example:
+  /// ```dart
+  /// final status = await client.getBiometricStatus();
+  /// if (status['available'] && status['enabled']) {
+  ///   await client.unlockVaultBiometric();
+  /// }
+  /// ```
+  Future<Map<String, dynamic>> getBiometricStatus() async {
+    return await sendRequest('vault.biometric_status', {});
+  }
+
+  /// Disable biometric unlock by removing the stored master key
+  ///
+  /// Example:
+  /// ```dart
+  /// await client.disableBiometric();
+  /// ```
+  Future<void> disableBiometric() async {
+    await sendRequest('vault.biometric_disable', {});
   }
 
   /// Get audit log entries

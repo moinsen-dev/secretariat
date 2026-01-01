@@ -115,10 +115,18 @@ class MainShellState extends State<MainShell> {
   }
 
   /// Show the vault unlock dialog
-  void _showUnlockDialog() {
+  void _showUnlockDialog() async {
     if (_showingUnlockDialog) return;
 
     _showingUnlockDialog = true;
+
+    // Check if biometric unlock is available
+    final provider = Provider.of<VaultProvider>(context, listen: false);
+    final biometricStatus = await provider.getBiometricStatus();
+    final biometricAvailable = biometricStatus['available'] == true;
+    final biometricEnabled = biometricStatus['enabled'] == true;
+
+    if (!mounted) return;
 
     showDialog(
       context: context,
@@ -126,32 +134,49 @@ class MainShellState extends State<MainShell> {
       barrierColor: Colors.black87,
       builder: (dialogContext) => VaultUnlockDialog(
         onUnlock: (password) async {
-          final provider = Provider.of<VaultProvider>(context, listen: false);
-          await provider.unlockVault(password);
+          final vaultProvider =
+              Provider.of<VaultProvider>(context, listen: false);
+          // Capture navigator before async gap to avoid use_build_context_synchronously
+          final navigator = Navigator.of(dialogContext);
+
+          // Enable biometric on first successful unlock if available
+          // This stores the master key in keychain for future Touch ID unlock
+          await vaultProvider.unlockVault(
+            password,
+            enableBiometric: biometricAvailable,
+          );
+
           // Load data after unlock
-          await provider.loadSecrets();
-          await provider.loadApplications();
+          await vaultProvider.loadSecrets();
+          await vaultProvider.loadApplications();
           // Close dialog
-          if (mounted && Navigator.of(dialogContext).canPop()) {
-            Navigator.of(dialogContext).pop();
+          if (mounted && navigator.canPop()) {
+            navigator.pop();
           }
           _showingUnlockDialog = false;
         },
-        onTouchIdUnlock: () async {
-          // Touch ID authentication is handled by the dialog
-          // After successful auth, we still need to unlock with stored password
-          // For now, this is a placeholder - full implementation would need
-          // keychain integration to retrieve the password
-          final provider = Provider.of<VaultProvider>(context, listen: false);
-          // In a full implementation, retrieve password from keychain here
-          await provider.loadSecrets();
-          await provider.loadApplications();
-          if (mounted && Navigator.of(dialogContext).canPop()) {
-            Navigator.of(dialogContext).pop();
-          }
-          _showingUnlockDialog = false;
-        },
-        touchIdEnabled: true,
+        onTouchIdUnlock: biometricEnabled
+            ? () async {
+                final vaultProvider =
+                    Provider.of<VaultProvider>(context, listen: false);
+                // Capture navigator before async gap
+                final navigator = Navigator.of(dialogContext);
+
+                // Unlock using biometric - daemon will retrieve key from keychain
+                await vaultProvider.unlockVaultBiometric();
+
+                // Load data after unlock
+                await vaultProvider.loadSecrets();
+                await vaultProvider.loadApplications();
+
+                // Close dialog
+                if (mounted && navigator.canPop()) {
+                  navigator.pop();
+                }
+                _showingUnlockDialog = false;
+              }
+            : null,
+        touchIdEnabled: biometricAvailable,
       ),
     ).then((_) {
       _showingUnlockDialog = false;
