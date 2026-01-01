@@ -116,30 +116,42 @@ All Phase 1 "Must Have" requirements are fully implemented.
 
 **Estimated Total:** 20 hours (5h complete, 15h remaining)
 
-### Provider Onboarding (Section 9)
+### Provider Onboarding (Section 9) - CLI IMPLEMENTED
 
 **PID Requirement:** Guided setup for API key providers.
 
 | Provider | Status | Priority |
 |----------|--------|----------|
-| OpenAI | Not Started | HIGH |
-| Anthropic | Not Started | HIGH |
-| Google (Maps, Gemini) | Not Started | MEDIUM |
-| Stripe | Not Started | MEDIUM |
-| AWS | Not Started | LOW |
-| GitHub | Not Started | LOW |
+| OpenAI | **DONE** | HIGH |
+| Anthropic | **DONE** | HIGH |
+| Google (Maps, Gemini) | **DONE** | MEDIUM |
+| Stripe | **DONE** | MEDIUM |
+| AWS | **DONE** | LOW |
+| GitHub | **DONE** | LOW |
+| Azure | **DONE** | LOW |
+| Twilio | **DONE** | LOW |
+| SendGrid | **DONE** | LOW |
+| Slack | **DONE** | LOW |
 
 | Task | Status | Priority | Effort |
 |------|--------|----------|--------|
-| Provider metadata schema | Not Started | HIGH | 2h |
-| Provider database/config file | Not Started | HIGH | 2h |
-| `sec provider list` command | Not Started | MEDIUM | 1h |
-| `sec provider add <name>` wizard | Not Started | HIGH | 4h |
+| Provider metadata schema | **DONE** | HIGH | 2h |
+| Provider database/config file | **DONE** | HIGH | 2h |
+| `sec provider list` command | **DONE** | MEDIUM | 1h |
+| `sec provider info <name>` command | **DONE** | MEDIUM | 1h |
+| `sec provider add <name>` wizard | **DONE** | HIGH | 4h |
+| Best practice recommendations | **DONE** | LOW | 2h |
 | Provider onboarding UI in Flutter | Not Started | HIGH | 8h |
-| Best practice recommendations | Not Started | LOW | 2h |
-| Auto-categorization on import | Not Started | MEDIUM | 4h |
+| Auto-categorization on import | Existing | MEDIUM | - |
 
-**Estimated Total:** 23 hours
+**CLI Location:** `cli/src/commands/provider.rs`
+
+**Available Commands:**
+- `sec provider list` - List all 10 supported providers by category
+- `sec provider info <name>` - Show provider details, docs URL, key format, best practices
+- `sec provider add <name>` - Interactive wizard with guided setup, validation, and saving
+
+**Estimated Total:** 23 hours (12h complete, 8h remaining for Flutter UI)
 
 ### Go SDK (Section 5.4)
 

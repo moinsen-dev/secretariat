@@ -96,6 +96,9 @@ enum Commands {
     /// Emergency kill-switch - revoke ALL access immediately
     Panic(PanicCommand),
 
+    /// Guided provider onboarding (OpenAI, Anthropic, Stripe, etc.)
+    Provider(ProviderCommandStruct),
+
     /// Show version
     Version(VersionCommand),
 }
@@ -430,6 +433,36 @@ struct PanicCommand {
     force: bool,
 }
 
+/// Guided provider onboarding (OpenAI, Anthropic, Stripe, etc.)
+#[derive(Parser)]
+struct ProviderCommandStruct {
+    #[command(subcommand)]
+    action: ProviderActionEnum,
+}
+
+#[derive(Subcommand)]
+enum ProviderActionEnum {
+    /// List supported providers
+    List {
+        /// Output in JSON format
+        #[arg(long)]
+        json: bool,
+    },
+    /// Show provider information
+    Info {
+        /// Provider name (e.g., openai, anthropic, stripe)
+        name: String,
+    },
+    /// Start guided setup for a provider
+    Add {
+        /// Provider name (e.g., openai, anthropic, stripe)
+        name: String,
+        /// Environment to store secret in
+        #[arg(short, long)]
+        environment: Option<String>,
+    },
+}
+
 /// Show version
 #[derive(Parser)]
 struct VersionCommand {
@@ -478,6 +511,7 @@ async fn main() -> Result<()> {
         Commands::Lock(cmd) => handle_lock(client, cmd).await,
         Commands::ChangePassword(cmd) => handle_change_password(client, cmd).await,
         Commands::Panic(cmd) => handle_panic(client, cmd).await,
+        Commands::Provider(cmd) => handle_provider(client, cmd).await,
         Commands::Version(cmd) => handle_version(client, cmd).await,
     }
 }
@@ -679,6 +713,19 @@ async fn handle_panic(client: DaemonClient, cmd: PanicCommand) -> Result<()> {
         force: cmd.force,
     };
     commands::handle_panic(client, cmd_args).await
+}
+
+async fn handle_provider(client: DaemonClient, cmd: ProviderCommandStruct) -> Result<()> {
+    use commands::provider::{ProviderAction, ProviderCommand};
+
+    let action = match cmd.action {
+        ProviderActionEnum::List { json } => ProviderAction::List { json },
+        ProviderActionEnum::Info { name } => ProviderAction::Info { name },
+        ProviderActionEnum::Add { name, environment } => ProviderAction::Add { name, environment },
+    };
+
+    let cmd_args = ProviderCommand { action };
+    commands::handle_provider(client, cmd_args).await
 }
 
 async fn handle_version(_client: DaemonClient, cmd: VersionCommand) -> Result<()> {
