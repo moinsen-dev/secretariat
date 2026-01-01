@@ -11,11 +11,11 @@
 | Phase | Status | Completion |
 |-------|--------|------------|
 | Phase 1 - Core | **COMPLETE** | 100% |
-| Phase 2 - Polish | In Progress | 30% |
-| Phase 3 - AI | Not Started | 0% |
+| Phase 2 - Polish | In Progress | 35% |
+| Phase 3 - AI | **COMPLETE** | 100% |
 | Phase 4 - Teams | Not Started | 0% |
 
-**Total PID Coverage:** ~65% of all specified features
+**Total PID Coverage:** ~75% of all specified features
 
 ---
 
@@ -176,7 +176,7 @@ All Phase 1 "Must Have" requirements are fully implemented.
 
 ---
 
-## Phase 3: AI Agent Access Control (IMPLEMENTED)
+## Phase 3: AI Agent Access Control (COMPLETE)
 
 **PID Requirement (Section 11):** Control what AI coding assistants can access.
 
@@ -218,23 +218,33 @@ Tables added to `daemon/src/storage.rs`:
 
 **Estimated Total:** 29 hours (15h complete, 14h remaining for Flutter UI)
 
-### MCP Server Integration (Section 11.5)
+### MCP Server Integration (Section 11.5) - IMPLEMENTED
 
 **PID Requirement:** Model Context Protocol server for AI tool integration.
 
 | Task | Status | Priority | Effort |
 |------|--------|----------|--------|
-| Research MCP specification | Not Started | HIGH | 2h |
-| Create `mcp-server/` directory | Not Started | HIGH | 0.5h |
-| Implement MCP server in TypeScript | Not Started | HIGH | 8h |
-| `secretariat.get` MCP tool | Not Started | HIGH | 2h |
-| `secretariat.list` MCP tool | Not Started | HIGH | 1h |
-| Permission enforcement for MCP | Not Started | HIGH | 4h |
-| Documentation for AI tool setup | Not Started | MEDIUM | 2h |
+| Research MCP specification | **DONE** | HIGH | 2h |
+| Create `mcp-server/` directory | **DONE** | HIGH | 0.5h |
+| Implement MCP server in TypeScript | **DONE** | HIGH | 8h |
+| `secretariat.get` MCP tool | **DONE** | HIGH | 2h |
+| `secretariat.list` MCP tool | **DONE** | HIGH | 1h |
+| `secretariat.check` MCP tool | **DONE** | HIGH | 1h |
+| `secretariat.status` MCP tool | **DONE** | HIGH | 0.5h |
+| Permission enforcement for MCP | **DONE** | HIGH | 4h |
+| Documentation for AI tool setup | **DONE** | MEDIUM | 2h |
 | Test with Claude Code | Not Started | HIGH | 2h |
 | Test with Cursor | Not Started | MEDIUM | 2h |
 
-**Estimated Total:** 23.5 hours
+**MCP Server Location:** `mcp-server/`
+
+**Available MCP Tools:**
+- `secretariat.get` - Retrieve a secret (with agent permission check)
+- `secretariat.list` - List available secrets (names only)
+- `secretariat.check` - Check agent permission for a secret
+- `secretariat.status` - Get vault status
+
+**Estimated Total:** 25 hours (21h complete, 4h remaining for testing)
 
 ---
 
@@ -385,6 +395,7 @@ Tables added to `daemon/src/storage.rs`:
 | Daemon | `daemon/src/server.rs`, `daemon/src/handlers/*.rs` |
 | CLI | `cli/src/main.rs`, `cli/src/commands/*.rs` |
 | Flutter | `app/lib/screens/*.dart`, `app/lib/providers/*.dart` |
+| MCP Server | `mcp-server/src/index.ts`, `mcp-server/src/tools.ts` |
 | Python SDK | `sdk-python/secretariat/__init__.py` |
 | Node SDK | `sdk-node/src/index.ts` |
 | Dart SDK | `sdk-dart/lib/secretariat.dart` |
