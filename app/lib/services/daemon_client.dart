@@ -23,6 +23,12 @@ import 'logger_service.dart';
 /// await client.disconnect();
 /// ```
 class DaemonClient {
+  /// Optional explicit socket path override (used in tests and controlled setups).
+  final String? socketPathOverride;
+
+  /// Application identifier used for `secret.get` permission checks.
+  final String appId;
+
   /// F144: Socket connection to the daemon
   Socket? _socket;
 
@@ -37,6 +43,11 @@ class DaemonClient {
 
   /// Buffer for incomplete JSON messages
   String _buffer = '';
+
+  /// Monotonic request ID counter (avoids timestamp collisions in fast tests).
+  int _requestIdCounter = 0;
+
+  DaemonClient({this.socketPathOverride, this.appId = 'flutter-app'});
 
   /// F145: Implement connect() async method using Socket.connect to Unix socket
   ///
@@ -141,11 +152,12 @@ class DaemonClient {
     }
 
     // Build JSON-RPC request
+    final requestId = ++_requestIdCounter;
     final request = {
       'jsonrpc': '2.0',
       'method': method,
       'params': params,
-      'id': DateTime.now().millisecondsSinceEpoch,
+      'id': requestId,
     };
 
     _log('Sending request: $method');
@@ -206,10 +218,7 @@ class DaemonClient {
   /// final secret = await client.getSecret('OPENAI_API_KEY');
   /// ```
   Future<Map<String, dynamic>> getSecret(String name) async {
-    return await sendRequest('secret.get', {
-      'name': name,
-      'app_id': 'flutter-app',
-    });
+    return await sendRequest('secret.get', {'name': name, 'app_id': appId});
   }
 
   /// Set a secret
@@ -546,7 +555,9 @@ class DaemonClient {
   /// ```dart
   /// final stale = await client.getRotationReminders(daysSinceRotation: 90);
   /// ```
-  Future<List<String>> getRotationReminders({int daysSinceRotation = 90}) async {
+  Future<List<String>> getRotationReminders({
+    int daysSinceRotation = 90,
+  }) async {
     final result = await sendRequest('secret.rotation_reminders', {
       'days': daysSinceRotation,
     });
@@ -597,9 +608,11 @@ class DaemonClient {
     String agentId, {
     String? description,
   }) async {
+    // Daemon contract: agent.register expects `name` and optional `type`.
+    // Keep `description` in method signature for API compatibility and UI flow.
     return await sendRequest('agent.register', {
-      'agent_id': agentId,
-      if (description != null) 'description': description,
+      'name': agentId,
+      'type': 'ai-assistant',
     });
   }
 
@@ -646,10 +659,20 @@ class DaemonClient {
   /// final permissions = await client.getAgentPermissions('claude-code');
   /// ```
   Future<List<String>> getAgentPermissions(String agentId) async {
-    final result = await sendRequest('agent.permissions', {
-      'agent_id': agentId,
-    });
-    return List<String>.from(result['secrets'] as List);
+    final result = await sendRequest('agent.explain', {'agent_id': agentId});
+
+    final permissions = result['permissions'] as List<dynamic>? ?? const [];
+    final names = <String>{};
+    for (final permission in permissions) {
+      if (permission is Map<String, dynamic>) {
+        final secret = permission['secret'];
+        if (secret is String && secret.isNotEmpty) {
+          names.add(secret);
+        }
+      }
+    }
+    final ordered = names.toList()..sort();
+    return ordered;
   }
 
   // ============================================================
@@ -664,8 +687,19 @@ class DaemonClient {
   /// // environments = ['default', 'dev', 'staging', 'prod']
   /// ```
   Future<List<String>> listEnvironments() async {
-    final result = await sendRequest('environment.list', {});
-    return List<String>.from(result['environments'] as List);
+    final result = await sendRequest('secret.list', {});
+    final secrets = List<Map<String, dynamic>>.from(result['secrets'] as List);
+
+    final environments = <String>{'default'};
+    for (final secret in secrets) {
+      final environment = secret['environment'];
+      if (environment is String && environment.isNotEmpty) {
+        environments.add(environment);
+      }
+    }
+
+    final ordered = environments.toList()..sort();
+    return ordered;
   }
 
   /// List secrets for a specific environment
@@ -677,10 +711,11 @@ class DaemonClient {
   Future<List<Map<String, dynamic>>> listSecretsForEnvironment(
     String environment,
   ) async {
-    final result = await sendRequest('secret.list', {
-      'environment': environment,
-    });
-    return List<Map<String, dynamic>>.from(result['secrets'] as List);
+    final result = await sendRequest('secret.list', {});
+    final secrets = List<Map<String, dynamic>>.from(result['secrets'] as List);
+    return secrets
+        .where((secret) => secret['environment'] == environment)
+        .toList(growable: false);
   }
 
   /// Handle incoming socket data
@@ -720,13 +755,27 @@ class DaemonClient {
 
   /// Get platform-specific socket path
   String _getSocketPath() {
+    if (socketPathOverride != null && socketPathOverride!.isNotEmpty) {
+      return socketPathOverride!;
+    }
+
+    final envSocketPath = Platform.environment['SECRETARIAT_SOCKET_PATH'];
+    if (envSocketPath != null && envSocketPath.isNotEmpty) {
+      return envSocketPath;
+    }
+
+    final legacySocketPath = Platform.environment['SECRETARIAT_SOCKET'];
+    if (legacySocketPath != null && legacySocketPath.isNotEmpty) {
+      return legacySocketPath;
+    }
+
     if (Platform.isMacOS) {
       // macOS: ~/Library/Application Support/Secretariat/secretariat.sock
-      final home = Platform.environment['HOME'];
+      final home = Platform.environment['HOME'] ?? '/tmp';
       return '$home/Library/Application Support/Secretariat/secretariat.sock';
     } else if (Platform.isLinux) {
       // Linux: ~/.local/share/secretariat/secretariat.sock
-      final home = Platform.environment['HOME'];
+      final home = Platform.environment['HOME'] ?? '/tmp';
       return '$home/.local/share/secretariat/secretariat.sock';
     } else if (Platform.isWindows) {
       // Windows is not yet supported

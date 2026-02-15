@@ -58,6 +58,12 @@ impl DaemonClient {
 
     /// Get the platform-specific socket path
     fn get_socket_path() -> Result<PathBuf> {
+        if let Some(socket_path) = std::env::var_os("SECRETARIAT_SOCKET_PATH")
+            .or_else(|| std::env::var_os("SECRETARIAT_SOCKET"))
+        {
+            return Ok(PathBuf::from(socket_path));
+        }
+
         #[cfg(target_os = "macos")]
         let base_dir = dirs::home_dir()
             .context("Failed to get home directory")?
@@ -234,13 +240,18 @@ impl DaemonClient {
 
         tracing::debug!("Starting daemon from: {}", secd_path.display());
 
-        // Start daemon in background (daemonized mode)
-        let child = Command::new(&secd_path)
+        let mut command = Command::new(&secd_path);
+        command
             .arg("start")
             .arg("-d") // Daemonize
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::piped())
+            .env("SECRETARIAT_SOCKET_PATH", &self.socket_path)
+            .env("SECRETARIAT_SOCKET", &self.socket_path);
+
+        // Start daemon in background (daemonized mode)
+        let child = command
             .spawn()
             .with_context(|| format!("Failed to start daemon from {}", secd_path.display()))?;
 
@@ -263,6 +274,22 @@ impl DaemonClient {
 
     /// Find the secd binary
     fn find_secd_binary(&self) -> Result<PathBuf> {
+        if let Some(path) = std::env::var_os("SECRETARIAT_SECD_PATH") {
+            let path = PathBuf::from(path);
+            if path.exists() {
+                return Ok(path);
+            }
+        }
+
+        if let Ok(current_exe) = std::env::current_exe() {
+            if let Some(parent) = current_exe.parent() {
+                let sibling = parent.join("secd");
+                if sibling.exists() {
+                    return Ok(sibling);
+                }
+            }
+        }
+
         // Check if secd is in PATH
         if let Ok(path) = which::which("secd") {
             return Ok(path);
@@ -280,16 +307,6 @@ impl DaemonClient {
         for candidate in &candidates {
             if candidate.exists() {
                 return Ok(candidate.clone());
-            }
-        }
-
-        // As a fallback, assume it's in the same directory as sec
-        if let Ok(current_exe) = std::env::current_exe() {
-            if let Some(parent) = current_exe.parent() {
-                let sibling = parent.join("secd");
-                if sibling.exists() {
-                    return Ok(sibling);
-                }
             }
         }
 

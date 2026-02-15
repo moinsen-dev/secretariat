@@ -293,7 +293,24 @@ class Secretariat:
         if "secrets" not in result:
             raise SecretariatError("Invalid response: missing secrets")
 
-        return result["secrets"]
+        secrets_raw = result["secrets"]
+        if not isinstance(secrets_raw, list):
+            raise SecretariatError("Invalid response: secrets must be a list")
+
+        names: List[str] = []
+        for entry in secrets_raw:
+            if isinstance(entry, str):
+                names.append(entry)
+            elif isinstance(entry, dict):
+                name = entry.get("name")
+                if isinstance(name, str):
+                    names.append(name)
+                else:
+                    raise SecretariatError("Invalid response: secret entry missing name")
+            else:
+                raise SecretariatError("Invalid response: unsupported secret entry format")
+
+        return names
 
     def set(self, key: str, value: str) -> None:
         """

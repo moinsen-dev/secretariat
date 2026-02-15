@@ -38,6 +38,10 @@ export interface SecretariatOptions {
   timeout?: number;
 }
 
+interface SecretListEntry {
+  name: string;
+}
+
 // F241: Define export class Secretariat
 /**
  * Secretariat client for retrieving secrets from the daemon.
@@ -275,7 +279,7 @@ export class Secretariat {
    * ```
    */
   async list(): Promise<string[]> {
-    const result = await this.sendRequest<{ secrets: string[] }>(
+    const result = await this.sendRequest<{ secrets: Array<string | SecretListEntry> }>(
       'secret.list',
       {}
     );
@@ -284,7 +288,17 @@ export class Secretariat {
       throw new SecretariatError('Invalid response: missing secrets');
     }
 
-    return result.secrets;
+    return result.secrets.map((entry) => {
+      if (typeof entry === 'string') {
+        return entry;
+      }
+
+      if (entry && typeof entry.name === 'string') {
+        return entry.name;
+      }
+
+      throw new SecretariatError('Invalid response: secret entry missing name');
+    });
   }
 
   /**

@@ -151,6 +151,13 @@ func New(opts ...Option) (*Client, error) {
 
 // defaultSocketPath returns the default socket path for the current platform.
 func defaultSocketPath() string {
+	if env := os.Getenv("SECRETARIAT_SOCKET_PATH"); env != "" {
+		return env
+	}
+	if env := os.Getenv("SECRETARIAT_SOCKET"); env != "" {
+		return env
+	}
+
 	switch runtime.GOOS {
 	case "darwin": // macOS
 		home, _ := os.UserHomeDir()
@@ -282,9 +289,11 @@ func (c *Client) GetWithOptions(name string, opts GetOptions) (string, error) {
 	params := map[string]interface{}{
 		"name": name,
 	}
-	if opts.AppID != "" {
-		params["app_id"] = opts.AppID
+	appID := opts.AppID
+	if appID == "" {
+		appID = "go-sdk"
 	}
+	params["app_id"] = appID
 	if opts.Environment != "" {
 		params["environment"] = opts.Environment
 	}

@@ -25,9 +25,10 @@ mod system_events;
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::Mutex;
 use tracing::{info, error, warn};
 
@@ -83,7 +84,25 @@ impl Config {
     /// - Linux: ~/.local/share/secretariat/
     /// - Windows: %APPDATA%\Secretariat\
     fn default() -> Result<Self> {
-        let data_dir = if cfg!(target_os = "macos") {
+        let env_data_dir = std::env::var_os("SECRETARIAT_DATA_DIR")
+            .map(PathBuf::from);
+        let env_db_path = std::env::var_os("SECRETARIAT_DB_PATH")
+            .map(PathBuf::from);
+        let env_socket_path = std::env::var_os("SECRETARIAT_SOCKET_PATH")
+            .or_else(|| std::env::var_os("SECRETARIAT_SOCKET"))
+            .map(PathBuf::from);
+
+        let mut data_dir = if let Some(path) = env_data_dir {
+            path
+        } else if let Some(path) = env_db_path.as_ref() {
+            path.parent()
+                .map(PathBuf::from)
+                .unwrap_or_else(|| PathBuf::from("."))
+        } else if let Some(path) = env_socket_path.as_ref() {
+            path.parent()
+                .map(PathBuf::from)
+                .unwrap_or_else(|| PathBuf::from("."))
+        } else if cfg!(target_os = "macos") {
             dirs::home_dir()
                 .context("Failed to get home directory")?
                 .join("Library/Application Support/Secretariat")
@@ -99,9 +118,19 @@ impl Config {
             anyhow::bail!("Unsupported operating system");
         };
 
-        let db_path = data_dir.join("vault.db");
+        let db_path = env_db_path.unwrap_or_else(|| data_dir.join("vault.db"));
+        let socket_path = env_socket_path.unwrap_or_else(|| data_dir.join("secretariat.sock"));
+
+        if let Some(parent) = socket_path.parent() {
+            if !parent.as_os_str().is_empty() {
+                data_dir = parent.to_path_buf();
+            }
+        } else if let Some(parent) = db_path.parent() {
+            if !parent.as_os_str().is_empty() {
+                data_dir = parent.to_path_buf();
+            }
+        }
         let pid_path = data_dir.join("secd.pid");
-        let socket_path = data_dir.join("secretariat.sock");
 
         Ok(Config {
             data_dir,
@@ -109,6 +138,68 @@ impl Config {
             pid_path,
             socket_path,
         })
+    }
+}
+
+fn is_incompatible_database_error(error: &anyhow::Error) -> bool {
+    error
+        .chain()
+        .any(|cause| cause.to_string().to_lowercase().contains("file is not a database"))
+}
+
+fn backup_incompatible_database(db_path: &Path) -> Result<PathBuf> {
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+    let filename = db_path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("vault.db");
+    let backup_name = format!("{filename}.incompatible.{timestamp}.bak");
+    let backup_path = db_path.with_file_name(backup_name);
+
+    fs::rename(db_path, &backup_path).with_context(|| {
+        format!(
+            "Failed to move incompatible database from {} to {}",
+            db_path.display(),
+            backup_path.display()
+        )
+    })?;
+
+    for suffix in ["-wal", "-shm"] {
+        let sidecar_path = PathBuf::from(format!("{}{}", db_path.display(), suffix));
+        if sidecar_path.exists() {
+            let _ = fs::remove_file(sidecar_path);
+        }
+    }
+
+    Ok(backup_path)
+}
+
+fn initialize_storage_with_recovery(db_path: &Path) -> Result<Storage> {
+    match Storage::new_without_key(db_path) {
+        Ok(storage) => Ok(storage),
+        Err(error) => {
+            if !is_incompatible_database_error(&error) || !db_path.exists() {
+                return Err(error);
+            }
+
+            warn!(
+                "Incompatible database detected at {}. Backing it up and creating a fresh database.",
+                db_path.display()
+            );
+            let backup_path = backup_incompatible_database(db_path)
+                .context("Failed to backup incompatible database")?;
+            warn!("Backed up incompatible database to {}", backup_path.display());
+            eprintln!(
+                "Warning: incompatible database moved to {}",
+                backup_path.display()
+            );
+
+            Storage::new_without_key(db_path)
+                .context("Failed to initialize fresh database after incompatible DB recovery")
+        }
     }
 }
 
@@ -206,7 +297,7 @@ impl Daemon {
 
         // Initialize storage without encryption key - encryption is handled by vault unlock
         // The actual encryption key comes from the master password via Argon2 derivation
-        let storage = Storage::new_without_key(&config.db_path)
+        let storage = initialize_storage_with_recovery(&config.db_path)
             .context("Failed to initialize storage")?;
 
         info!("Storage initialized at: {}", config.db_path.display());
@@ -250,21 +341,27 @@ impl Daemon {
         info!("Daemon is ready");
         info!("Database: {}", self.config.db_path.display());
 
-        // F061: Retrieve master key from keychain
-        // The vault starts in "locked" state - users must unlock with their master password
-        // The master key in keychain is only used if vault was previously unlocked and system
-        // keychain has the key cached
-        let master_key = match keychain::retrieve_master_key() {
-            Ok(key) => {
-                info!("Master key retrieved from keychain - vault will start unlocked");
-                Some(key)
+        let restore_key_on_start = std::env::var("SECRETARIAT_RESTORE_KEY_ON_START")
+            .map(|value| matches!(value.as_str(), "1" | "true" | "TRUE" | "yes" | "YES"))
+            .unwrap_or(false);
+
+        let master_key = if restore_key_on_start {
+            match keychain::retrieve_master_key() {
+                Ok(key) => {
+                    info!("Master key retrieved from keychain - vault will start unlocked");
+                    Some(key)
+                }
+                Err(e) => {
+                    info!("No master key in keychain ({}), vault will start locked", e);
+                    None
+                }
             }
-            Err(e) => {
-                // No keychain key means vault is locked - this is the normal secure state
-                // User must unlock with their master password
-                info!("No master key in keychain ({}), vault will start locked", e);
-                None
-            }
+        } else {
+            info!(
+                "Skipping keychain restore on startup; vault will start locked. \
+                 Set SECRETARIAT_RESTORE_KEY_ON_START=1 to enable."
+            );
+            None
         };
 
         // Determine initial vault state

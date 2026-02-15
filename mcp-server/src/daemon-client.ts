@@ -33,6 +33,7 @@ export class DaemonClient {
   constructor(socketPath?: string) {
     this.socketPath =
       socketPath ??
+      process.env.SECRETARIAT_SOCKET_PATH ??
       process.env.SECRETARIAT_SOCKET ??
       path.join(
         os.homedir(),

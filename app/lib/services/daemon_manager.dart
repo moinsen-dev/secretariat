@@ -38,6 +38,15 @@ class DaemonManager {
 
   /// Get the socket path based on platform
   String get socketPath {
+    final envSocketPath = Platform.environment['SECRETARIAT_SOCKET_PATH'];
+    if (envSocketPath != null && envSocketPath.isNotEmpty) {
+      return envSocketPath;
+    }
+    final legacySocketPath = Platform.environment['SECRETARIAT_SOCKET'];
+    if (legacySocketPath != null && legacySocketPath.isNotEmpty) {
+      return legacySocketPath;
+    }
+
     if (Platform.isMacOS) {
       final home = Platform.environment['HOME'] ?? '/tmp';
       return '$home/Library/Application Support/Secretariat/secretariat.sock';

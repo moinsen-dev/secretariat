@@ -67,7 +67,8 @@ Add to Cursor's MCP settings:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `SECRETARIAT_SOCKET` | Path to daemon Unix socket | `~/Library/Application Support/Secretariat/secretariat.sock` |
+| `SECRETARIAT_SOCKET_PATH` | Path to daemon Unix socket | `~/Library/Application Support/Secretariat/secretariat.sock` |
+| `SECRETARIAT_SOCKET` | Legacy alias for socket path | (fallback) |
 | `SECRETARIAT_AGENT_NAME` | Agent identifier for permission checks | `claude-code` |
 
 ## Available Tools
@@ -87,7 +88,7 @@ Get my OpenAI API key
 
 ### `secretariat.list`
 
-List available secrets (names only, not values).
+List available secrets (names only, not values) that the agent is permitted to access.
 
 **Input:**
 - `environment` (optional): Filter by environment

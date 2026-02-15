@@ -125,6 +125,10 @@ struct InitCommand {
     /// Skip interactive prompts and use defaults
     #[arg(short, long)]
     yes: bool,
+
+    /// Read master password from an environment variable (for automation)
+    #[arg(long, value_name = "ENV_VAR")]
+    password_env: Option<String>,
 }
 
 // F092: ListCommand struct for sec list with --json flag
@@ -598,7 +602,10 @@ async fn main() -> Result<()> {
 
 // F109-F113: Init command - implemented in commands/init.rs
 async fn handle_init(client: DaemonClient, cmd: InitCommand) -> Result<()> {
-    let cmd_args = commands::init::InitCommand { yes: cmd.yes };
+    let cmd_args = commands::init::InitCommand {
+        yes: cmd.yes,
+        password_env: cmd.password_env,
+    };
     commands::handle_init(client, cmd_args).await
 }
 

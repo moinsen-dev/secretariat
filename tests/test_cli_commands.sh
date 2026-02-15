@@ -56,12 +56,12 @@ TESTS_FAILED=0
 # Helper function to log test result
 pass() {
     echo -e "${GREEN}✓ PASS:${NC} $1"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 }
 
 fail() {
     echo -e "${RED}✗ FAIL:${NC} $1"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 }
 
 # Create test directory
@@ -106,6 +106,7 @@ fi
 # Export environment for tests
 export SECRETARIAT_SOCKET_PATH="$SOCKET_PATH"
 export SECRETARIAT_DB_PATH="$DB_PATH"
+export SECRETARIAT_TEST_MASTER_PASSWORD="testpassword123"
 
 # ==================================================
 # Start daemon for tests
@@ -138,15 +139,11 @@ echo ""
 echo "F252: Test sec init creates vault"
 echo "---------------------------------"
 
-# Init should create/initialize the vault
-# Note: In a real test, we'd provide password via stdin
-echo "testpassword123" | "$CLI_BIN" init --stdin 2>/dev/null
-
-if [ $? -eq 0 ]; then
+# Init should create/initialize the vault and unlock it
+if "$CLI_BIN" init --password-env SECRETARIAT_TEST_MASTER_PASSWORD 2>/dev/null; then
     pass "sec init succeeded"
 else
-    # Init might not require password if vault already created by daemon
-    pass "sec init completed (vault may be pre-initialized)"
+    fail "sec init failed"
 fi
 
 # ==================================================

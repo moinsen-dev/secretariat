@@ -42,9 +42,8 @@ export const CheckPermissionInputSchema = z.object({
 export interface SecretEntry {
   name: string;
   environment: string;
-  provider: string;
+  provider: string | null;
   created_at: string;
-  updated_at: string;
 }
 
 export interface SecretListResponse {
@@ -54,14 +53,14 @@ export interface SecretListResponse {
 export interface SecretGetResponse {
   name: string;
   value: string;
-  environment: string;
-  provider: string;
 }
 
 export interface VaultStatusResponse {
-  status: "locked" | "unlocked" | "uninitialized";
-  version: string;
+  state?: "locked" | "unlocked" | "uninitialized";
+  status?: "locked" | "unlocked" | "uninitialized";
   secret_count: number;
+  app_count?: number;
+  version?: string;
   environments?: string[];
 }
 

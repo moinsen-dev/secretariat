@@ -54,12 +54,12 @@ TESTS_FAILED=0
 # Helper function to log test result
 pass() {
     echo -e "${GREEN}✓ PASS:${NC} $1"
-    ((TESTS_PASSED++))
+    ((++TESTS_PASSED))
 }
 
 fail() {
     echo -e "${RED}✗ FAIL:${NC} $1"
-    ((TESTS_FAILED++))
+    ((++TESTS_FAILED))
 }
 
 # Create test directory

@@ -53,6 +53,14 @@ class Secretariat {
   /// F219: Get the socket path based on platform
   String get _socketPath {
     if (socketPath != null) return socketPath!;
+    final envSocketPath = Platform.environment['SECRETARIAT_SOCKET_PATH'];
+    if (envSocketPath != null && envSocketPath.isNotEmpty) {
+      return envSocketPath;
+    }
+    final legacySocketPath = Platform.environment['SECRETARIAT_SOCKET'];
+    if (legacySocketPath != null && legacySocketPath.isNotEmpty) {
+      return legacySocketPath;
+    }
 
     // Use platform-specific default path
     if (Platform.isWindows) {
@@ -268,10 +276,19 @@ class Secretariat {
     }
 
     final secrets = result['secrets'] as List<dynamic>;
-    // Each secret is an object with a 'name' field
-    return secrets
-        .map((s) => (s as Map<String, dynamic>)['name'] as String)
-        .toList();
+    // Support metadata objects (current contract) and legacy string arrays.
+    return secrets.map((secret) {
+      if (secret is String) {
+        return secret;
+      }
+      if (secret is Map<String, dynamic>) {
+        final name = secret['name'];
+        if (name is String) {
+          return name;
+        }
+      }
+      throw SecretariatException('Invalid response: secret entry missing name');
+    }).toList();
   }
 
   /// Set/create a secret

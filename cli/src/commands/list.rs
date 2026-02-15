@@ -11,7 +11,6 @@
 
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 use crate::client::DaemonClient;
 
@@ -54,37 +53,43 @@ struct ListResponse {
 ///
 /// Returns Ok(()) on success, error if list fails
 pub async fn handle_list(client: DaemonClient, cmd: ListCommand) -> Result<()> {
-    // F115: Build request params with optional filters
-    let mut params = json!({});
-
-    if let Some(provider) = &cmd.provider {
-        params["provider"] = json!(provider);
-    }
-
-    if let Some(environment) = &cmd.environment {
-        params["environment"] = json!(environment);
-    }
-
     // F115-F116: Send secret.list request to daemon and parse as Vec<SecretMetadata>
     let response: ListResponse = client
-        .request("secret.list", params)
+        .request("secret.list", serde_json::json!({}))
         .await
         .context("Failed to list secrets")?;
 
+    // The daemon contract for secret.list returns all secret metadata.
+    // Apply provider/environment filters client-side for deterministic behavior.
+    let mut secrets = response.secrets;
+
+    if let Some(provider_filter) = &cmd.provider {
+        secrets.retain(|secret| {
+            secret
+                .provider
+                .as_deref()
+                .map(|provider| provider.eq_ignore_ascii_case(provider_filter))
+                .unwrap_or(false)
+        });
+    }
+
+    if let Some(environment_filter) = &cmd.environment {
+        secrets.retain(|secret| secret.environment == *environment_filter);
+    }
+
     // F118: Display results - JSON output if --json flag is set
     if cmd.json {
-        let json_output = serde_json::to_string_pretty(&response.secrets)
+        let json_output = serde_json::to_string_pretty(&secrets)
             .context("Failed to serialize secrets to JSON")?;
         println!("{}", json_output);
     } else {
         // F117: Format as ASCII table with name, provider, created columns
-        if response.secrets.is_empty() {
+        if secrets.is_empty() {
             println!("No secrets found.");
             println!("\nTry: sec set MY_API_KEY <value>");
         } else {
             // Find max width for name column
-            let max_name_width = response
-                .secrets
+            let max_name_width = secrets
                 .iter()
                 .map(|s| s.name.len())
                 .max()
@@ -110,7 +115,7 @@ pub async fn handle_list(client: DaemonClient, cmd: ListCommand) -> Result<()> {
             println!("{}", "-".repeat(total_width));
 
             // Print secrets
-            for secret in &response.secrets {
+            for secret in &secrets {
                 let provider = secret
                     .provider
                     .as_deref()
@@ -128,7 +133,7 @@ pub async fn handle_list(client: DaemonClient, cmd: ListCommand) -> Result<()> {
             }
 
             println!();
-            println!("Total: {} secret(s)", response.secrets.len());
+            println!("Total: {} secret(s)", secrets.len());
         }
     }
 

@@ -92,6 +92,17 @@ impl std::error::Error for Error {
 
 /// Get default socket path based on platform
 fn get_default_socket_path() -> PathBuf {
+    if let Ok(path) = std::env::var("SECRETARIAT_SOCKET_PATH") {
+        if !path.is_empty() {
+            return PathBuf::from(path);
+        }
+    }
+    if let Ok(path) = std::env::var("SECRETARIAT_SOCKET") {
+        if !path.is_empty() {
+            return PathBuf::from(path);
+        }
+    }
+
     #[cfg(target_os = "macos")]
     {
         let home = std::env::var("HOME").unwrap_or_else(|_| "/tmp".to_string());
@@ -341,14 +352,17 @@ impl Secretariat {
             .as_array()
             .ok_or_else(|| Error::InvalidResponse("Missing secrets in response".to_string()))?;
 
-        // Each secret is an object with a "name" field
+        // Support metadata objects (current contract) and legacy string arrays.
         secrets
             .iter()
             .map(|s| {
-                s["name"]
-                    .as_str()
-                    .map(|s| s.to_string())
-                    .ok_or_else(|| Error::InvalidResponse("Invalid secret format".to_string()))
+                if let Some(name) = s["name"].as_str() {
+                    Ok(name.to_string())
+                } else if let Some(name) = s.as_str() {
+                    Ok(name.to_string())
+                } else {
+                    Err(Error::InvalidResponse("Invalid secret format".to_string()))
+                }
             })
             .collect()
     }

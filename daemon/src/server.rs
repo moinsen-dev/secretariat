@@ -315,6 +315,12 @@ impl Response {
 /// - Linux: ~/.local/share/secretariat/secretariat.sock
 /// - Windows: Will use named pipes (not implemented yet)
 pub fn get_socket_path() -> Result<PathBuf> {
+    if let Some(socket_path) = std::env::var_os("SECRETARIAT_SOCKET_PATH")
+        .or_else(|| std::env::var_os("SECRETARIAT_SOCKET"))
+    {
+        return Ok(PathBuf::from(socket_path));
+    }
+
     let socket_path = if cfg!(target_os = "macos") {
         dirs::home_dir()
             .context("Failed to get home directory")?

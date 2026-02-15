@@ -15,7 +15,7 @@
         sdk-dart sdk-python sdk-node sdk-rust sdks sdks-clean \
         daemon cli docs check fmt lint \
         dev dev-daemon dev-cli \
-        release package status version \
+        release release-gate package status version \
         service-install service-uninstall service-start service-stop service-status service-logs
 
 # Colors for terminal output
@@ -59,6 +59,7 @@ help:
 	@echo "  $(GREEN)make all$(NC)          - Build everything (Rust + Flutter + SDKs)"
 	@echo "  $(GREEN)make clean$(NC)        - Clean all build artifacts"
 	@echo "  $(GREEN)make test$(NC)         - Run all tests"
+	@echo "  $(GREEN)make release-gate$(NC) - Run full cross-component release gate"
 	@echo "  $(GREEN)make release$(NC)      - Build optimized release binaries"
 	@echo "  $(GREEN)make install$(NC)      - Install to /usr/local/bin (requires sudo)"
 	@echo "  $(GREEN)make install-local$(NC) - Install to ~/bin (no sudo)"
@@ -140,6 +141,9 @@ release: rust-release
 	@echo "$(GREEN)✓ Release build complete!$(NC)"
 	@echo "  Daemon: $(RELEASE_DIR)/secd"
 	@echo "  CLI:    $(RELEASE_DIR)/sec"
+
+release-gate:
+	@./scripts/release-gate.sh
 
 # ============================================================================
 # Rust targets

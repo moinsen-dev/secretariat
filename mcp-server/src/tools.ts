@@ -20,6 +20,31 @@ import {
 
 // Agent identifier for this MCP server instance
 const AGENT_NAME = process.env.SECRETARIAT_AGENT_NAME ?? "claude-code";
+// Daemon `secret.get` currently requires an app_id parameter.
+const INTERNAL_APP_ID = "cli";
+
+interface ExplainResponse {
+  agent_id: string;
+  permissions: Array<{ secret: string; environment: string }>;
+}
+
+function getVaultState(
+  status: VaultStatusResponse
+): "locked" | "unlocked" | "uninitialized" {
+  return status.state ?? status.status ?? "uninitialized";
+}
+
+function hasAgentPermission(
+  permissions: ExplainResponse["permissions"],
+  secretName: string,
+  environment?: string
+): boolean {
+  return permissions.some(
+    (permission) =>
+      permission.secret === secretName &&
+      (!environment || permission.environment === environment)
+  );
+}
 
 /**
  * Get a secret from the vault
@@ -35,7 +60,7 @@ export async function getSecret(
     // First check if vault is unlocked
     const status = await client.request<VaultStatusResponse>("vault.status", {});
 
-    if (status.status === "locked") {
+    if (getVaultState(status) === "locked") {
       return {
         content: [
           {
@@ -47,7 +72,7 @@ export async function getSecret(
       };
     }
 
-    if (status.status === "uninitialized") {
+    if (getVaultState(status) === "uninitialized") {
       return {
         content: [
           {
@@ -59,28 +84,61 @@ export async function getSecret(
       };
     }
 
-    // Request the secret
-    const params: Record<string, string> = {
-      name: input.name,
-      agent: AGENT_NAME,
-    };
+    // Check agent permissions first. This keeps MCP behavior aligned with
+    // `sec agent grant` / `agent.explain` even though daemon `secret.get`
+    // itself is app_id-based.
+    const permissions = await client.request<ExplainResponse>("agent.explain", {
+      agent_id: AGENT_NAME,
+    });
 
-    if (input.environment) {
-      params.environment = input.environment;
+    if (!hasAgentPermission(permissions.permissions, input.name, input.environment)) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Access denied: Agent '${AGENT_NAME}' does not have permission to access secret '${input.name}'.\n\nGrant access with: sec agent grant ${AGENT_NAME} ${input.name}${input.environment ? ` --environment ${input.environment}` : ""}`,
+          },
+        ],
+        isError: true,
+      };
     }
 
-    const response = await client.request<SecretGetResponse>("secret.get", params);
+    const response = await client.request<SecretGetResponse>("secret.get", {
+      name: input.name,
+      app_id: INTERNAL_APP_ID,
+    });
+
+    const outputLines = [`Secret: ${response.name}`, `Value: ${response.value}`];
+    if (input.environment) {
+      outputLines.push(`Environment: ${input.environment}`);
+    }
 
     return {
       content: [
         {
           type: "text",
-          text: `Secret: ${response.name}\nValue: ${response.value}\nEnvironment: ${response.environment}\nProvider: ${response.provider}`,
+          text: outputLines.join("\n"),
         },
       ],
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+
+    // If agent not registered, provide helpful message
+    if (
+      message.includes("Agent not found") ||
+      message.includes("Failed to explain agent permissions")
+    ) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Agent '${AGENT_NAME}' is not registered with Secretariat.\n\nRegister it first:\n  sec agent register ${AGENT_NAME}`,
+          },
+        ],
+        isError: true,
+      };
+    }
 
     // Check for permission denied
     if (message.includes("permission") || message.includes("access denied")) {
@@ -88,7 +146,7 @@ export async function getSecret(
         content: [
           {
             type: "text",
-            text: `Access denied: Agent '${AGENT_NAME}' does not have permission to access secret '${input.name}'.\n\nGrant access with: sec agent grant ${AGENT_NAME} ${input.name}`,
+            text: `Access denied: Agent '${AGENT_NAME}' does not have permission to access secret '${input.name}'.\n\nGrant access with: sec agent grant ${AGENT_NAME} ${input.name}${input.environment ? ` --environment ${input.environment}` : ""}`,
           },
         ],
         isError: true,
@@ -128,7 +186,7 @@ export async function listSecrets(
     // Check vault status
     const status = await client.request<VaultStatusResponse>("vault.status", {});
 
-    if (status.status === "locked") {
+    if (getVaultState(status) === "locked") {
       return {
         content: [
           {
@@ -140,7 +198,7 @@ export async function listSecrets(
       };
     }
 
-    if (status.status === "uninitialized") {
+    if (getVaultState(status) === "uninitialized") {
       return {
         content: [
           {
@@ -152,16 +210,12 @@ export async function listSecrets(
       };
     }
 
-    // Get list of secrets
-    const params: Record<string, string> = {
-      agent: AGENT_NAME,
-    };
-
-    if (input.environment) {
-      params.environment = input.environment;
-    }
-
-    const response = await client.request<SecretListResponse>("secret.list", params);
+    // Load all secrets metadata from daemon and agent permissions separately,
+    // then enforce agent/environment/filter constraints client-side.
+    const response = await client.request<SecretListResponse>("secret.list", {});
+    const permissions = await client.request<ExplainResponse>("agent.explain", {
+      agent_id: AGENT_NAME,
+    });
 
     if (!response.secrets || response.secrets.length === 0) {
       return {
@@ -176,8 +230,18 @@ export async function listSecrets(
       };
     }
 
-    // Filter by pattern if provided
+    // Filter by permissions first
     let secrets = response.secrets;
+    secrets = secrets.filter((secret) =>
+      hasAgentPermission(permissions.permissions, secret.name, secret.environment)
+    );
+
+    // Filter by environment if provided
+    if (input.environment) {
+      secrets = secrets.filter((secret) => secret.environment === input.environment);
+    }
+
+    // Filter by pattern if provided
     if (input.filter) {
       const pattern = input.filter.toLowerCase();
       secrets = secrets.filter((s) =>
@@ -208,7 +272,7 @@ export async function listSecrets(
 
     for (const secret of secrets) {
       lines.push(
-        `${secret.name.padEnd(maxNameLen)}  ${secret.environment.padEnd(maxEnvLen)}  ${secret.provider}`
+        `${secret.name.padEnd(maxNameLen)}  ${secret.environment.padEnd(maxEnvLen)}  ${secret.provider ?? "-"}`
       );
     }
 
@@ -220,6 +284,23 @@ export async function listSecrets(
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
+
+    // If agent not registered, provide helpful message
+    if (
+      message.includes("Agent not found") ||
+      message.includes("Failed to explain agent permissions")
+    ) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: `Agent '${AGENT_NAME}' is not registered with Secretariat.\n\nRegister it first:\n  sec agent register ${AGENT_NAME}`,
+          },
+        ],
+        isError: true,
+      };
+    }
+
     return {
       content: [{ type: "text", text: `Error listing secrets: ${message}` }],
       isError: true,
@@ -235,29 +316,15 @@ export async function checkPermission(
   input: CheckPermissionInput
 ): Promise<ToolResult> {
   try {
-    const params: Record<string, string> = {
-      agent_id: AGENT_NAME,
-      secret_name: input.secret_name,
-    };
-
-    if (input.environment) {
-      params.environment = input.environment;
-    }
-
     // Use agent.explain to check what secrets the agent can access
-    interface ExplainResponse {
-      agent_id: string;
-      permissions: Array<{ secret: string; environment: string }>;
-    }
-
     const response = await client.request<ExplainResponse>("agent.explain", {
       agent_id: AGENT_NAME,
     });
 
-    const hasAccess = response.permissions.some(
-      (p) =>
-        p.secret === input.secret_name &&
-        (!input.environment || p.environment === input.environment)
+    const hasAccess = hasAgentPermission(
+      response.permissions,
+      input.secret_name,
+      input.environment
     );
 
     if (hasAccess) {
@@ -283,7 +350,10 @@ export async function checkPermission(
     const message = error instanceof Error ? error.message : String(error);
 
     // If agent not registered, provide helpful message
-    if (message.includes("not found") || message.includes("Agent not found")) {
+    if (
+      message.includes("Agent not found") ||
+      message.includes("Failed to explain agent permissions")
+    ) {
       return {
         content: [
           {
@@ -316,10 +386,17 @@ export async function getVaultStatus(
     const lines = [
       "Secretariat Vault Status",
       "",
-      `Status: ${status.status}`,
-      `Version: ${status.version}`,
+      `Status: ${getVaultState(status)}`,
       `Secrets: ${status.secret_count}`,
     ];
+
+    if (typeof status.app_count === "number") {
+      lines.push(`Apps: ${status.app_count}`);
+    }
+
+    if (status.version) {
+      lines.push(`Version: ${status.version}`);
+    }
 
     if (status.environments && status.environments.length > 0) {
       lines.push(`Environments: ${status.environments.join(", ")}`);

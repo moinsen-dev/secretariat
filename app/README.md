@@ -1,16 +1,30 @@
-# secretariat_app
+# Secretariat App
 
-A new Flutter project.
+Flutter desktop UI for the local Secretariat daemon.
 
-## Getting Started
+## Test Strategy
 
-This project is a starting point for a Flutter application.
+- Default `flutter test` run is daemon-independent and CI-safe.
+- Daemon integration tests are opt-in and disabled by default.
 
-A few resources to get you started if this is your first Flutter project:
+### Run Unit/Contract Tests (default)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+```bash
+cd app
+flutter test
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+### Run Daemon Integration Tests
+
+Set this env var to enable integration tests that require a running daemon:
+
+```bash
+cd app
+SECRETARIAT_RUN_INTEGRATION_TESTS=1 flutter test test/daemon_client_integration_test.dart
+```
+
+You can point tests to a custom socket path with:
+
+```bash
+SECRETARIAT_SOCKET_PATH=/path/to/secretariat.sock
+```

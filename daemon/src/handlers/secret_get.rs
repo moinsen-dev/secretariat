@@ -78,7 +78,13 @@ pub fn handle_secret_get(name: &str, app_id: &str, storage: &Storage, master_key
     // These are CLI and SDK clients running on the local machine
     let is_trusted = matches!(
         app_id,
-        "cli" | "python-sdk" | "node-sdk" | "dart-sdk" | "rust-sdk" | "flutter-app"
+        "cli"
+            | "python-sdk"
+            | "node-sdk"
+            | "dart-sdk"
+            | "rust-sdk"
+            | "go-sdk"
+            | "flutter-app"
     );
 
     // F058: Check if the app has permission to access this secret
