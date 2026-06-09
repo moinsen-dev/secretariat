@@ -50,12 +50,12 @@ jobs:
       - name: Staging
         run: |
           mkdir -p staging
-          # Binaries könnten in target/<triple>/release/ oder target/release/ liegen
-          BIN=$(find target -name "secretd" -type f -path "*/release/*" 2>/dev/null | head -1)
-          BIN_DIR="${BIN%/secretd}"
+          # Binaries heißen "secd" (daemon) und "sec" (CLI) — siehe Cargo.toml
+          BIN=$(find target -name "secd" -type f -path "*/release/*" 2>/dev/null | head -1)
+          BIN_DIR="${BIN%/secd}"
           echo "Binaries from: $BIN_DIR"
-          cp "$BIN_DIR/secretd" staging/
-          cp "$BIN_DIR/secret" staging/
+          cp "$BIN_DIR/secd" staging/
+          cp "$BIN_DIR/sec" staging/
           ls -la staging/
 
       - name: Run tests
@@ -67,7 +67,7 @@ jobs:
 
       - name: Generate SHA256
         run: |
-          sha256sum secretariat-${{ matrix.artifact }}.tar.gz | tee secretariat-${{ matrix.artifact }}.sha256
+          (sha256sum secretariat-${{ matrix.artifact }}.tar.gz || shasum -a 256 secretariat-${{ matrix.artifact }}.tar.gz) | tee secretariat-${{ matrix.artifact }}.sha256
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
