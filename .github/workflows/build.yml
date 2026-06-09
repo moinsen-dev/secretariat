@@ -13,6 +13,7 @@ env:
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: macos-latest
@@ -49,13 +50,9 @@ jobs:
       - name: Staging
         run: |
           mkdir -p staging
-          # Native builds (target == host) write to target/release/
-          # Cross-compiles write to target/<triple>/release/
-          if [ -d "target/${{ matrix.target }}/release" ]; then
-            BIN_DIR="target/${{ matrix.target }}/release"
-          else
-            BIN_DIR="target/release"
-          fi
+          # Binaries könnten in target/<triple>/release/ oder target/release/ liegen
+          BIN=$(find target -name "secretd" -type f -path "*/release/*" 2>/dev/null | head -1)
+          BIN_DIR="${BIN%/secretd}"
           echo "Binaries from: $BIN_DIR"
           cp "$BIN_DIR/secretd" staging/
           cp "$BIN_DIR/secret" staging/

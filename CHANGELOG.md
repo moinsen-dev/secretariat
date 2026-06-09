@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.1.1 (2026-06-09) — Homebrew Release
+
+🧪 **First Homebrew release with per-arch binary artifacts.**
+
+### Changes
+- **CI/CD:** Rewrote build matrix to produce per-architecture tarballs (`darwin-arm64`, `darwin-x86_64`, `linux-x86_64`) with SHA256 checksums
+- **CI/CD:** Release workflow now attaches individual archives for Homebrew ingestion
+- **Infrastructure:** Homebrew formula added to `moinsen-dev/homebrew-tap` — `brew install moinsen-dev/tap/secretariat`
+
 ## v0.1.0 (2026-06-09) — Initial Release
 
 🚀 **First public release of Secretariat — Local-First Secrets Manager.**
