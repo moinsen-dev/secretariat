@@ -46,14 +46,14 @@ jobs:
       - name: Build
         run: cargo build --release --target ${{ matrix.target }} --workspace
 
-      - name: Run tests
-        run: cargo test --workspace
-
-      - name: Staging
+      - name: Staging (pre-test — tests run natively and can invalidate cross-target builds)
         run: |
           mkdir -p staging
           cp target/${{ matrix.target }}/release/secretd staging/
           cp target/${{ matrix.target }}/release/secret staging/
+
+      - name: Run tests
+        run: cargo test --workspace
 
       - name: Create archive
         run: |
