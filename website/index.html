@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Secretariat — Dein persönlicher Secret-Manager</title>
+  <title>Secretariat — Der Secret-Vault für Mensch & KI</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>" />
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -70,7 +70,7 @@
       mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, black 30%, transparent 70%);
       -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, black 30%, transparent 70%);
     }
-    .hero-content { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+    .hero-content { position: relative; z-index: 1; max-width: 700px; margin: 0 auto; }
     .hero-badge {
       display: inline-flex; align-items: center; gap: 8px;
       padding: 6px 16px; border-radius: 20px;
@@ -87,7 +87,7 @@
     }
     .hero-sub {
       font-size: clamp(16px, 2vw, 19px); line-height: 1.7;
-      color: var(--muted); max-width: 520px; margin: 0 auto 40px;
+      color: var(--muted); max-width: 580px; margin: 0 auto 40px;
     }
     .hero-actions { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
     .btn-primary {
@@ -127,6 +127,29 @@
     .terminal .cmd { color: var(--text); }
     .terminal .comment { color: var(--muted); font-style: italic; }
     .terminal .output { color: #7a889a; }
+    .terminal .ai { color: var(--blue); }
+    .terminal .human { color: var(--accent); }
+
+    /* ─── Dialog ─── */
+    .dialog-wrapper {
+      background: #0d1117; border: 1px solid var(--border); border-radius: 14px;
+      margin: 32px 0; padding: 24px; overflow-x: auto;
+    }
+    .dialog-line {
+      padding: 8px 0; display: flex; gap: 12px; align-items: flex-start;
+      font-family: 'SF Mono', 'Menlo', 'Monaco', monospace; font-size: 13px;
+    }
+    .dialog-line .badge {
+      display: inline-block; min-width: 60px; padding: 2px 8px;
+      border-radius: 4px; font-size: 11px; font-weight: 700; text-align: center;
+    }
+    .badge-human { background: rgba(52,211,153,0.15); color: var(--accent); }
+    .badge-agent { background: rgba(96,165,250,0.15); color: var(--blue); }
+    .badge-sec { background: rgba(167,139,250,0.15); color: #a78bfa; }
+    .dialog-line .text { flex: 1; color: var(--text); line-height: 1.5; }
+    .dialog-line .text.green { color: var(--accent); }
+    .dialog-line .text.blue { color: var(--blue); }
+    .dialog-line .text.purple { color: #a78bfa; }
 
     /* ─── Feature Grid ─── */
     .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 48px; }
@@ -143,17 +166,8 @@
     .card-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
     .card-desc { font-size: 14px; line-height: 1.6; color: var(--muted); }
 
-    /* ─── Stats ─── */
-    .stats {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 32px;
-      padding: 48px 32px; border-radius: 14px; background: var(--surface);
-      border: 1px solid var(--border); text-align: center; margin-top: 48px;
-    }
-    .stat-num { font-size: clamp(28px, 4vw, 40px); font-weight: 800; color: var(--accent); line-height: 1; margin-bottom: 8px; }
-    .stat-lbl { font-size: 14px; color: var(--muted); }
-
     /* ─── Steps ─── */
-    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-top: 48px; }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin-top: 48px; }
     .step { text-align: center; padding: 32px 20px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); }
     .step-num {
       width: 48px; height: 48px; border-radius: 24px; background: var(--gradient); color: #0a0e14;
@@ -163,16 +177,15 @@
     .step-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
     .step-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
 
-    /* ─── Architektur ─── */
-    .arch-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;
-      margin-top: 48px;
+    /* ─── Why Section ─── */
+    .why-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-top: 48px; }
+    .why-card {
+      padding: 24px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border);
+      text-align: center;
     }
-    .arch-card {
-      padding: 24px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); text-align: center;
-    }
-    .arch-name { font-size: 15px; font-weight: 700; color: var(--accent); margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
-    .arch-row { font-size: 13px; padding: 5px 0; color: var(--muted); }
+    .why-emoji { font-size: 32px; margin-bottom: 12px; }
+    .why-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+    .why-desc { font-size: 13px; color: var(--muted); line-height: 1.6; }
 
     /* ─── CTA ─── */
     .cta-section {
@@ -180,7 +193,7 @@
       background: radial-gradient(ellipse 60% 60% at 50% 80%, var(--accent-glow) 0%, transparent 60%);
     }
     .cta-title { font-size: clamp(28px, 4vw, 40px); font-weight: 800; margin-bottom: 16px; }
-    .cta-text { font-size: 17px; color: var(--muted); max-width: 480px; margin: 0 auto 40px; }
+    .cta-text { font-size: 17px; color: var(--muted); max-width: 520px; margin: 0 auto 40px; }
     .cta-hint { margin-top: 24px; font-size: 14px; color: var(--muted); }
     .cta-hint a { color: var(--accent); font-weight: 600; }
 
@@ -212,11 +225,10 @@
         <span class="logo-sub">v0.1.0</span>
       </a>
       <nav class="nav">
+        <a href="#problem">Problem</a>
+        <a href="#funktion">So geht's</a>
         <a href="#features">Features</a>
-        <a href="pricing.html">Pricing</a>
-        <a href="#architektur">Architektur</a>
         <a href="#install">Install</a>
-        <a href="v2.html">V2 Vision</a>
         <a href="https://github.com/moinsen-dev/secretariat" class="nav-cta" target="_blank">GitHub →</a>
       </nav>
     </div>
@@ -226,14 +238,15 @@
   <section class="hero">
     <div class="hero-dots"></div>
     <div class="hero-content">
-      <div class="hero-badge"><span>🔐</span> Secret Management für Developer</div>
+      <div class="hero-badge"><span>🤖+🧑</span> Secret Management für Mensch & KI</div>
       <h1 class="hero-title">
-        Deine Keys. <br /><span class="hero-gradient">Dein Vault.</span>
+        Ein Vault.<br /><span class="hero-gradient">Mensch & KI.</span>
       </h1>
       <p class="hero-sub">
-        Secretariat ist ein lokaler, hochsicherer Secret-Manager für Developer.
-        API-Keys, Tokens, Zertifikate – verschlüsselt auf deiner Maschine,
-        erreichbar via CLI, Python SDK oder TCP-Netzwerk.
+        Secretariat ist der erste Secret-Manager, der für die Zusammenarbeit 
+        von Menschen und KI-Agenten gebaut wurde. <strong>Ein gemeinsamer Vault</strong> 
+        — API-Keys, Tokens, Zertifikate. Nie wieder Secrets im Chat, 
+        in Prompts oder im Terminal-History.
       </p>
       <div class="hero-actions">
         <a href="#install" class="btn-primary">⚡ Jetzt installieren</a>
@@ -243,30 +256,103 @@
   </section>
 
   <!-- ═══ PROBLEM ═══ -->
-  <section class="section">
+  <section class="section" id="problem">
     <div class="label">Das Problem</div>
-    <h2 class="h2">Deine Secrets liegen überall verstreut</h2>
+    <h2 class="h2">Deine API-Keys liegen überall — auch im Klartext-Chat</h2>
     <p class="p">
-      API-Keys in <code>.env</code>-Dateien. Tokens im Terminal-History. 
-      Zertifikate auf drei verschiedenen Rechnern. Und beim nächsten 
-      Dev-Setup suchst du wieder alles zusammen.
+      Du gibst einen Key an deinen KI-Assistenten weiter. Er speichert ihn im Prompt-Kontext. 
+      Nächste Woche taucht der Key in einem Export auf. Oder in einer Log-Datei. 
+      Vielleicht im Chat-Verlauf, den ein Prompt-Injection-Angriff ausliest.
     </p>
-    <div class="stats">
-      <div>
-        <div class="stat-num">🔐</div>
-        <div class="stat-lbl">AES-256-GCM Verschlüsselung</div>
+
+    <div class="dialog-wrapper">
+      <div class="dialog-line">
+        <span class="badge badge-human">DU</span>
+        <span class="text green">"Setze den DeepSeek API-Key sk-abc123... in der Config"</span>
       </div>
-      <div>
-        <div class="stat-num">⚡</div>
-        <div class="stat-lbl">&lt;5ms Lesezeit</div>
+      <div class="dialog-line" style="opacity:0.5">
+        <span class="badge badge-agent">AGENT</span>
+        <span class="text blue">"Ok, hab ich in die config.yml geschrieben"</span>
       </div>
-      <div>
-        <div class="stat-num">🐍</div>
-        <div class="stat-lbl">Python SDK</div>
+      <div class="dialog-line" style="border-top:1px solid var(--border); padding-top:16px; margin-top:8px;">
+        <span class="badge badge-sec">SECRETARIAT</span>
+        <span class="text purple">"Warum sagst du ihm nicht einfach <code>sec get /deepseek/api-key</code>?"</span>
       </div>
-      <div>
-        <div class="stat-num">🔗</div>
-        <div class="stat-lbl">TCP Multi-Device</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-icon">⚠️</div>
+        <div class="card-title">Secrets im Chat</div>
+        <div class="card-desc">Jeder API-Key, den du dem Chat übergibst, lebt im Prompt-Kontext und in der History. Ein Einfallstor.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">📁</div>
+        <div class="card-title">Secrets in Dateien</div>
+        <div class="card-desc">Das <code>.env</code> von Projekt A, die Config von Projekt B — Keys verteilt auf der ganzen Platte.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔄</div>
+        <div class="card-title">Secrets rotieren</div>
+        <div class="card-desc">Key geändert? Viel Spaß beim Suchen aller Stellen, wo er noch im Klartext liegt.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ DIE IDEE ═══ -->
+  <section class="section" id="funktion">
+    <div class="label">Die Lösung</div>
+    <h2 class="h2">Ein Vault. Zwei Clients. Null Secrets im Chat.</h2>
+    <p class="p">
+      Secretariat ist ein Daemon auf deiner Maschine. Der Vault liegt lokal, 
+      verschlüsselt mit AES-256-GCM. Sowohl du (via <code>sec</code>) als auch 
+      dein KI-Assistent (via <code>sec get</code> im Terminal) greifen auf 
+      <strong>denselben</strong> Secret-Store zu. Der Key verlässt den Vault 
+      nie — nur du und dein Agent sehen ihn kurz im stdout.
+    </p>
+
+    <div class="dialog-wrapper">
+      <div class="dialog-line">
+        <span class="badge badge-human">DU</span>
+        <span class="text green">"Erstelle einen neuen Blog-Artikel über MotoGP mit DeepSeek"</span>
+      </div>
+      <div class="dialog-line">
+        <span class="badge badge-agent">AGENT</span>
+        <span class="text blue">Ich hole den API-Key aus dem gemeinsamen Vault...</span>
+      </div>
+      <div class="dialog-line">
+        <span class="badge badge-sec">TERMINAL</span>
+        <span class="text purple"><span style="color:var(--accent)">$</span> sec get /deepseek/api-key</span>
+      </div>
+      <div class="dialog-line">
+        <span class="badge badge-agent">AGENT</span>
+        <span class="text blue">Key geladen (flüchtig im RAM). Erstelle den Artikel...</span>
+      </div>
+      <div class="dialog-line" style="color:var(--muted); font-style:italic; font-size:12px; padding-top:8px; border-top:1px solid var(--border);">
+        → Der Key erscheint nirgendwo im Chat, in keiner Datei, in keinem Prompt-Export
+      </div>
+    </div>
+
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-emoji">🤖</div>
+        <div class="why-title">Agent ruft ab</div>
+        <div class="why-desc"><code>sec get /openai/api-key</code> im Terminal-Tool. Output flüchtig im RAM des Agenten.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-emoji">🧑</div>
+        <div class="why-title">Mensch setzt</div>
+        <div class="why-desc"><code>sec set /stripe/secret "sk_live_..."</code>. Ein Befehl, ein Vault.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-emoji">🔐</div>
+        <div class="why-title">Vault lokal</div>
+        <div class="why-desc">Nichts in der Cloud. AES-256-GCM. Daemon auf deiner Maschine, per Passwort geschützt.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-emoji">📋</div>
+        <div class="why-title">Nie im Chat</div>
+        <div class="why-desc">Das Secret erscheint in <strong>keiner</strong> Chat-Nachricht. Kein Prompt-Export enthält Keys.</div>
       </div>
     </div>
   </section>
@@ -276,40 +362,40 @@
     <div class="label">Features — V1</div>
     <h2 class="h2">Was Secretariat heute kann</h2>
     <p class="p">
-      Ein schlanker, schneller Secret-Manager. Keine Cloud-Abhängigkeit.
-      Keine Datenbank-Setups. Einfach <code>secret set</code> und los.
+      Schlank, schnell, robust. Geschrieben in Rust. Keine Cloud, keine DB-Setups.
+      Einfach <code>brew install secretariat</code> und los.
     </p>
 
     <div class="grid">
       <div class="card">
-        <div class="card-icon">⚡</div>
-        <div class="card-title">CLI-First</div>
-        <div class="card-desc"><code>secret set/openvpn/key</code>, <code>secret get</code>, <code>secret list</code> — alles aus dem Terminal. Autocomplete inklusive.</div>
+        <div class="card-icon">🤝</div>
+        <div class="card-title">Mensch + KI</div>
+        <div class="card-desc">Ein Vault für dich und deine Agenten. <code>sec get /key</code> im Terminal-Tool — das Secret erscheint nur im stdout, nie im Chat oder in Dateien.</div>
       </div>
       <div class="card">
         <div class="card-icon">🛡️</div>
         <div class="card-title">AES-256-GCM Vault</div>
-        <div class="card-desc">SQLCipher-basierter Vault. Master-Key in der macOS Keychain (mit 5s Timeout für Headless-Betrieb).</div>
+        <div class="card-desc">Lokaler SQLCipher-Vault. Master-Key per Passwort geschützt. Argon2id Key-Derivation.</div>
       </div>
       <div class="card">
-        <div class="card-icon">🐍</div>
-        <div class="card-title">Python SDK</div>
-        <div class="card-desc"><code>from secretariat import Vault</code> — deine Secrets direkt aus Python-Scripts, ohne Subprozesse.</div>
+        <div class="card-icon">⚡</div>
+        <div class="card-title">CLI + Daemon</div>
+        <div class="card-desc"><code>sec set</code>, <code>sec get</code>, <code>sec list</code> — alles aus dem Terminal. Daemon läuft im Hintergrund, startet via LaunchAgent automatisch.</div>
       </div>
       <div class="card">
         <div class="card-icon">🔗</div>
-        <div class="card-title">TCP Multi-Device</div>
-        <div class="card-desc">Vault via TCP von anderen Rechnern im Netzwerk abfragen. Auth-Token-geschützt, TLS-optional.</div>
+        <div class="card-title">Unix Socket + TCP</div>
+        <div class="card-desc">Lokal via Unix Socket, Netzwerk via TCP. Auth-Token-geschützt. Bereit für Multi-Device-Setups.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🧑‍💻</div>
+        <div class="card-title">Headless-fähig</div>
+        <div class="card-desc">Funktioniert auf Servern und headless Mac Minis. <code>--password</code> Flag oder <code>SECRETARIAT_INIT_PASSWORD</code> Env-Var für Non-Interactive-Betrieb.</div>
       </div>
       <div class="card">
         <div class="card-icon">🦀</div>
         <div class="card-title">Rust-Kern</div>
-        <div class="card-desc">Geschrieben in Rust — schnell, speichersicher, kein GC-Pausen. Daemon + CLI in einer Binary.</div>
-      </div>
-      <div class="card">
-        <div class="card-icon">🔁</div>
-        <div class="card-title">LaunchAgent Autostart</div>
-        <div class="card-desc">Daemon startet mit dem Mac. Via LaunchAgent, kein manuelles Starten nötig. Immer bereit.</div>
+        <div class="card-desc">Schnell, speichersicher, kein GC. Daemon (<code>secd</code>) + CLI (<code>sec</code>) in einem Build.</div>
       </div>
     </div>
   </section>
@@ -317,88 +403,57 @@
   <!-- ═══ QUICK START ═══ -->
   <section class="section" id="install">
     <div class="label">Quick Start</div>
-    <h2 class="h2">In 3 Schritten zum eigenen Vault</h2>
-    <p class="p">Rust installiert? Dann los:</p>
+    <h2 class="h2">In 60 Sekunden zum eigenen Vault</h2>
+    <p class="p">macOS? <code>brew install secretariat</code> — dann los:</p>
 
     <div class="steps">
       <div class="step">
         <div class="step-num">1</div>
         <div class="step-title">Installieren</div>
-        <div class="step-desc">Binary aus GitHub Release laden oder <code>cargo build --release</code></div>
+        <div class="step-desc"><code>brew install moinsen-dev/tap/secretariat</code> oder <code>cargo build --release</code></div>
       </div>
       <div class="step">
         <div class="step-num">2</div>
         <div class="step-title">Vault initialisieren</div>
-        <div class="step-desc"><code>secret init</code> — legt verschlüsselten Vault an. Key sichert macOS Keychain.</div>
+        <div class="step-desc"><code>sec init --password "dein-passwort"</code> — legt verschlüsselten Vault an. Headless-fähig.</div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
-        <div class="step-title">Secrets verwalten</div>
-        <div class="step-desc"><code>secret set /github/token sk-...</code> — fertig. <code>secret get /github/token</code> zum Lesen.</div>
+        <div class="step-title">Daemon starten</div>
+        <div class="step-desc"><code>brew services start secretariat</code> — läuft automatisch ab jetzt.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-title">Erstes Secret</div>
+        <div class="step-desc"><code>sec set /deepseek/api-key sk-...</code> — und <code>sec get</code> von Mensch & KI nutzbar.</div>
       </div>
     </div>
 
     <div class="terminal">
-      <div><span class="prompt">$</span> <span class="cmd">secret set /deepseek/api-key sk-abc123...</span></div>
-      <div><span class="output">✓ Schlüssel gespeichert</span></div>
-      <div><span class="prompt">$</span> <span class="cmd">secret get /deepseek/api-key</span></div>
-      <div><span class="output">sk-abc123...</span></div>
-      <div><span class="prompt">$</span> <span class="cmd">secret list</span></div>
+      <div><span class="comment"># Mensch setzt ein Secret</span></div>
+      <div><span class="prompt">$</span> <span class="cmd">sec set /openai/api-key sk-proj-xxx</span></div>
+      <div><span class="output">✓ Secret gespeichert</span></div>
+      <div> </div>
+      <div><span class="comment"># KI-Agent liest es aus (via Terminal-Tool — nie im Chat)</span></div>
+      <div><span class="prompt">$</span> <span class="cmd">sec get /openai/api-key</span></div>
+      <div><span class="output">sk-proj-xxx</span></div>
+      <div> </div>
+      <div><span class="comment"># Rotation = ein Befehl</span></div>
+      <div><span class="prompt">$</span> <span class="cmd">sec set /openai/api-key sk-proj-neu</span></div>
+      <div><span class="output">✓ Secret aktualisiert</span></div>
+      <div><span class="prompt">$</span> <span class="cmd">sec list</span></div>
+      <div><span class="output">/openai/api-key</span></div>
       <div><span class="output">/deepseek/api-key</span></div>
-      <div><span class="output">/github/token</span></div>
-      <div><span class="output">/openvpn/cert</span></div>
-      <div><span class="prompt">$</span> <span class="cmd">secret export</span></div>
-      <div><span class="output">✓ 42 Secrets exportiert</span></div>
-    </div>
-  </section>
-
-  <!-- ═══ ARCHITEKTUR ═══ -->
-  <section class="section" id="architektur">
-    <div class="label">Architektur</div>
-    <h2 class="h2">Sicher, schnell, simpel</h2>
-    <p class="p">
-      Zweiteilig: Hintergrund-Daemon für persistente Sessions, CLI für den täglichen Zugriff.
-      Kommunikation via Unix Socket (lokal) oder TCP (Netzwerk).
-    </p>
-
-    <div class="arch-grid">
-      <div class="arch-card">
-        <div class="arch-name">Daemon (secretd)</div>
-        <div class="arch-row">✅ Rust, Tokio async</div>
-        <div class="arch-row">✅ Unix Socket + TCP</div>
-        <div class="arch-row">✅ Auth-Token Auth</div>
-        <div class="arch-row">✅ Optional: TLS</div>
-      </div>
-      <div class="arch-card">
-        <div class="arch-name">CLI (secret)</div>
-        <div class="arch-row">✅ Autocomplete</div>
-        <div class="arch-row">✅ JSON Export</div>
-        <div class="arch-row">✅ .env Import</div>
-        <div class="arch-row">✅ Remote via --host</div>
-      </div>
-      <div class="arch-card">
-        <div class="arch-name">Vault</div>
-        <div class="arch-row">✅ SQLCipher</div>
-        <div class="arch-row">✅ AES-256-GCM</div>
-        <div class="arch-row">✅ macOS Keychain</div>
-        <div class="arch-row">✅ Keychain Timeout (3s)</div>
-      </div>
-      <div class="arch-card">
-        <div class="arch-name">SDK</div>
-        <div class="arch-row">✅ Python 3</div>
-        <div class="arch-row">✅ TCP-Transport</div>
-        <div class="arch-row">✅ Auth-Token</div>
-        <div class="arch-row">✅ Context Manager</div>
-      </div>
+      <div><span class="output">/stripe/secret</span></div>
     </div>
   </section>
 
   <!-- ═══ CTA ═══ -->
   <section class="cta-section">
-    <h2 class="cta-title">Bereit für deinen eigenen Vault?</h2>
-    <p class="cta-text">Secretariat läuft auf deiner Maschine. Deine Keys, deine Kontrolle.</p>
+    <h2 class="cta-title">Bereit für Mensch-KI-Secret-Management?</h2>
+    <p class="cta-text">Keine Cloud. Keine Prompts mit Schlüsseln. Ein Vault für dich und deine Agenten.</p>
     <a href="https://github.com/moinsen-dev/secretariat" class="btn-primary">📦 GitHub Release</a>
-    <p class="cta-hint">Neugierig auf die Zukunft? <a href="v2.html">V2 Vision ansehen →</a></p>
+    <p class="cta-hint">Rust-Quellcode offen auf <a href="https://github.com/moinsen-dev/secretariat">GitHub</a> — Contributions willkommen!</p>
   </section>
 
   <!-- ═══ FOOTER ═══ -->
@@ -411,7 +466,6 @@
       <nav class="footer-nav">
         <a href="impressum.html">Impressum</a>
         <a href="datenschutz.html">Datenschutz</a>
-        <a href="v2.html">V2 Vision</a>
         <a href="https://github.com/moinsen-dev/secretariat">GitHub</a>
       </nav>
       <div class="footer-copy">© 2026 Moinsen Development Hamburg</div>
