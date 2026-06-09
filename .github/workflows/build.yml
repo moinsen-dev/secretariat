@@ -46,11 +46,20 @@ jobs:
       - name: Build
         run: cargo build --release --target ${{ matrix.target }} --workspace
 
-      - name: Staging (pre-test — tests run natively and can invalidate cross-target builds)
+      - name: Staging
         run: |
           mkdir -p staging
-          cp target/${{ matrix.target }}/release/secretd staging/
-          cp target/${{ matrix.target }}/release/secret staging/
+          # Native builds (target == host) write to target/release/
+          # Cross-compiles write to target/<triple>/release/
+          if [ -d "target/${{ matrix.target }}/release" ]; then
+            BIN_DIR="target/${{ matrix.target }}/release"
+          else
+            BIN_DIR="target/release"
+          fi
+          echo "Binaries from: $BIN_DIR"
+          cp "$BIN_DIR/secretd" staging/
+          cp "$BIN_DIR/secret" staging/
+          ls -la staging/
 
       - name: Run tests
         run: cargo test --workspace
