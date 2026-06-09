@@ -9,6 +9,11 @@
 - **CI/CD:** Release workflow now attaches individual archives for Homebrew ingestion
 - **Infrastructure:** Homebrew formula added to `moinsen-dev/homebrew-tap` — `brew install moinsen-dev/tap/secretariat`
 
+### Infrastructure
+- **Website:** Moved from local Docker/Nginx (port 8082) to GitHub Pages — `secretariat.moinsen.dev` served from `moinsen-dev/secretariat/website/`
+- **Cleanup:** Removed `docker-compose.yml` — no more local server dependency
+- **CI:** Added `pages.yml` workflow for automatic website deployment on push to `main`
+
 ## v0.1.0 (2026-06-09) — Initial Release
 
 🚀 **First public release of Secretariat — Local-First Secrets Manager.**
