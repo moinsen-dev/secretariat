@@ -1,197 +1,190 @@
-# Secretariat
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://secretariat.moinsen.dev/og-image.png">
+  <img src="https://secretariat.moinsen.dev/og-image.png" alt="Secretariat — Local-First Secrets Manager" width="800">
+</picture>
 
-**Local-first secrets manager that eliminates .env files entirely.**
+# Secretariat — Local-First Secrets Manager
 
-One encrypted vault on your machine. All your API keys in one place. Every project just works.
+> **Stop copy-pasting API keys.** One encrypted vault on your machine. All your secrets in one place.
 
-## Overview
+[![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-blue)](LICENSE)
+[![macOS](https://img.shields.io/badge/platform-macOS-black?logo=apple)](https://secretariat.moinsen.dev)
+[![Rust](https://img.shields.io/badge/built%20with-Rust-orange?logo=rust)](https://www.rust-lang.org/)
+![Build](https://img.shields.io/badge/build-passing-brightgreen)
 
-Secretariat is a macOS-native secrets management solution designed for developers who work on multiple projects and are tired of managing dozens of scattered .env files.
+---
 
-**Tagline:** Stop copy-pasting API keys.
+## Why Secretariat?
 
-## Phase 1 Architecture
+```bash
+# Before: Where was that API key again?
+grep -r "sk-" ~/Documents/
+cat ~/Projects/*/.env 2>/dev/null
+# "I'll just regenerate it..." (famous last words)
 
-### Components
+# After:
+secret get /openai/api-key
+```
 
-1. **Daemon (secd)** - Rust background service
-   - Runs on macOS boot via launchd
-   - Encrypted SQLite database (SQLCipher)
-   - Unix socket IPC
-   - AES-256-GCM encryption
-   - Master key in macOS Keychain
+Every developer knows the pain: API keys in `.env` files. Tokens in terminal history. Certificates spread across three machines. Then the `.env` gets committed to GitHub by accident, and you're rotating keys at 2 AM.
 
-2. **CLI (sec)** - Rust command-line tool
-   - Full secret management (create, read, update, delete, rotate)
-   - Application permission management
-   - Import wizard for .env files
-   - Audit log viewer
-   - Human-readable and JSON output formats
+**Secretariat fixes this.** One command to store, one to retrieve. Every project, every machine, every time.
 
-3. **macOS Menu Bar App** - SwiftUI application
-   - Quick access to secrets
-   - Search and filter
-   - Copy to clipboard with auto-clear
-   - Drag & drop .env import
-   - Application permissions manager
-   - First-run onboarding
-
-4. **SDKs** - Client libraries for 4 languages
-   - **Dart SDK** - Flutter/Dart applications
-   - **Python SDK** - Sync and async APIs
-   - **Rust SDK** - Zero-cost abstractions
-   - **Node.js SDK** - TypeScript types included
+---
 
 ## Quick Start
 
-### Installation
-
 ```bash
-# Run setup script
-./init.sh
+# Install (macOS)
+brew tap moinsen-dev/tap
+brew install secd
+
+# Initialize your vault
+secretd init
+
+# Store your first secret
+secret set /github/token ghp_xxxxx
+
+# Retrieve it
+secret get /github/token
+
+# List all secrets
+secret list
+
+# Import from .env
+secret import ~/project/.env
+
+# Export for backup
+secret export > backup.json
 ```
 
-This will:
-- Check prerequisites (Rust, Xcode, Node.js, Python, Dart)
-- Create project structure
-- Set up Cargo workspace for Rust components
-- Configure SDK packages
+> **No running daemon?** `secret` auto-starts one via LaunchAgent. `secretd` stays in the background, zero-footprint.
 
-### Development
+---
 
-```bash
-# Build Rust components (daemon, CLI, SDK)
-cargo build
+## Features
 
-# Run daemon
-cargo run --bin secd
+### 🛡️ Encrypted Vault
+AES-256-GCM encryption, SQLCipher backend. Master key in macOS Keychain — never on disk.
 
-# Run CLI
-cargo run --bin sec -- --help
+### ⚡ CLI-First
+`secret set`, `secret get`, `secret list`, `secret import`, `secret export`. Tab-completion included.
 
-# View features to implement
-autocoder-db stats --project $(pwd)
-autocoder-db next --project $(pwd)
+### 🔗 Multi-Device
+TCP transport with auth-token security. Access your vault from your main Mac, dev server, or any machine on your network.
+
+### 🐍 Python SDK
+```python
+from secretariat import Vault
+
+vault = Vault()
+db_password = vault.get("/postgres/password")
 ```
 
-## Project Structure
+### 🦀 Rust Core
+Daemon + CLI in a single Rust binary. Fast, memory-safe, zero GC pauses.
 
-```
-secretariat/
-├── daemon/          # Rust daemon (secd)
-├── cli/             # Rust CLI (sec)
-├── app/             # SwiftUI Menu Bar App (Xcode project)
-├── sdk-dart/        # Dart SDK
-├── sdk-python/      # Python SDK
-├── sdk-rust/        # Rust SDK
-├── sdk-node/        # Node.js SDK
-└── docs/            # Documentation
-```
+### 🔁 LaunchAgent Auto-Start
+Daemon starts with your Mac, ready when you are. No manual setup.
 
-## Security Features
+---
 
-- **Encryption at Rest**: All secrets encrypted with AES-256-GCM
-- **Master Key Protection**: Key stored in macOS Keychain, never on disk
-- **Access Control**: Per-app, per-secret authorization
-- **Audit Trail**: Complete log of all secret access
-- **Touch ID Support**: Biometric authentication for vault unlock
-- **Auto-lock**: Configurable timeout and system sleep triggers
+## Pricing
 
-## Data Locations
+| Tier | Features | Price |
+|------|----------|-------|
+| **Free** 🆓 | Local vault, CLI, SDK, TCP multi-device, LaunchAgent | €0 |
+| **Pro** 🔐 | + Cloud Sync, Web UI, Auto-Backup, IDE Plugins | €4/mo |
+| **Team** 👥 | + Team Vaults, Audit Log, Granular Permissions, SSO | €12/user/mo |
+| **Enterprise** 🏢 | + Self-hosted server, SLA, Custom integrations | Custom |
 
-- **Database**: `~/Library/Application Support/Secretariat/vault.db`
-- **Socket**: `~/Library/Application Support/Secretariat/secretariat.sock`
-- **Logs**: `~/Library/Logs/Secretariat/`
-- **Preferences**: `~/Library/Preferences/dev.moinsen.secretariat.plist`
+> **Self-hosting is always free.** The BSL license allows unlimited self-hosted use of all features, including Team-tier. You only pay when you use our cloud services.
 
-## Features Database
-
-This project uses autocoder-db for feature tracking:
-
-```bash
-# View statistics
-autocoder-db stats --project $(pwd)
-
-# List all features
-autocoder-db list --project $(pwd)
-
-# Search features
-autocoder-db search --project $(pwd) <query>
-
-# View session logs
-autocoder-db log list --project $(pwd)
-
-# Get next features to implement
-autocoder-db next --project $(pwd)
-```
-
-## Development Status
-
-**Initialization Complete** ✓
-
-- [x] Project structure created
-- [x] Feature database populated (770+ features)
-- [x] Build configuration set up
-- [x] Documentation created
-
-**Next Steps:**
-
-1. Implement daemon core (storage, crypto, IPC server)
-2. Implement CLI commands
-3. Create macOS menu bar app in Xcode
-4. Develop SDK client libraries
-5. Create import wizard for .env migration
-
-## Success Criteria (Phase 1)
-
-### Functional
-- Daemon runs stably for 24+ hours
-- All CLI commands work correctly
-- Menu bar app is responsive
-- SDKs connect and retrieve secrets
-- Import wizard successfully migrates .env files
-
-### Performance
-- Secret retrieval < 10ms
-- Daemon memory < 50MB
-- App launch < 500ms
-- CLI response < 100ms
-
-### Security
-- Secrets never written in plaintext to disk
-- Master key protected by Keychain
-- Audit log captures all access
-- Revocation is immediate
-
-### User Experience
-- Onboarding completes in < 5 minutes
-- Import wizard handles 90% of .env files
-- Search finds secrets instantly
-- Copy-to-clipboard works reliably
-
-## Technology Stack
-
-- **Platform**: macOS only (Phase 1)
-- **Daemon & CLI**: Rust
-- **Menu Bar App**: Swift/SwiftUI
-- **Database**: SQLite with SQLCipher encryption
-- **IPC**: Unix domain sockets
-- **Encryption**: AES-256-GCM
-- **Key Storage**: macOS Keychain
-
-## Out of Scope (Phase 1)
-
-- Cloud sync / team features
-- AI agent access control
-- MCP server integration
-- Windows/Linux support
-- Mobile support
-- Browser extension
+---
 
 ## License
 
-TBD
+**BSL 1.1** (Business Source License) — [view full terms](LICENSE)
 
-## Contact
+- ✅ Code is **publicly visible** — auditable, verifiable
+- ✅ **Self-host for free** — unlimited users, unlimited secrets
+- ✅ **Modify and redistribute** — fork, patch, improve
+- ❌ **Don't resell as a competing cloud service** — that's what the BSL prevents
+- 🔄 **Becomes Apache 2.0 on 2029-01-01** — fully open source after 3 years
 
-TBD
+We chose BSL over MIT because: if we gave everything away MIT-style, someone could clone Secretariat Cloud and sell it for €2. With BSL, the code is open and auditable, but the business model is protected. **Fair for everyone.**
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│  CLI (secret)         │  SDKs (Python, Dart,  │
+│                       │  Rust, Node.js)       │
+├─────────────────────────────────────────────┤
+│              Unix Socket / TCP               │
+├─────────────────────────────────────────────┤
+│  Daemon (secretd)     │  Auth-Token Auth      │
+├─────────────────────────────────────────────┤
+│  SQLCipher Vault      │  AES-256-GCM          │
+├─────────────────────────────────────────────┤
+│  macOS Keychain       │  File System          │
+└─────────────────────────────────────────────┘
+```
+
+### Components
+
+| Component | Language | Location |
+|-----------|----------|----------|
+| Daemon (`secretd`) | Rust | `daemon/` |
+| CLI (`secret`) | Rust | `cli/` |
+| macOS Menu Bar App | SwiftUI | `app/` |
+| Python SDK | Python | `sdk-python/` |
+| Rust SDK | Rust | `sdk-rust/` |
+| Dart SDK | Dart | `sdk-dart/` |
+| Node.js SDK | TypeScript | `sdk-node/` |
+| Website | HTML/CSS | `website/` |
+
+---
+
+## Development
+
+```bash
+# Clone
+git clone https://github.com/moinsen-dev/secretariat.git
+cd secretariat
+
+# Build
+cargo build --release
+
+# Run daemon (development)
+cargo run --bin secretd -- --tcp-port 7357 --auth-token "dev-token"
+
+# Run CLI
+cargo run --bin secret -- status --host 127.0.0.1 --auth-token "dev-token"
+```
+
+### Prerequisites
+- Rust toolchain (1.75+)
+- Xcode Command Line Tools (for macOS Keychain)
+- Optional: Flutter/Python/Node for SDK development
+
+---
+
+## Roadmap
+
+See [secretariat.moinsen.dev/v2.html](https://secretariat.moinsen.dev/v2.html) for the full V2 vision.
+
+**V1** ✅ — Local vault, CLI, SDK, TCP multi-device, LaunchAgent
+**V2** 🔜 — Cloud sync, Web UI, team sharing, IDE plugins, audit log
+
+---
+
+## Community
+
+- **Website:** [secretariat.moinsen.dev](https://secretariat.moinsen.dev)
+- **GitHub Issues:** Bug reports, feature requests
+- **Email:** [uli@moinsen.dev](mailto:uli@moinsen.dev)
+
+Built with ❤️ by [Moinsen Development Hamburg](https://moinsen.dev)

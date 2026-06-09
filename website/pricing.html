@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Pricing — Secretariat" />
+  <meta name="robots" content="index, follow" />
+  <title>Pricing — Secretariat</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0a0e14; --surface: #111820; --border: #1e2a36; --text: #c5cdd9;
+      --muted: #7a889a; --accent: #34d399; --blue: #60a5fa; --purple: #a78bfa;
+      --gradient: linear-gradient(135deg, #34d399 0%, #60a5fa 60%, #a78bfa 100%);
+      --glow: rgba(52,211,153,0.08);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6; color: var(--text); background: var(--bg);
+    }
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .header {
+      border-bottom: 1px solid var(--border); background: rgba(10,14,20,0.9);
+      backdrop-filter: blur(8px); position: sticky; top: 0; z-index: 100;
+    }
+    .header-inner { max-width: 1100px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+    .logo { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; }
+    .logo-icon { font-size: 24px; }
+    .logo-text { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .nav { display: flex; align-items: center; gap: 6px; }
+    .nav a { color: var(--muted); text-decoration: none; font-size: 14px; padding: 8px 14px; border-radius: 8px; transition: color 0.15s, background 0.15s; }
+    .nav a:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .nav-cta { display: inline-flex; align-items: center; gap: 6px; padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; background: var(--accent); color: #0a0e14; text-decoration: none; transition: opacity 0.15s; }
+    .nav-cta:hover { opacity: 0.9; text-decoration: none; }
+    .hero { text-align: center; padding: 80px 24px 60px; border-bottom: 1px solid var(--border); }
+    .hero h1 { font-size: clamp(32px, 5vw, 48px); font-weight: 800; margin-bottom: 16px; }
+    .hero p { font-size: 17px; color: var(--muted); max-width: 520px; margin: 0 auto; }
+    .hero-gradient { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .pricing { padding: 80px 24px; max-width: 1100px; margin: 0 auto; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; margin-top: 40px; }
+    .plan { padding: 32px 28px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); display: flex; flex-direction: column; }
+    .plan.featured { border-color: var(--accent); background: linear-gradient(135deg, rgba(52,211,153,0.05), rgba(96,165,250,0.05)); }
+    .plan-name { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .plan-sub { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+    .plan-price { font-size: 32px; font-weight: 800; margin-bottom: 4px; }
+    .plan-price span { font-size: 16px; font-weight: 400; color: var(--muted); }
+    .plan-desc { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+    .plan-features { list-style: none; margin-bottom: 24px; flex: 1; }
+    .plan-features li { font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--border); color: var(--muted); }
+    .plan-features li:last-child { border: none; }
+    .plan-cta { display: block; text-align: center; padding: 12px; border-radius: 10px; font-size: 15px; font-weight: 600; background: var(--gradient); color: #0a0e14; text-decoration: none; transition: opacity 0.15s; }
+    .plan-cta:hover { opacity: 0.9; text-decoration: none; }
+    .plan-cta-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+    .faq { padding: 60px 24px 80px; max-width: 700px; margin: 0 auto; }
+    .faq h2 { font-size: 24px; font-weight: 700; margin-bottom: 32px; text-align: center; }
+    .faq-item { margin-bottom: 24px; }
+    .faq-q { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .faq-a { font-size: 14px; color: var(--muted); line-height: 1.7; }
+    .faq-a code { background: var(--surface); padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+    .footer { border-top: 1px solid var(--border); padding: 32px 24px; text-align: center; font-size: 13px; color: var(--muted); }
+    .footer a { color: var(--muted); margin: 0 8px; }
+    .footer a:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" class="logo"><span class="logo-icon">🔐</span><span class="logo-text">Secretariat</span></a>
+      <nav class="nav">
+        <a href="index.html">Features</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="v2.html">V2 Vision</a>
+        <a href="https://github.com/moinsen-dev/secretariat" class="nav-cta">GitHub →</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1>Fair Pricing. <span class="hero-gradient">No Lock-In.</span></h1>
+    <p>Self-hosting is always free — including all Team features. You only pay when you use our cloud services.</p>
+  </section>
+
+  <section class="pricing">
+    <div class="pricing-grid">
+      <div class="plan">
+        <div class="plan-name">Free</div>
+        <div class="plan-sub">Für Solo-Entwickler</div>
+        <div class="plan-price">€0 <span>für immer</span></div>
+        <div class="plan-desc">Lokaler Vault, kein Cloud-Zugriff nötig</div>
+        <ul class="plan-features">
+          <li>✅ Lokaler Vault (SQLCipher)</li>
+          <li>✅ CLI + Daemon (secretd)</li>
+          <li>✅ Python SDK</li>
+          <li>✅ TCP Multi-Device</li>
+          <li>✅ macOS Keychain</li>
+          <li>✅ LaunchAgent Autostart</li>
+          <li>✅ Unbegrenzte Secrets</li>
+        </ul>
+        <a href="https://github.com/moinsen-dev/secretariat" class="plan-cta plan-cta-outline">GitHub →</a>
+      </div>
+
+      <div class="plan featured">
+        <div class="plan-name">Pro</div>
+        <div class="plan-sub">⭐ Empfohlen</div>
+        <div class="plan-price">€4 <span>/ Monat</span></div>
+        <div class="plan-desc">Cloud-Sync für deine Maschinen</div>
+        <ul class="plan-features">
+          <li>✅ Alles aus Free</li>
+          <li>✅ Cloud-Sync (E2E-verschlüsselt)</li>
+          <li>✅ Web UI</li>
+          <li>✅ Auto-Backup</li>
+          <li>✅ IDE-Plugins (VS Code, JetBrains)</li>
+          <li>✅ Priorisierter Support</li>
+        </ul>
+        <a href="https://secretariat.moinsen.dev/v2.html" class="plan-cta">Warteliste →</a>
+      </div>
+
+      <div class="plan">
+        <div class="plan-name">Team</div>
+        <div class="plan-sub">Für DevOps-Teams</div>
+        <div class="plan-price">€12 <span>/ User / Monat</span></div>
+        <div class="plan-desc">Geteilte Vaults mit Audit-Log</div>
+        <ul class="plan-features">
+          <li>✅ Alles aus Pro</li>
+          <li>✅ Team-Vaults & Sharing</li>
+          <li>✅ Audit-Log & Rollback</li>
+          <li>✅ Granulare Zugriffsrechte</li>
+          <li>✅ SSO / SAML</li>
+          <li>✅ Priorisierter Support</li>
+        </ul>
+        <a href="https://secretariat.moinsen.dev/v2.html" class="plan-cta plan-cta-outline">Warteliste →</a>
+      </div>
+
+      <div class="plan">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-sub">Für Organisationen</div>
+        <div class="plan-price">Custom</div>
+        <div class="plan-desc">Self-hosted + SLA</div>
+        <ul class="plan-features">
+          <li>✅ Alles aus Team</li>
+          <li>✅ Self-Hosted Server</li>
+          <li>✅ SLA & Support-Zeiten</li>
+          <li>✅ On-Premises Deployment</li>
+          <li>✅ Individuelle Integrationen</li>
+          <li>✅ Dedizierter Ansprechpartner</li>
+        </ul>
+        <a href="mailto:uli@moinsen.dev" class="plan-cta plan-cta-outline">Kontakt →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="faq">
+    <h2>Häufige Fragen</h2>
+
+    <div class="faq-item">
+      <div class="faq-q">💡 Kann ich Secretariat komplett kostenlos nutzen?</div>
+      <div class="faq-a">Ja. Der lokale Vault, CLI, SDKs, TCP Multi-Device — alles kostenlos, für immer. Selbst die Team-Features sind kostenlos, wenn du sie <strong>self-hosted</strong> betreibst. Du zahlst nur für Cloud-Dienste (Sync, Web UI).</div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">🔒 Ist der Quellcode einsehbar?</div>
+      <div class="faq-a">Ja — BSL-Lizenz. Du kannst den Code auf <a href="https://github.com/moinsen-dev/secretariat">GitHub</a> einsehen, auditieren, forken. Einzige Einschränkung: Du darfst keinen Konkurrenz-Cloud-Dienst daraus bauen. <strong>Self-hosting ist immer erlaubt.</strong></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">☁️ Wo werden meine Secrets bei Cloud-Sync gespeichert?</div>
+      <div class="faq-a">Ende-zu-Ende-verschlüsselt. Der Server sieht nur verschlüsselte Blobs. Der Entschlüsselungs-Key bleibt auf deinen Geräten — wir können deine Secrets nicht lesen. <a href="datenschutz.html">Mehr im Datenschutz.</a></div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">🔄 Wann wird der Code Open Source?</div>
+      <div class="faq-a">Am 1. Januar 2029 wird die BSL-Lizenz automatisch zu Apache 2.0. Dann ist Secretariat vollständig Open Source — für immer. Bis dahin: Code ist öffentlich, Lizenz schützt das Geschäftsmodell.</div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <nav>
+      <a href="impressum.html">Impressum</a>
+      <span>·</span>
+      <a href="datenschutz.html">Datenschutz</a>
+      <span>·</span>
+      <a href="v2.html">V2 Vision</a>
+      <span>·</span>
+      <a href="https://github.com/moinsen-dev/secretariat">GitHub</a>
+    </nav>
+    <p style="margin-top: 8px;">© 2026 Moinsen Development Hamburg</p>
+  </footer>
+</body>
+</html>

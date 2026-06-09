@@ -7,7 +7,7 @@ resolver = "2"
 version = "0.1.0"
 edition = "2021"
 authors = ["Secretariat Team"]
-license = "MIT"
+license = "BSL-1.1"
 
 [workspace.dependencies]
 tokio = { version = "1.35", features = ["full"] }

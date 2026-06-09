@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secretariat — Dein persönlicher Secret-Manager</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --bg: #0a0e14;
+      --surface: #111820;
+      --border: #1e2a36;
+      --text: #c5cdd9;
+      --muted: #7a889a;
+      --accent: #34d399;
+      --accent-dim: rgba(52,211,153,0.1);
+      --accent-glow: rgba(52,211,153,0.08);
+      --blue: #60a5fa;
+      --gradient: linear-gradient(135deg, #34d399 0%, #60a5fa 60%, #a78bfa 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+    }
+    body { min-height: 100vh; display: flex; flex-direction: column; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ─── Header ─── */
+    .header {
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,14,20,0.9);
+      backdrop-filter: blur(8px);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .header-inner {
+      max-width: 1100px; margin: 0 auto; padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between; height: 64px;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; color: inherit; text-decoration: none; }
+    .logo-icon { font-size: 24px; }
+    .logo-text { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; }
+    .logo-sub { font-size: 12px; color: var(--muted); font-weight: 400; }
+    .nav { display: flex; align-items: center; gap: 6px; }
+    .nav a {
+      color: var(--muted); text-decoration: none; font-size: 14px;
+      padding: 8px 14px; border-radius: 8px; transition: color 0.15s, background 0.15s;
+    }
+    .nav a:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+    .nav-cta {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 20px; border-radius: 8px; font-size: 14px; font-weight: 600;
+      background: var(--accent); color: #0a0e14; text-decoration: none; transition: opacity 0.15s;
+    }
+    .nav-cta:hover { opacity: 0.9; text-decoration: none; }
+
+    /* ─── Hero ─── */
+    .hero {
+      position: relative; text-align: center;
+      padding: 120px 24px 100px;
+      background: radial-gradient(ellipse 80% 60% at 50% 20%, var(--accent-glow) 0%, transparent 60%);
+      border-bottom: 1px solid var(--border);
+      overflow: hidden;
+    }
+    .hero-dots {
+      position: absolute; inset: 0; pointer-events: none;
+      background-image: radial-gradient(circle, rgba(52,211,153,0.05) 1px, transparent 1px);
+      background-size: 32px 32px;
+      mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, black 30%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse 60% 50% at 50% 40%, black 30%, transparent 70%);
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 680px; margin: 0 auto; }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; border-radius: 20px;
+      background: var(--accent-dim); border: 1px solid rgba(52,211,153,0.2);
+      font-size: 13px; font-weight: 500; color: var(--accent); margin-bottom: 32px;
+    }
+    .hero-title {
+      font-size: clamp(36px, 6vw, 60px); font-weight: 800; line-height: 1.1;
+      letter-spacing: -0.02em; margin-bottom: 24px;
+    }
+    .hero-gradient {
+      background: var(--gradient);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 19px); line-height: 1.7;
+      color: var(--muted); max-width: 520px; margin: 0 auto 40px;
+    }
+    .hero-actions { display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 16px 36px; border-radius: 12px; border: none; cursor: pointer;
+      font-size: 17px; font-weight: 700;
+      background: var(--gradient); color: #0a0e14; text-decoration: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+      box-shadow: 0 4px 24px rgba(52,211,153,0.25);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(52,211,153,0.4); text-decoration: none; }
+    .btn-secondary {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: 14px 32px; border-radius: 12px;
+      font-size: 15px; font-weight: 600; color: var(--text);
+      background: var(--surface); border: 1px solid var(--border); text-decoration: none;
+      transition: border-color 0.15s;
+    }
+    .btn-secondary:hover { border-color: var(--accent); text-decoration: none; }
+
+    /* ─── Sections ─── */
+    .section { padding: 100px 24px; max-width: 1100px; margin: 0 auto; }
+    .label {
+      font-size: 13px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--accent); margin-bottom: 16px;
+    }
+    .h2 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; line-height: 1.2; margin-bottom: 20px; letter-spacing: -0.02em; }
+    .p { font-size: 17px; line-height: 1.7; color: var(--muted); max-width: 640px; margin-bottom: 48px; }
+
+    /* ─── Terminal Block ─── */
+    .terminal {
+      background: #0d1117; border: 1px solid var(--border); border-radius: 12px;
+      padding: 20px 24px; margin: 32px 0; overflow-x: auto;
+      font-family: 'SF Mono', 'Menlo', 'Monaco', monospace; font-size: 13px; line-height: 1.8;
+    }
+    .terminal .prompt { color: var(--accent); }
+    .terminal .cmd { color: var(--text); }
+    .terminal .comment { color: var(--muted); font-style: italic; }
+    .terminal .output { color: #7a889a; }
+
+    /* ─── Feature Grid ─── */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-top: 48px; }
+    .card {
+      padding: 28px 24px; border-radius: 14px; background: var(--surface);
+      border: 1px solid var(--border); transition: border-color 0.2s, transform 0.15s;
+    }
+    .card:hover { border-color: rgba(52,211,153,0.3); transform: translateY(-2px); }
+    .card-icon {
+      width: 44px; height: 44px; border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; margin-bottom: 16px; background: var(--accent-dim);
+    }
+    .card-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .card-desc { font-size: 14px; line-height: 1.6; color: var(--muted); }
+
+    /* ─── Stats ─── */
+    .stats {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 32px;
+      padding: 48px 32px; border-radius: 14px; background: var(--surface);
+      border: 1px solid var(--border); text-align: center; margin-top: 48px;
+    }
+    .stat-num { font-size: clamp(28px, 4vw, 40px); font-weight: 800; color: var(--accent); line-height: 1; margin-bottom: 8px; }
+    .stat-lbl { font-size: 14px; color: var(--muted); }
+
+    /* ─── Steps ─── */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-top: 48px; }
+    .step { text-align: center; padding: 32px 20px; border-radius: 14px; background: var(--surface); border: 1px solid var(--border); }
+    .step-num {
+      width: 48px; height: 48px; border-radius: 24px; background: var(--gradient); color: #0a0e14;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 800; margin: 0 auto 16px;
+    }
+    .step-title { font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+    .step-desc { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+    /* ─── Architektur ─── */
+    .arch-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px;
+      margin-top: 48px;
+    }
+    .arch-card {
+      padding: 24px; border-radius: 12px; background: var(--surface); border: 1px solid var(--border); text-align: center;
+    }
+    .arch-name { font-size: 15px; font-weight: 700; color: var(--accent); margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+    .arch-row { font-size: 13px; padding: 5px 0; color: var(--muted); }
+
+    /* ─── CTA ─── */
+    .cta-section {
+      padding: 100px 24px; text-align: center;
+      background: radial-gradient(ellipse 60% 60% at 50% 80%, var(--accent-glow) 0%, transparent 60%);
+    }
+    .cta-title { font-size: clamp(28px, 4vw, 40px); font-weight: 800; margin-bottom: 16px; }
+    .cta-text { font-size: 17px; color: var(--muted); max-width: 480px; margin: 0 auto 40px; }
+    .cta-hint { margin-top: 24px; font-size: 14px; color: var(--muted); }
+    .cta-hint a { color: var(--accent); font-weight: 600; }
+
+    /* ─── Footer ─── */
+    .footer { border-top: 1px solid var(--border); padding: 40px 24px; font-size: 13px; }
+    .footer-inner { max-width: 1100px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; }
+    .footer-brand { display: flex; align-items: center; gap: 8px; }
+    .footer-nav { display: flex; gap: 16px; }
+    .footer-nav a { color: var(--muted); text-decoration: none; }
+    .footer-nav a:hover { color: var(--text); }
+    .footer-copy { width: 100%; text-align: center; color: var(--muted); margin-top: 8px; }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 600px) {
+      .nav a:not(.nav-cta) { display: none; }
+      .hero { padding: 80px 20px 60px; }
+      .section { padding: 60px 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══ HEADER ═══ -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" class="logo">
+        <span class="logo-icon">🔐</span>
+        <span class="logo-text">Secretariat</span>
+        <span class="logo-sub">v0.1.0</span>
+      </a>
+      <nav class="nav">
+        <a href="#features">Features</a>
+        <a href="pricing.html">Pricing</a>
+        <a href="#architektur">Architektur</a>
+        <a href="#install">Install</a>
+        <a href="v2.html">V2 Vision</a>
+        <a href="https://github.com/moinsen-dev/secretariat" class="nav-cta" target="_blank">GitHub →</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ═══ HERO ═══ -->
+  <section class="hero">
+    <div class="hero-dots"></div>
+    <div class="hero-content">
+      <div class="hero-badge"><span>🔐</span> Secret Management für Developer</div>
+      <h1 class="hero-title">
+        Deine Keys. <br /><span class="hero-gradient">Dein Vault.</span>
+      </h1>
+      <p class="hero-sub">
+        Secretariat ist ein lokaler, hochsicherer Secret-Manager für Developer.
+        API-Keys, Tokens, Zertifikate – verschlüsselt auf deiner Maschine,
+        erreichbar via CLI, Python SDK oder TCP-Netzwerk.
+      </p>
+      <div class="hero-actions">
+        <a href="#install" class="btn-primary">⚡ Jetzt installieren</a>
+        <a href="https://github.com/moinsen-dev/secretariat" class="btn-secondary">GitHub ansehen →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PROBLEM ═══ -->
+  <section class="section">
+    <div class="label">Das Problem</div>
+    <h2 class="h2">Deine Secrets liegen überall verstreut</h2>
+    <p class="p">
+      API-Keys in <code>.env</code>-Dateien. Tokens im Terminal-History. 
+      Zertifikate auf drei verschiedenen Rechnern. Und beim nächsten 
+      Dev-Setup suchst du wieder alles zusammen.
+    </p>
+    <div class="stats">
+      <div>
+        <div class="stat-num">🔐</div>
+        <div class="stat-lbl">AES-256-GCM Verschlüsselung</div>
+      </div>
+      <div>
+        <div class="stat-num">⚡</div>
+        <div class="stat-lbl">&lt;5ms Lesezeit</div>
+      </div>
+      <div>
+        <div class="stat-num">🐍</div>
+        <div class="stat-lbl">Python SDK</div>
+      </div>
+      <div>
+        <div class="stat-num">🔗</div>
+        <div class="stat-lbl">TCP Multi-Device</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FEATURES ═══ -->
+  <section class="section" id="features">
+    <div class="label">Features — V1</div>
+    <h2 class="h2">Was Secretariat heute kann</h2>
+    <p class="p">
+      Ein schlanker, schneller Secret-Manager. Keine Cloud-Abhängigkeit.
+      Keine Datenbank-Setups. Einfach <code>secret set</code> und los.
+    </p>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-icon">⚡</div>
+        <div class="card-title">CLI-First</div>
+        <div class="card-desc"><code>secret set/openvpn/key</code>, <code>secret get</code>, <code>secret list</code> — alles aus dem Terminal. Autocomplete inklusive.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🛡️</div>
+        <div class="card-title">AES-256-GCM Vault</div>
+        <div class="card-desc">SQLCipher-basierter Vault. Master-Key in der macOS Keychain (mit 5s Timeout für Headless-Betrieb).</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🐍</div>
+        <div class="card-title">Python SDK</div>
+        <div class="card-desc"><code>from secretariat import Vault</code> — deine Secrets direkt aus Python-Scripts, ohne Subprozesse.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔗</div>
+        <div class="card-title">TCP Multi-Device</div>
+        <div class="card-desc">Vault via TCP von anderen Rechnern im Netzwerk abfragen. Auth-Token-geschützt, TLS-optional.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🦀</div>
+        <div class="card-title">Rust-Kern</div>
+        <div class="card-desc">Geschrieben in Rust — schnell, speichersicher, kein GC-Pausen. Daemon + CLI in einer Binary.</div>
+      </div>
+      <div class="card">
+        <div class="card-icon">🔁</div>
+        <div class="card-title">LaunchAgent Autostart</div>
+        <div class="card-desc">Daemon startet mit dem Mac. Via LaunchAgent, kein manuelles Starten nötig. Immer bereit.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ QUICK START ═══ -->
+  <section class="section" id="install">
+    <div class="label">Quick Start</div>
+    <h2 class="h2">In 3 Schritten zum eigenen Vault</h2>
+    <p class="p">Rust installiert? Dann los:</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-title">Installieren</div>
+        <div class="step-desc">Binary aus GitHub Release laden oder <code>cargo build --release</code></div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-title">Vault initialisieren</div>
+        <div class="step-desc"><code>secret init</code> — legt verschlüsselten Vault an. Key sichert macOS Keychain.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-title">Secrets verwalten</div>
+        <div class="step-desc"><code>secret set /github/token sk-...</code> — fertig. <code>secret get /github/token</code> zum Lesen.</div>
+      </div>
+    </div>
+
+    <div class="terminal">
+      <div><span class="prompt">$</span> <span class="cmd">secret set /deepseek/api-key sk-abc123...</span></div>
+      <div><span class="output">✓ Schlüssel gespeichert</span></div>
+      <div><span class="prompt">$</span> <span class="cmd">secret get /deepseek/api-key</span></div>
+      <div><span class="output">sk-abc123...</span></div>
+      <div><span class="prompt">$</span> <span class="cmd">secret list</span></div>
+      <div><span class="output">/deepseek/api-key</span></div>
+      <div><span class="output">/github/token</span></div>
+      <div><span class="output">/openvpn/cert</span></div>
+      <div><span class="prompt">$</span> <span class="cmd">secret export</span></div>
+      <div><span class="output">✓ 42 Secrets exportiert</span></div>
+    </div>
+  </section>
+
+  <!-- ═══ ARCHITEKTUR ═══ -->
+  <section class="section" id="architektur">
+    <div class="label">Architektur</div>
+    <h2 class="h2">Sicher, schnell, simpel</h2>
+    <p class="p">
+      Zweiteilig: Hintergrund-Daemon für persistente Sessions, CLI für den täglichen Zugriff.
+      Kommunikation via Unix Socket (lokal) oder TCP (Netzwerk).
+    </p>
+
+    <div class="arch-grid">
+      <div class="arch-card">
+        <div class="arch-name">Daemon (secretd)</div>
+        <div class="arch-row">✅ Rust, Tokio async</div>
+        <div class="arch-row">✅ Unix Socket + TCP</div>
+        <div class="arch-row">✅ Auth-Token Auth</div>
+        <div class="arch-row">✅ Optional: TLS</div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-name">CLI (secret)</div>
+        <div class="arch-row">✅ Autocomplete</div>
+        <div class="arch-row">✅ JSON Export</div>
+        <div class="arch-row">✅ .env Import</div>
+        <div class="arch-row">✅ Remote via --host</div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-name">Vault</div>
+        <div class="arch-row">✅ SQLCipher</div>
+        <div class="arch-row">✅ AES-256-GCM</div>
+        <div class="arch-row">✅ macOS Keychain</div>
+        <div class="arch-row">✅ Keychain Timeout (3s)</div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-name">SDK</div>
+        <div class="arch-row">✅ Python 3</div>
+        <div class="arch-row">✅ TCP-Transport</div>
+        <div class="arch-row">✅ Auth-Token</div>
+        <div class="arch-row">✅ Context Manager</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CTA ═══ -->
+  <section class="cta-section">
+    <h2 class="cta-title">Bereit für deinen eigenen Vault?</h2>
+    <p class="cta-text">Secretariat läuft auf deiner Maschine. Deine Keys, deine Kontrolle.</p>
+    <a href="https://github.com/moinsen-dev/secretariat" class="btn-primary">📦 GitHub Release</a>
+    <p class="cta-hint">Neugierig auf die Zukunft? <a href="v2.html">V2 Vision ansehen →</a></p>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span>🔐 </span><span style="font-weight:700;">Secretariat</span>
+        <span style="color:var(--muted);">von Moinsen Development Hamburg</span>
+      </div>
+      <nav class="footer-nav">
+        <a href="impressum.html">Impressum</a>
+        <a href="datenschutz.html">Datenschutz</a>
+        <a href="v2.html">V2 Vision</a>
+        <a href="https://github.com/moinsen-dev/secretariat">GitHub</a>
+      </nav>
+      <div class="footer-copy">© 2026 Moinsen Development Hamburg</div>
+    </div>
+  </footer>
+
+</body>
+</html>
