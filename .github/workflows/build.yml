@@ -14,7 +14,16 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest]
+        include:
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact: darwin-arm64
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact: darwin-x86_64
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            artifact: linux-x86_64
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -23,7 +32,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.os == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || 'x86_64-unknown-linux-gnu' }}
+          targets: ${{ matrix.target }}
 
       - name: Cache cargo
         uses: actions/cache@v4
@@ -32,21 +41,35 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build (all targets)
-        run: cargo build --release --workspace
+      - name: Build
+        run: cargo build --release --target ${{ matrix.target }} --workspace
 
       - name: Run tests
         run: cargo test --workspace
 
-      - name: Upload binaries
+      - name: Staging
+        run: |
+          mkdir -p staging
+          cp target/${{ matrix.target }}/release/secretd staging/
+          cp target/${{ matrix.target }}/release/secret staging/
+
+      - name: Create archive
+        run: |
+          cd staging && tar czf ../secretariat-${{ matrix.artifact }}.tar.gz .
+
+      - name: Generate SHA256
+        run: |
+          sha256sum secretariat-${{ matrix.artifact }}.tar.gz | tee secretariat-${{ matrix.artifact }}.sha256
+
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: secretariat-${{ matrix.os }}
+          name: secretariat-${{ matrix.artifact }}
           path: |
-            target/release/secretd
-            target/release/secret
+            secretariat-${{ matrix.artifact }}.tar.gz
+            secretariat-${{ matrix.artifact }}.sha256
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -61,21 +84,21 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
 
-      - name: Create release archive
+      - name: Prepare release assets
         run: |
-          mkdir -p release
-          # macOS ARM
-          cp secretariat-macos-latest/secretd release/secretd-darwin-arm64
-          cp secretariat-macos-latest/secret release/secret-darwin-arm64
-          # Linux x64
-          cp secretariat-ubuntu-latest/secretd release/secretd-linux-x86_64
-          cp secretariat-ubuntu-latest/secret release/secret-linux-x86_64
-          # Archive
-          cd release && tar czf ../secretariat-${{ github.ref_name }}.tar.gz .
+          echo "## SHA256 Checksums" > sha256.txt
+          for dir in secretariat-*; do
+            arch="${dir#secretariat-}"
+            cp "$dir/secretariat-${arch}.tar.gz" .
+            cat "$dir/secretariat-${arch}.sha256" >> sha256.txt
+          done
+          cat sha256.txt
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          files: secretariat-*.tar.gz
+          files: |
+            secretariat-*.tar.gz
+            sha256.txt
           body_path: CHANGELOG.md
           draft: true
