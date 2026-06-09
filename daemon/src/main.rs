@@ -250,25 +250,37 @@ impl Daemon {
         info!("Daemon is ready");
         info!("Database: {}", self.config.db_path.display());
 
-        // F061: Retrieve master key from keychain
-        // The vault starts in "locked" state - users must unlock with their master password
-        // The master key in keychain is only used if vault was previously unlocked and system
-        // keychain has the key cached
-        let master_key = match keychain::retrieve_master_key() {
-            Ok(key) => {
+        // Start IPC server FIRST — before keychain access (which may hang
+        // on headless systems with no GUI / Touch ID prompt).
+        let listener = server::start_server()
+            .await
+            .context("Failed to start IPC server")?;
+
+        // F061: Retrieve master key from keychain (with timeout for headless systems)
+        let (master_key, vault_starts_locked) = match tokio::time::timeout(
+            std::time::Duration::from_secs(3),
+            tokio::task::spawn_blocking(|| keychain::retrieve_master_key()),
+        )
+        .await
+        {
+            Ok(Ok(Ok(key))) => {
                 info!("Master key retrieved from keychain - vault will start unlocked");
-                Some(key)
+                (Some(key), false)
             }
-            Err(e) => {
-                // No keychain key means vault is locked - this is the normal secure state
-                // User must unlock with their master password
+            Ok(Ok(Err(e))) => {
                 info!("No master key in keychain ({}), vault will start locked", e);
-                None
+                (None, true)
+            }
+            Ok(Err(_)) => {
+                info!("Keychain task panicked, vault will start locked");
+                (None, true)
+            }
+            Err(_) => {
+                info!("Keychain access timed out (headless system?), vault will start locked");
+                (None, true)
             }
         };
 
-        // Determine initial vault state
-        let vault_starts_locked = master_key.is_none();
         if vault_starts_locked {
             info!("Vault is locked - unlock with 'sec unlock' to access secrets");
         }
@@ -282,11 +294,6 @@ impl Daemon {
             initial_key,
             vault_starts_locked,
         );
-
-        // Start IPC server
-        let listener = server::start_server()
-            .await
-            .context("Failed to start IPC server")?;
 
         // Get socket path for cleanup during shutdown
         let socket_path = server::get_socket_path()

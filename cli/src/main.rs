@@ -278,6 +278,11 @@ struct UnlockCommand {
     /// Use password instead of Touch ID
     #[arg(long)]
     password: bool,
+
+    /// Provide password directly (for non-interactive use).
+    /// Falls back to $SECRETARIAT_INIT_PASSWORD env var.
+    #[arg(long)]
+    password_value: Option<String>,
 }
 
 /// Lock vault
@@ -466,6 +471,7 @@ async fn handle_status(client: DaemonClient, cmd: StatusCommand) -> Result<()> {
 async fn handle_unlock(client: DaemonClient, cmd: UnlockCommand) -> Result<()> {
     let cmd_args = commands::unlock::UnlockCommand {
         password: cmd.password,
+        password_value: cmd.password_value.or_else(|| std::env::var("SECRETARIAT_INIT_PASSWORD").ok()),
     };
     commands::handle_unlock(client, cmd_args).await
 }

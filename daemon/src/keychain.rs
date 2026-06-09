@@ -5,6 +5,37 @@
 //! security-framework. On other platforms, provides fallback mechanisms.
 
 use anyhow::Result;
+use std::sync::mpsc;
+use std::time::Duration;
+
+/// Keychain operation timeout (3 seconds).
+/// On headless macOS (no GUI / Touch ID) the Security Framework blocks
+/// indefinitely. This timeout ensures the daemon doesn't hang.
+const KEYCHAIN_TIMEOUT: Duration = Duration::from_secs(3);
+
+/// Run a keychain operation on a dedicated thread with a timeout.
+/// Falls back to Ok(None) on timeout so the caller can decide how to handle it.
+fn with_keychain_timeout<F, T>(op_name: &'static str, f: F) -> Result<Option<T>>
+where
+    F: FnOnce() -> Result<T> + Send + 'static,
+    T: Send + 'static,
+{
+    let (tx, rx) = mpsc::channel();
+    std::thread::spawn(move || {
+        let result = f();
+        let _ = tx.send(result);
+    });
+    match rx.recv_timeout(KEYCHAIN_TIMEOUT) {
+        Ok(result) => result.map(Some),
+        Err(mpsc::RecvTimeoutError::Timeout) => {
+            tracing::warn!("Keychain operation '{}' timed out after {}s (headless system?)", op_name, KEYCHAIN_TIMEOUT.as_secs());
+            Ok(None)
+        }
+        Err(mpsc::RecvTimeoutError::Disconnected) => {
+            anyhow::bail!("Keychain operation '{}' thread panicked", op_name);
+        }
+    }
+}
 
 /// Service name for keychain entries
 const SERVICE_NAME: &str = "dev.moinsen.secretariat.daemon";
@@ -52,12 +83,18 @@ const ACCOUNT_NAME: &str = "master_key";
 pub fn store_master_key(key: &[u8; 32]) -> Result<()> {
     use security_framework::passwords::{set_generic_password};
 
-    // F030: Use SecItemAdd via security-framework's set_generic_password
-    // This internally calls SecItemAdd from the Security Framework
-    set_generic_password(SERVICE_NAME, ACCOUNT_NAME, key)
-        .map_err(|e| anyhow::anyhow!("Failed to store key in keychain: {}", e))?;
-
-    Ok(())
+    let key_copy = *key;
+    match with_keychain_timeout("store_master_key", move || {
+        set_generic_password(SERVICE_NAME, ACCOUNT_NAME, &key_copy)
+            .map_err(|e| anyhow::anyhow!("Failed to store key in keychain: {}", e))
+    })? {
+        Some(_) => Ok(()),
+        None => {
+            // Timeout — vault init succeeds without keychain (locked on restart)
+            tracing::info!("Master key not stored in keychain (timeout — vault will start locked on next daemon restart)");
+            Ok(())
+        }
+    }
 }
 
 /// F030: Retrieve master key from macOS Keychain

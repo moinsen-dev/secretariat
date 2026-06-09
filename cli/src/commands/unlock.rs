@@ -13,7 +13,11 @@ use crate::client::DaemonClient;
 
 /// UnlockCommand arguments
 pub struct UnlockCommand {
+    /// Use password prompt instead of Touch ID
     pub password: bool,
+    /// Optional password for non-interactive unlock.
+    /// Falls back to $SECRETARIAT_INIT_PASSWORD env var (set in main.rs).
+    pub password_value: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -24,19 +28,27 @@ struct UnlockResponse {
 /// Handle the unlock command
 ///
 /// Unlocks the vault by:
-/// 1. Prompting for master password
+/// 1. Prompting for master password (or using provided one)
 /// 2. Sending vault.unlock request to daemon
 /// 3. Daemon derives key from password and restores access
-pub async fn handle_unlock(client: DaemonClient, _cmd: UnlockCommand) -> Result<()> {
-    // Prompt for password
-    print!("Enter master password: ");
-    io::stdout().flush()?;
-    let password = rpassword::read_password().context("Failed to read password")?;
-
-    if password.is_empty() {
-        println!("Password cannot be empty.");
-        return Ok(());
-    }
+pub async fn handle_unlock(client: DaemonClient, cmd: UnlockCommand) -> Result<()> {
+    // Use provided password, env var, or prompt interactively
+    let password = if let Some(pw) = cmd.password_value {
+        if pw.is_empty() {
+            anyhow::bail!("Password cannot be empty.");
+        }
+        pw
+    } else {
+        // Prompt interactively (Touch ID or rpassword)
+        print!("Enter master password: ");
+        io::stdout().flush()?;
+        let pw = rpassword::read_password().context("Failed to read password")?;
+        if pw.is_empty() {
+            println!("Password cannot be empty.");
+            return Ok(());
+        }
+        pw
+    };
 
     println!("Unlocking vault...");
 
