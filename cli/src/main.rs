@@ -95,6 +95,11 @@ struct InitCommand {
     /// Skip interactive prompts and use defaults
     #[arg(short, long)]
     yes: bool,
+
+    /// Master password (for headless/non-interactive use).
+    /// Falls back to $SECRETARIAT_INIT_PASSWORD env var if not provided.
+    #[arg(short, long)]
+    password: Option<String>,
 }
 
 // F092: ListCommand struct for sec list with --json flag
@@ -335,7 +340,10 @@ async fn main() -> Result<()> {
 
 // F109-F113: Init command - implemented in commands/init.rs
 async fn handle_init(client: DaemonClient, cmd: InitCommand) -> Result<()> {
-    let cmd_args = commands::init::InitCommand { yes: cmd.yes };
+    let cmd_args = commands::init::InitCommand {
+        yes: cmd.yes,
+        password: cmd.password.or_else(|| std::env::var("SECRETARIAT_INIT_PASSWORD").ok()),
+    };
     commands::handle_init(client, cmd_args).await
 }
 

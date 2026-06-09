@@ -17,6 +17,9 @@ use crate::client::DaemonClient;
 /// InitCommand arguments
 pub struct InitCommand {
     pub yes: bool,
+    /// Optional password for non-interactive init.
+    /// Falls back to $SECRETARIAT_INIT_PASSWORD env var (set in main.rs).
+    pub password: Option<String>,
 }
 
 /// F109-F113: Handle the init command
@@ -37,21 +40,27 @@ pub struct InitCommand {
 pub async fn handle_init(client: DaemonClient, cmd: InitCommand) -> Result<()> {
     println!("Initializing Secretariat vault...\n");
 
-    // F110: Prompt for master password
-    let password = if cmd.yes {
+    // F110: Prompt for master password (or use provided one)
+    let password = if let Some(pw) = cmd.password {
+        if pw.len() < 8 {
+            bail!("Password must be at least 8 characters long.");
+        }
+        pw
+    } else if cmd.yes {
         // In non-interactive mode, can't prompt for password
-        bail!("Cannot use --yes flag with init command. Password is required.");
+        bail!("Cannot use --yes flag with init command. Password is required. Use --password or SECRETARIAT_INIT_PASSWORD env var.");
     } else {
-        prompt_password("Enter master password: ")?
+        let pw = prompt_password("Enter master password: ")?;
+
+        // F111: Confirm password with second prompt
+        let confirm_password = prompt_password("Confirm master password: ")?;
+
+        // Validate passwords match
+        if pw != confirm_password {
+            bail!("Passwords do not match. Please try again.");
+        }
+        pw
     };
-
-    // F111: Confirm password with second prompt
-    let confirm_password = prompt_password("Confirm master password: ")?;
-
-    // Validate passwords match
-    if password != confirm_password {
-        bail!("Passwords do not match. Please try again.");
-    }
 
     // Validate password strength (basic check)
     if password.len() < 8 {
