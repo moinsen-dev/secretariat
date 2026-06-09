@@ -1,34 +1,33 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://secretariat.moinsen.dev/og-image.png">
-  <img src="https://secretariat.moinsen.dev/og-image.png" alt="Secretariat — Local-First Secrets Manager" width="800">
+  <img src="https://secretariat.moinsen.dev/og-image.png" alt="Secretariat — Der Secret-Vault für Mensch & KI" width="800">
 </picture>
 
-# Secretariat — Local-First Secrets Manager
+# Secretariat — Der Secret-Vault für Mensch & KI
 
-> **Stop copy-pasting API keys.** One encrypted vault on your machine. All your secrets in one place.
+> **Ein Vault. Mensch und KI. Nie wieder Secrets im Chat.**
 
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-blue)](LICENSE)
 [![macOS](https://img.shields.io/badge/platform-macOS-black?logo=apple)](https://secretariat.moinsen.dev)
 [![Rust](https://img.shields.io/badge/built%20with-Rust-orange?logo=rust)](https://www.rust-lang.org/)
-![Build](https://img.shields.io/badge/build-passing-brightgreen)
+[![Homebrew](https://img.shields.io/badge/brew-tap-green?logo=homebrew)](https://github.com/moinsen-dev/homebrew-tap)
 
 ---
 
-## Why Secretariat?
+## Wieso Secretariat?
 
 ```bash
-# Before: Where was that API key again?
+# Vorher: Wo war der API-Key noch?
 grep -r "sk-" ~/Documents/
 cat ~/Projects/*/.env 2>/dev/null
-# "I'll just regenerate it..." (famous last words)
+# Oder schlimmer: Du gibst den Key deinem KI-Assistenten im Chat
+# → Er taucht in der Prompt-History, in Exports, in Logs auf
 
-# After:
-secret get /openai/api-key
+# Nachher: Ein Befehl für Mensch & KI
+sec get /openai/api-key
 ```
 
-Every developer knows the pain: API keys in `.env` files. Tokens in terminal history. Certificates spread across three machines. Then the `.env` gets committed to GitHub by accident, and you're rotating keys at 2 AM.
-
-**Secretariat fixes this.** One command to store, one to retrieve. Every project, every machine, every time.
+**Secretariat ist der erste Secret-Manager, der für die Zusammenarbeit von Menschen und KI-Agenten gebaut ist.** Ein gemeinsamer, lokaler Vault. API-Keys, Tokens, Zertifikate — einmal gespeichert, für beide abrufbar. **Das Secret erscheint nie im Chat, nie in Dateien, nie in Prompt-Exports.**
 
 ---
 
@@ -36,42 +35,74 @@ Every developer knows the pain: API keys in `.env` files. Tokens in terminal his
 
 ```bash
 # Install (macOS)
-brew tap moinsen-dev/tap
-brew install secd
+brew install moinsen-dev/tap/secretariat
 
-# Initialize your vault
-secretd init
+# Oder aus Source bauen
+cargo build --release
 
-# Store your first secret
-secret set /github/token ghp_xxxxx
+# Vault initialisieren (headless-fähig)
+sec init --password "dein-passwort"
 
-# Retrieve it
-secret get /github/token
+# Daemon starten (automatisch via LaunchAgent)
+brew services start secretariat
 
-# List all secrets
-secret list
+# Erstes Secret speichern
+sec set /github/token ghp_xxxxx
 
-# Import from .env
-secret import ~/project/.env
+# Abrufen — für Mensch & KI
+sec get /github/token
 
-# Export for backup
-secret export > backup.json
+# Alle Secrets listen
+sec list
+
+# Aus .env importieren
+sec import ~/project/.env
 ```
 
-> **No running daemon?** `secret` auto-starts one via LaunchAgent. `secretd` stays in the background, zero-footprint.
+### Non-Interactive / Headless
+
+```bash
+# Initialisierung ohne Terminal
+SECRETARIAT_INIT_PASSWORD="pass" sec init
+
+# Unlock ohne Touch-ID
+sec unlock --password-value "pass"
+# oder via Env-Var:
+SECRETARIAT_INIT_PASSWORD="pass" sec unlock
+```
+
+---
+
+## Für KI-Agenten
+
+Dein KI-Assistent (Claude, Codex, Hermes, o.ä.) kann Secrets direkt aus dem Vault laden:
+
+```bash
+# Der Agent ruft im Terminal auf:
+sec get /deepseek/api-key
+# → Output: Nur der Key in stdout. Nie im Chat. Nie in Dateien.
+```
+
+Damit:
+- **Kein Secret** landet im Prompt-Kontext oder in Chat-Logs
+- **Rotation** = ein `sec set` — der Agent holt beim nächsten Mal den neuen Key
+- **Ein Vault** für dich und all deine Agenten
 
 ---
 
 ## Features
 
-### 🛡️ Encrypted Vault
-AES-256-GCM encryption, SQLCipher backend. Master key in macOS Keychain — never on disk.
+### 🛡️ Verschlüsselter Vault
+AES-256-GCM, SQLCipher-Backend, Argon2id Key-Derivation. Master-Key per Passwort geschützt.
 
-### ⚡ CLI-First
-`secret set`, `secret get`, `secret list`, `secret import`, `secret export`. Tab-completion included.
+### ⚡ CLI + Daemon
+`sec set`, `sec get`, `sec list`, `sec import`. Daemon (`secd`) läuft im Hintergrund, LaunchAgent Auto-Start.
+
+### 🧑‍🤝‍🧑 Mensch + KI
+Ein Vault für dich und deine Agenten. Das Secret erscheint nur im stdout des Terminal-Tools — nie im Chat oder in Dateien.
 
 ### 🔗 Multi-Device
-TCP transport with auth-token security. Access your vault from your main Mac, dev server, or any machine on your network.
+Unix Socket (lokal) + TCP (Netzwerk). Auth-Token-geschützt. Zugriff vom Mac, Server, oder jedem Device im Netzwerk.
 
 ### 🐍 Python SDK
 ```python
@@ -82,63 +113,36 @@ db_password = vault.get("/postgres/password")
 ```
 
 ### 🦀 Rust Core
-Daemon + CLI in a single Rust binary. Fast, memory-safe, zero GC pauses.
+Daemon (`secd`) + CLI (`sec`) in einem Build. Schnell, speichersicher, kein GC.
 
-### 🔁 LaunchAgent Auto-Start
-Daemon starts with your Mac, ready when you are. No manual setup.
-
----
-
-## Pricing
-
-| Tier | Features | Price |
-|------|----------|-------|
-| **Free** 🆓 | Local vault, CLI, SDK, TCP multi-device, LaunchAgent | €0 |
-| **Pro** 🔐 | + Cloud Sync, Web UI, Auto-Backup, IDE Plugins | €4/mo |
-| **Team** 👥 | + Team Vaults, Audit Log, Granular Permissions, SSO | €12/user/mo |
-| **Enterprise** 🏢 | + Self-hosted server, SLA, Custom integrations | Custom |
-
-> **Self-hosting is always free.** The BSL license allows unlimited self-hosted use of all features, including Team-tier. You only pay when you use our cloud services.
+### 🤖 Headless-fähig
+Funktioniert auf headless Mac Minis und Servern. `--password`-Flag und `SECRETARIAT_INIT_PASSWORD`-Env-Var für Non-Interactive-Betrieb. Keychain-Timeout (3s) verhindert Hänger ohne GUI.
 
 ---
 
-## License
-
-**BSL 1.1** (Business Source License) — [view full terms](LICENSE)
-
-- ✅ Code is **publicly visible** — auditable, verifiable
-- ✅ **Self-host for free** — unlimited users, unlimited secrets
-- ✅ **Modify and redistribute** — fork, patch, improve
-- ❌ **Don't resell as a competing cloud service** — that's what the BSL prevents
-- 🔄 **Becomes Apache 2.0 on 2029-01-01** — fully open source after 3 years
-
-We chose BSL over MIT because: if we gave everything away MIT-style, someone could clone Secretariat Cloud and sell it for €2. With BSL, the code is open and auditable, but the business model is protected. **Fair for everyone.**
-
----
-
-## Architecture
+## Architektur
 
 ```
-┌─────────────────────────────────────────────┐
-│  CLI (secret)         │  SDKs (Python, Dart,  │
-│                       │  Rust, Node.js)       │
-├─────────────────────────────────────────────┤
-│              Unix Socket / TCP               │
-├─────────────────────────────────────────────┤
-│  Daemon (secretd)     │  Auth-Token Auth      │
-├─────────────────────────────────────────────┤
-│  SQLCipher Vault      │  AES-256-GCM          │
-├─────────────────────────────────────────────┤
-│  macOS Keychain       │  File System          │
-└─────────────────────────────────────────────┘
+┌────────────────────────────────────────────────┐
+│  CLI (sec)        │  SDKs (Python, Dart,        │
+│                   │  Rust, Node.js)             │
+├────────────────────────────────────────────────┤
+│            Unix Socket / TCP (Port 7357)        │
+├────────────────────────────────────────────────┤
+│  Daemon (secd)    │  Auth-Token Auth            │
+├────────────────────────────────────────────────┤
+│  SQLCipher Vault  │  AES-256-GCM               │
+├────────────────────────────────────────────────┤
+│  macOS Keychain   │  File System                │
+└────────────────────────────────────────────────┘
 ```
 
-### Components
+### Komponenten
 
 | Component | Language | Location |
 |-----------|----------|----------|
-| Daemon (`secretd`) | Rust | `daemon/` |
-| CLI (`secret`) | Rust | `cli/` |
+| Daemon (`secd`) | Rust | `daemon/` |
+| CLI (`sec`) | Rust | `cli/` |
 | macOS Menu Bar App | SwiftUI | `app/` |
 | Python SDK | Python | `sdk-python/` |
 | Rust SDK | Rust | `sdk-rust/` |
@@ -158,26 +162,29 @@ cd secretariat
 # Build
 cargo build --release
 
-# Run daemon (development)
-cargo run --bin secretd -- --tcp-port 7357 --auth-token "dev-token"
+# Run daemon (foreground)
+./target/release/secd
 
 # Run CLI
-cargo run --bin secret -- status --host 127.0.0.1 --auth-token "dev-token"
+./target/release/sec status
 ```
 
 ### Prerequisites
 - Rust toolchain (1.75+)
-- Xcode Command Line Tools (for macOS Keychain)
-- Optional: Flutter/Python/Node for SDK development
+- macOS (für Keychain-Integration)
+- Optional: Flutter/Python/Node für SDK-Entwicklung
 
 ---
 
-## Roadmap
+## License
 
-See [secretariat.moinsen.dev/v2.html](https://secretariat.moinsen.dev/v2.html) for the full V2 vision.
+**BSL 1.1** (Business Source License) — [view full terms](LICENSE)
 
-**V1** ✅ — Local vault, CLI, SDK, TCP multi-device, LaunchAgent
-**V2** 🔜 — Cloud sync, Web UI, team sharing, IDE plugins, audit log
+- ✅ Code is **publicly visible** — auditable, verifiable
+- ✅ **Self-host for free** — unlimited users, unlimited secrets
+- ✅ **Modify and redistribute** — fork, patch, improve
+- ❌ **Don't resell as a competing cloud service**
+- 🔄 **Becomes Apache 2.0 on 2029-01-01**
 
 ---
 
