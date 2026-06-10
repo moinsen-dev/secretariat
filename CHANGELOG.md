@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.2.0 (2026-06-10) — App Stability
+
+🛠️ **Reliability pass on the macOS app — connection handling, value loading, and UI polish.**
+
+### Fixes
+- **Daemon client:** Persistent response dispatcher + race guards — no more dropped/mismatched responses under concurrent requests
+- **VaultProvider:** Re-entrant guard on `connect()` + `isClosed` check to prevent double-connect and use-after-close
+- **Socket:** Heartbeat keeps the Unix-socket connection alive; fixed value loading and async-safety edge cases
+- **UI:** `ListTile` colors corrected; red error SnackBars replaced with copy-to-clipboard for actionable error messages
+- **Password rules:** UI now aligned with CLI/daemon validation
+
+### Infrastructure
+- **Release:** New `build-release.sh` pipeline — universal binary, Developer ID signing, Apple notarization, DMG packaging — plus `RELEASE.md` runbook
+
 ## v0.1.1 (2026-06-09) — Homebrew Release
 
 🧪 **First Homebrew release with per-arch binary artifacts.**
