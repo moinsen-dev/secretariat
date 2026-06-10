@@ -1,5 +1,35 @@
 # Changelog
 
+## v0.3.0 (2026-06-10) — Multi-Device Sync
+
+🔐 **End-to-end-encrypted secret sync across your Apple devices (macOS).**
+
+### Features
+- **iCloud sync:** Secrets now sync across your Macs through your private
+  iCloud Drive. Only the AES-256-GCM ciphertext + salt leave the device —
+  the master password and key never do. Apple only ever sees ciphertext.
+- **Sync protocol (daemon):** `sync.export` / `sync.import` with tombstones
+  and last-write-wins conflict resolution; moves ciphertext only, no unlock
+  required.
+- **Instant sync:** an iCloud file-change watcher (NSMetadataQuery) syncs
+  immediately when another device pushes; 30s background poll as a backstop.
+- **`sec service install`:** installs the daemon as a Launch Agent so it
+  auto-starts on login (the sandboxed app can't, by design).
+
+### Changed
+- **macOS app is now sandboxed** (required for iCloud). The daemon's Unix
+  socket moved to the shared App Group container
+  (`group.dev.moinsen.secretariat`); the daemon stays unsandboxed and runs
+  via the Launch Agent. Vault DB remains in Application Support.
+
+### Fixes (since v0.2.0 draft)
+- Onboarding now detects an existing vault and shows unlock instead of
+  re-creating; readable/copyable error messages; honest password checklist;
+  scrollable onboarding; real app icon.
+- Add-secret FAB (was hidden behind the debug ribbon); edit-mode crash
+  ("obscured fields cannot be multiline"); serialized socket writes
+  (fixed "StreamSink is bound to a stream" on launch).
+
 ## v0.2.0 (2026-06-10) — App Stability
 
 🛠️ **Reliability pass on the macOS app — connection handling, value loading, and UI polish.**
