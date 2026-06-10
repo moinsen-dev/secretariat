@@ -536,25 +536,6 @@ class VaultProvider extends ChangeNotifier {
     }
   }
 
-  /// Get vault status from daemon
-  ///
-  /// Returns the current vault state, secret count, and app count.
-  Future<Map<String, dynamic>> getVaultStatus() async {
-    try {
-      _errorMessage = null;
-
-      if (!_daemonClient.isConnected) {
-        await _daemonClient.connect();
-      }
-
-      return await _daemonClient.getVaultStatus();
-    } catch (e) {
-      _errorMessage = 'Failed to get vault status: $e';
-      notifyListeners();
-      rethrow;
-    }
-  }
-
   /// Lock the vault via daemon
   ///
   /// Sends lock command to daemon and clears local state.
