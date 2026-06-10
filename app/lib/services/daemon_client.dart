@@ -532,6 +532,24 @@ class DaemonClient {
     return List<Map<String, dynamic>>.from(result['entries'] as List);
   }
 
+  /// Export the full encrypted sync payload (secrets + tombstones + salt +
+  /// verification). Moves only ciphertext — no unlock required.
+  Future<Map<String, dynamic>> syncExport() async {
+    return await sendRequest('sync.export', {});
+  }
+
+  /// Merge an incoming encrypted sync payload from another device into the
+  /// local vault (last-write-wins). Returns applied/received counts.
+  Future<Map<String, dynamic>> syncImport(
+    List<dynamic> secrets,
+    List<dynamic> tombstones,
+  ) async {
+    return await sendRequest('sync.import', {
+      'secrets': secrets,
+      'tombstones': tombstones,
+    });
+  }
+
   /// Get vault status
   ///
   /// Example:
