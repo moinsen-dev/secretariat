@@ -54,4 +54,32 @@ class PlatformPaths {
     }
     return _ubiquityPath;
   }
+
+  /// Whether iCloud is available (signed in + container provisioned).
+  static Future<bool> icloudAvailable() async {
+    return (await ubiquityContainerPath()) != null;
+  }
+
+  /// Read the encrypted vault sync file from iCloud. Returns the JSON string,
+  /// or null if it doesn't exist yet / iCloud unavailable.
+  static Future<String?> icloudRead() async {
+    if (!Platform.isMacOS && !Platform.isIOS) return null;
+    try {
+      return await _channel.invokeMethod<String>('icloudRead');
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Write the encrypted vault sync file to iCloud. Returns true on success.
+  static Future<bool> icloudWrite(String content) async {
+    if (!Platform.isMacOS && !Platform.isIOS) return false;
+    try {
+      final ok =
+          await _channel.invokeMethod<bool>('icloudWrite', {'content': content});
+      return ok ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
 }

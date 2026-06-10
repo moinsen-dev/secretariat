@@ -60,6 +60,9 @@ void main() async {
     debugPrint('[Main] Could not read vault status, using onboarding flag: $e');
   }
 
+  // Start E2E-encrypted iCloud background sync (no-op if iCloud unavailable).
+  vaultProvider.startAutoSync();
+
   runApp(
     SecretariatApp(
       vaultProvider: vaultProvider,

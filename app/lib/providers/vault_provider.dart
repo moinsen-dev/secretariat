@@ -10,12 +10,15 @@
 // - F156: Call notifyListeners() after state changes
 // - F188: Fetch applications from daemon
 
+import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../models/secret.dart';
 import '../models/application.dart';
 import '../models/audit_entry.dart';
 import '../services/daemon_client.dart';
 import '../services/daemon_manager.dart';
+import '../services/platform_paths.dart';
 
 /// F152: Define VaultProvider extends ChangeNotifier
 ///
@@ -337,12 +340,79 @@ class VaultProvider extends ChangeNotifier {
 
       // Reload secrets to get updated list
       await loadSecrets();
+      // Push the change to iCloud (fire-and-forget).
+      unawaited(syncWithICloud());
     } catch (e, st) {
       _errorMessage = 'Failed to set secret: $e';
       debugPrint('[VaultProvider] Failed to set secret "$name": $e\n$st');
       notifyListeners();
       rethrow;
     }
+  }
+
+  // ---- E2E-encrypted iCloud sync ----
+
+  Timer? _syncTimer;
+  bool _syncing = false;
+
+  /// Run one iCloud sync cycle: PULL (merge the cloud file into the local
+  /// vault) then PUSH (write the full merged export back). After both, local
+  /// and cloud converge by last-write-wins. Only ciphertext crosses iCloud.
+  Future<void> syncWithICloud() async {
+    if (_syncing) return;
+    if (!await PlatformPaths.icloudAvailable()) {
+      return;
+    }
+    _syncing = true;
+    try {
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      // PULL
+      var applied = 0;
+      final remote = await PlatformPaths.icloudRead();
+      if (remote != null && remote.trim().isNotEmpty) {
+        try {
+          final payload = jsonDecode(remote) as Map<String, dynamic>;
+          final res = await _daemonClient.syncImport(
+            (payload['secrets'] as List?) ?? const [],
+            (payload['tombstones'] as List?) ?? const [],
+          );
+          applied = ((res['applied_secrets'] as int?) ?? 0) +
+              ((res['applied_tombstones'] as int?) ?? 0);
+          debugPrint('[Sync] pull applied=$applied');
+        } catch (e) {
+          debugPrint('[Sync] pull failed: $e');
+        }
+      }
+
+      // PUSH
+      final exported = await _daemonClient.syncExport();
+      final ok = await PlatformPaths.icloudWrite(jsonEncode(exported));
+      debugPrint('[Sync] push ${ok ? "ok" : "failed"}');
+
+      // Refresh the UI if the pull changed local state.
+      if (applied > 0 && !_isLocked) {
+        await loadSecrets();
+      }
+    } catch (e) {
+      debugPrint('[Sync] cycle error: $e');
+    } finally {
+      _syncing = false;
+    }
+  }
+
+  /// Start periodic background sync (and run one cycle immediately).
+  void startAutoSync({Duration interval = const Duration(seconds: 30)}) {
+    _syncTimer?.cancel();
+    _syncTimer = Timer.periodic(interval, (_) => syncWithICloud());
+    unawaited(syncWithICloud());
+  }
+
+  void stopAutoSync() {
+    _syncTimer?.cancel();
+    _syncTimer = null;
   }
 
   /// Delete a secret
@@ -366,6 +436,8 @@ class VaultProvider extends ChangeNotifier {
 
       // F156: Call notifyListeners() after state changes
       notifyListeners();
+      // Push the deletion (tombstone) to iCloud (fire-and-forget).
+      unawaited(syncWithICloud());
     } catch (e) {
       _errorMessage = 'Failed to delete secret: $e';
       notifyListeners();
