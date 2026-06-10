@@ -9,6 +9,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as path;
+import 'platform_paths.dart';
 
 /// Status of the Secretariat daemon
 enum DaemonStatus {
@@ -40,7 +41,7 @@ class DaemonManager {
   String get socketPath {
     if (Platform.isMacOS) {
       final home = Platform.environment['HOME'] ?? '/tmp';
-      return '$home/Library/Application Support/Secretariat/secretariat.sock';
+      return '$home/Library/Group Containers/group.dev.moinsen.secretariat/secretariat.sock';
     } else if (Platform.isLinux) {
       final home = Platform.environment['HOME'] ?? '/tmp';
       return '$home/.local/share/secretariat/secretariat.sock';
@@ -122,6 +123,9 @@ class DaemonManager {
   /// Check if daemon is running by checking socket existence and connectivity
   Future<DaemonStatus> checkStatus() async {
     _log('Checking daemon status...');
+
+    // Resolve the socket path natively (App Group container on sandboxed macOS).
+    final socketPath = await PlatformPaths.socketPath();
 
     // First check if socket file exists
     final socketFile = File(socketPath);

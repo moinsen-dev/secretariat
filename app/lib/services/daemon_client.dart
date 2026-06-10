@@ -14,6 +14,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'platform_paths.dart';
 
 /// Custom exception for daemon errors
 class DaemonException implements Exception {
@@ -81,7 +82,7 @@ class DaemonClient {
     _connecting = true;
     _isDisposed = false;
 
-    final socketPath = _getSocketPath();
+    final socketPath = await PlatformPaths.socketPath();
     _log('Connecting to daemon at: $socketPath');
 
     // Check if socket file exists
@@ -364,28 +365,6 @@ class DaemonClient {
   void _handleSocketDone() {
     _log('Socket connection closed by daemon');
     disconnect();
-  }
-
-  /// F145: Get platform-specific socket path
-  String _getSocketPath() {
-    if (Platform.isMacOS) {
-      final home = Platform.environment['HOME'];
-      return '$home/Library/Application Support/Secretariat/secretariat.sock';
-    } else if (Platform.isLinux) {
-      final home = Platform.environment['HOME'];
-      return '$home/.local/share/secretariat/secretariat.sock';
-    } else if (Platform.isWindows) {
-      throw UnsupportedError(
-        'Secretariat is not yet available for Windows.\n'
-        'Currently supported platforms: macOS, Linux.\n'
-        'Windows support is planned for a future release.',
-      );
-    } else {
-      throw UnsupportedError(
-        'Unsupported platform: ${Platform.operatingSystem}.\n'
-        'Secretariat currently supports macOS and Linux only.',
-      );
-    }
   }
 
   /// Log a debug message
