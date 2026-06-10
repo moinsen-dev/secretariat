@@ -144,15 +144,18 @@ class DaemonManager {
         },
       );
 
-      // Send a health check request
-      socket.write(
-        '{"jsonrpc":"2.0","id":0,"method":"health.check","params":{}}\n',
-      );
-      await socket.flush();
+      try {
+        // Send a health check request
+        socket.write(
+          '{"jsonrpc":"2.0","id":0,"method":"health.check","params":{}}\n',
+        );
+        await socket.flush();
 
-      // Wait briefly for response
-      await Future.delayed(const Duration(milliseconds: 100));
-      await socket.close();
+        // Wait briefly for response
+        await Future.delayed(const Duration(milliseconds: 100));
+      } finally {
+        await socket.close();
+      }
 
       _log('Daemon is running and responsive');
       _status = DaemonStatus.running;

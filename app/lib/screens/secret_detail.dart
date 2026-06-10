@@ -52,9 +52,17 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
   bool _isValueVisible = false;
 
   /// F177: Text editing controllers for edit mode
-  late TextEditingController _valueController;
-  late TextEditingController _notesController;
+  late final TextEditingController _valueController;
+  late final TextEditingController _notesController;
   late String _editingProvider;
+
+  /// Guard against didChangeDependencies re-entry
+  bool _controllersInitialized = false;
+
+  /// The actual secret value, loaded from the daemon
+  String? _secretValue;
+  bool _isValueLoading = false;
+  String? _valueLoadError;
 
   @override
   void initState() {
@@ -64,10 +72,46 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (!_controllersInitialized) {
+      _controllersInitialized = true;
+      _valueController = TextEditingController(text: '');
+      _notesController = TextEditingController(text: '');
+      _editingProvider = '';
+      _initFromRouteArgs();
+    }
+  }
+
+  void _initFromRouteArgs() {
     final secret = ModalRoute.of(context)!.settings.arguments as Secret;
-    _valueController = TextEditingController(text: secret.value ?? '');
-    _notesController = TextEditingController(text: secret.notes ?? '');
+    _valueController.text = secret.value ?? '';
+    _notesController.text = secret.notes ?? '';
     _editingProvider = secret.provider ?? '';
+    // Load full secret value from daemon (listSecrets only returns metadata)
+    _loadSecretValue(secret.name);
+  }
+
+  Future<void> _loadSecretValue(String secretName) async {
+    setState(() {
+      _isValueLoading = true;
+      _valueLoadError = null;
+    });
+    try {
+      final vaultProvider = Provider.of<VaultProvider>(context, listen: false);
+      final fullSecret = await vaultProvider.getSecret(secretName);
+      if (mounted) {
+        setState(() {
+          _secretValue = fullSecret?.value;
+          _isValueLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _valueLoadError = e.toString();
+          _isValueLoading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -416,9 +460,9 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.copy),
-                                    onPressed: secret.value != null
+                                    onPressed: _secretValue != null
                                         ? () {
-                                            _copyToClipboard(secret.value!);
+                                            _copyToClipboard(_secretValue!);
                                           }
                                         : null,
                                     tooltip: 'Copy to clipboard',
@@ -455,9 +499,13 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              _isValueVisible
-                                  ? (secret.value ?? 'Value not loaded')
-                                  : '•' * 24,
+                              _isValueLoading
+                                  ? 'Loading...'
+                                  : (_isValueVisible
+                                      ? (_valueLoadError != null
+                                          ? 'Error: $_valueLoadError'
+                                          : (_secretValue ?? 'Value not loaded'))
+                                      : '•' * 24),
                               style: const TextStyle(
                                 fontFamily: 'monospace',
                                 fontSize: 14,

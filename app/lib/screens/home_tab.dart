@@ -3,6 +3,7 @@
 // Embedded version of main_popup content for use in MainShell.
 // Shows recent secrets (last 5) with search functionality.
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -25,6 +26,7 @@ class HomeTab extends StatefulWidget {
 class _HomeTabState extends State<HomeTab> {
   late final TextEditingController _searchController;
   List<Secret> _filteredSecrets = [];
+  Timer? _clipboardClearTimer;
 
   @override
   void initState() {
@@ -51,6 +53,7 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void dispose() {
     _searchController.dispose();
+    _clipboardClearTimer?.cancel();
     super.dispose();
   }
 
@@ -114,7 +117,8 @@ class _HomeTabState extends State<HomeTab> {
       );
 
       // Auto-clear after 30 seconds
-      Future.delayed(const Duration(seconds: 30), () async {
+      _clipboardClearTimer?.cancel();
+      _clipboardClearTimer = Timer(const Duration(seconds: 30), () async {
         await Clipboard.setData(const ClipboardData(text: ''));
       });
     } catch (e) {
@@ -318,12 +322,12 @@ class _SecretListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
-        color: surfaceDark,
+      color: surfaceDark,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderDark),
+        side: BorderSide(color: borderDark),
       ),
       child: ListTile(
         leading: CircleAvatar(

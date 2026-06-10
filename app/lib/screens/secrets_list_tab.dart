@@ -29,6 +29,7 @@ class SecretsListTab extends StatefulWidget {
 class _SecretsListTabState extends State<SecretsListTab> {
   late final TextEditingController _searchController;
   Timer? _debounceTimer;
+  Timer? _clipboardClearTimer;
   String _searchQuery = '';
   SecretSortOrder _sortOrder = SecretSortOrder.name;
   List<Secret> _displaySecrets = [];
@@ -56,6 +57,7 @@ class _SecretsListTabState extends State<SecretsListTab> {
   void dispose() {
     _searchController.dispose();
     _debounceTimer?.cancel();
+    _clipboardClearTimer?.cancel();
     super.dispose();
   }
 
@@ -144,7 +146,8 @@ class _SecretsListTabState extends State<SecretsListTab> {
       );
 
       // Auto-clear after 30 seconds
-      Future.delayed(const Duration(seconds: 30), () async {
+      _clipboardClearTimer?.cancel();
+      _clipboardClearTimer = Timer(const Duration(seconds: 30), () async {
         await Clipboard.setData(const ClipboardData(text: ''));
       });
     } catch (e) {
@@ -402,12 +405,12 @@ class _SecretListItem extends StatelessWidget {
     return Semantics(
       label: '${secret.name} secret from $providerLabel provider',
       button: true,
-      child: Container(
+      child: Card(
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        decoration: BoxDecoration(
-          color: surfaceDark,
+        color: surfaceDark,
+        shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: borderDark),
+          side: BorderSide(color: borderDark),
         ),
         child: ListTile(
           leading: CircleAvatar(

@@ -125,30 +125,36 @@ class MainShellState extends State<MainShell> {
       barrierColor: Colors.black87,
       builder: (dialogContext) => VaultUnlockDialog(
         onUnlock: (password) async {
+          final nav = Navigator.of(dialogContext);
           final provider = Provider.of<VaultProvider>(context, listen: false);
-          await provider.unlockVault(password);
-          // Load data after unlock
-          await provider.loadSecrets();
-          await provider.loadApplications();
-          // Close dialog
-          if (mounted && Navigator.of(dialogContext).canPop()) {
-            Navigator.of(dialogContext).pop();
+          try {
+            await provider.unlockVault(password);
+            // unlockVault already calls loadSecrets() internally
+            await provider.loadApplications();
+            if (mounted && nav.canPop()) {
+              nav.pop();
+            }
+          } catch (e) {
+            // Rethrow so the dialog shows "Incorrect password"
+            rethrow;
+          } finally {
+            if (mounted) {
+              _showingUnlockDialog = false;
+            }
           }
-          _showingUnlockDialog = false;
         },
         onTouchIdUnlock: () async {
-          // Touch ID authentication is handled by the dialog
-          // After successful auth, we still need to unlock with stored password
-          // For now, this is a placeholder - full implementation would need
-          // keychain integration to retrieve the password
+          final nav = Navigator.of(dialogContext);
           final provider = Provider.of<VaultProvider>(context, listen: false);
           // In a full implementation, retrieve password from keychain here
           await provider.loadSecrets();
           await provider.loadApplications();
-          if (mounted && Navigator.of(dialogContext).canPop()) {
-            Navigator.of(dialogContext).pop();
+          if (mounted && nav.canPop()) {
+            nav.pop();
           }
-          _showingUnlockDialog = false;
+          if (mounted) {
+            _showingUnlockDialog = false;
+          }
         },
         touchIdEnabled: true,
       ),
@@ -196,7 +202,9 @@ class MainShellState extends State<MainShell> {
                   context,
                   listen: false,
                 );
-                vaultProvider.refreshSecrets();
+                vaultProvider.refreshSecrets().catchError((e) {
+                  debugPrint('[MainShell] Refresh failed: $e');
+                });
               },
               tooltip: 'Refresh',
             ),

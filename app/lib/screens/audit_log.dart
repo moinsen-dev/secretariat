@@ -251,12 +251,12 @@ class _AuditEntryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: surfaceDark,
+      color: surfaceDark,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
+        side: BorderSide(
           color: entry.success ? borderDark : errorColor.withValues(alpha: 0.5),
         ),
       ),

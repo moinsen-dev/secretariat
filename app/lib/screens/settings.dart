@@ -123,12 +123,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final status = provider.daemonStatus;
     final isRunning = status == DaemonStatus.running;
 
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: surfaceDark,
+      color: surfaceDark,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderDark),
+        side: BorderSide(color: borderDark),
       ),
       child: ListTile(
         leading: Container(
@@ -203,12 +203,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildAutoStartTile(VaultProvider provider) {
     final isEnabled = provider.isAutoStartEnabled;
 
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: surfaceDark,
+      color: surfaceDark,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderDark),
+        side: BorderSide(color: borderDark),
       ),
       child: SwitchListTile(
         secondary: Container(
@@ -261,73 +261,55 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildVaultStatusTile(VaultProvider provider) {
-    return FutureBuilder<Map<String, dynamic>>(
-      future: provider.isConnected ? provider.getVaultStatus() : null,
-      builder: (context, snapshot) {
-        String stateText = 'Unknown';
-        int secretCount = 0;
-        int appCount = 0;
+    final isUnlocked = !provider.isLocked && provider.isConnected;
+    final isConnected = provider.isConnected;
 
-        if (snapshot.hasData) {
-          stateText = snapshot.data!['state'] as String? ?? 'unknown';
-          secretCount = snapshot.data!['secret_count'] as int? ?? 0;
-          appCount = snapshot.data!['app_count'] as int? ?? 0;
-        } else if (snapshot.hasError) {
-          stateText = 'Error';
-        } else if (!provider.isConnected) {
-          stateText = 'Disconnected';
-        }
-
-        final isUnlocked = stateText == 'unlocked';
-
-        return Container(
-          margin: const EdgeInsets.only(bottom: 8),
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      color: surfaceDark,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(8),
+        side: BorderSide(color: borderDark),
+      ),
+      child: ListTile(
+        leading: Container(
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
-            color: surfaceDark,
+            color: (isUnlocked ? unlockedColor : lockedColor).withValues(
+              alpha: 0.15,
+            ),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: borderDark),
           ),
-          child: ListTile(
-            leading: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: (isUnlocked ? unlockedColor : lockedColor).withValues(
-                  alpha: 0.15,
-                ),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                isUnlocked ? Icons.lock_open : Icons.lock,
-                color: isUnlocked ? unlockedColor : lockedColor,
-                size: 20,
-              ),
-            ),
-            title: Text(
-              'Vault Status',
-              style: TextStyle(
-                color: textPrimaryDark,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            subtitle: Text(
-              '$stateText - $secretCount secrets, $appCount apps',
+          child: Icon(
+            isUnlocked ? Icons.lock_open : Icons.lock,
+            color: isUnlocked ? unlockedColor : lockedColor,
+            size: 20,
+          ),
+        ),
+        title: Text(
+          'Vault Status',
+          style: TextStyle(
+            color: textPrimaryDark,
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        subtitle: Text(
+          '${isConnected ? (isUnlocked ? "unlocked" : "locked") : "Disconnected"} - ${provider.secrets.length} secrets, ${provider.applications.length} apps',
               style: TextStyle(color: textSecondaryDark, fontSize: 12),
             ),
           ),
         );
-      },
-    );
   }
 
   Widget _buildLockVaultTile(VaultProvider provider) {
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: surfaceDark,
+      color: surfaceDark,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderDark),
+        side: BorderSide(color: borderDark),
       ),
       child: ListTile(
         leading: Container(
@@ -384,7 +366,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             if (confirm == true) {
               try {
                 await provider.lockVault();
-                if (context.mounted) {
+                if (mounted) {
                   Navigator.of(context).pop();
                 }
               } catch (e) {
@@ -408,12 +390,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: surfaceDark,
+      color: surfaceDark,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderDark),
+        side: BorderSide(color: borderDark),
       ),
       child: ListTile(
         leading: Container(
@@ -444,12 +426,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildAboutTile() {
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: surfaceDark,
+      color: surfaceDark,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderDark),
+        side: BorderSide(color: borderDark),
       ),
       child: ListTile(
         leading: Container(
@@ -478,12 +460,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildVersionTile() {
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: surfaceDark,
+      color: surfaceDark,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderDark),
+        side: BorderSide(color: borderDark),
       ),
       child: ListTile(
         leading: Container(

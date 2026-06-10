@@ -323,12 +323,12 @@ class _ApplicationTile extends StatelessWidget {
     final permissionCount = application.permissions.length;
     final hasPermissions = permissionCount > 0;
 
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: surfaceDark,
+      color: surfaceDark,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: borderDark),
+        side: BorderSide(color: borderDark),
       ),
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),

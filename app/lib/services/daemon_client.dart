@@ -42,6 +42,9 @@ class DaemonClient {
   /// Flag to prevent operations on disposed client
   bool _isDisposed = false;
 
+  /// Heartbeat timer to keep the socket connection alive
+  Timer? _heartbeatTimer;
+
   /// Map of pending request IDs to their completers
   final Map<int, Completer<Map<String, dynamic>>> _pendingRequests = {};
 
@@ -107,9 +110,10 @@ class DaemonClient {
         onDone: _handleSocketDone,
       );
       _log('Daemon client ready');
+      startHeartbeat();
     } catch (e) {
       _log('ERROR: Failed to connect to daemon: $e');
-      _cleanup();
+      cleanup();
       rethrow;
     } finally {
       _connecting = false;
@@ -128,13 +132,15 @@ class DaemonClient {
     }
     _pendingRequests.clear();
 
-    _cleanup();
+    cleanup();
     _log('Disconnected');
   }
 
   /// Internal cleanup without failing pending requests
-  void _cleanup() {
+  @visibleForTesting
+  void cleanup() {
     _isDisposed = true;
+    stopHeartbeat();
     _responseSubscription?.cancel();
     _responseSubscription = null;
     _socketSubscription?.cancel();
@@ -146,9 +152,73 @@ class DaemonClient {
     _buffer = '';
   }
 
+  /// Whether the heartbeat timer should remain active (socket open, not disposed)
+  @visibleForTesting
+  bool get heartbeatShouldRemainActive => _socket != null && !_isDisposed;
+
+  /// Start periodic heartbeat to keep the socket connection alive
+  @visibleForTesting
+  void startHeartbeat() {
+    stopHeartbeat();
+    _heartbeatTimer = Timer.periodic(const Duration(seconds: 15), (_) async {
+      if (!heartbeatShouldRemainActive) {
+        stopHeartbeat();
+        return;
+      }
+      try {
+        await healthCheck();
+      } catch (_) {
+        // Socket likely closed — stop heartbeat, reconnect happens on next request
+        stopHeartbeat();
+      }
+    });
+  }
+
+  /// Stop the heartbeat timer
+  @visibleForTesting
+  void stopHeartbeat() {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
+  }
+
+  @visibleForTesting
+  Timer? get heartbeatTimer => _heartbeatTimer;
+
+  @visibleForTesting
+  Socket? get socket => _socket;
+
+  @visibleForTesting
+  set socket(Socket? value) {
+    _socket = value;
+  }
+
+  @visibleForTesting
+  bool get isDisposed => _isDisposed;
+
+  /// Ensure we are connected, reconnecting if the socket was closed
+  @visibleForTesting
+  Future<void> ensureConnected() async {
+    if (_socket != null && !_isDisposed) return;
+    // If another connect is in progress, wait for it
+    if (_connecting) {
+      _log('Already connecting, waiting...');
+      for (int i = 0; i < 10; i++) {
+        await Future.delayed(const Duration(milliseconds: 200));
+        if (_socket != null && !_isDisposed) return;
+        if (!_connecting) break;
+      }
+    }
+    _log('Socket disconnected, reconnecting...');
+    // Just null the socket without disposing — connect() handles the rest
+    _socket = null;
+    _isDisposed = false;
+    await connect();
+  }
+
   /// F146-F149: Send a JSON-RPC request and wait for response
   ///
   /// Uses a persistent response dispatcher to route the response.
+  /// Automatically reconnects if the socket connection was lost.
   /// Returns the `result` field of the JSON-RPC response.
   ///
   /// Example:
@@ -159,9 +229,12 @@ class DaemonClient {
     String method,
     Map<String, dynamic> params,
   ) async {
-    if (_socket == null) {
-      _log('ERROR: Not connected to daemon');
-      throw StateError('Not connected to daemon. Call connect() first.');
+    // Auto-reconnect if socket was closed
+    try {
+      await ensureConnected();
+    } catch (e) {
+      _log('ERROR: Auto-reconnect failed: $e');
+      throw DaemonException('Not connected to daemon and reconnect failed: $e');
     }
 
     // Build JSON-RPC request with auto-incrementing ID

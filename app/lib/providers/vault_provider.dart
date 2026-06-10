@@ -392,7 +392,6 @@ class VaultProvider extends ChangeNotifier {
 
       final status = await _daemonClient.getVaultStatus();
       _isLocked = status['state'] == 'locked';
-      notifyListeners();
       return status;
     } catch (e) {
       _errorMessage = 'Failed to get vault status: $e';
