@@ -101,7 +101,9 @@ impl Config {
 
         let db_path = data_dir.join("vault.db");
         let pid_path = data_dir.join("secd.pid");
-        let socket_path = data_dir.join("secretariat.sock");
+        // Single source of truth for the socket path (App Group container on
+        // macOS so the sandboxed app can reach it). Keep db/pid in data_dir.
+        let socket_path = crate::server::get_socket_path()?;
 
         Ok(Config {
             data_dir,

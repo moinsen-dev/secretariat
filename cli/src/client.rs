@@ -58,12 +58,21 @@ impl DaemonClient {
 
     /// Get the platform-specific socket path
     fn get_socket_path() -> Result<PathBuf> {
+        // Explicit override (tests / non-standard setups). Ignore if empty.
+        if let Ok(p) = std::env::var("SECRETARIAT_SOCKET") {
+            if !p.is_empty() {
+                return Ok(PathBuf::from(p));
+            }
+        }
+
+        // macOS: shared App Group container, so the sandboxed app and the
+        // (unsandboxed) CLI/daemon all meet at the same socket.
         #[cfg(target_os = "macos")]
         let base_dir = dirs::home_dir()
             .context("Failed to get home directory")?
             .join("Library")
-            .join("Application Support")
-            .join("Secretariat");
+            .join("Group Containers")
+            .join("group.dev.moinsen.secretariat");
 
         #[cfg(target_os = "linux")]
         let base_dir = dirs::data_local_dir()

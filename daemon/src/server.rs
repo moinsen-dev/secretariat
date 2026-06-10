@@ -315,10 +315,19 @@ impl Response {
 /// - Linux: ~/.local/share/secretariat/secretariat.sock
 /// - Windows: Will use named pipes (not implemented yet)
 pub fn get_socket_path() -> Result<PathBuf> {
+    // Explicit override (tests / non-standard setups). Ignore if empty.
+    if let Ok(p) = std::env::var("SECRETARIAT_SOCKET") {
+        if !p.is_empty() {
+            return Ok(PathBuf::from(p));
+        }
+    }
+    // On macOS the socket lives in the shared App Group container so the
+    // sandboxed Flutter app can reach it. The daemon stays unsandboxed and
+    // keeps the vault DB in Application Support.
     let socket_path = if cfg!(target_os = "macos") {
         dirs::home_dir()
             .context("Failed to get home directory")?
-            .join("Library/Application Support/Secretariat/secretariat.sock")
+            .join("Library/Group Containers/group.dev.moinsen.secretariat/secretariat.sock")
     } else if cfg!(target_os = "linux") {
         dirs::home_dir()
             .context("Failed to get home directory")?
