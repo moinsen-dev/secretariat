@@ -7,6 +7,7 @@
 // 4. Import first secret or .env file
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/vault_provider.dart';
@@ -233,6 +234,22 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+  /// Wrap a step so it scrolls when the window is too short, while still
+  /// letting Spacer()/center layouts breathe when there's room. Prevents the
+  /// "BOTTOM OVERFLOWED" error on small window heights.
+  Widget _scrollableStep(Widget child) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(child: child),
+          ),
+        );
+      },
+    );
+  }
+
   /// Build welcome step
   Widget _buildWelcomeStep() {
     return Padding(
@@ -432,23 +449,40 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ],
             ),
             const SizedBox(height: 12),
-            // Password requirements checklist (per wireframe 3.2)
+            // The ONLY hard requirement is minimum length, matching the
+            // daemon/CLI policy (8 chars). Everything below is optional
+            // strength advice — never a gate. See feedback: consistent
+            // password policy across daemon, CLI and app.
             _PasswordRequirementItem(
-              label: 'At least 12 characters',
-              isMet: _passwordController.text.length >= 12,
+              label: 'At least 8 characters (required)',
+              isMet: _passwordController.text.length >= 8,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Stronger (optional):',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
             ),
             _PasswordRequirementItem(
-              label: 'Contains uppercase and lowercase',
+              label: '12+ characters',
+              isMet: _passwordController.text.length >= 12,
+              isRecommended: true,
+            ),
+            _PasswordRequirementItem(
+              label: 'Upper- and lowercase',
               isMet:
                   _passwordController.text.contains(RegExp(r'[A-Z]')) &&
                   _passwordController.text.contains(RegExp(r'[a-z]')),
+              isRecommended: true,
             ),
             _PasswordRequirementItem(
-              label: 'Contains numbers',
+              label: 'Numbers',
               isMet: _passwordController.text.contains(RegExp(r'[0-9]')),
+              isRecommended: true,
             ),
             _PasswordRequirementItem(
-              label: 'Contains special characters (recommended)',
+              label: 'Special characters',
               isMet: _passwordController.text.contains(
                 RegExp(r'[!@#$%^&*(),.?":{}|<>]'),
               ),
@@ -487,19 +521,37 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
                     Icons.error_outline,
-                    color: Theme.of(context).colorScheme.error,
+                    color: Theme.of(context).colorScheme.onErrorContainer,
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
+                    child: SelectableText(
                       _errorMessage!,
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.error,
+                        color: Theme.of(context).colorScheme.onErrorContainer,
                       ),
                     ),
+                  ),
+                  IconButton(
+                    visualDensity: VisualDensity.compact,
+                    icon: Icon(
+                      Icons.copy,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.onErrorContainer,
+                    ),
+                    tooltip: 'Copy error',
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: _errorMessage!));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Error copied to clipboard'),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -738,10 +790,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 controller: _pageController,
                 physics: const NeverScrollableScrollPhysics(),
                 children: [
-                  _buildWelcomeStep(),
-                  _buildPasswordStep(),
-                  _buildTouchIdStep(),
-                  _buildImportStep(),
+                  _scrollableStep(_buildWelcomeStep()),
+                  _scrollableStep(_buildPasswordStep()),
+                  _scrollableStep(_buildTouchIdStep()),
+                  _scrollableStep(_buildImportStep()),
                 ],
               ),
             ),

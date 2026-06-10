@@ -46,10 +46,24 @@ void main() async {
   final vaultProvider = VaultProvider();
   await _ensureDaemonRunning(vaultProvider);
 
+  // Decide whether to show the create-master-password onboarding.
+  // The persisted flag is only a fallback — the authoritative signal is the
+  // daemon's vault state. A vault may already exist (e.g. created via the
+  // `sec` CLI) even when this app has never run. In that case we must NOT
+  // show "Create Master Password" (re-init would fail/clobber); we go to the
+  // app shell, which shows the unlock dialog for the existing vault.
+  bool showOnboarding = !onboardingComplete;
+  try {
+    final status = await vaultProvider.getVaultStatus();
+    showOnboarding = status['state'] == 'uninitialized';
+  } catch (e) {
+    debugPrint('[Main] Could not read vault status, using onboarding flag: $e');
+  }
+
   runApp(
     SecretariatApp(
       vaultProvider: vaultProvider,
-      showOnboarding: !onboardingComplete,
+      showOnboarding: showOnboarding,
     ),
   );
 }

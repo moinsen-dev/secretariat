@@ -32,6 +32,15 @@ const Color warningColor = Color(0xFFFFA726); // Orange 400
 const Color errorColor = Color(0xFFF44336); // Red 500
 const Color infoColor = Color(0xFF2196F3); // Blue 500
 
+// Error container tones (Material 3) — readable error surfaces.
+// Background/foreground pair so error text stays legible. These were
+// missing, so error messages rendered invisible (error-on-errorContainer
+// with no contrast).
+const Color errorContainerLight = Color(0xFFFFDAD6); // light red bg
+const Color onErrorContainerLight = Color(0xFF410002); // dark red text
+const Color errorContainerDark = Color(0xFF93000A); // dark red bg
+const Color onErrorContainerDark = Color(0xFFFFDAD6); // light red text
+
 // Background Colors - Light Theme
 const Color backgroundLight = Color(0xFFFAFAFA); // Gray 50
 const Color surfaceLight = Color(0xFFFFFFFF); // White

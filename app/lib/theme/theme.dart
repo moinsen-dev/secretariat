@@ -36,6 +36,8 @@ ThemeData get lightTheme {
 
       error: errorColor,
       onError: Colors.white,
+      errorContainer: errorContainerLight,
+      onErrorContainer: onErrorContainerLight,
 
       surface: surfaceLight,
       onSurface: textPrimaryLight,
@@ -239,6 +241,8 @@ ThemeData get darkTheme {
 
       error: errorColor,
       onError: Colors.white,
+      errorContainer: errorContainerDark,
+      onErrorContainer: onErrorContainerDark,
 
       surface: surfaceDark,
       onSurface: textPrimaryDark,
