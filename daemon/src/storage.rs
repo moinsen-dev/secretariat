@@ -5,7 +5,7 @@
 //! and environment management.
 
 use anyhow::{Context, Result};
-use rusqlite::Connection;
+use rusqlite::{Connection, OptionalExtension};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 
@@ -71,6 +71,50 @@ pub struct Secret {
     pub environment: String,
     /// Timestamp when the secret was created
     pub created_at: String,
+}
+
+/// A self-contained encrypted secret record for cross-device sync.
+///
+/// Carries the AES-256-GCM ciphertext (nonce + ciphertext) plus metadata
+/// and timestamps. Any device holding the same master key can decrypt
+/// `value_encrypted`; the plaintext never appears in a SyncSecret.
+/// Timestamps are SQLite `YYYY-MM-DD HH:MM:SS` strings (lexically ordered),
+/// used for last-write-wins conflict resolution.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SyncSecret {
+    pub name: String,
+    /// nonce(12B) + ciphertext+tag, base64 at the JSON layer
+    #[serde(with = "crate::storage::b64")]
+    pub value_encrypted: Vec<u8>,
+    pub provider: Option<String>,
+    pub environment: String,
+    pub notes: Option<String>,
+    pub created_at: String,
+    pub updated_at: String,
+    pub version: i64,
+    pub rotated_at: Option<String>,
+}
+
+/// A deletion marker for cross-device sync.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SyncTombstone {
+    pub name: String,
+    pub deleted_at: String,
+}
+
+/// base64 (de)serialization for the encrypted blob in JSON transport.
+pub(crate) mod b64 {
+    use base64::{engine::general_purpose::STANDARD, Engine as _};
+    use serde::{Deserialize, Deserializer, Serializer};
+
+    pub fn serialize<S: Serializer>(bytes: &[u8], s: S) -> Result<S::Ok, S::Error> {
+        s.serialize_str(&STANDARD.encode(bytes))
+    }
+
+    pub fn deserialize<'de, D: Deserializer<'de>>(d: D) -> Result<Vec<u8>, D::Error> {
+        let s = String::deserialize(d)?;
+        STANDARD.decode(&s).map_err(serde::de::Error::custom)
+    }
 }
 
 /// Application information
@@ -314,6 +358,13 @@ impl Storage {
             BEGIN
                 UPDATE vault_metadata SET updated_at = CURRENT_TIMESTAMP WHERE key = NEW.key;
             END;
+
+            -- Tombstones: record deleted secret names so deletes propagate
+            -- across devices during sync (last-write-wins by timestamp).
+            CREATE TABLE IF NOT EXISTS tombstones (
+                name TEXT PRIMARY KEY,
+                deleted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
             "#,
         )
         .context("Failed to initialize database schema")?;
@@ -786,7 +837,151 @@ impl Storage {
             anyhow::bail!("Secret not found: {}", name);
         }
 
+        // Record a tombstone so the deletion propagates during sync.
+        self.conn.execute(
+            "INSERT OR REPLACE INTO tombstones (name, deleted_at) VALUES (?, CURRENT_TIMESTAMP)",
+            [name],
+        )
+        .context("Failed to record tombstone")?;
+
         Ok(())
+    }
+
+    // ---- Cross-device sync (E2E-encrypted) ----
+
+    /// Export all secrets as self-contained encrypted sync records.
+    /// The ciphertext is moved verbatim; the daemon never decrypts for sync.
+    pub fn export_sync_secrets(&self) -> Result<Vec<SyncSecret>> {
+        let mut stmt = self.conn.prepare(
+            "SELECT name, value_encrypted, provider, environment, notes,
+                    created_at, updated_at, version, rotated_at
+             FROM secrets",
+        )?;
+        let rows = stmt.query_map([], |row| {
+            Ok(SyncSecret {
+                name: row.get(0)?,
+                value_encrypted: row.get(1)?,
+                provider: row.get(2)?,
+                environment: row.get(3)?,
+                notes: row.get(4)?,
+                created_at: row.get(5)?,
+                updated_at: row.get(6)?,
+                version: row.get::<_, Option<i64>>(7)?.unwrap_or(1),
+                rotated_at: row.get(8)?,
+            })
+        })?;
+        let mut out = Vec::new();
+        for r in rows {
+            out.push(r?);
+        }
+        Ok(out)
+    }
+
+    /// Export all deletion tombstones.
+    pub fn export_tombstones(&self) -> Result<Vec<SyncTombstone>> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT name, deleted_at FROM tombstones")?;
+        let rows = stmt.query_map([], |row| {
+            Ok(SyncTombstone {
+                name: row.get(0)?,
+                deleted_at: row.get(1)?,
+            })
+        })?;
+        let mut out = Vec::new();
+        for r in rows {
+            out.push(r?);
+        }
+        Ok(out)
+    }
+
+    /// Merge one incoming secret record (last-write-wins by `updated_at`).
+    /// Returns true if the local store changed. Skips when a local secret or
+    /// tombstone is at least as new as the incoming record.
+    pub fn import_sync_secret(&self, rec: &SyncSecret) -> Result<bool> {
+        // A tombstone at or after the record's updated_at means it was deleted
+        // more recently — deletion wins.
+        let tomb: Option<String> = self
+            .conn
+            .query_row(
+                "SELECT deleted_at FROM tombstones WHERE name = ?",
+                [&rec.name],
+                |row| row.get(0),
+            )
+            .optional()?;
+        if let Some(deleted_at) = tomb {
+            if deleted_at >= rec.updated_at {
+                return Ok(false);
+            }
+        }
+
+        // A local secret at or after the record's updated_at is newer — keep it.
+        let local: Option<String> = self
+            .conn
+            .query_row(
+                "SELECT updated_at FROM secrets WHERE name = ?",
+                [&rec.name],
+                |row| row.get(0),
+            )
+            .optional()?;
+        if let Some(local_updated) = local {
+            if local_updated >= rec.updated_at {
+                return Ok(false);
+            }
+        }
+
+        // Apply: DELETE+INSERT to bypass the AFTER-UPDATE trigger and keep the
+        // source timestamps exactly. Clear any stale tombstone (resurrection).
+        let id = uuid::Uuid::new_v4().to_string();
+        self.conn
+            .execute("DELETE FROM secrets WHERE name = ?", [&rec.name])?;
+        self.conn.execute(
+            "INSERT INTO secrets
+                (id, name, value_encrypted, provider, environment, notes,
+                 created_at, updated_at, version, rotated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            rusqlite::params![
+                id,
+                rec.name,
+                rec.value_encrypted,
+                rec.provider,
+                rec.environment,
+                rec.notes,
+                rec.created_at,
+                rec.updated_at,
+                rec.version,
+                rec.rotated_at,
+            ],
+        )?;
+        self.conn
+            .execute("DELETE FROM tombstones WHERE name = ?", [&rec.name])?;
+        Ok(true)
+    }
+
+    /// Merge one incoming deletion tombstone. Returns true if it was applied.
+    /// Skips when the local secret was re-created after the deletion time.
+    pub fn import_sync_tombstone(&self, name: &str, deleted_at: &str) -> Result<bool> {
+        let local: Option<String> = self
+            .conn
+            .query_row(
+                "SELECT updated_at FROM secrets WHERE name = ?",
+                [name],
+                |row| row.get(0),
+            )
+            .optional()?;
+        if let Some(local_updated) = local {
+            if local_updated > deleted_at.to_string() {
+                // Secret was resurrected after this delete — keep it.
+                return Ok(false);
+            }
+            self.conn
+                .execute("DELETE FROM secrets WHERE name = ?", [name])?;
+        }
+        self.conn.execute(
+            "INSERT OR REPLACE INTO tombstones (name, deleted_at) VALUES (?, ?)",
+            rusqlite::params![name, deleted_at],
+        )?;
+        Ok(true)
     }
 
     /// F072-F075: Register an application in the database
@@ -1310,6 +1505,123 @@ mod tests {
         // Clean up
         drop(storage);
         let _ = fs::remove_file(db_path);
+    }
+
+    fn sync_rec(name: &str, updated: &str, val: Vec<u8>) -> SyncSecret {
+        SyncSecret {
+            name: name.into(),
+            value_encrypted: val,
+            provider: None,
+            environment: "default".into(),
+            notes: None,
+            created_at: "2026-01-01 00:00:00".into(),
+            updated_at: updated.into(),
+            version: 1,
+            rotated_at: None,
+        }
+    }
+
+    #[test]
+    fn test_sync_roundtrip() {
+        let db = "/tmp/test_sec_sync_roundtrip.db";
+        let _ = fs::remove_file(db);
+        let storage = Storage::new(db, "k").unwrap();
+
+        assert!(storage
+            .import_sync_secret(&sync_rec("API_KEY", "2026-01-01 00:00:00", vec![1, 2, 3, 4]))
+            .unwrap());
+        let exported = storage.export_sync_secrets().unwrap();
+        assert_eq!(exported.len(), 1);
+        assert_eq!(exported[0].name, "API_KEY");
+        assert_eq!(exported[0].value_encrypted, vec![1, 2, 3, 4]);
+        assert_eq!(exported[0].updated_at, "2026-01-01 00:00:00");
+
+        drop(storage);
+        let _ = fs::remove_file(db);
+    }
+
+    #[test]
+    fn test_sync_last_write_wins() {
+        let db = "/tmp/test_sec_sync_lww.db";
+        let _ = fs::remove_file(db);
+        let storage = Storage::new(db, "k").unwrap();
+
+        assert!(storage
+            .import_sync_secret(&sync_rec("K", "2026-01-02 00:00:00", vec![2]))
+            .unwrap());
+        // Older -> skipped.
+        assert!(!storage
+            .import_sync_secret(&sync_rec("K", "2026-01-01 00:00:00", vec![1]))
+            .unwrap());
+        // Equal -> skipped (local is not strictly older).
+        assert!(!storage
+            .import_sync_secret(&sync_rec("K", "2026-01-02 00:00:00", vec![9]))
+            .unwrap());
+        // Newer -> applied.
+        assert!(storage
+            .import_sync_secret(&sync_rec("K", "2026-01-03 00:00:00", vec![3]))
+            .unwrap());
+
+        let exported = storage.export_sync_secrets().unwrap();
+        assert_eq!(exported.len(), 1);
+        assert_eq!(exported[0].value_encrypted, vec![3]);
+
+        drop(storage);
+        let _ = fs::remove_file(db);
+    }
+
+    #[test]
+    fn test_sync_tombstone_and_resurrection() {
+        let db = "/tmp/test_sec_sync_tomb.db";
+        let _ = fs::remove_file(db);
+        let storage = Storage::new(db, "k").unwrap();
+
+        assert!(storage
+            .import_sync_secret(&sync_rec("K", "2026-01-02 00:00:00", vec![1]))
+            .unwrap());
+
+        // Tombstone older than the secret -> not applied (secret is newer).
+        assert!(!storage
+            .import_sync_tombstone("K", "2026-01-01 00:00:00")
+            .unwrap());
+        assert_eq!(storage.export_sync_secrets().unwrap().len(), 1);
+
+        // Tombstone newer than the secret -> applied, secret removed.
+        assert!(storage
+            .import_sync_tombstone("K", "2026-01-03 00:00:00")
+            .unwrap());
+        assert_eq!(storage.export_sync_secrets().unwrap().len(), 0);
+
+        // Re-import older than the tombstone -> skipped (deletion wins).
+        assert!(!storage
+            .import_sync_secret(&sync_rec("K", "2026-01-02 00:00:00", vec![1]))
+            .unwrap());
+
+        // Re-import newer than the tombstone -> applied (resurrection).
+        assert!(storage
+            .import_sync_secret(&sync_rec("K", "2026-01-04 00:00:00", vec![5]))
+            .unwrap());
+        assert_eq!(storage.export_sync_secrets().unwrap().len(), 1);
+
+        drop(storage);
+        let _ = fs::remove_file(db);
+    }
+
+    #[test]
+    fn test_delete_records_tombstone() {
+        let db = "/tmp/test_sec_sync_deltomb.db";
+        let _ = fs::remove_file(db);
+        let storage = Storage::new(db, "k").unwrap();
+
+        storage.create_secret("K", &[1, 2, 3], None, "default").unwrap();
+        storage.delete_secret("K").unwrap();
+
+        let tombs = storage.export_tombstones().unwrap();
+        assert_eq!(tombs.len(), 1);
+        assert_eq!(tombs[0].name, "K");
+
+        drop(storage);
+        let _ = fs::remove_file(db);
     }
 
     #[test]

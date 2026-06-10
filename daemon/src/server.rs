@@ -969,6 +969,49 @@ fn route_request(
                 ErrorInfo::internal_error("Method should be handled by async handler")
             )
         }
+        // Cross-device sync — moves ciphertext only, no master key required.
+        "sync.export" => {
+            match crate::handlers::handle_sync_export(storage) {
+                Ok(payload) => Response::success(request.id, payload),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to export sync payload: {}", e)),
+                ),
+            }
+        }
+        "sync.import" => {
+            let secrets = match request.params.get("secrets") {
+                Some(v) => match serde_json::from_value(v.clone()) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        return Response::error(
+                            request.id,
+                            ErrorInfo::invalid_params(format!("Invalid 'secrets': {}", e)),
+                        );
+                    }
+                },
+                None => Vec::new(),
+            };
+            let tombstones = match request.params.get("tombstones") {
+                Some(v) => match serde_json::from_value(v.clone()) {
+                    Ok(t) => t,
+                    Err(e) => {
+                        return Response::error(
+                            request.id,
+                            ErrorInfo::invalid_params(format!("Invalid 'tombstones': {}", e)),
+                        );
+                    }
+                },
+                None => Vec::new(),
+            };
+            match crate::handlers::handle_sync_import(storage, secrets, tombstones) {
+                Ok(result) => Response::success(request.id, result),
+                Err(e) => Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!("Failed to import sync payload: {}", e)),
+                ),
+            }
+        }
         _ => {
             // Unknown method
             Response::error(
