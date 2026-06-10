@@ -75,6 +75,9 @@ enum Commands {
     /// Show daemon status
     Status(StatusCommand),
 
+    /// Manage the daemon Launch Agent (install/uninstall/status)
+    Service(ServiceCommand),
+
     /// Unlock vault (Touch ID/password)
     Unlock(UnlockCommand),
 
@@ -86,6 +89,23 @@ enum Commands {
 
     /// Show version
     Version(VersionCommand),
+}
+
+/// Manage the daemon Launch Agent (macOS)
+#[derive(Parser)]
+struct ServiceCommand {
+    #[command(subcommand)]
+    action: ServiceAction,
+}
+
+#[derive(Subcommand)]
+enum ServiceAction {
+    /// Install + load the daemon Launch Agent (auto-start on login)
+    Install,
+    /// Remove the daemon Launch Agent
+    Uninstall,
+    /// Show Launch Agent install/running status
+    Status,
 }
 
 // F091: InitCommand struct for sec init
@@ -334,6 +354,11 @@ async fn main() -> Result<()> {
         Commands::Import(cmd) => handle_import(client, cmd).await,
         Commands::Cleanup(cmd) => handle_cleanup(client, cmd).await,
         Commands::Status(cmd) => handle_status(client, cmd).await,
+        Commands::Service(cmd) => match cmd.action {
+            ServiceAction::Install => commands::service::install(),
+            ServiceAction::Uninstall => commands::service::uninstall(),
+            ServiceAction::Status => commands::service::status(),
+        },
         Commands::Unlock(cmd) => handle_unlock(client, cmd).await,
         Commands::Lock(cmd) => handle_lock(client, cmd).await,
         Commands::ChangePassword(cmd) => handle_change_password(client, cmd).await,
