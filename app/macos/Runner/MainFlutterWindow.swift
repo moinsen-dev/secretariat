@@ -2,6 +2,9 @@ import Cocoa
 import FlutterMacOS
 
 class MainFlutterWindow: NSWindow {
+  private var metadataQuery: NSMetadataQuery?
+  private var syncEventSink: FlutterEventSink?
+
   override func awakeFromNib() {
     let flutterViewController = FlutterViewController()
     let windowFrame = self.frame
@@ -85,6 +88,72 @@ class MainFlutterWindow: NSWindow {
       }
     }
 
+    // EventChannel: notify Dart when the iCloud vault file changes (another
+    // device pushed) so sync runs immediately instead of waiting for the poll.
+    let syncEvents = FlutterEventChannel(
+      name: "dev.moinsen.secretariat/sync_events",
+      binaryMessenger: flutterViewController.engine.binaryMessenger)
+    syncEvents.setStreamHandler(SyncEventStreamHandler(
+      onListen: { [weak self] sink in
+        self?.syncEventSink = sink
+        self?.startMetadataQuery()
+      },
+      onCancel: { [weak self] in
+        self?.stopMetadataQuery()
+        self?.syncEventSink = nil
+      }))
+
     super.awakeFromNib()
+  }
+
+  private func startMetadataQuery() {
+    guard metadataQuery == nil else { return }
+    let q = NSMetadataQuery()
+    q.searchScopes = [NSMetadataQueryUbiquitousDocumentsScope]
+    q.predicate = NSPredicate(
+      format: "%K == %@", NSMetadataItemFSNameKey, "secretariat-vault.json")
+    NotificationCenter.default.addObserver(
+      self, selector: #selector(metadataChanged(_:)),
+      name: .NSMetadataQueryDidUpdate, object: q)
+    NotificationCenter.default.addObserver(
+      self, selector: #selector(metadataChanged(_:)),
+      name: .NSMetadataQueryDidFinishGathering, object: q)
+    q.start()
+    metadataQuery = q
+  }
+
+  private func stopMetadataQuery() {
+    if let q = metadataQuery {
+      q.stop()
+      NotificationCenter.default.removeObserver(
+        self, name: .NSMetadataQueryDidUpdate, object: q)
+      NotificationCenter.default.removeObserver(
+        self, name: .NSMetadataQueryDidFinishGathering, object: q)
+    }
+    metadataQuery = nil
+  }
+
+  @objc private func metadataChanged(_ note: Notification) {
+    syncEventSink?("changed")
+  }
+}
+
+/// Bridges FlutterStreamHandler callbacks to closures.
+class SyncEventStreamHandler: NSObject, FlutterStreamHandler {
+  private let onListenCb: (@escaping FlutterEventSink) -> Void
+  private let onCancelCb: () -> Void
+  init(onListen: @escaping (@escaping FlutterEventSink) -> Void,
+       onCancel: @escaping () -> Void) {
+    self.onListenCb = onListen
+    self.onCancelCb = onCancel
+  }
+  func onListen(withArguments arguments: Any?,
+                eventSink events: @escaping FlutterEventSink) -> FlutterError? {
+    onListenCb(events)
+    return nil
+  }
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    onCancelCb()
+    return nil
   }
 }

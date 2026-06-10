@@ -353,6 +353,7 @@ class VaultProvider extends ChangeNotifier {
   // ---- E2E-encrypted iCloud sync ----
 
   Timer? _syncTimer;
+  StreamSubscription<dynamic>? _syncEventSub;
   bool _syncing = false;
 
   /// Run one iCloud sync cycle: PULL (merge the cloud file into the local
@@ -387,10 +388,16 @@ class VaultProvider extends ChangeNotifier {
         }
       }
 
-      // PUSH
+      // PUSH — only write if the merged export differs from what's already
+      // in iCloud, so our own write doesn't re-trigger the file-change watcher.
       final exported = await _daemonClient.syncExport();
-      final ok = await PlatformPaths.icloudWrite(jsonEncode(exported));
-      debugPrint('[Sync] push ${ok ? "ok" : "failed"}');
+      final newContent = jsonEncode(exported);
+      if (newContent != remote) {
+        final ok = await PlatformPaths.icloudWrite(newContent);
+        debugPrint('[Sync] push ${ok ? "ok" : "failed"}');
+      } else {
+        debugPrint('[Sync] push skipped (no change)');
+      }
 
       // Refresh the UI if the pull changed local state.
       if (applied > 0 && !_isLocked) {
@@ -407,12 +414,19 @@ class VaultProvider extends ChangeNotifier {
   void startAutoSync({Duration interval = const Duration(seconds: 30)}) {
     _syncTimer?.cancel();
     _syncTimer = Timer.periodic(interval, (_) => syncWithICloud());
+    // React instantly when another device pushes a change to the iCloud file.
+    _syncEventSub ??= PlatformPaths.icloudChanges.listen((_) {
+      debugPrint('[Sync] iCloud file changed, syncing now');
+      syncWithICloud();
+    }, onError: (_) {});
     unawaited(syncWithICloud());
   }
 
   void stopAutoSync() {
     _syncTimer?.cancel();
     _syncTimer = null;
+    _syncEventSub?.cancel();
+    _syncEventSub = null;
   }
 
   /// Delete a secret

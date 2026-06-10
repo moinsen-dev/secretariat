@@ -10,6 +10,15 @@ import 'package:flutter/services.dart';
 
 class PlatformPaths {
   static const _channel = MethodChannel('dev.moinsen.secretariat/platform');
+  static const _syncEvents =
+      EventChannel('dev.moinsen.secretariat/sync_events');
+
+  /// Fires when the iCloud vault file changes (another device pushed). Empty
+  /// stream on unsupported platforms.
+  static Stream<dynamic> get icloudChanges {
+    if (!Platform.isMacOS && !Platform.isIOS) return const Stream.empty();
+    return _syncEvents.receiveBroadcastStream();
+  }
 
   static String? _socketPath;
   static String? _ubiquityPath;
