@@ -68,6 +68,9 @@ class VaultProvider extends ChangeNotifier {
   /// Current daemon status
   DaemonStatus _daemonStatus = DaemonStatus.unknown;
 
+  /// Re-entrant guard for connect()
+  bool _connecting = false;
+
   /// F153: Getter for isLocked
   bool get isLocked => _isLocked;
 
@@ -106,6 +109,12 @@ class VaultProvider extends ChangeNotifier {
   /// await provider.connect();
   /// ```
   Future<void> connect({bool autoStart = true}) async {
+    if (_connecting) {
+      debugPrint('[VaultProvider] Already connecting, skipping...');
+      return;
+    }
+    _connecting = true;
+
     try {
       _errorMessage = null;
 
@@ -126,6 +135,7 @@ class VaultProvider extends ChangeNotifier {
           _daemonStatus = DaemonStatus.stopped;
           _errorMessage = 'Failed to start daemon';
           notifyListeners();
+          _connecting = false;
           throw StateError('Failed to start daemon. Please start it manually.');
         }
       }
@@ -135,8 +145,11 @@ class VaultProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       _errorMessage = 'Failed to connect to daemon: $e';
+      debugPrint('[VaultProvider] Connect error: $e');
       notifyListeners();
       rethrow;
+    } finally {
+      _connecting = false;
     }
   }
 

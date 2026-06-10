@@ -250,9 +250,13 @@ class DaemonClient {
       try {
         final message = json.decode(line) as Map<String, dynamic>;
         _log('Received response for request ${message['id']}');
-        _messageController?.add(message);
+        if (_messageController != null && !_messageController!.isClosed) {
+          _messageController!.add(message);
+        } else {
+          _log('WARNING: messageController is closed, dropping response');
+        }
       } catch (e) {
-        _log('ERROR: Failed to parse JSON message: $e');
+        _log('ERROR: Failed to process message: $e');
         _log('Raw message: $line');
       }
     }
