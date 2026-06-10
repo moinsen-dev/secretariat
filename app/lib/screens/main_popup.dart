@@ -11,6 +11,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../models/secret.dart';
 import '../providers/vault_provider.dart';
+import '../utils/error_clipboard.dart';
 
 /// F158: Define MainPopup extends StatefulWidget
 ///
@@ -107,9 +108,7 @@ class _MainPopupState extends State<MainPopup> {
   /// Show error message
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
+    copyErrorToClipboard(context, message);
   }
 
   /// Copy secret value to clipboard with auto-clear after 30 seconds
@@ -121,12 +120,7 @@ class _MainPopupState extends State<MainPopup> {
 
       if (fullSecret == null || fullSecret.value == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to retrieve secret value'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          copyErrorToClipboard(context, 'Failed to retrieve secret value');
         }
         return;
       }
@@ -167,12 +161,7 @@ class _MainPopupState extends State<MainPopup> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to copy: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        copyErrorToClipboard(context, 'Failed to copy: $e');
       }
     }
   }

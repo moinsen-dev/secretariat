@@ -13,6 +13,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/vault_provider.dart';
+import '../utils/error_clipboard.dart';
 
 /// F179: Create lib/screens/add_secret.dart file
 ///
@@ -156,9 +157,7 @@ class _AddSecretScreenState extends State<AddSecretScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to add secret: $e')));
+        copyErrorToClipboard(context, 'Failed to add secret: $e');
       }
     } finally {
       if (mounted) {

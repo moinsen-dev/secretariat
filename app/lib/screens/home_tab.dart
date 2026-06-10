@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../models/secret.dart';
 import '../providers/vault_provider.dart';
 import '../theme/colors.dart';
+import '../utils/error_clipboard.dart';
 
 /// Home tab content showing recent secrets and search
 ///
@@ -72,9 +73,7 @@ class _HomeTabState extends State<HomeTab> {
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: Colors.red),
-    );
+    copyErrorToClipboard(context, message);
   }
 
   Future<void> _copySecret(Secret secret) async {
@@ -84,12 +83,7 @@ class _HomeTabState extends State<HomeTab> {
 
       if (fullSecret == null || fullSecret.value == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to retrieve secret value'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          copyErrorToClipboard(context, 'Failed to retrieve secret value');
         }
         return;
       }
@@ -125,12 +119,7 @@ class _HomeTabState extends State<HomeTab> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to copy: $e'),
-            backgroundColor: Colors.red,
-          ),
-        );
+        copyErrorToClipboard(context, 'Failed to copy: $e');
       }
     }
   }

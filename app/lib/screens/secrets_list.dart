@@ -15,6 +15,7 @@ import 'package:provider/provider.dart';
 import '../models/secret.dart';
 import '../providers/vault_provider.dart';
 import '../widgets/empty_state.dart';
+import '../utils/error_clipboard.dart';
 
 /// Sort order options for secrets list
 enum SecretSortOrder { name, created, updated }
@@ -70,12 +71,7 @@ class _SecretsListScreenState extends State<SecretsListScreen> {
       if (vaultProvider.secrets.isEmpty && !vaultProvider.isLoading) {
         vaultProvider.loadSecrets().catchError((e) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to load secrets: $e'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            copyErrorToClipboard(context, 'Failed to load secrets: $e');
           }
         });
       }

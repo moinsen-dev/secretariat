@@ -9,6 +9,7 @@ import '../models/application.dart';
 import '../models/secret.dart';
 import '../providers/vault_provider.dart';
 import '../theme/colors.dart';
+import '../utils/error_clipboard.dart';
 
 /// Applications tab content showing app permissions
 ///
@@ -35,12 +36,7 @@ class _ApplicationsTabState extends State<ApplicationsTab> {
       await vaultProvider.loadSecrets();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to load applications: $e'),
-            backgroundColor: errorColor,
-          ),
-        );
+        copyErrorToClipboard(context, 'Failed to load applications: $e');
       }
     }
   }
@@ -157,12 +153,7 @@ class _ApplicationsTabState extends State<ApplicationsTab> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to grant permission: $e'),
-              backgroundColor: errorColor,
-            ),
-          );
+          copyErrorToClipboard(context, 'Failed to grant permission: $e');
         }
       }
     }
@@ -212,12 +203,7 @@ class _ApplicationsTabState extends State<ApplicationsTab> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to revoke permission: $e'),
-              backgroundColor: errorColor,
-            ),
-          );
+          copyErrorToClipboard(context, 'Failed to revoke permission: $e');
         }
       }
     }

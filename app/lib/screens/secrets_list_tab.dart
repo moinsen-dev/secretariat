@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import '../models/secret.dart';
 import '../providers/vault_provider.dart';
 import '../theme/colors.dart';
+import '../utils/error_clipboard.dart';
 
 /// Sort order options for secrets list
 enum SecretSortOrder { name, created, updated }
@@ -44,12 +45,7 @@ class _SecretsListTabState extends State<SecretsListTab> {
       if (vaultProvider.secrets.isEmpty && !vaultProvider.isLoading) {
         vaultProvider.loadSecrets().catchError((e) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Failed to load secrets: $e'),
-                backgroundColor: errorColor,
-              ),
-            );
+            copyErrorToClipboard(context, 'Failed to load secrets: $e');
           }
         });
       }
@@ -117,12 +113,7 @@ class _SecretsListTabState extends State<SecretsListTab> {
 
       if (fullSecret == null || fullSecret.value == null) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Failed to retrieve secret value'),
-              backgroundColor: errorColor,
-            ),
-          );
+          copyErrorToClipboard(context, 'Failed to retrieve secret value');
         }
         return;
       }
@@ -158,12 +149,7 @@ class _SecretsListTabState extends State<SecretsListTab> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to copy: $e'),
-            backgroundColor: errorColor,
-          ),
-        );
+        copyErrorToClipboard(context, 'Failed to copy: $e');
       }
     }
   }

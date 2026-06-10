@@ -17,6 +17,7 @@ import '../models/application.dart';
 import '../models/secret.dart';
 import '../providers/vault_provider.dart';
 import '../theme/colors.dart';
+import '../utils/error_clipboard.dart';
 
 /// F171: Create lib/screens/secret_detail.dart file
 ///
@@ -314,12 +315,7 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
         }
       } catch (e) {
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Failed to rotate secret: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
+          copyErrorToClipboard(context, 'Failed to rotate secret: $e');
         }
       }
     }
