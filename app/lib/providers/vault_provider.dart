@@ -366,11 +366,37 @@ class VaultProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Unlock the vault
+  /// Get vault status from daemon
   ///
-  /// Attempts to load secrets, which will unlock the vault if successful.
+  /// Returns a map with state, secret_count, and app_count.
+  Future<Map<String, dynamic>> getVaultStatus() async {
+    try {
+      _errorMessage = null;
+
+      if (!_daemonClient.isConnected) {
+        await _daemonClient.connect();
+      }
+
+      final status = await _daemonClient.getVaultStatus();
+      _isLocked = status['state'] == 'locked';
+      notifyListeners();
+      return status;
+    } catch (e) {
+      _errorMessage = 'Failed to get vault status: $e';
+      notifyListeners();
+      rethrow;
+    }
+  }
+
+  /// Unlock the vault with password
+  ///
+  /// Sends unlock command to daemon then loads secrets.
   Future<void> unlock() async {
-    await loadSecrets();
+    // unlock() requires the password — this is just a routing helper.
+    // Use unlockVault(password) from the dialog instead.
+    throw StateError(
+      'unlock() requires a password. Use unlockVault(password) instead.',
+    );
   }
 
   /// Filter secrets by search query

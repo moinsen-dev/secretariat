@@ -68,18 +68,24 @@ class Secret {
   /// final secret = Secret.fromJson(json);
   /// ```
   factory Secret.fromJson(Map<String, dynamic> json) {
+    DateTime parseDate(String? raw) {
+      if (raw == null || raw.isEmpty) return DateTime.now();
+      // Daemon returns format "2026-06-09 20:18:25" (space, not T)
+      return DateTime.tryParse(raw.replaceAll(' ', 'T')) ?? DateTime.now();
+    }
+
     return Secret(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      id: (json['id'] ?? '').toString(),
+      name: (json['name'] ?? '').toString(),
       value: json['value'] as String?,
       provider: json['provider'] as String?,
       environment: json['environment'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: parseDate(json['created_at'] as String?),
       updatedAt: json['updated_at'] != null
-          ? DateTime.parse(json['updated_at'] as String)
+          ? parseDate(json['updated_at'] as String?)
           : null,
       rotatedAt: json['rotated_at'] != null
-          ? DateTime.parse(json['rotated_at'] as String)
+          ? parseDate(json['rotated_at'] as String?)
           : null,
       notes: json['notes'] as String?,
     );

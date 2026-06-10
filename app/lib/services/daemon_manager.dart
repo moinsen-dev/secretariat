@@ -111,7 +111,7 @@ class DaemonManager {
   /// Get LaunchAgent plist path (macOS)
   String get _launchAgentPath {
     final home = Platform.environment['HOME'] ?? '/tmp';
-    return '$home/Library/LaunchAgents/dev.moinsen.secretariat.daemon.plist';
+    return '$home/Library/LaunchAgents/dev.moinsen.secretariat.plist';
   }
 
   /// Log a message
