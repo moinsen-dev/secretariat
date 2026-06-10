@@ -219,6 +219,16 @@ class MainShellState extends State<MainShell> {
             ),
         ],
       ),
+      // Prominent, discoverable add button. The AppBar add action sits under
+      // the debug ribbon and is generally hard to find; a FAB matches the
+      // "Tap + to add one" empty state and the platform convention.
+      floatingActionButton: (_currentIndex == 0 || _currentIndex == 1)
+          ? FloatingActionButton(
+              onPressed: () => Navigator.pushNamed(context, '/add-secret'),
+              tooltip: 'Add Secret',
+              child: const Icon(Icons.add),
+            )
+          : null,
       body: IndexedStack(
         index: _currentIndex,
         children: const [

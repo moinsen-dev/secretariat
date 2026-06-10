@@ -482,7 +482,9 @@ class _SecretDetailScreenState extends State<SecretDetailScreen> {
                               hintText: 'Enter secret value',
                             ),
                             obscureText: !_isValueVisible,
-                            maxLines: 3,
+                            // Flutter forbids obscureText + multiline.
+                            // Single line while hidden, up to 3 when revealed.
+                            maxLines: _isValueVisible ? 3 : 1,
                             style: const TextStyle(
                               fontFamily: 'monospace',
                               fontSize: 14,

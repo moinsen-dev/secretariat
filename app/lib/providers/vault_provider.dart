@@ -299,8 +299,9 @@ class VaultProvider extends ChangeNotifier {
       notifyListeners();
 
       return secret;
-    } catch (e) {
+    } catch (e, st) {
       _errorMessage = 'Failed to get secret: $e';
+      debugPrint('[VaultProvider] Failed to get secret "$name": $e\n$st');
       notifyListeners();
       return null;
     }
@@ -336,8 +337,9 @@ class VaultProvider extends ChangeNotifier {
 
       // Reload secrets to get updated list
       await loadSecrets();
-    } catch (e) {
+    } catch (e, st) {
       _errorMessage = 'Failed to set secret: $e';
+      debugPrint('[VaultProvider] Failed to set secret "$name": $e\n$st');
       notifyListeners();
       rethrow;
     }
