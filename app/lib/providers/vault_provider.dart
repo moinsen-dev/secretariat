@@ -254,6 +254,9 @@ class VaultProvider extends ChangeNotifier {
     } catch (e) {
       _isLoading = false;
       _errorMessage = 'Failed to load secrets: $e';
+      // Also log it: a caught error shown only in the UI is invisible to
+      // the VM-service error stream and to log-based tooling otherwise.
+      debugPrint('[VaultProvider] Failed to load secrets: $e');
       // F156: Call notifyListeners() after state changes
       notifyListeners();
       rethrow;

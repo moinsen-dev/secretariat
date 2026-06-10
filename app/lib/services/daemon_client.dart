@@ -51,6 +51,12 @@ class DaemonClient {
   /// Next request ID (auto-incrementing, avoids millisecond collisions)
   int _nextRequestId = 1;
 
+  /// Serializes socket write+flush so concurrent requests never overlap.
+  /// IOSink.flush() briefly binds the sink; two overlapping flushes throw
+  /// "Bad state: StreamSink is bound to a stream". Chaining writes prevents
+  /// that when several requests fire at once (e.g. on app startup).
+  Future<void> _writeQueue = Future<void>.value();
+
   /// Whether the client is connected
   bool get isConnected => _socket != null;
 
@@ -248,10 +254,11 @@ class DaemonClient {
 
     _log('Sending request #$requestId: $method');
 
-    // F147: Serialize request to JSON and write to socket
+    // F147: Serialize request to JSON and write to socket.
+    // Chain through _writeQueue so concurrent requests don't overlap their
+    // flush() calls (which would throw "StreamSink is bound to a stream").
     final requestJson = json.encode(request);
-    _socket!.write('$requestJson\n');
-    await _socket!.flush();
+    await _serializedWrite('$requestJson\n');
 
     // F148-F149: Create completer and wait for dispatcher to route response
     final completer = Completer<Map<String, dynamic>>();
@@ -272,6 +279,18 @@ class DaemonClient {
       _pendingRequests.remove(requestId);
       rethrow;
     }
+  }
+
+  /// Write to the socket through a serialized queue so write+flush of
+  /// concurrent requests never overlap. The queue swallows errors so one
+  /// failed write doesn't poison every subsequent request.
+  Future<void> _serializedWrite(String data) {
+    final result = _writeQueue.then((_) async {
+      _socket!.write(data);
+      await _socket!.flush();
+    });
+    _writeQueue = result.catchError((_) {});
+    return result;
   }
 
   /// Dispatch a response message to the correct pending request
