@@ -178,7 +178,10 @@ build_flutter() {
     run_or_dry flutter pub get
     run_or_dry flutter build macos --release
 
-    cp -r "$APP_DIR/build/macos/Build/Products/Release/Secretariat.app" "$BUILD_DIR/"
+    # Use ditto (not cp -r) to preserve framework symlinks (Versions/Current).
+    # cp -r flattens them, which makes codesign report "bundle format is ambiguous".
+    rm -rf "$BUILD_DIR/Secretariat.app"
+    run_or_dry ditto "$APP_DIR/build/macos/Build/Products/Release/Secretariat.app" "$BUILD_DIR/Secretariat.app"
     ok "Flutter app built"
 }
 
@@ -186,7 +189,7 @@ sign_binary() {
     local path="$1"
     if [ -f "$path" ]; then
         echo "  Signing $path..."
-        run_or_dry codesign --force --options runtime --sign "$DEV_ID" "$path"
+        run_or_dry codesign --force --options runtime --timestamp --sign "$DEV_ID" "$path"
         ok "Signed $path"
     else
         warn "File not found: $path — skipping"
@@ -200,15 +203,31 @@ sign_all() {
     sign_binary "$BUILD_DIR/secd"
     sign_binary "$BUILD_DIR/sec"
 
-    # Sign Flutter app
+    # Sign Flutter app inside-out: nested frameworks first, app bundle last.
+    # --deep is unreliable for Developer ID + hardened runtime and strips the
+    # app's entitlements; sign each component explicitly instead.
     if [ -d "$BUILD_DIR/Secretariat.app" ]; then
-        echo "  Signing Secretariat.app..."
-        run_or_dry codesign --force --deep --options runtime --sign "$DEV_ID" "$BUILD_DIR/Secretariat.app"
+        local APP="$BUILD_DIR/Secretariat.app"
+        local ENTITLEMENTS="$APP_DIR/macos/Runner/Release.entitlements"
+
+        echo "  Signing nested frameworks..."
+        local fw
+        for fw in "$APP/Contents/Frameworks/"*.framework; do
+            [ -e "$fw" ] || continue
+            run_or_dry codesign --force --options runtime --timestamp --sign "$DEV_ID" "$fw"
+        done
+        ok "Nested frameworks signed"
+
+        echo "  Signing Secretariat.app (with entitlements)..."
+        run_or_dry codesign --force --options runtime --timestamp \
+            --entitlements "$ENTITLEMENTS" \
+            --sign "$DEV_ID" "$APP"
         ok "Signed Secretariat.app"
 
         # Verify signing
         echo "  Verifying signature..."
-        run_or_dry codesign --verify --deep --strict "$BUILD_DIR/Secretariat.app"
+        run_or_dry codesign --verify --deep --strict --verbose=2 "$APP"
+        codesign -dvv "$APP" 2>&1 | grep -E "Authority|TeamIdentifier|Runtime" || true
         ok "Signature verified"
     else
         warn "Secretariat.app not found in build directory"
@@ -264,25 +283,39 @@ create_dmg() {
     local VERSION
     VERSION=$(get_version)
 
+    rm -f "$BUILD_DIR/Secretariat.dmg"
+    local DMG_OK=false
+
     if command -v create-dmg &>/dev/null; then
         echo "  Using create-dmg..."
-        run_or_dry create-dmg \
-            --volname "Secretariat v$VERSION" \
-            --volicon "$APP_DIR/macos/Runner/Assets.xcassets/AppIcon.appiconset/AppIcon.icns" 2>/dev/null || true \
-            --window-pos 200 120 \
-            --window-size 600 400 \
-            --icon-size 100 \
-            --icon "Secretariat.app" 150 190 \
-            --hide-extension "Secretariat.app" \
-            --app-drop-link 450 190 \
+        local DMG_ARGS=(
+            --volname "Secretariat v$VERSION"
+            --window-pos 200 120
+            --window-size 600 400
+            --icon-size 100
+            --icon "Secretariat.app" 150 190
+            --hide-extension "Secretariat.app"
+            --app-drop-link 450 190
+        )
+        # Optional volume icon — only added if a real .icns exists
+        # (the asset catalog ships PNGs only, so this is normally skipped)
+        local ICNS="$APP_DIR/macos/Runner/Assets.xcassets/AppIcon.appiconset/AppIcon.icns"
+        [ -f "$ICNS" ] && DMG_ARGS+=(--volicon "$ICNS")
+
+        run_or_dry create-dmg "${DMG_ARGS[@]}" \
             "$BUILD_DIR/Secretariat.dmg" \
-            "$BUILD_DIR/Secretariat.app"
-    else
-        echo "  create-dmg not found, using hdiutil..."
-        # Create a temporary directory for DMG contents
+            "$BUILD_DIR/Secretariat.app" || true
+
+        [ -f "$BUILD_DIR/Secretariat.dmg" ] && DMG_OK=true || warn "create-dmg produced no DMG — falling back to hdiutil"
+    fi
+
+    if ! $DMG_OK; then
+        echo "  Using hdiutil..."
         local DMG_TMP="$BUILD_DIR/.dmg-tmp"
+        rm -rf "$DMG_TMP"
         mkdir -p "$DMG_TMP"
-        cp -r "$BUILD_DIR/Secretariat.app" "$DMG_TMP/"
+        # ditto preserves framework symlinks (cp -r would corrupt the signed app)
+        ditto "$BUILD_DIR/Secretariat.app" "$DMG_TMP/Secretariat.app"
         ln -s /Applications "$DMG_TMP/Applications"
 
         run_or_dry hdiutil create -volname "Secretariat v$VERSION" \
@@ -293,7 +326,19 @@ create_dmg() {
         rm -rf "$DMG_TMP"
     fi
 
-    # Notarize the DMG too if signing was done
+    if [ ! -f "$BUILD_DIR/Secretariat.dmg" ]; then
+        err "DMG creation failed"
+        exit 1
+    fi
+
+    # Sign + notarize the DMG too if signing was requested.
+    # Signing the DMG (not just the app inside) is Apple best practice and
+    # makes `spctl -a -t open` assess it as accepted.
+    if $DO_SIGN && [ -f "$BUILD_DIR/Secretariat.dmg" ]; then
+        echo "  Signing DMG..."
+        run_or_dry codesign --force --timestamp \
+            --sign "$DEV_ID" "$BUILD_DIR/Secretariat.dmg"
+    fi
     if $DO_NOTARIZE && [ -f "$BUILD_DIR/Secretariat.dmg" ]; then
         echo "  Notarizing DMG..."
         run_or_dry xcrun notarytool submit "$BUILD_DIR/Secretariat.dmg" \
