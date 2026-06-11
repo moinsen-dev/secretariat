@@ -1363,7 +1363,9 @@ mod tests {
         let socket_path = get_socket_path().expect("Failed to get socket path");
 
         #[cfg(target_os = "macos")]
-        assert!(socket_path.to_string_lossy().contains("Library/Application Support/Secretariat"));
+        assert!(socket_path
+            .to_string_lossy()
+            .contains("Library/Group Containers/group.dev.moinsen.secretariat"));
 
         #[cfg(target_os = "linux")]
         assert!(socket_path.to_string_lossy().contains(".local/share/secretariat"));

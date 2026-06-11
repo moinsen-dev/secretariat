@@ -936,6 +936,7 @@ dependencies = [
  "libc",
  "rand",
  "rusqlite",
+ "secretariat-core",
  "security-framework",
  "serde",
  "serde_json",
@@ -946,6 +947,17 @@ dependencies = [
  "tracing",
  "tracing-subscriber",
  "uuid",
+ "zeroize",
+]
+
+[[package]]
+name = "secretariat-core"
+version = "0.3.0"
+dependencies = [
+ "aes-gcm",
+ "anyhow",
+ "argon2",
+ "rand",
  "zeroize",
 ]
 

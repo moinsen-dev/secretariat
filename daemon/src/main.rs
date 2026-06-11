@@ -15,7 +15,9 @@
 //! secd --version    # Show version
 //! ```
 
-mod crypto;
+// Crypto lives in the shared `secretariat-core` crate (also compiled to the
+// iOS FFI lib). Aliased to `crypto` so existing crate::crypto::* paths work.
+use secretariat_core as crypto;
 mod storage;
 mod keychain;
 mod server;

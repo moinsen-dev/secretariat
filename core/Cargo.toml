@@ -1,0 +1,20 @@
+[package]
+name = "secretariat-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+# Shared vault crypto (Argon2id key derivation + AES-256-GCM). Used by the
+# daemon today and compiled to an FFI library for the iOS app, so every
+# platform runs byte-identical crypto.
+
+[lib]
+name = "secretariat_core"
+crate-type = ["lib"]
+
+[dependencies]
+anyhow.workspace = true
+aes-gcm = "0.10"
+argon2 = "0.5"
+rand = "0.8"
+zeroize = { version = "1.7", features = ["derive"] }

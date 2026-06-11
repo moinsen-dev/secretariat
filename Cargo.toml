@@ -1,5 +1,5 @@
 [workspace]
-members = ["daemon", "cli"]
+members = ["core", "daemon", "cli"]
 exclude = ["sdk-rust"]
 resolver = "2"
 

@@ -54,7 +54,7 @@ pub struct EncryptedValue {
 /// # Examples
 ///
 /// ```
-/// use secd::crypto::generate_master_key;
+/// use secretariat_core::generate_master_key;
 ///
 /// let master_key = generate_master_key();
 /// // Store master_key in system keychain
@@ -106,7 +106,7 @@ pub fn generate_master_key() -> [u8; KEY_SIZE] {
 /// # Examples
 ///
 /// ```no_run
-/// use secd::crypto::derive_key_from_password;
+/// use secretariat_core::derive_key_from_password;
 /// use argon2::password_hash::{rand_core::OsRng, SaltString};
 ///
 /// // Generate a random salt (do this once per user/vault)
@@ -166,7 +166,7 @@ pub fn derive_key_from_password(password: &[u8], salt: &str) -> anyhow::Result<[
 /// # Examples
 ///
 /// ```
-/// use secd::crypto::generate_salt;
+/// use secretariat_core::generate_salt;
 ///
 /// let salt = generate_salt();
 /// // Store salt in database alongside encrypted data
@@ -206,7 +206,7 @@ pub fn generate_salt() -> String {
 /// # Examples
 ///
 /// ```
-/// use secd::crypto::{encrypt, generate_master_key};
+/// use secretariat_core::{encrypt, generate_master_key};
 ///
 /// let master_key = generate_master_key();
 /// let api_key = "sk-1234567890abcdef";
@@ -273,7 +273,7 @@ pub fn encrypt(plaintext: &str, key: &[u8; KEY_SIZE]) -> anyhow::Result<Encrypte
 /// # Examples
 ///
 /// ```
-/// use secd::crypto::{encrypt, decrypt, generate_master_key};
+/// use secretariat_core::{encrypt, decrypt, generate_master_key};
 ///
 /// let master_key = generate_master_key();
 /// let secret = "my-secret-api-key";

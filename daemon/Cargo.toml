@@ -16,6 +16,9 @@ serde_json.workspace = true
 anyhow.workspace = true
 thiserror.workspace = true
 
+# Shared vault crypto (Argon2id + AES-256-GCM), also used by the iOS FFI lib
+secretariat-core = { path = "../core" }
+
 # SQLite with SQLCipher support for encryption
 rusqlite = { version = "0.31", features = ["bundled-sqlcipher"] }
 
