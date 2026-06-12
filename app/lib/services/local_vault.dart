@@ -1,0 +1,140 @@
+// iOS vault backend — no daemon.
+//
+// On iOS there is no `secd`. The app operates directly on the E2E-encrypted
+// iCloud sync document (`secretariat-vault.json`), doing Argon2id + AES-256-GCM
+// via the shared Rust core (NativeCrypto / FFI). It can read EXACTLY the same
+// vault the macOS daemon writes — same key derivation, same blob layout
+// (`nonce(12) || ciphertext`, base64 in the JSON).
+//
+// The on-disk JSON is the sync payload produced by the daemon's `sync.export`:
+//   { "salt": ..., "password_verification": ...,
+//     "secrets": [ { "name", "value_encrypted"(b64), "provider", ... } ],
+//     "tombstones": [...] }
+
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'native_crypto.dart';
+
+/// Decrypted-on-demand view over the iCloud vault document.
+class LocalVault {
+  final NativeCrypto _crypto;
+  Map<String, dynamic> _doc;
+  Uint8List? _key;
+
+  LocalVault(this._crypto, this._doc);
+
+  /// Parse a vault document (the iCloud sync JSON).
+  factory LocalVault.fromJson(NativeCrypto crypto, String json) =>
+      LocalVault(crypto, (jsonDecode(json) as Map).cast<String, dynamic>());
+
+  /// Start from an empty, uninitialized document.
+  factory LocalVault.empty(NativeCrypto crypto) =>
+      LocalVault(crypto, {'secrets': [], 'tombstones': []});
+
+  bool get isInitialized => _doc['salt'] != null;
+  bool get isUnlocked => _key != null;
+
+  List<Map<String, dynamic>> get _secrets =>
+      ((_doc['secrets'] as List?) ?? const [])
+          .cast<Map>()
+          .map((m) => m.cast<String, dynamic>())
+          .toList();
+
+  /// Secret names + metadata (no decryption — works while locked).
+  List<({String name, String? provider})> listNames() =>
+      _secrets.map((s) => (name: s['name'] as String, provider: s['provider'] as String?)).toList();
+
+  /// Derive the key from the master password and verify it against the stored
+  /// verification value. Returns true on success (vault then unlocked).
+  bool unlock(String password) {
+    final salt = _doc['salt'] as String?;
+    if (salt == null) return false;
+    final key = _crypto.deriveKey(password, salt);
+
+    final verB64 = _doc['password_verification'] as String?;
+    if (verB64 != null && verB64.isNotEmpty) {
+      try {
+        final plain = _crypto.decrypt(Uint8List.fromList(base64.decode(verB64)), key);
+        if (plain != 'SECRETARIAT_VAULT_VERIFICATION_V1') return false;
+      } catch (_) {
+        return false; // wrong password (auth-tag failure)
+      }
+    }
+    _key = key;
+    return true;
+  }
+
+  void lock() => _key = null;
+
+  /// Decrypt and return a secret value (vault must be unlocked).
+  String getValue(String name) {
+    final key = _requireKey();
+    final s = _secrets.firstWhere(
+      (s) => s['name'] == name,
+      orElse: () => throw StateError("Secret '$name' not found"),
+    );
+    final blob = base64.decode(s['value_encrypted'] as String);
+    return _crypto.decrypt(Uint8List.fromList(blob), key);
+  }
+
+  /// Create or update a secret (encrypts locally; updates the in-memory doc
+  /// and bumps updated_at so the daemon's last-write-wins merge picks it up).
+  void setValue(String name, String value, {String? provider}) {
+    final key = _requireKey();
+    final blob = _crypto.encrypt(value, key);
+    final b64 = base64.encode(blob);
+    final now = _sqliteNow();
+
+    final secrets = (_doc['secrets'] as List).cast<Map>();
+    final idx = secrets.indexWhere((s) => s['name'] == name);
+    if (idx >= 0) {
+      secrets[idx]['value_encrypted'] = b64;
+      secrets[idx]['updated_at'] = now;
+      if (provider != null) secrets[idx]['provider'] = provider;
+    } else {
+      secrets.add({
+        'name': name,
+        'value_encrypted': b64,
+        'provider': provider,
+        'environment': 'default',
+        'notes': null,
+        'created_at': now,
+        'updated_at': now,
+        'version': 1,
+        'rotated_at': null,
+      });
+    }
+    // A re-created secret cancels a prior tombstone.
+    final tombs = (_doc['tombstones'] as List?)?.cast<Map>() ?? [];
+    tombs.removeWhere((t) => t['name'] == name);
+    _doc['tombstones'] = tombs;
+  }
+
+  /// Delete a secret, leaving a tombstone (for cross-device sync).
+  void delete(String name) {
+    final secrets = (_doc['secrets'] as List).cast<Map>();
+    secrets.removeWhere((s) => s['name'] == name);
+    final tombs = (_doc['tombstones'] as List?)?.cast<Map>() ?? [];
+    tombs.removeWhere((t) => t['name'] == name);
+    tombs.add({'name': name, 'deleted_at': _sqliteNow()});
+    _doc['tombstones'] = tombs;
+  }
+
+  /// Serialize back to the iCloud sync JSON.
+  String toJson() => jsonEncode(_doc);
+
+  Uint8List _requireKey() {
+    final k = _key;
+    if (k == null) throw StateError('Vault is locked');
+    return k;
+  }
+
+  /// UTC timestamp in SQLite's `YYYY-MM-DD HH:MM:SS` format — same lexically
+  /// ordered shape the daemon uses, so last-write-wins compares correctly.
+  static String _sqliteNow() {
+    final n = DateTime.now().toUtc();
+    String p(int v) => v.toString().padLeft(2, '0');
+    return '${n.year}-${p(n.month)}-${p(n.day)} ${p(n.hour)}:${p(n.minute)}:${p(n.second)}';
+  }
+}

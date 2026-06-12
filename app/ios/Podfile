@@ -30,6 +30,10 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks!
 
+  # Shared Rust crypto core (Argon2id + AES-256-GCM) — iOS has no daemon,
+  # so the app runs the same crypto via FFI. See tools/build_ios_xcframework.sh.
+  pod 'secretariat_core', :path => '.'
+
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
     inherit! :search_paths
