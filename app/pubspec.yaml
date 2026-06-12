@@ -41,6 +41,10 @@ dependencies:
   # Path manipulation utilities
   path: ^1.9.1
 
+  # dart:ffi helpers (malloc/free) for the secretariat-core crypto bridge.
+  # iOS has no daemon — the app does Argon2id/AES-GCM via the shared Rust core.
+  ffi: ^2.1.0
+
   # System tray integration - for Wave 23 (F192-F199)
   # Migrated from system_tray to tray_manager (actively maintained)
   tray_manager: ^0.5.2
