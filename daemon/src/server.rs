@@ -480,6 +480,50 @@ async fn handle_request(request: Request, server_state: &ServerState) -> Respons
         );
     }
 
+    // Unlock from the Keychain-stored master key (no password). The caller
+    // gates this with biometrics (e.g. the macOS App Intent does Touch ID
+    // before invoking it); the key is read from the daemon's Keychain item.
+    if request.method == "vault.unlock_keychain" {
+        if !server_state.is_vault_locked() {
+            return Response::success(
+                request.id,
+                serde_json::json!({ "status": "already_unlocked" }),
+            );
+        }
+        match crate::keychain::retrieve_master_key() {
+            Ok(key) => {
+                // Reject a stale Keychain key (left over from an earlier init).
+                let storage = server_state.storage.lock().await;
+                let valid = crate::handlers::vault_unlock::verify_master_key(&storage, &key)
+                    .unwrap_or(false);
+                drop(storage);
+                if !valid {
+                    return Response::error(
+                        request.id,
+                        ErrorInfo::internal_error(
+                            "Keychain key is stale — unlock with your password once to refresh it."
+                                .to_string(),
+                        ),
+                    );
+                }
+                server_state.unlock_vault(key).await;
+                return Response::success(
+                    request.id,
+                    serde_json::json!({ "status": "unlocked" }),
+                );
+            }
+            Err(e) => {
+                return Response::error(
+                    request.id,
+                    ErrorInfo::internal_error(format!(
+                        "No Keychain key available (unlock with password instead): {}",
+                        e
+                    )),
+                );
+            }
+        }
+    }
+
     // Handle vault.unlock specially - async operation
     if request.method == "vault.unlock" {
         if !server_state.is_vault_locked() {

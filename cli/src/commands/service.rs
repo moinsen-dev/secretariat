@@ -80,6 +80,46 @@ fn plist_contents(secd_path: &str) -> String {
     )
 }
 
+/// Sign the daemon with a stable Developer ID identity (+ fixed identifier) so
+/// macOS TCC and Keychain remember the user's grant across rebuilds. Best-effort
+/// — release binaries are already Developer-ID-signed; if no identity is found
+/// we leave the (ad-hoc) signature and note the caveat.
+fn sign_daemon(path: &std::path::Path) {
+    let identity = Command::new("security")
+        .args(["find-identity", "-v", "-p", "codesigning"])
+        .output()
+        .ok()
+        .and_then(|o| {
+            String::from_utf8_lossy(&o.stdout)
+                .lines()
+                .find(|l| l.contains("Developer ID Application"))
+                .and_then(|l| l.split('"').nth(1).map(|s| s.to_string()))
+        });
+
+    let Some(identity) = identity else {
+        println!("  ⚠ No Developer ID identity found — daemon left ad-hoc signed;");
+        println!("    macOS may re-prompt for app-data/Keychain access on each start.");
+        return;
+    };
+
+    let status = Command::new("codesign")
+        .args([
+            "--force",
+            "--options",
+            "runtime",
+            "--identifier",
+            "dev.moinsen.secretariat.daemon",
+            "--sign",
+            &identity,
+            &path.to_string_lossy(),
+        ])
+        .status();
+    match status {
+        Ok(s) if s.success() => println!("  Signed daemon: {}", identity),
+        _ => println!("  ⚠ codesign failed — macOS may re-prompt for permissions."),
+    }
+}
+
 pub fn install() -> Result<()> {
     if !cfg!(target_os = "macos") {
         bail!("'service install' is macOS-only (Linux uses systemd --user).");
@@ -100,6 +140,11 @@ pub fn install() -> Result<()> {
         use std::os::unix::fs::PermissionsExt;
         fs::set_permissions(&dest, fs::Permissions::from_mode(0o755))?;
     }
+
+    // Sign with a stable Developer ID identity so macOS remembers the
+    // TCC ("data from other apps") and Keychain grants across rebuilds.
+    // Ad-hoc binaries get a fresh identifier each build → re-prompt every time.
+    sign_daemon(&dest);
 
     // Write the LaunchAgent plist.
     let la_dir = launch_agents_dir()?;

@@ -189,7 +189,15 @@ sign_binary() {
     local path="$1"
     if [ -f "$path" ]; then
         echo "  Signing $path..."
-        run_or_dry codesign --force --options runtime --timestamp --sign "$DEV_ID" "$path"
+        # The daemon gets a STABLE identifier so macOS remembers its
+        # TCC (app-data) + Keychain grants across rebuilds (matches
+        # `sec service install`). Other binaries use the default identifier.
+        local id_args=()
+        if [ "$(basename "$path")" = "secd" ]; then
+            id_args=(--identifier dev.moinsen.secretariat.daemon)
+        fi
+        run_or_dry codesign --force --options runtime --timestamp \
+            "${id_args[@]}" --sign "$DEV_ID" "$path"
         ok "Signed $path"
     else
         warn "File not found: $path — skipping"

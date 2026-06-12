@@ -146,10 +146,44 @@ pub fn handle_vault_unlock(password: &str, storage: &Storage) -> Result<VaultUnl
 
     tracing::info!("Vault unlocked successfully");
 
+    // Keep the Keychain key in sync so biometric (Touch ID) unlock uses the
+    // current key. Best-effort — ignore Keychain timeouts.
+    let _ = crate::keychain::store_master_key(&master_key);
+
     Ok(VaultUnlockResult {
         status: "unlocked".to_string(),
         master_key,
     })
+}
+
+/// Verify a candidate master key against the stored verification value.
+/// Returns Ok(true) if it decrypts the verification value correctly (or if no
+/// verification value exists — legacy vault), Ok(false) if the key is wrong.
+/// Used by Keychain/biometric unlock to reject a stale Keychain key.
+pub fn verify_master_key(storage: &Storage, master_key: &[u8; 32]) -> Result<bool> {
+    let Some(verification_b64) = storage.get_vault_metadata("password_verification")? else {
+        return Ok(true); // legacy vault without a verification value
+    };
+
+    use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
+    let verification_bytes = BASE64
+        .decode(&verification_b64)
+        .context("Failed to decode verification value")?;
+    if verification_bytes.len() < 12 {
+        return Ok(false);
+    }
+
+    let mut nonce = [0u8; 12];
+    nonce.copy_from_slice(&verification_bytes[..12]);
+    let encrypted = EncryptedValue {
+        nonce,
+        ciphertext: verification_bytes[12..].to_vec(),
+    };
+
+    match decrypt(&encrypted, master_key) {
+        Ok(plaintext) => Ok(plaintext == "SECRETARIAT_VAULT_VERIFICATION_V1"),
+        Err(_) => Ok(false),
+    }
 }
 
 /// Handle a failed unlock attempt
