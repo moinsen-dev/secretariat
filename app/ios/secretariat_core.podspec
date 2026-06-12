@@ -9,12 +9,18 @@ Pod::Spec.new do |s|
   s.platform         = :ios, '13.0'
   s.source           = { :path => '.' }
 
-  # Prebuilt static lib (built by tools/build_ios_xcframework.sh).
-  s.vendored_frameworks = 'Frameworks/SecretariatCore.xcframework'
-
-  # It's a static library — force-load it so dart:ffi can resolve the symbols
-  # at runtime (the linker would otherwise dead-strip the "unused" exports).
-  s.pod_target_xcconfig = {
-    'OTHER_LDFLAGS' => '-force_load "${PODS_TARGET_SRCROOT}/Frameworks/SecretariatCore.xcframework/ios-arm64/libsecretariat_core_ffi.a"',
+  # Built by tools/build_ios_xcframework.sh. We don't use vendored_frameworks
+  # (its auto-link of a static-lib xcframework fights slice extraction/ordering
+  # in Flutter's build). Instead force-load the matching slice per SDK: the
+  # source .a always exists (no "missing build input"), force_load keeps the
+  # C symbols for dart:ffi, and there's no double-link.
+  s.preserve_paths   = 'Frameworks/SecretariatCore.xcframework'
+  # -u marks the symbols as required so the linker keeps them in the dynamic
+  # symbol table (dart:ffi resolves them via dlsym) instead of dead-stripping
+  # the force-loaded-but-unreferenced exports.
+  keep = '-Wl,-u,_sec_derive_key -Wl,-u,_sec_encrypt -Wl,-u,_sec_decrypt -Wl,-u,_sec_free -Wl,-u,_sec_key_size'
+  s.user_target_xcconfig = {
+    'OTHER_LDFLAGS[sdk=iphoneos*]'        => "$(inherited) #{keep} -force_load ${PODS_ROOT}/../Frameworks/SecretariatCore.xcframework/ios-arm64/libsecretariat_core_ffi.a",
+    'OTHER_LDFLAGS[sdk=iphonesimulator*]' => "$(inherited) #{keep} -force_load ${PODS_ROOT}/../Frameworks/SecretariatCore.xcframework/ios-arm64_x86_64-simulator/libsecretariat_core_ffi.a",
   }
 end

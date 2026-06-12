@@ -3,6 +3,7 @@ PODS:
   - local_auth_darwin (0.0.1):
     - Flutter
     - FlutterMacOS
+  - secretariat_core (0.4.0)
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -10,6 +11,7 @@ PODS:
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - local_auth_darwin (from `.symlinks/plugins/local_auth_darwin/darwin`)
+  - secretariat_core (from `.`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
 
 EXTERNAL SOURCES:
@@ -17,14 +19,17 @@ EXTERNAL SOURCES:
     :path: Flutter
   local_auth_darwin:
     :path: ".symlinks/plugins/local_auth_darwin/darwin"
+  secretariat_core:
+    :path: "."
   shared_preferences_foundation:
     :path: ".symlinks/plugins/shared_preferences_foundation/darwin"
 
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   local_auth_darwin: c3ee6cce0a8d56be34c8ccb66ba31f7f180aaebb
+  secretariat_core: 7d03f1765d1d44ae516fc91f8797ca0e8ae5fd2c
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
 
-PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
+PODFILE CHECKSUM: 78b6e5a10a44b8e54697118837a2187dbd52407f
 
 COCOAPODS: 1.16.2
