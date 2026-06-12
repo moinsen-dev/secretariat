@@ -21,7 +21,7 @@ use client::DaemonClient;
 #[derive(Parser)]
 #[command(name = "sec")]
 #[command(author = "Secretariat Team")]
-#[command(version = "0.1.0")]
+#[command(version = env!("CARGO_PKG_VERSION"))]
 #[command(about = "Local-first secrets manager", long_about = None)]
 struct Cli {
     /// Command to execute
