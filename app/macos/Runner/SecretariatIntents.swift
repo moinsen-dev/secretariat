@@ -1,0 +1,134 @@
+import AppIntents
+import AppKit
+import Foundation
+
+// App Intents expose Secretariat to the system Shortcuts app, so a user can
+// bind a global keyboard shortcut that fetches a secret and (via a paste step)
+// inserts it wherever the cursor is. The intent talks to the daemon over the
+// App Group Unix socket — the daemon decrypts (trusted local interface), so no
+// crypto runs here. Mirrored on iOS later (there the intent reads the iCloud
+// vault + decrypts via the Rust core, since iOS has no daemon).
+
+@available(macOS 13.0, *)
+struct GetSecretValueIntent: AppIntent {
+  static var title: LocalizedStringResource = "Get Secret"
+  static var description = IntentDescription(
+    "Fetch a Secretariat secret and copy its value to the clipboard so you can paste it.")
+
+  @Parameter(title: "Secret Name", description: "The name/key of the secret, e.g. OPENAI_API_KEY")
+  var secretName: String
+
+  @MainActor
+  func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
+    let value = try SecretariatDaemon.getSecret(name: secretName)
+    NSPasteboard.general.clearContents()
+    NSPasteboard.general.setString(value, forType: .string)
+    return .result(
+      value: value,
+      dialog: "Copied \(secretName) to the clipboard.")
+  }
+}
+
+@available(macOS 13.0, *)
+struct SecretariatShortcuts: AppShortcutsProvider {
+  static var appShortcuts: [AppShortcut] {
+    AppShortcut(
+      intent: GetSecretValueIntent(),
+      phrases: ["Get a \(.applicationName) secret"],
+      shortTitle: "Get Secret",
+      systemImageName: "key.fill")
+  }
+}
+
+enum SecretariatError: Error, CustomLocalizedStringResourceConvertible {
+  case notConnected
+  case locked
+  case notFound(String)
+  case protocolError(String)
+
+  var localizedStringResource: LocalizedStringResource {
+    switch self {
+    case .notConnected: return "Secretariat daemon isn't running."
+    case .locked: return "Vault is locked — unlock Secretariat first."
+    case .notFound(let n): return "Secret '\(n)' was not found."
+    case .protocolError(let m): return "Secretariat error: \(m)"
+    }
+  }
+}
+
+/// Minimal newline-delimited JSON-RPC client over the App Group Unix socket.
+enum SecretariatDaemon {
+  static func socketPath() -> String? {
+    FileManager.default.containerURL(
+      forSecurityApplicationGroupIdentifier: "group.dev.moinsen.secretariat")?
+      .appendingPathComponent("secretariat.sock").path
+  }
+
+  static func getSecret(name: String) throws -> String {
+    let resp = try request(
+      method: "secret.get",
+      params: ["name": name, "app_id": "flutter-app"])
+    if let err = resp["error"] as? [String: Any] {
+      let msg = (err["message"] as? String) ?? "unknown error"
+      if msg.contains("locked") { throw SecretariatError.locked }
+      if msg.contains("not found") || msg.contains("does not exist") {
+        throw SecretariatError.notFound(name)
+      }
+      throw SecretariatError.protocolError(msg)
+    }
+    guard let result = resp["result"] as? [String: Any],
+          let value = result["value"] as? String else {
+      throw SecretariatError.protocolError("malformed response")
+    }
+    return value
+  }
+
+  static func request(method: String, params: [String: Any]) throws -> [String: Any] {
+    guard let path = socketPath() else { throw SecretariatError.notConnected }
+
+    let fd = socket(AF_UNIX, SOCK_STREAM, 0)
+    if fd < 0 { throw SecretariatError.notConnected }
+    defer { close(fd) }
+
+    var addr = sockaddr_un()
+    addr.sun_family = sa_family_t(AF_UNIX)
+    let pathBytes = path.utf8CString
+    guard pathBytes.count <= MemoryLayout.size(ofValue: addr.sun_path) else {
+      throw SecretariatError.notConnected
+    }
+    withUnsafeMutablePointer(to: &addr.sun_path) { dst in
+      dst.withMemoryRebound(to: CChar.self, capacity: pathBytes.count) { d in
+        pathBytes.withUnsafeBufferPointer { src in
+          d.update(from: src.baseAddress!, count: pathBytes.count)
+        }
+      }
+    }
+    let connected = withUnsafePointer(to: &addr) {
+      $0.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+        connect(fd, $0, socklen_t(MemoryLayout<sockaddr_un>.size))
+      }
+    }
+    if connected < 0 { throw SecretariatError.notConnected }
+
+    let req: [String: Any] = ["jsonrpc": "2.0", "id": 1, "method": method, "params": params]
+    var data = try JSONSerialization.data(withJSONObject: req)
+    data.append(0x0A)
+    _ = data.withUnsafeBytes { write(fd, $0.baseAddress, data.count) }
+
+    var response = Data()
+    var buf = [UInt8](repeating: 0, count: 4096)
+    while true {
+      let n = read(fd, &buf, buf.count)
+      if n <= 0 { break }
+      response.append(contentsOf: buf[0..<n])
+      if buf[0..<n].contains(0x0A) { break }
+    }
+    guard let text = String(data: response, encoding: .utf8),
+          let line = text.split(separator: "\n").first,
+          let obj = try JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any]
+    else {
+      throw SecretariatError.protocolError("no/invalid response")
+    }
+    return obj
+  }
+}
