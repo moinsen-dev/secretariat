@@ -37,3 +37,9 @@ walkdir = "2.4"
 
 # Timestamps for archive naming
 chrono = "0.4"
+
+# .secretariat.toml project manifest (secret NAMES only, committable)
+toml = "0.8"
+
+# Server-side secret generation for the MCP set_secret tool
+rand = "0.8"

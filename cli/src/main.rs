@@ -72,11 +72,17 @@ enum Commands {
     /// Cleanup old .env files
     Cleanup(CleanupCommand),
 
+    /// Run a command with secrets injected into its environment
+    Run(RunCommand),
+
     /// Show daemon status
     Status(StatusCommand),
 
     /// Manage the daemon Launch Agent (install/uninstall/status)
     Service(ServiceCommand),
+
+    /// Run the MCP server for AI agents (stdio) — use, but never read, secrets
+    Mcp(McpCommand),
 
     /// Unlock vault (Touch ID/password)
     Unlock(UnlockCommand),
@@ -107,6 +113,46 @@ enum ServiceAction {
     /// Show Launch Agent install/running status
     Status,
 }
+
+/// Run a command with secrets injected into its environment.
+///
+/// Secret names come from a committable .secretariat.toml manifest (names
+/// only, never values) and/or --secret flags. Child stdout/stderr are
+/// scrubbed: secret values are replaced with [REDACTED:NAME].
+///
+/// Examples:
+///   sec run -- npm run dev
+///   sec run --secret OPENAI_API_KEY -- python train.py
+///   sec run --secret API_KEY=prod/api_key -- ./deploy.sh
+#[derive(Parser)]
+struct RunCommand {
+    /// Path to the manifest (default: search .secretariat.toml upwards)
+    #[arg(long)]
+    manifest: Option<std::path::PathBuf>,
+
+    /// Inject a secret: NAME or ENV_VAR=VAULT_NAME (repeatable)
+    #[arg(long = "secret")]
+    secrets: Vec<String>,
+
+    /// Inherit stdio instead of scrubbing output (interactive/TTY tools)
+    #[arg(long)]
+    no_redact: bool,
+
+    /// The command to run (everything after --)
+    #[arg(trailing_var_arg = true, allow_hyphen_values = true, required = true)]
+    command: Vec<String>,
+}
+
+/// MCP server over stdio for AI agents.
+///
+/// Deliberately asymmetric: agents can list secret NAMES, run commands with
+/// secrets injected (output redacted), create secrets, and read the audit
+/// log — but there is NO tool that returns a secret value.
+///
+/// Claude Code (.mcp.json):
+///   { "mcpServers": { "secretariat": { "command": "sec", "args": ["mcp"] } } }
+#[derive(Parser)]
+struct McpCommand {}
 
 // F091: InitCommand struct for sec init
 /// Initialize the secrets vault
@@ -325,7 +371,10 @@ struct VersionCommand {
 #[tokio::main]
 async fn main() -> Result<()> {
     // Initialize tracing for logging
+    // Logs go to stderr: stdout must stay clean for piping (`sec get`) and is
+    // the protocol channel in MCP mode (`sec mcp`).
     tracing_subscriber::fmt()
+        .with_writer(std::io::stderr)
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| tracing_subscriber::EnvFilter::new("info")),
@@ -354,11 +403,24 @@ async fn main() -> Result<()> {
         Commands::Import(cmd) => handle_import(client, cmd).await,
         Commands::Cleanup(cmd) => handle_cleanup(client, cmd).await,
         Commands::Status(cmd) => handle_status(client, cmd).await,
+        Commands::Run(cmd) => {
+            commands::run::handle_run(
+                client,
+                commands::run::RunArgs {
+                    manifest: cmd.manifest,
+                    secrets: cmd.secrets,
+                    no_redact: cmd.no_redact,
+                    command: cmd.command,
+                },
+            )
+            .await
+        }
         Commands::Service(cmd) => match cmd.action {
             ServiceAction::Install => commands::service::install(),
             ServiceAction::Uninstall => commands::service::uninstall(),
             ServiceAction::Status => commands::service::status(),
         },
+        Commands::Mcp(_) => commands::mcp::serve(client).await,
         Commands::Unlock(cmd) => handle_unlock(client, cmd).await,
         Commands::Lock(cmd) => handle_lock(client, cmd).await,
         Commands::ChangePassword(cmd) => handle_change_password(client, cmd).await,

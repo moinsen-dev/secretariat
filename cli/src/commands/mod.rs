@@ -17,6 +17,8 @@ pub mod list;
 pub mod lock;
 pub mod revoke;
 pub mod rotate;
+pub mod mcp;
+pub mod run;
 pub mod service;
 pub mod set;
 pub mod status;
