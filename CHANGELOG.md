@@ -1,5 +1,40 @@
 # Changelog
 
+## v0.4.0 (2026-06-12) — The Agentic Release
+
+🤖 **Secrets your AI can use but never see.** The mission features that make
+Secretariat the secret manager for the agentic-coding age.
+
+### Features
+- **`sec run`** — run any command with secrets injected into its environment.
+  Names come from a committable `.secretariat.toml` manifest (NAMES only) and/or
+  `--secret` flags; child stdout/stderr are scrubbed so secret values become
+  `[REDACTED:NAME]`. `--no-redact` for TTY tools. Replaces `.env` files.
+- **`sec mcp`** — MCP server (stdio) for AI agents with deliberately asymmetric
+  tools: `list_secret_names`, `run_with_secrets` (inject + redact + timeout),
+  `set_secret` (write-only; `generate` creates a value server-side that never
+  enters the agent's context), `read_audit`. There is **no** tool that returns
+  a secret value.
+- **`sec import --eradicate`** — one-command migration off plaintext: import →
+  write manifest → `.gitignore` → secure-delete the `.env` → scan the project
+  for leftover plaintext. Only deletes a file when every value in it is in the
+  vault.
+- **Peer attestation** — the daemon identifies the connecting process from the
+  socket (PID → path → code signature) instead of a self-declared id. Opt-in
+  enforcement via `SECRETARIAT_REQUIRE_SIGNED` (signed first-party binaries
+  only).
+- **macOS quick-insert** — a "Get Secret" App Intent with a secret picker and
+  Touch-ID unlock (`vault.unlock_keychain`), for system Shortcuts.
+
+### Changed
+- Shared crypto extracted into the `secretariat-core` crate (foundation for the
+  iOS FFI build).
+- `sec service install` and the release now sign the daemon with a stable
+  Developer ID identifier, so macOS remembers app-data/Keychain grants across
+  rebuilds (no more per-launch permission prompts).
+- README rewritten around the mission; CLI logs moved to stderr (stdout is the
+  MCP/pipe channel).
+
 ## v0.3.0 (2026-06-10) — Multi-Device Sync
 
 🔐 **End-to-end-encrypted secret sync across your Apple devices (macOS).**

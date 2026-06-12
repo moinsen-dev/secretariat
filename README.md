@@ -1,197 +1,142 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://secretariat.moinsen.dev/og-image.png">
-  <img src="https://secretariat.moinsen.dev/og-image.png" alt="Secretariat — Der Secret-Vault für Mensch & KI" width="800">
+  <img src="https://secretariat.moinsen.dev/og-image.png" alt="Secretariat — Secrets deine KI nutzen, aber nie sehen kann" width="800">
 </picture>
 
-# Secretariat — Der Secret-Vault für Mensch & KI
+# Secretariat
 
-> **Ein Vault. Mensch und KI. Nie wieder Secrets im Chat.**
+> **Secrets, die deine KI *nutzen*, aber nie *sehen* kann.**
+> Keine `.env`-Dateien. Keine Keys im Chat. Kein „darf ich mal kurz den API-Key?".
 
 [![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-blue)](LICENSE)
 [![macOS](https://img.shields.io/badge/platform-macOS-black?logo=apple)](https://secretariat.moinsen.dev)
 [![Rust](https://img.shields.io/badge/built%20with-Rust-orange?logo=rust)](https://www.rust-lang.org/)
-[![Homebrew](https://img.shields.io/badge/brew-tap-green?logo=homebrew)](https://github.com/moinsen-dev/homebrew-tap)
 
 ---
 
-## Wieso Secretariat?
+## Das Problem im Zeitalter des Agentic Coding
+
+Deine KI baut, deployt, testet — und braucht ständig Credentials. Heute heißt das:
 
 ```bash
-# Vorher: Wo war der API-Key noch?
-grep -r "sk-" ~/Documents/
-cat ~/Projects/*/.env 2>/dev/null
-# Oder schlimmer: Du gibst den Key deinem KI-Assistenten im Chat
-# → Er taucht in der Prompt-History, in Exports, in Logs auf
+# Secrets liegen im Klartext herum…
+cat .env                     # OPENAI_API_KEY=sk-...
+grep -r "sk-" ~/Projects/    # über zig Projekte verstreut
 
-# Nachher: Ein Befehl für Mensch & KI
-sec get /openai/api-key
+# …und landen im KI-Kontext, sobald der Agent sie „braucht":
+#   → in der Prompt-History, in Session-Exports, in Logs, in Tool-Outputs.
 ```
 
-**Secretariat ist der erste Secret-Manager, der für die Zusammenarbeit von Menschen und KI-Agenten gebaut ist.** Ein gemeinsamer, lokaler Vault. API-Keys, Tokens, Zertifikate — einmal gespeichert, für beide abrufbar. **Das Secret erscheint nie im Chat, nie in Dateien, nie in Prompt-Exports.**
+Entweder du **vertraust der KI nicht** (und tippst jeden Key von Hand) — oder du **vertraust ihr zu viel** (und dein Stripe-Key liegt in einem Transcript).
+
+## Die Lösung: asymmetrischer Zugriff
+
+Secretariat gibt Mensch und KI **unterschiedliche Fähigkeiten am selben Vault**:
+
+| | Mensch | KI-Agent |
+|---|:---:|:---:|
+| Werte **lesen** | ✅ (Touch ID) | ❌ **nie** |
+| Secrets **benutzen** (in Prozesse injizieren) | ✅ | ✅ |
+| Secrets **anlegen** (auch generiert) | ✅ | ✅ |
+| Namen **auflisten** | ✅ | ✅ |
+| Audit-Log lesen | ✅ | ✅ |
+
+Klartext existiert nur **im Daemon-Speicher** und **in der Umgebung des Zielprozesses** — nie in einer Datei, nie im Kontext der KI. Das ist keine Policy, das ist im Protokoll verankert: **es gibt kein Tool, das einen Wert zurückgibt.**
+
+---
+
+## Die drei Befehle, die alles ändern
+
+### 1. `sec run` — Secrets benutzen, ohne sie zu sehen
+
+```bash
+sec run -- npm run dev
+```
+
+Injiziert die Secrets aus `.secretariat.toml` (committable, enthält **nur Namen**) in die Umgebung des Kindprozesses. Output wird **redaktiert**: taucht ein Wert in stdout/stderr auf, wird er zu `[REDACTED:NAME]`. Selbst ein versehentliches `console.log(apiKey)` leakt nichts.
+
+```toml
+# .secretariat.toml  — sicher zu committen
+[secrets]
+OPENAI_API_KEY = "OPENAI_API_KEY"
+DATABASE_URL   = "myapp/db_url"
+```
+
+### 2. `sec mcp` — der MCP-Server für KI-Agenten
+
+```jsonc
+// .mcp.json  (Claude Code / Codex / jeder MCP-Client)
+{ "mcpServers": { "secretariat": { "command": "sec", "args": ["mcp"] } } }
+```
+
+Stellt vier bewusst **asymmetrische** Tools bereit:
+`list_secret_names` · `run_with_secrets` (Befehl ausführen + injizieren + Output redaktieren) · `set_secret` (write-only; `generate: true` erzeugt einen starken Zufallswert serverseitig, der **nie** in den KI-Kontext gelangt) · `read_audit`.
+**Kein** `get_value` — by design.
+
+### 3. `sec import --eradicate` — raus aus dem .env-Zeitalter
+
+```bash
+sec import . --scan --eradicate
+```
+
+Importiert alle Secrets, schreibt das committable Manifest, ergänzt `.gitignore`, **überschreibt + löscht** die `.env`-Dateien und **scannt** das Projekt nach Klartext-Resten (zeigt Datei + KEY, nie den Wert). Eine Datei wird nur gelöscht, wenn **jeder** Wert daraus nachweislich im Vault liegt.
 
 ---
 
 ## Quick Start
 
 ```bash
-# Install (macOS)
-brew install moinsen-dev/tap/secretariat
-
-# Oder aus Source bauen
+# Bauen
 cargo build --release
 
-# Vault initialisieren (headless-fähig)
-sec init --password "dein-passwort"
+# Daemon als Hintergrund-Dienst installieren (signiert → keine Dauer-Prompts)
+sec service install
 
-# Daemon starten (automatisch via LaunchAgent)
-brew services start secretariat
+# Vault initialisieren + entsperren
+sec init                 # fragt nach Master-Passwort
+sec unlock
 
-# Erstes Secret speichern
-sec set /github/token ghp_xxxxx
-
-# Abrufen — für Mensch & KI
-sec get /github/token
-
-# Alle Secrets listen
-sec list
-
-# Aus .env importieren
-sec import ~/project/.env
-```
-
-### Non-Interactive / Headless
-
-```bash
-# Initialisierung ohne Terminal
-SECRETARIAT_INIT_PASSWORD="pass" sec init
-
-# Unlock ohne Touch-ID
-sec unlock --password-value "pass"
-# oder via Env-Var:
-SECRETARIAT_INIT_PASSWORD="pass" sec unlock
+# Migrieren + loslegen
+sec import . --scan --eradicate
+sec run -- npm run dev
 ```
 
 ---
 
-## Für KI-Agenten
+## Sicherheitsmodell
 
-Dein KI-Assistent (Claude, Codex, Hermes, o.ä.) kann Secrets direkt aus dem Vault laden:
-
-```bash
-# Der Agent ruft im Terminal auf:
-sec get /deepseek/api-key
-# → Output: Nur der Key in stdout. Nie im Chat. Nie in Dateien.
-```
-
-Damit:
-- **Kein Secret** landet im Prompt-Kontext oder in Chat-Logs
-- **Rotation** = ein `sec set` — der Agent holt beim nächsten Mal den neuen Key
-- **Ein Vault** für dich und all deine Agenten
-
----
-
-## Features
-
-### 🛡️ Verschlüsselter Vault
-AES-256-GCM, SQLCipher-Backend, Argon2id Key-Derivation. Master-Key per Passwort geschützt.
-
-### ⚡ CLI + Daemon
-`sec set`, `sec get`, `sec list`, `sec import`. Daemon (`secd`) läuft im Hintergrund, LaunchAgent Auto-Start.
-
-### 🧑‍🤝‍🧑 Mensch + KI
-Ein Vault für dich und deine Agenten. Das Secret erscheint nur im stdout des Terminal-Tools — nie im Chat oder in Dateien.
-
-### 🔗 Multi-Device
-Unix Socket (lokal) + TCP (Netzwerk). Auth-Token-geschützt. Zugriff vom Mac, Server, oder jedem Device im Netzwerk.
-
-### 🐍 Python SDK
-```python
-from secretariat import Vault
-
-vault = Vault()
-db_password = vault.get("/postgres/password")
-```
-
-### 🦀 Rust Core
-Daemon (`secd`) + CLI (`sec`) in einem Build. Schnell, speichersicher, kein GC.
-
-### 🤖 Headless-fähig
-Funktioniert auf headless Mac Minis und Servern. `--password`-Flag und `SECRETARIAT_INIT_PASSWORD`-Env-Var für Non-Interactive-Betrieb. Keychain-Timeout (3s) verhindert Hänger ohne GUI.
+- **E2E-verschlüsselter Multi-Device-Sync** über deine private iCloud — nur Chiffrat (AES-256-GCM) + Salt verlassen das Gerät, das Master-Passwort nie. Alle deine Macs teilen einen Vault.
+- **Peer-Attestation:** der Daemon identifiziert den verbindenden Prozess über die Socket-Identität (PID → Pfad → Code-Signatur), nicht über eine selbst-behauptete ID. Mit `SECRETARIAT_REQUIRE_SIGNED` bekommen nur signierte Erst-Anbieter-Binaries Zugriff.
+- **Sandboxed App + Touch-ID-Unlock:** die macOS-App ist sandboxed; der Daemon-Socket liegt im geteilten App-Group-Container. Quick-Insert per System-Shortcut entsperrt via Touch ID.
+- **Krypto:** Argon2id-Key-Derivation, AES-256-GCM, geteilter Rust-Core (`secretariat-core`) für byte-identische Krypto auf allen Plattformen.
 
 ---
 
 ## Architektur
 
 ```
-┌────────────────────────────────────────────────┐
-│  CLI (sec)        │  SDKs (Python, Dart,        │
-│                   │  Rust, Node.js)             │
-├────────────────────────────────────────────────┤
-│            Unix Socket / TCP (Port 7357)        │
-├────────────────────────────────────────────────┤
-│  Daemon (secd)    │  Auth-Token Auth            │
-├────────────────────────────────────────────────┤
-│  SQLCipher Vault  │  AES-256-GCM               │
-├────────────────────────────────────────────────┤
-│  macOS Keychain   │  File System                │
-└────────────────────────────────────────────────┘
+  Mensch:  macOS-App (sandboxed) · sec CLI · System-Shortcuts (Touch ID)
+  KI:      sec mcp (MCP)         · sec run
+
+                    ▼  App-Group Unix-Socket (JSON-RPC, peer-attested)
+
+  Daemon (secd, Rust)  ── Argon2id + AES-256-GCM ── SQLCipher-Vault
+        │
+        └── E2E-verschlüsselte iCloud-Sync-Datei  ⇄  deine anderen Macs
 ```
 
-### Komponenten
-
-| Component | Language | Location |
-|-----------|----------|----------|
+| Komponente | Sprache | Ort |
+|---|---|---|
 | Daemon (`secd`) | Rust | `daemon/` |
-| CLI (`sec`) | Rust | `cli/` |
-| macOS Menu Bar App | SwiftUI | `app/` |
-| Python SDK | Python | `sdk-python/` |
-| Rust SDK | Rust | `sdk-rust/` |
-| Dart SDK | Dart | `sdk-dart/` |
-| Node.js SDK | TypeScript | `sdk-node/` |
-| Website | HTML/CSS | `website/` |
-
----
-
-## Development
-
-```bash
-# Clone
-git clone https://github.com/moinsen-dev/secretariat.git
-cd secretariat
-
-# Build
-cargo build --release
-
-# Run daemon (foreground)
-./target/release/secd
-
-# Run CLI
-./target/release/sec status
-```
-
-### Prerequisites
-- Rust toolchain (1.75+)
-- macOS (für Keychain-Integration)
-- Optional: Flutter/Python/Node für SDK-Entwicklung
+| CLI (`sec`) — run, mcp, import, service | Rust | `cli/` |
+| Krypto-Core (FFI-fähig) | Rust | `core/` |
+| macOS-App (sandboxed, App Intents) | Flutter/Swift | `app/` |
+| SDKs | Python · Dart · Rust · Node | `sdk-*/` |
 
 ---
 
 ## License
 
-**BSL 1.1** (Business Source License) — [view full terms](LICENSE)
+**BSL 1.1** — Code öffentlich & auditierbar, self-host frei, kein Resale als konkurrierender Cloud-Dienst. Wird am **2029-01-01** zu Apache 2.0.
 
-- ✅ Code is **publicly visible** — auditable, verifiable
-- ✅ **Self-host for free** — unlimited users, unlimited secrets
-- ✅ **Modify and redistribute** — fork, patch, improve
-- ❌ **Don't resell as a competing cloud service**
-- 🔄 **Becomes Apache 2.0 on 2029-01-01**
-
----
-
-## Community
-
-- **Website:** [secretariat.moinsen.dev](https://secretariat.moinsen.dev)
-- **GitHub Issues:** Bug reports, feature requests
-- **Email:** [uli@moinsen.dev](mailto:uli@moinsen.dev)
-
-Built with ❤️ by [Moinsen Development Hamburg](https://moinsen.dev)
+Built with ❤️ by [Moinsen Development Hamburg](https://moinsen.dev) · [uli@moinsen.dev](mailto:uli@moinsen.dev)
