@@ -43,6 +43,12 @@ const SERVICE_NAME: &str = "dev.moinsen.secretariat.daemon";
 /// Account name for the master key in keychain
 const ACCOUNT_NAME: &str = "master_key";
 
+/// Whether keychain access is disabled (tests/CI with a fake $HOME have no
+/// keychain, and macOS would otherwise pop a "no keychain found" dialog).
+fn keychain_disabled() -> bool {
+    std::env::var("SECRETARIAT_NO_KEYCHAIN").is_ok_and(|v| !v.is_empty())
+}
+
 /// F030: Store master key in macOS Keychain
 ///
 /// Stores the master encryption key securely in the system keychain.
@@ -82,6 +88,13 @@ const ACCOUNT_NAME: &str = "master_key";
 #[cfg(target_os = "macos")]
 pub fn store_master_key(key: &[u8; 32]) -> Result<()> {
     use security_framework::passwords::{set_generic_password};
+
+    // Tests/CI with a fake $HOME have no keychain — macOS would pop a
+    // "no keychain found" dialog. Allow opting out entirely.
+    if keychain_disabled() {
+        tracing::info!("SECRETARIAT_NO_KEYCHAIN set — not storing master key");
+        return Ok(());
+    }
 
     let key_copy = *key;
     match with_keychain_timeout("store_master_key", move || {
@@ -125,6 +138,10 @@ pub fn store_master_key(key: &[u8; 32]) -> Result<()> {
 #[cfg(target_os = "macos")]
 pub fn retrieve_master_key() -> Result<[u8; 32]> {
     use security_framework::passwords::get_generic_password;
+
+    if keychain_disabled() {
+        anyhow::bail!("Keychain disabled via SECRETARIAT_NO_KEYCHAIN");
+    }
 
     // Retrieve password from keychain
     let data = get_generic_password(SERVICE_NAME, ACCOUNT_NAME)

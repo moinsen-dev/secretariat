@@ -25,6 +25,8 @@ pub struct ImportCommand {
     pub path: String,
     pub scan: bool,
     pub yes: bool,
+    /// After import: manifest + .gitignore + secure-delete + leak scan
+    pub eradicate: bool,
 }
 
 /// A secret parsed from .env file
@@ -112,8 +114,11 @@ pub async fn handle_import(client: DaemonClient, cmd: ImportCommand) -> Result<(
         return Ok(());
     }
 
+    // Unlock via the Keychain key if needed (no-op when already unlocked).
+    crate::commands::run::ensure_unlocked(&client).await?;
+
     // Import each secret
-    let mut imported = 0;
+    let mut imported_ok: Vec<ParsedSecret> = Vec::new();
     let mut failed = 0;
 
     for secret in secrets_to_import {
@@ -128,8 +133,8 @@ pub async fn handle_import(client: DaemonClient, cmd: ImportCommand) -> Result<(
 
         match client.request::<Value, SetResponse>("secret.set", params).await {
             Ok(_) => {
-                imported += 1;
                 println!("  ✓ {}", secret.key);
+                imported_ok.push(secret);
             }
             Err(e) => {
                 eprintln!("  ✗ {}: {}", secret.key, e);
@@ -140,12 +145,275 @@ pub async fn handle_import(client: DaemonClient, cmd: ImportCommand) -> Result<(
 
     println!();
     println!("Import complete:");
-    println!("  Imported: {}", imported);
+    println!("  Imported: {}", imported_ok.len());
     if failed > 0 {
         println!("  Failed:   {}", failed);
     }
 
+    if cmd.eradicate {
+        if imported_ok.is_empty() {
+            println!("Nothing was imported — skipping eradication.");
+        } else {
+            eradicate_after_import(&imported_ok, cmd.yes)?;
+        }
+    }
+
     Ok(())
+}
+
+// ---- .env eradication ----
+//
+// After a successful import: leave a committable .secretariat.toml manifest
+// (NAMES only) next to each .env, add the .env to .gitignore, overwrite +
+// delete it, then scan the project for leftover plaintext occurrences of the
+// imported values. SAFETY: a file is only deleted when EVERY secret parsed
+// from it (key AND value) is verifiably in the vault — otherwise it is kept
+// (e.g. a duplicate key whose differing value was not imported).
+
+fn eradicate_after_import(imported: &[ParsedSecret], auto_yes: bool) -> Result<()> {
+    use std::collections::{BTreeSet, HashSet};
+
+    let imported_set: HashSet<(String, String)> = imported
+        .iter()
+        .map(|s| (s.key.clone(), s.value.clone()))
+        .collect();
+    // Canonicalize early: relative inputs like ".env" have an empty parent,
+    // which breaks git-root discovery, relative .gitignore paths, and the
+    // leak-scan root.
+    let files: BTreeSet<PathBuf> = imported
+        .iter()
+        .map(|s| {
+            s.source_file
+                .canonicalize()
+                .unwrap_or_else(|_| s.source_file.clone())
+        })
+        .collect();
+
+    let mut eradicable: Vec<(PathBuf, Vec<ParsedSecret>)> = Vec::new();
+    let mut kept: Vec<PathBuf> = Vec::new();
+    for file in files {
+        let parsed = parse_env_file(&file)?;
+        let all_in_vault = parsed
+            .iter()
+            .all(|s| imported_set.contains(&(s.key.clone(), s.value.clone())));
+        if all_in_vault {
+            eradicable.push((file, parsed));
+        } else {
+            kept.push(file);
+        }
+    }
+
+    for f in &kept {
+        println!(
+            "  ⚠ keeping {} — it contains values that were NOT imported (e.g. a \
+             duplicate key with a different value)",
+            f.display()
+        );
+    }
+    if eradicable.is_empty() {
+        println!("No files are safe to eradicate.");
+        return Ok(());
+    }
+
+    println!();
+    println!("Eradicate will, for each file:");
+    println!("  1. write/merge a .secretariat.toml manifest (secret NAMES only, committable)");
+    println!("  2. add the file to .gitignore (if in a git repo)");
+    println!("  3. overwrite the file with random data and DELETE it");
+    println!();
+    for (f, _) in &eradicable {
+        println!("  • {}", f.display());
+    }
+    println!();
+    if !auto_yes && !confirm("Delete these files? [y/N]: ")? {
+        println!("Eradication cancelled — secrets are imported, files kept.");
+        return Ok(());
+    }
+
+    for (file, parsed) in &eradicable {
+        let dir = file.parent().unwrap_or(Path::new("."));
+        write_manifest(dir, parsed)?;
+        add_to_gitignore(file)?;
+        shred_file(file)?;
+        println!("  ✓ eradicated {}", file.display());
+    }
+    println!(
+        "  (note: on APFS/SSDs the overwrite is best-effort — copy-on-write \
+         filesystems may retain old blocks)"
+    );
+
+    // Leak scan: are any imported values still lying around in plaintext?
+    let scan_root = eradicable
+        .first()
+        .map(|(f, _)| {
+            find_git_root(f).unwrap_or_else(|| {
+                f.parent().map(|p| p.to_path_buf()).unwrap_or_default()
+            })
+        })
+        .unwrap();
+    leak_scan(&scan_root, imported)?;
+    Ok(())
+}
+
+/// Write or merge the [secrets] manifest in `dir` (env var name == vault name).
+fn write_manifest(dir: &Path, secrets: &[ParsedSecret]) -> Result<()> {
+    let path = dir.join(crate::commands::run::MANIFEST_NAME);
+
+    let mut table: toml::value::Table = if path.exists() {
+        fs::read_to_string(&path)?
+            .parse::<toml::Value>()
+            .with_context(|| format!("Existing {} is invalid TOML", path.display()))?
+            .as_table()
+            .cloned()
+            .unwrap_or_default()
+    } else {
+        toml::value::Table::new()
+    };
+
+    // Normalize a list-form manifest to the mapping form before merging.
+    let mut secrets_table = match table.remove("secrets") {
+        Some(toml::Value::Table(t)) => t,
+        Some(toml::Value::Array(a)) => {
+            let mut t = toml::value::Table::new();
+            for v in a.iter().filter_map(|v| v.as_str()) {
+                t.insert(v.to_string(), toml::Value::String(v.to_string()));
+            }
+            t
+        }
+        _ => toml::value::Table::new(),
+    };
+    for s in secrets {
+        secrets_table.insert(s.key.clone(), toml::Value::String(s.key.clone()));
+    }
+    table.insert("secrets".to_string(), toml::Value::Table(secrets_table));
+
+    let body = toml::to_string(&toml::Value::Table(table))?;
+    let content = format!(
+        "# Secretariat project manifest — secret NAMES only, never values.\n\
+         # Safe to commit. Used by `sec run` to inject these into the environment.\n{body}"
+    );
+    fs::write(&path, content)?;
+    println!("  ✓ manifest {}", path.display());
+    Ok(())
+}
+
+/// Walk up from `start` looking for a `.git` directory.
+fn find_git_root(start: &Path) -> Option<PathBuf> {
+    let mut dir = start.parent();
+    while let Some(d) = dir {
+        if d.join(".git").exists() {
+            return Some(d.to_path_buf());
+        }
+        dir = d.parent();
+    }
+    None
+}
+
+/// Ensure the .env file is listed in the repo's .gitignore (idempotent).
+fn add_to_gitignore(env_file: &Path) -> Result<()> {
+    let Some(root) = find_git_root(env_file) else {
+        println!("  ⚠ {} is not in a git repo — no .gitignore updated", env_file.display());
+        return Ok(());
+    };
+    let abs = env_file.canonicalize().unwrap_or_else(|_| env_file.to_path_buf());
+    let rel = abs
+        .strip_prefix(root.canonicalize().unwrap_or(root.clone()))
+        .unwrap_or(&abs)
+        .to_string_lossy()
+        .to_string();
+
+    let gitignore = root.join(".gitignore");
+    let existing = fs::read_to_string(&gitignore).unwrap_or_default();
+    let already = existing
+        .lines()
+        .map(|l| l.trim())
+        .any(|l| l == rel || l == "/".to_string() + &rel || l == ".env" && rel == ".env");
+    if already {
+        return Ok(());
+    }
+    let mut content = existing;
+    if !content.is_empty() && !content.ends_with('\n') {
+        content.push('\n');
+    }
+    content.push_str(&rel);
+    content.push('\n');
+    fs::write(&gitignore, content)?;
+    println!("  ✓ .gitignore += {rel}");
+    Ok(())
+}
+
+/// Overwrite the file with random bytes, sync, then remove it.
+fn shred_file(path: &Path) -> Result<()> {
+    use rand::RngCore;
+    let len = fs::metadata(path)?.len() as usize;
+    if len > 0 {
+        let mut noise = vec![0u8; len];
+        rand::thread_rng().fill_bytes(&mut noise);
+        let mut f = fs::OpenOptions::new().write(true).open(path)?;
+        f.write_all(&noise)?;
+        f.sync_all()?;
+    }
+    fs::remove_file(path)?;
+    Ok(())
+}
+
+/// Scan the project tree for plaintext occurrences of imported values.
+/// Reports file + KEY (never the value). Short values (<8 chars) are skipped
+/// to avoid false positives.
+fn leak_scan(root: &Path, imported: &[ParsedSecret]) -> Result<()> {
+    let needles: Vec<(&str, &str)> = imported
+        .iter()
+        .filter(|s| s.value.len() >= 8)
+        .map(|s| (s.key.as_str(), s.value.as_str()))
+        .collect();
+    let skipped = imported.len() - needles.len();
+
+    println!();
+    println!("Scanning {} for leftover plaintext...", root.display());
+    let mut hits = 0;
+    for entry in WalkDir::new(root)
+        .follow_links(false)
+        .into_iter()
+        .filter_entry(|e| !is_ignored_dir(e) && e.file_name() != ".git")
+        .filter_map(|e| e.ok())
+    {
+        let path = entry.path();
+        if !entry.file_type().is_file() {
+            continue;
+        }
+        if entry.metadata().map(|m| m.len() > 2_000_000).unwrap_or(true) {
+            continue;
+        }
+        let Ok(bytes) = fs::read(path) else { continue };
+        if bytes.iter().take(8192).any(|&b| b == 0) {
+            continue; // binary
+        }
+        let text = String::from_utf8_lossy(&bytes);
+        for (key, value) in &needles {
+            if text.contains(value) {
+                println!("  ⚠ plaintext of {key} still in {}", path.display());
+                hits += 1;
+            }
+        }
+    }
+    if hits == 0 {
+        println!("  ✓ no plaintext leaks found");
+    } else {
+        println!("  → {hits} leak(s) — clean these up manually (values not shown).");
+    }
+    if skipped > 0 {
+        println!("  (skipped {skipped} value(s) shorter than 8 chars — too generic to scan for)");
+    }
+    Ok(())
+}
+
+/// Generic yes/no prompt.
+fn confirm(prompt: &str) -> Result<bool> {
+    print!("{prompt}");
+    io::stdout().flush()?;
+    let mut input = String::new();
+    io::stdin().read_line(&mut input)?;
+    Ok(input.trim().eq_ignore_ascii_case("y"))
 }
 
 /// Handle scan mode - recursively find and import .env files
@@ -215,10 +483,12 @@ fn scan_directory(dir: &Path) -> Result<ScanResult> {
     let mut all_secrets = Vec::new();
     let mut key_occurrences: HashMap<String, Vec<ParsedSecret>> = HashMap::new();
 
+    // depth 0 must always pass: the root itself ("." or a dot-dir) would
+    // otherwise be pruned and the walk would yield nothing.
     for entry in WalkDir::new(dir)
         .follow_links(false)
         .into_iter()
-        .filter_entry(|e| !is_hidden(e) && !is_ignored_dir(e))
+        .filter_entry(|e| e.depth() == 0 || (!is_hidden(e) && !is_ignored_dir(e)))
     {
         let entry = entry?;
         let path = entry.path();
@@ -253,9 +523,11 @@ fn scan_directory(dir: &Path) -> Result<ScanResult> {
 
 /// Check if a path is a hidden file/directory
 fn is_hidden(entry: &walkdir::DirEntry) -> bool {
+    // .env, .env.local, .env.production etc. are exactly what the scan is
+    // looking for — only OTHER dotfiles count as hidden.
     entry.file_name()
         .to_str()
-        .map(|s| s.starts_with('.') && s != ".env")
+        .map(|s| s.starts_with('.') && !s.starts_with(".env"))
         .unwrap_or(false)
 }
 

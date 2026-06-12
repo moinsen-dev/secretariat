@@ -315,6 +315,11 @@ struct ImportCommand {
     /// Skip confirmation prompts
     #[arg(short, long)]
     yes: bool,
+
+    /// After import: write .secretariat.toml manifest, add the .env to
+    /// .gitignore, securely delete it, and scan for leftover plaintext
+    #[arg(long)]
+    eradicate: bool,
 }
 
 /// Cleanup old .env files
@@ -534,6 +539,7 @@ async fn handle_import(client: DaemonClient, cmd: ImportCommand) -> Result<()> {
         path: cmd.path,
         scan: cmd.scan,
         yes: cmd.yes,
+        eradicate: cmd.eradicate,
     };
     commands::handle_import(client, cmd_args).await
 }
