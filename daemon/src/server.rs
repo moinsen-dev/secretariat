@@ -1094,6 +1094,27 @@ fn route_request(
 async fn handle_connection(mut stream: UnixStream, server_state: ServerState) {
     debug!("New connection established");
 
+    // Attest the peer process from the socket itself (PID -> path -> code
+    // signature) rather than trusting the self-declared app_id.
+    let peer = crate::attest::identify_peer(&stream);
+    debug!("peer: {} (trusted={})", peer.describe(), peer.trusted);
+    if std::env::var("SECRETARIAT_REQUIRE_SIGNED").is_ok_and(|v| !v.is_empty()) && !peer.trusted {
+        warn!("Rejecting unsigned/foreign peer: {}", peer.describe());
+        let resp = Response::error(
+            RequestId::Number(0),
+            ErrorInfo::new(
+                -32004,
+                format!(
+                    "Untrusted client: {}. Only first-party signed Secretariat \
+                     binaries are allowed (SECRETARIAT_REQUIRE_SIGNED).",
+                    peer.describe()
+                ),
+            ),
+        );
+        let _ = send_response(resp, &mut stream).await;
+        return;
+    }
+
     // F047: Track active connection
     server_state.connection_started();
     let _guard = ConnectionGuard::new(server_state.clone());
