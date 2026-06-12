@@ -1,6 +1,7 @@
 import AppIntents
 import AppKit
 import Foundation
+import LocalAuthentication
 
 // App Intents expose Secretariat to the system Shortcuts app, so a user can
 // bind a global keyboard shortcut that fetches a secret and (via a paste step)
@@ -9,23 +10,59 @@ import Foundation
 // crypto runs here. Mirrored on iOS later (there the intent reads the iCloud
 // vault + decrypts via the Rust core, since iOS has no daemon).
 
+/// A secret, as a pickable entity in Shortcuts (so the user chooses from a list
+/// instead of typing the name). Listing needs no unlock — only names cross.
+@available(macOS 13.0, *)
+struct SecretEntity: AppEntity {
+  var id: String  // the secret name/key
+  var provider: String?
+
+  static var typeDisplayRepresentation: TypeDisplayRepresentation = "Secret"
+  static var defaultQuery = SecretEntityQuery()
+
+  var displayRepresentation: DisplayRepresentation {
+    if let p = provider, !p.isEmpty {
+      return DisplayRepresentation(title: "\(id)", subtitle: "\(p)")
+    }
+    return DisplayRepresentation(title: "\(id)")
+  }
+}
+
+@available(macOS 13.0, *)
+struct SecretEntityQuery: EntityQuery {
+  func entities(for identifiers: [String]) async throws -> [SecretEntity] {
+    let all = try SecretariatDaemon.listSecrets()
+    return all.filter { identifiers.contains($0.id) }
+  }
+
+  func suggestedEntities() async throws -> [SecretEntity] {
+    try SecretariatDaemon.listSecrets()
+  }
+}
+
 @available(macOS 13.0, *)
 struct GetSecretValueIntent: AppIntent {
   static var title: LocalizedStringResource = "Get Secret"
   static var description = IntentDescription(
     "Fetch a Secretariat secret and copy its value to the clipboard so you can paste it.")
 
-  @Parameter(title: "Secret Name", description: "The name/key of the secret, e.g. OPENAI_API_KEY")
-  var secretName: String
+  @Parameter(title: "Secret")
+  var secret: SecretEntity
 
   @MainActor
   func perform() async throws -> some IntentResult & ReturnsValue<String> & ProvidesDialog {
-    let value = try SecretariatDaemon.getSecret(name: secretName)
+    let value: String
+    do {
+      value = try SecretariatDaemon.getSecret(name: secret.id)
+    } catch SecretariatError.locked {
+      // Vault is locked — gate with Touch ID, unlock from the Keychain, retry.
+      try await SecretariatDaemon.authenticate(reason: "Unlock Secretariat to fill \(secret.id)")
+      try SecretariatDaemon.unlockKeychain()
+      value = try SecretariatDaemon.getSecret(name: secret.id)
+    }
     NSPasteboard.general.clearContents()
     NSPasteboard.general.setString(value, forType: .string)
-    return .result(
-      value: value,
-      dialog: "Copied \(secretName) to the clipboard.")
+    return .result(value: value, dialog: "Copied \(secret.id) to the clipboard.")
   }
 }
 
@@ -44,6 +81,7 @@ enum SecretariatError: Error, CustomLocalizedStringResourceConvertible {
   case notConnected
   case locked
   case notFound(String)
+  case authFailed
   case protocolError(String)
 
   var localizedStringResource: LocalizedStringResource {
@@ -51,6 +89,7 @@ enum SecretariatError: Error, CustomLocalizedStringResourceConvertible {
     case .notConnected: return "Secretariat daemon isn't running."
     case .locked: return "Vault is locked — unlock Secretariat first."
     case .notFound(let n): return "Secret '\(n)' was not found."
+    case .authFailed: return "Touch ID authentication failed."
     case .protocolError(let m): return "Secretariat error: \(m)"
     }
   }
@@ -62,6 +101,18 @@ enum SecretariatDaemon {
     FileManager.default.containerURL(
       forSecurityApplicationGroupIdentifier: "group.dev.moinsen.secretariat")?
       .appendingPathComponent("secretariat.sock").path
+  }
+
+  static func listSecrets() throws -> [SecretEntity] {
+    let resp = try request(method: "secret.list", params: [:])
+    guard let result = resp["result"] as? [String: Any],
+          let secrets = result["secrets"] as? [[String: Any]] else {
+      return []
+    }
+    return secrets.compactMap { dict in
+      guard let name = dict["name"] as? String else { return nil }
+      return SecretEntity(id: name, provider: dict["provider"] as? String)
+    }
   }
 
   static func getSecret(name: String) throws -> String {
@@ -81,6 +132,27 @@ enum SecretariatDaemon {
       throw SecretariatError.protocolError("malformed response")
     }
     return value
+  }
+
+  static func unlockKeychain() throws {
+    let resp = try request(method: "vault.unlock_keychain", params: [:])
+    if let err = resp["error"] as? [String: Any] {
+      throw SecretariatError.protocolError((err["message"] as? String) ?? "unlock failed")
+    }
+  }
+
+  /// Biometric (Touch ID) gate, falling back to the device password.
+  static func authenticate(reason: String) async throws {
+    let ctx = LAContext()
+    var err: NSError?
+    guard ctx.canEvaluatePolicy(.deviceOwnerAuthentication, error: &err) else {
+      throw SecretariatError.authFailed
+    }
+    try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
+      ctx.evaluatePolicy(.deviceOwnerAuthentication, localizedReason: reason) { ok, evalErr in
+        if ok { cont.resume() } else { cont.resume(throwing: evalErr ?? SecretariatError.authFailed) }
+      }
+    }
   }
 
   static func request(method: String, params: [String: Any]) throws -> [String: Any] {
