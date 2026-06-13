@@ -151,6 +151,74 @@ class LocalVault {
     _doc['tombstones'] = tombs;
   }
 
+  /// Merge a remote sync document into this one using the daemon's exact
+  /// last-write-wins rules, so iOS converges identically to the Macs. Operates
+  /// on ciphertext only — no unlock required. Returns true if anything changed.
+  ///
+  /// Rules (mirroring `storage.rs` import_sync_secret / import_sync_tombstone):
+  /// - a remote secret applies unless a local tombstone is `>=` its updated_at
+  ///   (deletion wins) or a local secret is `>=` it (local newer/equal wins);
+  ///   applying it clears any local tombstone (resurrection).
+  /// - a remote tombstone applies unless the local secret is strictly newer
+  ///   (`>` deleted_at) — i.e. it was re-created after the delete.
+  bool merge(String remoteJson) {
+    final remote = (jsonDecode(remoteJson) as Map).cast<String, dynamic>();
+    var changed = false;
+
+    // Adopt salt + verification on first sync into an empty vault.
+    if (_doc['salt'] == null && remote['salt'] != null) {
+      _doc['salt'] = remote['salt'];
+      _doc['password_verification'] = remote['password_verification'];
+      changed = true;
+    }
+
+    final secrets = (_doc['secrets'] as List).cast<Map>();
+    final tombs = ((_doc['tombstones'] as List?) ?? []).cast<Map>();
+
+    String? localUpdatedAt(String name) {
+      final i = secrets.indexWhere((s) => s['name'] == name);
+      return i >= 0 ? secrets[i]['updated_at'] as String? : null;
+    }
+
+    String? localTombAt(String name) {
+      final i = tombs.indexWhere((t) => t['name'] == name);
+      return i >= 0 ? tombs[i]['deleted_at'] as String? : null;
+    }
+
+    // Remote secrets.
+    for (final rsRaw in (remote['secrets'] as List?) ?? const []) {
+      final rs = (rsRaw as Map).cast<String, dynamic>();
+      final name = rs['name'] as String;
+      final ru = (rs['updated_at'] as String?) ?? '';
+      final td = localTombAt(name);
+      if (td != null && td.compareTo(ru) >= 0) continue; // deletion wins
+      final lu = localUpdatedAt(name);
+      if (lu != null && lu.compareTo(ru) >= 0) continue; // local newer/equal
+      secrets.removeWhere((s) => s['name'] == name);
+      secrets.add(rs);
+      tombs.removeWhere((t) => t['name'] == name); // resurrection
+      changed = true;
+    }
+
+    // Remote tombstones.
+    for (final rtRaw in (remote['tombstones'] as List?) ?? const []) {
+      final rt = (rtRaw as Map).cast<String, dynamic>();
+      final name = rt['name'] as String;
+      final dd = (rt['deleted_at'] as String?) ?? '';
+      final lu = localUpdatedAt(name);
+      if (lu != null && lu.compareTo(dd) > 0) continue; // resurrected — keep
+      if (lu == null && localTombAt(name) == dd) continue; // already have it
+      secrets.removeWhere((s) => s['name'] == name);
+      tombs.removeWhere((t) => t['name'] == name);
+      tombs.add({'name': name, 'deleted_at': dd});
+      changed = true;
+    }
+
+    _doc['secrets'] = secrets;
+    _doc['tombstones'] = tombs;
+    return changed;
+  }
+
   /// Serialize back to the iCloud sync JSON.
   String toJson() => jsonEncode(_doc);
 

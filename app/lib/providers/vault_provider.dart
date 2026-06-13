@@ -522,9 +522,10 @@ class VaultProvider extends ChangeNotifier {
 
   /// Start periodic background sync (and run one cycle immediately).
   void startAutoSync({Duration interval = const Duration(seconds: 30)}) {
-    // iOS persists + pushes to iCloud on each write (_persistLocal); there is
-    // no daemon to drive a sync loop, so skip the periodic timer for now.
-    if (_useLocal) return;
+    if (_useLocal) {
+      _startLocalAutoSync(interval);
+      return;
+    }
     _syncTimer?.cancel();
     _syncTimer = Timer.periodic(interval, (_) => syncWithICloud());
     // React instantly when another device pushes a change to the iCloud file.
@@ -540,6 +541,48 @@ class VaultProvider extends ChangeNotifier {
     _syncTimer = null;
     _syncEventSub?.cancel();
     _syncEventSub = null;
+  }
+
+  /// iOS sync loop: pull+merge the iCloud vault on change and periodically, and
+  /// push local changes. (The daemon-based [syncWithICloud] doesn't apply — iOS
+  /// merges in-process via [LocalVault.merge], matching the daemon's LWW rules.)
+  void _startLocalAutoSync(Duration interval) {
+    _syncTimer?.cancel();
+    _syncTimer = Timer.periodic(interval, (_) => _syncLocalWithICloud());
+    _syncEventSub ??= PlatformPaths.icloudChanges.listen((_) {
+      debugPrint('[Sync-iOS] iCloud changed, syncing now');
+      _syncLocalWithICloud();
+    }, onError: (_) {});
+    unawaited(_syncLocalWithICloud());
+  }
+
+  /// One iOS sync cycle: PULL the iCloud document and merge it (LWW), then PUSH
+  /// our merged state if it differs from what's already in iCloud (so our own
+  /// write doesn't re-trigger the change watcher).
+  Future<void> _syncLocalWithICloud() async {
+    final lv = _local;
+    final p = _localPath;
+    if (lv == null || p == null || _syncing) return;
+    _syncing = true;
+    try {
+      if (!await PlatformPaths.icloudAvailable()) return;
+      final remote = await PlatformPaths.icloudRead();
+      if (remote != null && remote.trim().isNotEmpty) {
+        final didChange = lv.merge(remote);
+        if (didChange) {
+          await File(p).writeAsString(lv.toJson());
+          if (!_isLocked) await loadSecrets();
+        }
+      }
+      final json = lv.toJson();
+      if (json != remote) {
+        await PlatformPaths.icloudWrite(json);
+      }
+    } catch (e) {
+      debugPrint('[Sync-iOS] cycle error: $e');
+    } finally {
+      _syncing = false;
+    }
   }
 
   /// Delete a secret
