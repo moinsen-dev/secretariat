@@ -140,6 +140,23 @@ pub extern "C" fn sec_key_size() -> usize {
     KEY_SIZE
 }
 
+/// Generate a fresh random salt (PHC base64), byte-identical to what the
+/// daemon's vault-init produces — so an iOS-created vault unlocks on a Mac and
+/// vice versa. Writes the UTF-8 salt string to `*out_ptr`/`*out_len`; free with
+/// `sec_free`.
+///
+/// # Safety
+/// `out_ptr`/`out_len` must be valid, writable pointers.
+#[no_mangle]
+pub unsafe extern "C" fn sec_generate_salt(out_ptr: *mut *mut u8, out_len: *mut usize) -> i32 {
+    if out_ptr.is_null() || out_len.is_null() {
+        return ERR_NULL;
+    }
+    let salt = secretariat_core::generate_salt();
+    write_buffer(salt.into_bytes(), out_ptr, out_len);
+    0
+}
+
 unsafe fn write_buffer(bytes: Vec<u8>, out_ptr: *mut *mut u8, out_len: *mut usize) {
     let boxed = bytes.into_boxed_slice();
     *out_len = boxed.len();

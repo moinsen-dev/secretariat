@@ -42,9 +42,14 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final onboardingComplete = prefs.getBool(_onboardingCompleteKey) ?? false;
 
-  // Initialize VaultProvider and ensure daemon is running
+  // Initialize VaultProvider. iOS has no daemon — it opens a local vault via
+  // the shared FFI crypto; desktop ensures the daemon is running.
   final vaultProvider = VaultProvider();
-  await _ensureDaemonRunning(vaultProvider);
+  if (Platform.isIOS) {
+    await vaultProvider.initLocal();
+  } else {
+    await _ensureDaemonRunning(vaultProvider);
+  }
 
   // Decide whether to show the create-master-password onboarding.
   // The persisted flag is only a fallback — the authoritative signal is the
@@ -192,29 +197,37 @@ class SecretariatApp extends StatefulWidget {
 }
 
 class _SecretariatAppState extends State<SecretariatApp> with TrayListener {
+  /// The system tray + window manager only exist on desktop. On iOS these
+  /// calls would throw MissingPluginException, so gate them out entirely.
+  bool get _isDesktop =>
+      Platform.isMacOS || Platform.isWindows || Platform.isLinux;
+
   @override
   void initState() {
     super.initState();
-    // Register tray listener for menu clicks
-    TrayManager.instance.addListener(this);
+    // Register tray listener for menu clicks (desktop only)
+    if (_isDesktop) TrayManager.instance.addListener(this);
     // Listen to vault state changes
     widget.vaultProvider.addListener(_onVaultStateChanged);
     // Initial tray menu setup
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _updateTrayMenu(isLocked: widget.vaultProvider.isLocked);
-      updateTrayIcon(widget.vaultProvider.isLocked);
-    });
+    if (_isDesktop) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _updateTrayMenu(isLocked: widget.vaultProvider.isLocked);
+        updateTrayIcon(widget.vaultProvider.isLocked);
+      });
+    }
   }
 
   @override
   void dispose() {
-    TrayManager.instance.removeListener(this);
+    if (_isDesktop) TrayManager.instance.removeListener(this);
     widget.vaultProvider.removeListener(_onVaultStateChanged);
     super.dispose();
   }
 
   /// Called when vault state changes - update tray icon and menu
   void _onVaultStateChanged() {
+    if (!_isDesktop) return;
     final isLocked = widget.vaultProvider.isLocked;
     updateTrayIcon(isLocked);
     _updateTrayMenu(isLocked: isLocked);

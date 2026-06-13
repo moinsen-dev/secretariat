@@ -45,6 +45,36 @@ class LocalVault {
   List<({String name, String? provider})> listNames() =>
       _secrets.map((s) => (name: s['name'] as String, provider: s['provider'] as String?)).toList();
 
+  /// Secret metadata maps (no values) in the daemon's `secret.list` shape, so
+  /// the UI can build `Secret.fromJson` objects via the exact same path as on
+  /// macOS. Decryption happens lazily in [getValue].
+  List<Map<String, dynamic>> listSecretsJson() => _secrets
+      .map((s) => {
+            'id': s['name'],
+            'name': s['name'],
+            'provider': s['provider'],
+            'environment': s['environment'],
+            'created_at': s['created_at'],
+            'updated_at': s['updated_at'],
+            'rotated_at': s['rotated_at'],
+            'notes': s['notes'],
+          })
+      .toList();
+
+  /// Create a brand-new vault: generate a salt (daemon-compatible), derive the
+  /// key, and store the encrypted verification value. Leaves the vault unlocked.
+  void initialize(String password) {
+    if (isInitialized) throw StateError('Vault already initialized');
+    final salt = _crypto.generateSalt();
+    final key = _crypto.deriveKey(password, salt);
+    final verBlob = _crypto.encrypt('SECRETARIAT_VAULT_VERIFICATION_V1', key);
+    _doc['salt'] = salt;
+    _doc['password_verification'] = base64.encode(verBlob);
+    _doc['secrets'] ??= [];
+    _doc['tombstones'] ??= [];
+    _key = key;
+  }
+
   /// Derive the key from the master password and verify it against the stored
   /// verification value. Returns true on success (vault then unlocked).
   bool unlock(String password) {

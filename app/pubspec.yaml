@@ -41,6 +41,9 @@ dependencies:
   # Path manipulation utilities
   path: ^1.9.1
 
+  # App Documents directory — iOS persists its local vault file here (no daemon).
+  path_provider: ^2.1.4
+
   # dart:ffi helpers (malloc/free) for the secretariat-core crypto bridge.
   # iOS has no daemon — the app does Argon2id/AES-GCM via the shared Rust core.
   ffi: ^2.1.0

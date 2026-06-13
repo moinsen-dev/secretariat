@@ -12,12 +12,16 @@
 
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 import '../models/secret.dart';
 import '../models/application.dart';
 import '../models/audit_entry.dart';
 import '../services/daemon_client.dart';
 import '../services/daemon_manager.dart';
+import '../services/local_vault.dart';
+import '../services/native_crypto.dart';
 import '../services/platform_paths.dart';
 
 /// F152: Define VaultProvider extends ChangeNotifier
@@ -73,6 +77,17 @@ class VaultProvider extends ChangeNotifier {
 
   /// Re-entrant guard for connect()
   bool _connecting = false;
+
+  // ---- iOS backend (no daemon) ----
+  //
+  // iOS has no `secd`, so the app operates directly on the E2E-encrypted vault
+  // document via the shared Rust crypto (FFI). The same master password + salt
+  // derive the same key as the daemon, so iOS reads/writes the very vault the
+  // Macs sync. Storage is a local file in the app's Documents dir; iCloud sync
+  // layers on top when available.
+  bool get _useLocal => Platform.isIOS;
+  LocalVault? _local;
+  String? _localPath;
 
   /// F153: Getter for isLocked
   bool get isLocked => _isLocked;
@@ -156,6 +171,57 @@ class VaultProvider extends ChangeNotifier {
     }
   }
 
+  /// iOS only: open the FFI crypto and load the local vault document (pulling
+  /// from iCloud first if a synced vault exists, else starting empty). Call
+  /// this once at startup instead of [connect].
+  Future<void> initLocal() async {
+    if (!_useLocal) return;
+    try {
+      final crypto = NativeCrypto.open();
+      final dir = await getApplicationDocumentsDirectory();
+      _localPath = '${dir.path}/secretariat-vault.json';
+      final f = File(_localPath!);
+      if (await f.exists()) {
+        _local = LocalVault.fromJson(crypto, await f.readAsString());
+      } else {
+        // First launch on this device: adopt an existing iCloud vault if one
+        // is there (so we share the Macs' secrets), otherwise start fresh.
+        String? remote;
+        try {
+          if (await PlatformPaths.icloudAvailable()) {
+            remote = await PlatformPaths.icloudRead();
+          }
+        } catch (_) {}
+        _local = (remote != null && remote.trim().isNotEmpty)
+            ? LocalVault.fromJson(crypto, remote)
+            : LocalVault.empty(crypto);
+      }
+      _isLocked = !_local!.isUnlocked;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Failed to open local vault: $e';
+      debugPrint('[VaultProvider] initLocal error: $e');
+      notifyListeners();
+    }
+  }
+
+  /// iOS only: persist the in-memory vault document to the local file and push
+  /// to iCloud best-effort (no-op if iCloud is unavailable).
+  Future<void> _persistLocal() async {
+    final lv = _local;
+    final p = _localPath;
+    if (lv == null || p == null) return;
+    final json = lv.toJson();
+    await File(p).writeAsString(json);
+    try {
+      if (await PlatformPaths.icloudAvailable()) {
+        await PlatformPaths.icloudWrite(json);
+      }
+    } catch (e) {
+      debugPrint('[VaultProvider] iCloud push skipped: $e');
+    }
+  }
+
   /// Check daemon status
   ///
   /// Updates the internal daemon status and returns it.
@@ -229,6 +295,14 @@ class VaultProvider extends ChangeNotifier {
   /// await provider.loadSecrets();
   /// ```
   Future<void> loadSecrets() async {
+    if (_useLocal) {
+      final lv = _local;
+      if (lv == null) return;
+      _secrets = lv.listSecretsJson().map((j) => Secret.fromJson(j)).toList();
+      _isLocked = !lv.isUnlocked;
+      notifyListeners();
+      return;
+    }
     if (_isLoading) return; // Prevent concurrent loads
 
     _isLoading = true;
@@ -280,6 +354,29 @@ class VaultProvider extends ChangeNotifier {
   /// final secret = await provider.getSecret('OPENAI_API_KEY');
   /// ```
   Future<Secret?> getSecret(String name) async {
+    if (_useLocal) {
+      try {
+        final value = _local!.getValue(name);
+        final meta = _local!.listSecretsJson().firstWhere(
+          (j) => j['name'] == name,
+          orElse: () => {'id': name, 'name': name},
+        );
+        final secret = Secret.fromJson({...meta, 'value': value});
+        final index = _secrets.indexWhere((s) => s.name == name);
+        if (index >= 0) {
+          _secrets[index] = secret;
+        } else {
+          _secrets.add(secret);
+        }
+        notifyListeners();
+        return secret;
+      } catch (e) {
+        _errorMessage = 'Failed to get secret: $e';
+        debugPrint('[VaultProvider] Failed to get secret "$name": $e');
+        notifyListeners();
+        return null;
+      }
+    }
     try {
       _errorMessage = null;
 
@@ -323,6 +420,19 @@ class VaultProvider extends ChangeNotifier {
     String? environment,
     String? notes,
   }) async {
+    if (_useLocal) {
+      try {
+        _local!.setValue(name, value, provider: provider);
+        await _persistLocal();
+        await loadSecrets();
+        return;
+      } catch (e) {
+        _errorMessage = 'Failed to set secret: $e';
+        debugPrint('[VaultProvider] Failed to set secret "$name": $e');
+        notifyListeners();
+        rethrow;
+      }
+    }
     try {
       _errorMessage = null;
 
@@ -412,6 +522,9 @@ class VaultProvider extends ChangeNotifier {
 
   /// Start periodic background sync (and run one cycle immediately).
   void startAutoSync({Duration interval = const Duration(seconds: 30)}) {
+    // iOS persists + pushes to iCloud on each write (_persistLocal); there is
+    // no daemon to drive a sync loop, so skip the periodic timer for now.
+    if (_useLocal) return;
     _syncTimer?.cancel();
     _syncTimer = Timer.periodic(interval, (_) => syncWithICloud());
     // React instantly when another device pushes a change to the iCloud file.
@@ -436,6 +549,19 @@ class VaultProvider extends ChangeNotifier {
   /// await provider.deleteSecret('OPENAI_API_KEY');
   /// ```
   Future<void> deleteSecret(String name) async {
+    if (_useLocal) {
+      try {
+        _local!.delete(name);
+        _secrets.removeWhere((s) => s.name == name);
+        notifyListeners();
+        await _persistLocal();
+        return;
+      } catch (e) {
+        _errorMessage = 'Failed to delete secret: $e';
+        notifyListeners();
+        rethrow;
+      }
+    }
     try {
       _errorMessage = null;
 
@@ -463,6 +589,13 @@ class VaultProvider extends ChangeNotifier {
   ///
   /// Clears secrets from memory and marks vault as locked.
   Future<void> lock() async {
+    if (_useLocal) {
+      _local?.lock();
+      _secrets = [];
+      _isLocked = true;
+      notifyListeners();
+      return;
+    }
     _secrets = [];
     _isLocked = true;
     await disconnect();
@@ -474,6 +607,21 @@ class VaultProvider extends ChangeNotifier {
   ///
   /// Returns a map with state, secret_count, and app_count.
   Future<Map<String, dynamic>> getVaultStatus() async {
+    if (_useLocal) {
+      final lv = _local;
+      if (lv == null) {
+        return {'state': 'uninitialized', 'secret_count': 0, 'app_count': 0};
+      }
+      _isLocked = !lv.isUnlocked;
+      final state = !lv.isInitialized
+          ? 'uninitialized'
+          : (lv.isUnlocked ? 'unlocked' : 'locked');
+      return {
+        'state': state,
+        'secret_count': lv.listNames().length,
+        'app_count': 0,
+      };
+    }
     try {
       _errorMessage = null;
 
@@ -533,6 +681,13 @@ class VaultProvider extends ChangeNotifier {
   /// await provider.loadApplications();
   /// ```
   Future<void> loadApplications() async {
+    if (_useLocal) {
+      // iOS has no daemon and no app-permission registry (that's a host-agent
+      // concept). Present an empty list rather than erroring.
+      _applications = [];
+      notifyListeners();
+      return;
+    }
     try {
       _errorMessage = null;
 
@@ -615,6 +770,12 @@ class VaultProvider extends ChangeNotifier {
   /// await provider.loadAuditLog(limit: 50);
   /// ```
   Future<void> loadAuditLog({int limit = 100, String? appId}) async {
+    if (_useLocal) {
+      // No daemon-side audit log on iOS yet.
+      _auditEntries = [];
+      notifyListeners();
+      return;
+    }
     try {
       _errorMessage = null;
 
@@ -643,6 +804,13 @@ class VaultProvider extends ChangeNotifier {
   ///
   /// Sends lock command to daemon and clears local state.
   Future<void> lockVault() async {
+    if (_useLocal) {
+      _local?.lock();
+      _secrets = [];
+      _isLocked = true;
+      notifyListeners();
+      return;
+    }
     try {
       _errorMessage = null;
 
@@ -667,6 +835,18 @@ class VaultProvider extends ChangeNotifier {
   ///
   /// Sends unlock command to daemon with password.
   Future<void> unlockVault(String password) async {
+    if (_useLocal) {
+      _errorMessage = null;
+      final ok = _local?.unlock(password) ?? false;
+      if (!ok) {
+        _errorMessage = 'Incorrect master password';
+        notifyListeners();
+        throw StateError('Incorrect master password');
+      }
+      _isLocked = false;
+      await loadSecrets();
+      return;
+    }
     try {
       _errorMessage = null;
 
@@ -693,6 +873,12 @@ class VaultProvider extends ChangeNotifier {
     String name,
     String newValue,
   ) async {
+    if (_useLocal) {
+      _local!.setValue(name, newValue);
+      await _persistLocal();
+      await loadSecrets();
+      return {'name': name, 'version': 0};
+    }
     try {
       _errorMessage = null;
 
@@ -718,6 +904,19 @@ class VaultProvider extends ChangeNotifier {
   /// This must be called on first run to set up the vault.
   /// Returns the vault path and number of migrated secrets.
   Future<Map<String, dynamic>> initializeVault(String password) async {
+    if (_useLocal) {
+      try {
+        _local!.initialize(password);
+        _isLocked = false;
+        await _persistLocal();
+        notifyListeners();
+        return {'vault_path': _localPath ?? '', 'migrated_count': 0};
+      } catch (e) {
+        _errorMessage = 'Failed to initialize vault: $e';
+        notifyListeners();
+        rethrow;
+      }
+    }
     try {
       _errorMessage = null;
 
@@ -746,6 +945,13 @@ class VaultProvider extends ChangeNotifier {
     String currentPassword,
     String newPassword,
   ) async {
+    if (_useLocal) {
+      // Re-keying re-encrypts every secret under a new salt; do it on a Mac
+      // (daemon) for now so all devices converge on the new key via sync.
+      throw UnsupportedError(
+        'Change the master password on a Mac for now — it re-keys the whole vault.',
+      );
+    }
     try {
       _errorMessage = null;
 

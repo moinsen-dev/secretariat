@@ -29,6 +29,10 @@ typedef _Free = void Function(Pointer<Uint8>, int);
 typedef _KeySizeNative = Size Function();
 typedef _KeySize = int Function();
 
+// int sec_generate_salt(u8** outPtr, usize* outLen)
+typedef _GenSaltNative = Int32 Function(Pointer<Pointer<Uint8>>, Pointer<Size>);
+typedef _GenSalt = int Function(Pointer<Pointer<Uint8>>, Pointer<Size>);
+
 class NativeCryptoException implements Exception {
   final String op;
   final int code;
@@ -42,6 +46,7 @@ class NativeCrypto {
   final _Crypt _encrypt;
   final _Crypt _decrypt;
   final _Free _free;
+  final _GenSalt _genSalt;
   final int keySize;
 
   NativeCrypto._(DynamicLibrary lib)
@@ -50,6 +55,8 @@ class NativeCrypto {
         _encrypt = lib.lookupFunction<_CryptNative, _Crypt>('sec_encrypt'),
         _decrypt = lib.lookupFunction<_CryptNative, _Crypt>('sec_decrypt'),
         _free = lib.lookupFunction<_FreeNative, _Free>('sec_free'),
+        _genSalt =
+            lib.lookupFunction<_GenSaltNative, _GenSalt>('sec_generate_salt'),
         keySize =
             lib.lookupFunction<_KeySizeNative, _KeySize>('sec_key_size')();
 
@@ -81,6 +88,24 @@ class NativeCrypto {
       malloc.free(pw);
       malloc.free(saltP);
       malloc.free(outKey);
+    }
+  }
+
+  /// Generate a fresh PHC-base64 salt (same format the daemon's vault-init
+  /// produces) so an iOS-created vault unlocks on a Mac and vice versa.
+  String generateSalt() {
+    final outPtr = malloc<Pointer<Uint8>>();
+    final outLen = malloc<Size>();
+    try {
+      final rc = _genSalt(outPtr, outLen);
+      if (rc != 0) throw NativeCryptoException('generateSalt', rc);
+      final len = outLen.value;
+      final bytes = Uint8List.fromList(outPtr.value.asTypedList(len));
+      _free(outPtr.value, len);
+      return utf8.decode(bytes);
+    } finally {
+      malloc.free(outPtr);
+      malloc.free(outLen);
     }
   }
 

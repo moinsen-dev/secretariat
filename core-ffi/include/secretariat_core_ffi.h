@@ -24,4 +24,8 @@ void sec_free(uint8_t *ptr, size_t len);
 
 size_t sec_key_size(void);
 
+/* Generate a fresh PHC-base64 salt string (UTF-8) for a new vault, matching the
+ * daemon's vault-init. Free the buffer once with sec_free. */
+int32_t sec_generate_salt(uint8_t **out_ptr, size_t *out_len);
+
 #endif /* SECRETARIAT_CORE_FFI_H */
