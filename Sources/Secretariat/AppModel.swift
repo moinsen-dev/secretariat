@@ -25,6 +25,7 @@ final class AppModel {
     var secretEditor: SecretDraft?
     var profileEditor: ProfileDraft?
     var copied = false
+    var agentSetup: AgentSetupDraft?
 
     init() { reload() }
     var vault: Vault { Vault(paths: paths, expectedRevision: configuration.revision) }
@@ -69,6 +70,21 @@ final class AppModel {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(launchCommand(profile: profile, executable: launcherPath), forType: .string)
         copied = true
+    }
+    func openAgentSetup(_ profile: Profile) {
+        do {
+            let current = try ConfigurationStore(paths: paths).load()
+            guard current.revision == configuration.revision else {
+                throw SecretariatError("Die Profile wurden geändert. Bitte Ansicht aktualisieren und erneut einrichten.")
+            }
+            agentSetup = AgentSetupDraft(plan: try ProjectInstructions.preview(profile: profile, executable: launcherPath), revision: current.revision)
+        } catch { errorMessage = error.localizedDescription }
+    }
+    func applyAgentSetup(_ draft: AgentSetupDraft) throws {
+        guard try ConfigurationStore(paths: paths).load().revision == draft.revision else {
+            throw SecretariatError("Das Profil wurde seit der Vorschau geändert. Bitte die Vorschau schließen und erneut öffnen.")
+        }
+        try ProjectInstructions.apply(draft.plan)
     }
     func usages(of id: UUID) -> [String] {
         configuration.profiles.filter { $0.bindings.contains { $0.secretID == id } }.map(\.name)

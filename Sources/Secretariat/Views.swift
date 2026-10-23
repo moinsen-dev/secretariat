@@ -44,6 +44,7 @@ struct MainView: View {
             ToolbarItem { Button { model.reload() } label: { Label("Aktualisieren", systemImage: "arrow.clockwise") } }
         }
         .sheet(item: $model.secretEditor) { draft in SecretEditor(model: model, draft: draft) }
+        .sheet(item: $model.agentSetup) { draft in AgentSetupView(model: model, draft: draft) }
         .sheet(item: $model.profileEditor) { draft in ProfileEditor(model: model, draft: draft) }
         .alert("Das hat nicht geklappt", isPresented: Binding(get: { model.errorMessage != nil }, set: { if !$0 { model.errorMessage = nil } })) {
             Button("OK", role: .cancel) { model.errorMessage = nil }
@@ -148,6 +149,12 @@ struct MainView: View {
                 }.buttonStyle(.borderedProminent).disabled(profile.command.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 Text("Den Aufruf im Terminal einfügen. Das Programm erhält die ausgewählten Schlüssel beim Start.")
                     .font(.caption).foregroundStyle(.secondary)
+            }
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Mit Coding-Systemen verwenden").font(.headline)
+                Text("Projektanweisungen für Codex, Claude Code und OpenCode vorbereiten.")
+                    .foregroundStyle(.secondary)
+                Button("Coding-System einrichten", systemImage: "terminal.fill") { model.openAgentSetup(profile) }
             }
             Spacer()
             Button("Profil löschen", role: .destructive) { deletingProfile = profile }.buttonStyle(.borderless)

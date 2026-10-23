@@ -37,26 +37,31 @@ public struct PreparedLaunch {
 
 public enum CommandLineInterface {
     public static let help = """
-    Secretariat 0.1 – Schlüssel für deine Projekte
+    Secretariat 0.2 – Schlüssel für deine Projekte
 
     secretariat run PROFIL -- PROGRAMM [ARGUMENTE …]
-    secretariat profiles
+    secretariat profiles [--json]
+    secretariat describe PROFIL [--json]
+    secretariat check PROFIL [--json]
+    secretariat instructions PROFIL
+    secretariat setup PROFIL [--dry-run] [--json]
     secretariat --version
 
     Schlüssel und Profile verwaltest du in der Secretariat-App.
     Der Zielprozess erhält die ausgewählten Werte. Es läuft kein Hintergrunddienst.
     """
 
-    public static func run(_ arguments: [String], vault: Vault = Vault()) throws -> Int32 {
+    public static func run(_ arguments: [String], vault: Vault? = nil) throws -> Int32 {
+        let paths = AppPaths()
+        let vault = vault ?? Vault(configuration: ConfigurationStore(paths: paths),
+                                   credentials: KeychainStore(service: paths.keychainService, allowInteraction: false))
+        if AgentCommand.handles(arguments.first) {
+            return try AgentCommand.execute(arguments, service: AgentService(paths: vault.configuration.paths),
+                                            executable: Bundle.main.executableURL?.path ?? URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL.path)
+        }
         switch arguments.first {
         case "--help", "-h", "help": print(help); return 0
-        case "--version": print("Secretariat 0.1.0"); return 0
-        case "profiles":
-            guard arguments.count == 1 else { throw SecretariatError("Aufruf: secretariat profiles") }
-            let profiles = try vault.configuration.load().profiles
-            if profiles.isEmpty { print("Noch keine Profile. Bitte ein Profil in Secretariat anlegen.") }
-            else { for profile in profiles.sorted(by: { $0.name < $1.name }) { print("\(profile.name)\t\(profile.directory)") } }
-            return 0
+        case "--version": print("Secretariat 0.2.0"); return 0
         case "run":
             guard arguments.count >= 4, arguments[2] == "--" else {
                 throw SecretariatError("Aufruf: secretariat run PROFIL -- PROGRAMM [ARGUMENTE …]")

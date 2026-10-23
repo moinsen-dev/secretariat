@@ -6,7 +6,7 @@
 - profile: macos
 - template_version: 1.1.0
 - targets: macos
-- goal: Secretariat 0.1: native lokale Mac-App für Keychain-Schlüssel, Projektprofile und Terminalstart; Legacy archiviert, lokale Installation und Entfernung sowie echte UI- und Prozessabläufe geprüft
+- goal: Secretariat 0.2: vorhandene native Mac-App um CLI-Auskunft, dialogfreie Profilprüfung und sichere Projektanweisungen für lokale Coding-Systeme erweitern, normal bedienen und lokal installieren
 
 ## Personalization
 
@@ -31,7 +31,7 @@
 
 | ID | Platform | Channel | Goal | AppID | Owner | Tasks |
 | --- | --- | --- | --- | --- | --- | --- |
-| D001 | macos | local | local | dev.moinsen.secretariat.local | Udi, lokale Developer-ID-Signatur | T006 |
+| D001 | macos | local | local | dev.moinsen.secretariat.local | Udi, lokale Developer-ID-Signatur | T006,T010 |
 
 ## Requirements
 
@@ -45,6 +45,12 @@
 | R006 | Nach Neustart beständig, keine Secretwerte in Konfiguration oder kopierten Befehlen; Fehler starten keinen Zielprozess |
 | R007 | Lokale Installation und Entfernung samt normaler UI-Bedienung und echtem Entwicklungsprojekt geprüft |
 
+| R008 | CLI liefert versionierte JSON-Auskunft zu Profilen und Variablennamen sowie strukturierte Fehler ohne Credentialwerte |
+| R009 | Profilprüfung meldet Ordner und Credential-Verfügbarkeit ohne Zielprozess, Schreibzugriff oder interaktive Keychain-Abfrage |
+| R010 | UI und CLI zeigen Projektanweisungen und richten AGENTS.md plus CLAUDE.md gezielt ein; bestehende Inhalte, andere Profile und Symlinkziele werden geschützt |
+| R012 | CLI-Starts und Prüfungen öffnen keine Keychain-Dialoge; fehlende Freigabe bricht ab; Testeinträge und Signieridentität verursachen keine Wiederholschleife |
+| R011 | Lokaler Ablauf aus Codex, Claude Code und OpenCode mit künstlichen Werten wird versucht und tatsächliche Tool-, Rechte- und Auth-Grenzen werden getrennt berichtet |
+
 ## Phases
 
 | ID | Order | Outcome | Depends |
@@ -54,6 +60,9 @@
 | P03 | 3 | Schlüssel- und Profilverwaltung vollständig bedienbar | P02 |
 | P04 | 4 | Zusammenhängender Neustart- und Entwicklungsablauf geprüft | P03 |
 | P05 | 5 | Lokale Installation, Entfernung und Übergabe | P04 |
+
+| P06 | 6 | Agenten-Auskunft, Prüfung und Projekteinrichtung | P05 |
+| P07 | 7 | Tatsächliche Coding-Systeme und aktualisierte lokale Lieferung | P06 |
 
 ## UseCases
 
@@ -65,6 +74,9 @@
 | UC04 | P04 | Terminalablauf, Fehler und Neustart vollständig prüfen | R003,R004,R005,R006,R007 | required |
 | UC05 | P05 | App lokal installieren, entfernen und wieder öffnen | R002,R007 | required |
 
+| UC06 | P06 | Profil entdecken, prüfen und Projektanweisungen erhalten oder sicher einrichten | R008,R009,R010,R012 | required |
+| UC07 | P07 | Coding-System nutzt installierte App für Testbefehl; lokale Lieferung und bisherige Kernabläufe erhalten | R002,R005,R006,R007,R011,R012 | required |
+
 ## Tasks
 
 | ID | Phase | UseCase | Requirements | Accept | Verify | Mode | Depends | Files |
@@ -75,6 +87,11 @@
 | T004 | P04 | UC04 | R005,R006 | Paket-CLI übergibt Testwerte korrekt, trennt Profile, übernimmt Änderungen, erhält stdin/stdout/Exitcode und Ctrl-C; echtes fehlendes Credential und simulierte Zugriffsverweigerung verhindern den Start; OS-Sperrdialog ist separat als Prüfgrenze dokumentiert; beschädigte Konfiguration bleibt unverändert | unit | normal | T003 | Sources/SecretariatCore/Launcher.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/Keychain.swift,Tests/SecretariatCoreTests/CoreTests.swift,script/integration_check.py,Package.swift,Sources/SecretariatCore/Models.swift,Sources/Secretariat/Entry.swift |
 | T005 | P04 | UC04 | R003,R004,R006,R007 | Frischer kompletter UI-Ablauf samt Neustart, schmalem Fenster und kopiertem Startbefehl; vorhandenes echtes Entwicklungsprojekt startet mit künstlichem Credential | macos | normal | T003 | Sources/Secretariat/Entry.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Views.swift,Sources/Secretariat/Editors.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/Launcher.swift,Sources/SecretariatCore/Keychain.swift,Sources/SecretariatCore/Models.swift,Package.swift,script/build.sh,Resources/Info.plist,Assets/AppIcon.icns |
 | T006 | P05 | UC05 | R002,R007 | Installation und Entfernung samt erneutem Installieren ohne Autostart geprüft; installiertes Bundle normal geöffnet und bedient; fremde Apps oder Terminaldateien werden nicht überschrieben | inspection,macos | normal | T004,T005 | script/install.py,script/install.sh,script/uninstall.sh,script/build.sh,Resources/Info.plist,Assets/AppIcon.icns,README.md,Sources/Secretariat/Entry.swift,Sources/Secretariat/Views.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Editors.swift,Sources/SecretariatCore/Keychain.swift,Sources/SecretariatCore/Launcher.swift,Sources/SecretariatCore/Models.swift,Sources/SecretariatCore/Storage.swift,Package.swift |
+
+| T007 | P06 | UC06 | R008,R009,R012 | profiles --json, describe und check liefern Schema 1, stabile Fehlercodes und Exitstatus; check liest Credentials ohne Interaktion, startet nichts; Defaulttests bleiben ohne echten Schlüsselbund | build,unit | normal | T006 | Package.swift,Sources/SecretariatCore/Models.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/Keychain.swift,Sources/SecretariatCore/Launcher.swift,Sources/SecretariatCore/AgentIntegration.swift,Sources/SecretariatCore/ProjectInstructions.swift,Sources/Secretariat/Entry.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Views.swift,Sources/Secretariat/AgentSetupView.swift,Resources/Info.plist,Tests/SecretariatCoreTests/AgentIntegrationTests.swift,Sources/Secretariat/Editors.swift,script/build.sh,Assets/AppIcon.icns,Tests/SecretariatCoreTests/CoreTests.swift |
+| T008 | P06 | UC06 | R010 | Vorschau vor Einrichtung; idempotente eigene Markerblöcke in AGENTS.md und CLAUDE.md; andere Inhalte und Profile erhalten; Symlinks, beschädigte Marker und erkannte Änderungen seit der Vorschau stoppen; Abbruch schreibt nichts; UI normal geprüft | unit,macos | normal | T007 | Package.swift,Sources/SecretariatCore/Models.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/Keychain.swift,Sources/SecretariatCore/Launcher.swift,Sources/SecretariatCore/AgentIntegration.swift,Sources/SecretariatCore/ProjectInstructions.swift,Sources/Secretariat/Entry.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Views.swift,Sources/Secretariat/AgentSetupView.swift,Resources/Info.plist,Tests/SecretariatCoreTests/AgentIntegrationTests.swift,Sources/Secretariat/Editors.swift,script/build.sh,Assets/AppIcon.icns |
+| T009 | P07 | UC07 | R005,R006,R011 | Alle drei lokal vorhandenen Coding-CLIs lesen Projektanweisung und versuchen check plus künstlichen Teststart; echte Ausführung mit Receipt von bloßer Dokumentkompatibilität unterscheiden; fehlende Auth oder Sandbox konkret belegen | inspection | normal | T008 | Package.swift,Sources/SecretariatCore/Models.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/Keychain.swift,Sources/SecretariatCore/Launcher.swift,Sources/SecretariatCore/AgentIntegration.swift,Sources/SecretariatCore/ProjectInstructions.swift,Sources/Secretariat/Entry.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Views.swift,Sources/Secretariat/AgentSetupView.swift,Resources/Info.plist,script/agent_acceptance.py,script/seed_agent_fixture.swift,docs/coding-system-integration-research.md,Sources/Secretariat/Editors.swift,script/build.sh,Assets/AppIcon.icns |
+| T010 | P07 | UC07 | R002,R005,R006,R007,R012 | Aktualisierte App 0.2.0 signiert installiert; GUI-Einrichtung und CLI daraus geprüft, Basistests und Paket-Prozessprüfungen ohne Regression; keine neuen Autostarts und Testdaten entfernt | build,unit,macos,inspection | normal | T009 | Package.swift,Sources/SecretariatCore/Models.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/Keychain.swift,Sources/SecretariatCore/Launcher.swift,Sources/SecretariatCore/AgentIntegration.swift,Sources/SecretariatCore/ProjectInstructions.swift,Sources/Secretariat/Entry.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Views.swift,Sources/Secretariat/AgentSetupView.swift,Resources/Info.plist,Sources/Secretariat/Editors.swift,Assets/AppIcon.icns,script/build.sh,script/install.py,script/integration_check.py,README.md,Tests/SecretariatCoreTests/CoreTests.swift,Tests/SecretariatCoreTests/AgentIntegrationTests.swift,script/agent_acceptance.py,script/seed_agent_fixture.swift |
 
 ## Modules
 
@@ -148,3 +165,19 @@ Für lokale Fertigstellung sind keine neuen Anbieter-Konten, Kosten oder externe
 ## Datenintegrität
 
 Metadaten werden unter exklusiver Schreibsperre atomar ersetzt. UI-Mutationen vergleichen die geladene Revision; veraltete Formulare müssen neu geladen werden. Beschädigte oder unbekannte Konfiguration wird erhalten und als Fehler angezeigt. Installation und Entfernung überprüfen App-Identität und Zielverweis; fremde Dateien bleiben erhalten. T003, T004 und T006 prüfen diese Fälle.
+
+## Bestand und Änderungsumfang 0.2
+
+Ausgangspunkt: Commit 2d027f7, installierte Version 0.1.0, unveränderte Datenstruktur und App-ID. Die vorangegangene Recherche ist als unversionierte eigene Notiz vorhanden und bleibt erhalten. Archivnachweis unverändert; bisherige Quellen-/Paketnachweise werden für betroffene Core- und UI-Pfade nach der Änderung neu geprüft. Alte Evidence bleibt als Historie erhalten.
+
+Neue CLI: `profiles --json`, `describe PROFIL [--json]`, `check PROFIL [--json]`, `instructions PROFIL`, `setup PROFIL [--dry-run] [--json]`. JSON mit schemaVersion 1, ok und stabilen Fehlercodes. Laufbefehle bleiben unverändert; keine get/export-Schnittstelle für Werte. Listen, Vorschau und Einrichtung lesen keine Credentials. check verwendet ausdrücklich nichtinteraktiven Keychain-Zugriff, prüft Ordner und zugeordnete Werte, speichert keine Werte und startet nichts. Kein Erstellen oder Sperren von Testschlüsselbünden.
+
+Die Einrichtung ändert ausschließlich einen eindeutig markierten Secretariat-Block pro Datei im vom Nutzer gewählten Profilordner. Vorschau vor UI-Schreiben; CLI setup ist die ausdrückliche lokale Schreibaktion. Bestehende Inhalte außerhalb der Marker bleiben bytegetreu, wiederholte Einrichtung ist unverändert; ein anderes Profil, Symlink/Hardlink, ungültiges UTF-8, beschädigte Marker oder bei optimistischen Snapshotvergleichen erkannte Änderungen führen zum Fehler. Beide Dateien werden vor jeder Änderung geprüft; bei normalem Schreibfehler wird die erste Änderung zurückgerollt, keine gemeinsame Crash-Transaktion behauptet. Globalen Toolkonfigurationen wird nichts hinzugefügt.
+
+Anweisungen erklären profilspezifisch, wann check und run zu verwenden sind. Der kopierte Aufruf enthält keine eingesetzten Schlüsselwerte; geerbte Projekt-Credentials werden nicht zum Start des gesamten Coding-Systems verwendet. Ein Prozess mit frei ausführbarem Code kann Werte trotzdem ausgeben. Kein MCP, Proxy oder neue Isolation in diesem Auftrag.
+
+Für 0.2 gelten die Katalogchecks zusätzlich auf T007 (CLI/Fehler/Daten), T008 (Bedienung/Dateien/Abbruch) und T010 (Bundle, Identität, Installation, Regression). Icons und Berechtigungen unverändert, keine zusätzlichen Anbieter-SDKs. Die tatsächlichen Agentensitzungen nutzen ausschließlich künstliche lokale Fixtures; vorhandene Anmeldung verwenden, keine Konten anlegen oder Abrechnung umstellen. Nicht verfügbare Auth/Toolrechte sind Testgrenzen und dürfen nicht als erfolgreicher E2E-Test gelten.
+
+Projektdateien werden nach dem Staging unmittelbar vor dem Dateitausch erneut mit der Vorschau verglichen. Gegen beliebige nicht kooperierende Editoren bleibt zwischen Vergleich und Rename ein kleines nicht atomar schließbares Zeitfenster; der Verzeichnis-Lock koordiniert Secretariat-Aufrufe untereinander. Dies ist kein atomarer Compare-and-Swap und keine allgemeine Sperre fremder Editoren.
+
+Korrektur vom Nutzer am 23.10: Wiederholte OS-Freigaben sind ein Fehler. CLI run und check müssen nichtinteraktiv bleiben; blockierte Berechtigung wird als Fehler gemeldet, keine automatische Entsperrung oder unbegrenzte Wiederholung. Beim klassischen Login-Keychain greifen SecItem-UI-Flags allein nicht zuverlässig (Chromium FB16959400). Deshalb jeder nichtinteraktive Aufruf: serialisierter prozesslokaler SecKeychainGet/SetUserInteractionAllowed-Scope mit Wiederherstellung des vorherigen Werts. Die GUI behält normale Benutzerfreigabe. Testhelfer dürfen App-Trust nur auf .app-Pakete binden; persistente Freigaben werden an einem gleichbleibenden Eintrag geprüft, nicht an ständig neuen Einträgen verwechselt.

@@ -17,6 +17,29 @@ secretariat run mein-projekt -- pnpm dev
 
 Ein Schlüssel kann mehreren Profilen zugeordnet werden. Änderungen gelten für den nächsten Programmstart. Bereits laufende Prozesse behalten ihre bisherigen Werte.
 
+## Mit Codex, Claude Code und OpenCode
+
+Wähle im Projektprofil **Coding-System einrichten**. Prüfe die Vorschau und klicke **Im Projekt einrichten**. Secretariat ergänzt einen eigenen Abschnitt in `AGENTS.md` sowie einen Verweis in `CLAUDE.md`. Bestehende Inhalte bleiben erhalten; die Einrichtung lässt sich wiederholen. Das gilt für lokale Sitzungen auf diesem Mac.
+
+Dasselbe geht per CLI:
+
+```sh
+~/bin/secretariat profiles --json
+~/bin/secretariat describe mein-projekt --json
+~/bin/secretariat check mein-projekt --json
+~/bin/secretariat setup mein-projekt --dry-run
+~/bin/secretariat setup mein-projekt --json
+~/bin/secretariat run mein-projekt -- npm test
+```
+
+`instructions mein-projekt` gibt nur die Anleitung zum Kopieren aus. Vorschau, Auskunft und Einrichtung lesen keine Schlüsselwerte. `check` verwendet nichtinteraktiven Keychain-Zugriff, meldet `available`, `missing`, `invalid` oder `unavailable` je Variable und startet kein Programm. Antwortet macOS nicht innerhalb von zehn Sekunden, endet die CLI mit `keychain_timeout` und Exitcode 2. Bei einem nicht bereiten Profil: Ordner oder Schlüssel in der App prüfen. Auch `run` arbeitet ohne Authentifizierungsdialog. Fehlt die Berechtigung oder ist der Schlüsselbund gesperrt, bricht der Start ab. Freigaben gehören in die geöffnete Secretariat-App; die CLI entsperrt den Schlüsselbund nicht.
+
+JSON-Antworten der Verwaltungsbefehle haben `schemaVersion: 1` und `ok`. Fehler enthalten `error.code` und `error.message`. Exitcodes: `0` erfolgreich/bereit, `2` nicht bereit bei `check`, `1` ungültiger Aufruf oder fehlgeschlagene Verwaltung. `run` erhält den Exitcode des Zielprogramms. Schlüsselwerte sind kein Bestandteil der Auskunft; ein optionaler `keychainStatus` ist ausschließlich ein numerischer macOS-Fehlercode.
+
+Die Einrichtung stoppt bei fremden Profilmarkern, beschädigten Abschnitten, Symlinks, Hardlinks, nicht lesbaren Dateien oder erkannten Änderungen seit der Vorschau. Sie ersetzt Dateien atomar und stellt bei normalen Fehlern die erste Änderung wieder her. Gegen nicht kooperierende Editoren bleibt ein kleines Zeitfenster zwischen letztem Vergleich und Dateitausch; die zwei Dateien bilden keine gemeinsame absturzsichere Transaktion. Globale Agenten-Konfigurationen werden nicht geändert.
+
+Die Coding-Sitzung bleibt bei ihrer normalen Anmeldung. Projekt-Credentials erhält der konkrete Test- oder Entwicklungsprozess. Frei ausführbarer Code kann seine Umgebung dennoch ausgeben; die Anweisung ist keine Zugriffssperre. MCP und Cloud-Zugriff sind kein Teil dieser Version.
+
 ## Lokal bauen und starten
 
 Voraussetzungen: macOS 14 oder neuer, Xcode/Swift 6.2 oder neuer und die macOS-Kommandozeilenwerkzeuge. Keine Paketabhängigkeiten.
