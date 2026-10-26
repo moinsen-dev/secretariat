@@ -36,3 +36,7 @@ von Schlüsselnamen und Anlegen von Profilen. Dann installieren.“), PLAN.md, K
 ## Urteil
 
 PASS — mit der Einschränkung, dass es eine Selbstprüfung ist und T013 eine Nutzerhandlung braucht.
+
+## Plan-Prüfung 0.4 (Selbstprüfung)
+
+R018/P11/UC11/T016 ergänzt. Anforderung prüfbar (Namen-only-Ausgabe, --replace, Vorabprüfung), Aufgabe nennt alle geänderten Quellen, Abhängigkeit T015 korrekt, Lockerung der Wertregel als Entscheidung mit Begründung dokumentiert. PASS.
