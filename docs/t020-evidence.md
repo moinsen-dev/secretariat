@@ -4,3 +4,8 @@
 - macos (echt, Testheim): Dialog zeigt „Was speicherst du?“ mit 8 Arten und Erklärung, darunter Anbieter (mit Auswahlliste), Zusatz, beschriftete Felder (Schlüssel *, Variablenname), Schalter „In allen Projekten und Werkzeugen nutzbar“, Ablage-Vorschau, „Erweitert“ eingeklappt, „Fehlt noch: …“ und gesperrtes Speichern (Screenshot geprüft).
 - Reparatur (echt): moinsen/key_id entfernt, `field move moinsen/secret moinsen/deepseek/api_key`, env_var=DEEPSEEK_API_KEY, Profil werkzeuge bindet DEEPSEEK_API_KEY; `check werkzeuge` bereit. Wert verließ den Prozess nicht.
 - build/unit: 32/32. 1.2.0 auf M4, Mini, M1, M5.
+
+## Nachtrag 1.2.1 (Build 6598dc9)
+
+- Doppelklick auf einen Eintrag öffnet „Eintrag bearbeiten“ (echt per Mausereignis in einer Testinstanz, Screenshot geprüft); Rechtsklick-Menü „Bearbeiten …/Löschen …“; Entf-Taste; „Löschen“ im Detailkopf und im Bearbeiten-Dialog, jeweils mit Rückfrage. 32/32, 1.2.1 auf allen Macs.
+- Massenübernahme ausgeführt: 283 Werte übernommen, 13 schon vorhanden, 10 Kennungen, 146 Profile (alle `check` bereit), 209 Einträge auf allen Macs; Profil werkzeuge mit 18 Variablen bereit.
