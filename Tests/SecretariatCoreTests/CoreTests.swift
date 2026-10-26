@@ -158,3 +158,12 @@ func realKeychainRoundTripInATestNamespace() throws {
 extension Vault {
     func get(_ reference: String) throws -> String? { try resolve(try FieldReference(reference)).1.value }
 }
+
+@Test func anywhereProfilesRunInTheCallersFolder() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    try f.vault.saveProfile(Profile(name: "werkzeuge", directory: Profile.anywhere, bindings: [Binding(variable: "TOKEN", itemID: f.item.id, field: "secret")]))
+    let launch = try f.vault.preparedLaunch(name: "werkzeuge", arguments: ["true"], inheritedEnvironment: [:])
+    #expect(launch.directory == FileManager.default.currentDirectoryPath)
+    #expect(try f.service.check("werkzeuge").ok)
+    #expect(throws: AgentError.self) { try ProjectInstructions.preview(profile: try f.service.profile(named: "werkzeuge"), executable: "/tmp/s") }
+}

@@ -278,7 +278,8 @@ public enum Commands {
         case ("profile", _):
             let a = try Arguments(all.dropFirst(2), values: ["--dir", "--command"], usage: usage)
             func absolute(_ path: String) -> String {
-                URL(fileURLWithPath: (path as NSString).expandingTildeInPath,
+                if path == Profile.anywhere { return path }
+                return URL(fileURLWithPath: (path as NSString).expandingTildeInPath,
                     relativeTo: URL(fileURLWithPath: FileManager.default.currentDirectoryPath, isDirectory: true))
                     .standardizedFileURL.resolvingSymlinksInPath().path
             }
@@ -287,6 +288,13 @@ public enum Commands {
                 return (0, try json(result), "\(name)\nOrdner: \(result.profile.directory)\nVariablen: \(result.profile.variables.isEmpty ? "–" : result.profile.variables.joined(separator: ", "))")
             }
             switch (sub, a.positional.count) {
+            case ("which", 0), ("which", 1):
+                // The profile for a folder: its own or the closest enclosing project's.
+                let dir = absolute(a.positional.first ?? ".")
+                let match = try vault.configuration.load().profiles.filter { !$0.isAnywhere && (dir == $0.directory || dir.hasPrefix($0.directory + "/")) }
+                    .max { $0.directory.count < $1.directory.count }
+                guard let match else { throw AgentError("profile_not_found", "Kein Profil für \(dir).") }
+                return try describe(match.name)
             case ("create", 1):
                 guard let dir = a.option("--dir") else { throw AgentError("invalid_arguments", "--dir ORDNER fehlt.") }
                 if (try? service.profile(named: a.positional[0])) != nil { throw AgentError("profile_exists", "Ein Profil mit diesem Namen gibt es schon.") }

@@ -77,7 +77,7 @@ public struct PreparedLaunch {
 }
 
 public enum CommandLineInterface {
-    public static let version = "1.0.0"
+    public static let version = "1.1.0"
     public static let help = """
     Secretariat \(version) – vertrauliche Daten für dich und deine Agenten
 
@@ -95,7 +95,8 @@ public enum CommandLineInterface {
 
     Projekte
       secretariat profiles [--json] · describe PROFIL [--json] · check PROFIL [--json]
-      secretariat profile create PROFIL --dir ORDNER [--command BEFEHL] [--json]
+      secretariat profile create PROFIL --dir ORDNER [--command BEFEHL] [--json]   --dir '*': ohne festen Ordner (Werkzeug-Tokens)
+      secretariat profile which [ORDNER]               Profil dieses (oder des umgebenden) Projektordners
       secretariat profile set PROFIL [--dir ORDNER] [--command BEFEHL] [--json]
       secretariat profile bind PROFIL VARIABLE PFAD/FELD [--json] · unbind PROFIL VARIABLE · delete PROFIL
       secretariat run PROFIL -- PROGRAMM [ARGUMENTE …]   Dateifelder kommen als Pfad einer temporären Datei

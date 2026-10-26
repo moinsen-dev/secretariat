@@ -280,7 +280,7 @@ public struct Vault {
 
     public func saveProfile(_ profile: Profile) throws {
         var isDirectory: ObjCBool = false
-        guard FileManager.default.fileExists(atPath: profile.directory, isDirectory: &isDirectory), isDirectory.boolValue else {
+        guard profile.isAnywhere || FileManager.default.fileExists(atPath: profile.directory, isDirectory: &isDirectory) && isDirectory.boolValue else {
             throw SecretariatError("Der gewählte Projektordner existiert nicht. Bitte erneut auswählen.")
         }
         try configuration.update(expectedRevision: expectedRevision) { config in
@@ -327,7 +327,8 @@ public struct Vault {
             }
         }
         audit.record("run", ["profile": name, "variables": profile.bindings.map(\.variable).sorted().joined(separator: ",")])
-        return PreparedLaunch(directory: profile.directory, arguments: arguments, environment: environment, files: files)
+        let directory = profile.isAnywhere ? FileManager.default.currentDirectoryPath : profile.directory
+        return PreparedLaunch(directory: directory, arguments: arguments, environment: environment, files: files)
     }
 
     // MARK: registry

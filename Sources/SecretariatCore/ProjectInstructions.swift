@@ -56,6 +56,7 @@ public enum ProjectInstructions {
     }
 
     public static func preview(profile: Profile, executable: String) throws -> InstructionPlan {
+        guard !profile.isAnywhere else { throw AgentError("no_project", "Profile ohne festen Ordner haben keine Projektanweisungen.") }
         // Profile slugs are also used inside markers and inline Markdown.
         guard profile.name.range(of: #"^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$"#, options: .regularExpression) != nil,
               !executable.contains("\n"), !executable.contains("\r"), !executable.contains("`"), executable.hasPrefix("/") else {

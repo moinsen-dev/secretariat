@@ -181,3 +181,11 @@ import Testing
     let a = try? Arguments(["p", "--set", "a=1", "--set", "b=2", "--json"], values: ["--set"], usage: "u")
     #expect(a?.options["--set"] == ["a=1", "b=2"]); #expect(a?.json == true); #expect(a?.positional == ["p"])
 }
+
+@Test func profileWhichFindsTheClosestProjectProfile() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    let sub = f.root.appendingPathComponent("src/deep"); try FileManager.default.createDirectory(at: sub, withIntermediateDirectories: true)
+    let (_, json) = try f.cli("profile", "which", sub.path)
+    #expect(json.contains("agent-test"))
+    #expect(f.code("profile", "which", "/") == "profile_not_found")
+}

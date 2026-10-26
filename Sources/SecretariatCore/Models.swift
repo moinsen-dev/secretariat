@@ -169,6 +169,9 @@ public struct Profile: Codable, Identifiable, Equatable, Sendable {
     public init(id: UUID = UUID(), name: String = "", directory: String = "", command: String = "", bindings: [Binding] = []) {
         self.id = id; self.name = name; self.directory = directory; self.command = command; self.bindings = bindings
     }
+    /// Directory "*": not tied to a project — `run` starts in the caller's current folder (tool tokens).
+    public static let anywhere = "*"
+    public var isAnywhere: Bool { directory == Self.anywhere }
 }
 
 /// A place outside the Macs that holds copies of values: a Cloudflare Worker, Supabase, GitHub, a Linux host.
@@ -219,7 +222,7 @@ public struct Configuration: Codable, Equatable, Sendable {
             guard profile.name.range(of: Self.namePattern, options: .regularExpression) != nil else {
                 throw SecretariatError("Profilnamen beginnen mit einem Buchstaben oder einer Zahl und enthalten nur Buchstaben, Zahlen, Punkt, Bindestrich oder Unterstrich (maximal 64 Zeichen).")
             }
-            guard profile.directory.hasPrefix("/") else { throw SecretariatError("Bitte einen Projektordner auswählen.") }
+            guard profile.directory.hasPrefix("/") || profile.isAnywhere else { throw SecretariatError("Bitte einen Projektordner auswählen.") }
             try Self.validate(profile.bindings)
         }
         for target in targets {

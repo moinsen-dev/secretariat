@@ -127,7 +127,7 @@ public struct AgentService {
     public func check(_ name: String) throws -> ProfileCheck {
         let profile = try profile(named: name)
         var isDirectory: ObjCBool = false
-        let exists = FileManager.default.fileExists(atPath: profile.directory, isDirectory: &isDirectory) && isDirectory.boolValue
+        let exists = profile.isAnywhere || FileManager.default.fileExists(atPath: profile.directory, isDirectory: &isDirectory) && isDirectory.boolValue
         let items = (try? vault.list()) ?? []
         let variables = profile.bindings.sorted { $0.variable < $1.variable }.map { binding in
             var status = "available"
