@@ -23,8 +23,9 @@ public struct ProfileRemoved: Encodable, Sendable {
 extension AgentService {
     var vault: Vault { Vault(configuration: configuration, credentials: credentials) }
 
-    /// Key names from the configuration only — no keychain access.
+    /// Key names (never values): the configuration plus keys that arrived from other Macs.
     public func keys() throws -> KeyList {
+        try vault.importSyncedKeys()
         let config = try configuration.load()
         return KeyList(keys: config.secrets.sorted { $0.name.lowercased() < $1.name.lowercased() }.map { secret in
             KeyInfo(name: secret.name, id: secret.id,
@@ -51,6 +52,7 @@ extension AgentService {
     /// Map an environment variable to a key by its name; an existing mapping of the variable is replaced.
     public func bind(profile name: String, variable: String, key keyName: String) throws -> ProfileDescription {
         var changed = try profile(named: name)
+        try vault.importSyncedKeys()
         let secrets = try configuration.load().secrets
         guard let secret = secrets.first(where: { $0.name == keyName })
                 ?? secrets.first(where: { $0.name.lowercased() == keyName.lowercased() }) else {

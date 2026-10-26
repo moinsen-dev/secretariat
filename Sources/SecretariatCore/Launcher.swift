@@ -60,7 +60,7 @@ public enum CommandLineInterface {
     public static func run(_ arguments: [String], vault: Vault? = nil) throws -> Int32 {
         let paths = AppPaths()
         let vault = vault ?? Vault(configuration: ConfigurationStore(paths: paths),
-                                   credentials: KeychainStore(service: paths.keychainService, allowInteraction: false))
+                                   credentials: paths.credentialStore(allowInteraction: false))
         if AgentCommand.handles(arguments.first) {
             return try AgentCommand.execute(arguments, service: AgentService(paths: vault.configuration.paths),
                                             executable: Bundle.main.executableURL?.path ?? URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL.path)

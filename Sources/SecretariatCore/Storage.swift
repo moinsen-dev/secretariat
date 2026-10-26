@@ -9,13 +9,27 @@ public struct AppPaths: Sendable {
         let digest = SHA256.hash(data: Data(directory.standardizedFileURL.path.utf8))
         return "dev.moinsen.secretariat.local.v1." + digest.prefix(12).map { String(format: "%02x", $0) }.joined()
     }
+    /// Service of the synced keys. The real home shares one fixed service across all Macs (the path
+    /// and user differ per Mac); any other home (tests, fixtures) gets its own isolated namespace.
+    public var syncedKeychainService: String {
+        guard directory != AppPaths.defaultDirectory else { return "dev.moinsen.secretariat.keys.v1" }
+        let digest = SHA256.hash(data: Data(directory.standardizedFileURL.path.utf8))
+        return "dev.moinsen.secretariat.keys.test." + digest.prefix(12).map { String(format: "%02x", $0) }.joined()
+    }
+    public static var defaultDirectory: URL {
+        FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent("Library/Application Support/SecretariatLocal", isDirectory: true).standardizedFileURL
+    }
+    public func credentialStore(allowInteraction: Bool) -> FleetCredentialStore {
+        FleetCredentialStore(synced: SyncedKeychainStore(service: syncedKeychainService),
+                             legacy: KeychainStore(service: keychainService, allowInteraction: allowInteraction))
+    }
     public init(directory: URL? = nil) {
         if let directory { self.directory = directory.standardizedFileURL }
         else if let override = ProcessInfo.processInfo.environment["SECRETARIAT_HOME"], !override.isEmpty {
             self.directory = URL(fileURLWithPath: override, isDirectory: true).standardizedFileURL
         } else {
-            self.directory = FileManager.default.homeDirectoryForCurrentUser
-                .appendingPathComponent("Library/Application Support/SecretariatLocal", isDirectory: true)
+            self.directory = AppPaths.defaultDirectory
         }
     }
 }
@@ -75,7 +89,7 @@ public struct Vault {
     }
     public init(paths: AppPaths = AppPaths(), expectedRevision: Int? = nil) {
         configuration = ConfigurationStore(paths: paths)
-        credentials = KeychainStore(service: paths.keychainService)
+        credentials = paths.credentialStore(allowInteraction: true)
         self.expectedRevision = expectedRevision
     }
 
@@ -148,6 +162,33 @@ public struct Vault {
             }
             throw error
         }
+    }
+
+    /// Add references for keys that arrived from another Mac; a name clash gets a short id suffix.
+    @discardableResult public func importSyncedKeys() throws -> Int {
+        guard let listing = credentials as? SyncedKeyListing else { return 0 }
+        let entries = try listing.syncedKeys()
+        let known = Set(try configuration.load().secrets.map(\.id))
+        guard entries.contains(where: { !known.contains($0.id) }) else { return 0 }
+        var added = 0
+        try configuration.update { config in
+            for entry in entries where !config.secrets.contains(where: { $0.id == entry.id }) {
+                var name = String(entry.name.prefix(128))
+                if config.secrets.contains(where: { $0.name.lowercased() == name.lowercased() }) {
+                    name = String(name.prefix(118)) + " (" + entry.id.uuidString.prefix(4) + ")"
+                }
+                config.secrets.append(SecretReference(id: entry.id, name: name)); added += 1
+            }
+        }
+        return added
+    }
+
+    /// Move values stored by 0.1/0.2 in the local login keychain into the synced store.
+    @discardableResult public func migrateLocalKeys() throws -> Int {
+        guard let fleet = credentials as? FleetCredentialStore else { return 0 }
+        var moved = 0
+        for secret in try configuration.load().secrets where try fleet.migrate(id: secret.id, label: secret.name) { moved += 1 }
+        return moved
     }
 
     public func saveProfile(_ profile: Profile) throws {

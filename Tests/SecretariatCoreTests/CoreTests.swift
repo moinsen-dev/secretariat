@@ -168,3 +168,75 @@ private func fixture() throws -> (Vault, MemoryCredentials, URL) {
     #expect(credentials.values[id] == "original-value")
     #expect(try Data(contentsOf: vault.configuration.paths.configuration) == before)
 }
+
+// MARK: - 0.3 synced keys
+
+private final class FakeSynced: CredentialStore, SyncedKeyListing {
+    var values: [UUID: (String, String)] = [:]
+    var missingEntitlement = false
+    private func gate() throws { if missingEntitlement { throw CredentialError.unavailable(errSecMissingEntitlement) } }
+    func set(_ value: String, id: UUID, label: String) throws { try gate(); values[id] = (value, label) }
+    func read(id: UUID) throws -> String { try gate(); guard let v = values[id] else { throw CredentialError.notFound }; return v.0 }
+    func delete(id: UUID) throws { try gate(); values.removeValue(forKey: id) }
+    func syncedKeys() throws -> [SyncedKeyEntry] { try gate(); return values.map { SyncedKeyEntry(id: $0.key, name: $0.value.1) } }
+}
+private final class FakeLocal: CredentialStore {
+    var values: [UUID: String] = [:]
+    func set(_ value: String, id: UUID, label: String) throws { values[id] = value }
+    func read(id: UUID) throws -> String { guard let v = values[id] else { throw CredentialError.notFound }; return v }
+    func delete(id: UUID) throws { values.removeValue(forKey: id) }
+}
+private func syncFixture() throws -> (Vault, FakeSynced, FakeLocal, URL) {
+    let root = FileManager.default.temporaryDirectory.appendingPathComponent("secretariat-sync-\(UUID().uuidString)")
+    let synced = FakeSynced(), local = FakeLocal()
+    let vault = Vault(configuration: ConfigurationStore(paths: AppPaths(directory: root)),
+                      credentials: FleetCredentialStore(synced: synced, legacy: local))
+    return (vault, synced, local, root)
+}
+
+@Test func newValuesGoToTheSyncedStoreWithTheirName() throws {
+    let (vault, synced, local, root) = try syncFixture(); defer { try? FileManager.default.removeItem(at: root) }
+    let id = try vault.addSecret(name: "Gemini", value: "artificial-1")
+    #expect(synced.values[id]?.0 == "artificial-1"); #expect(synced.values[id]?.1 == "Gemini")
+    #expect(local.values[id] == nil)
+}
+
+@Test func legacyValuesStayReadableAndMigrateWithoutLoss() throws {
+    let (vault, synced, local, root) = try syncFixture(); defer { try? FileManager.default.removeItem(at: root) }
+    synced.missingEntitlement = true                      // written by 0.2: only in the login keychain
+    let id = try vault.addSecret(name: "Alt", value: "artificial-old")
+    #expect(local.values[id] == "artificial-old")
+    synced.missingEntitlement = false
+    #expect(try vault.credentials.read(id: id) == "artificial-old")   // fallback before migration
+    #expect(try vault.migrateLocalKeys() == 1)
+    #expect(synced.values[id]?.0 == "artificial-old"); #expect(local.values[id] == nil)
+    #expect(try vault.migrateLocalKeys() == 0)                        // repeat is a no-op
+}
+
+@Test func keysFromAnotherMacAreImportedOnceAndNameClashesGetASuffix() throws {
+    let (vault, synced, _, root) = try syncFixture(); defer { try? FileManager.default.removeItem(at: root) }
+    _ = try vault.addSecret(name: "Gemini", value: "artificial-here")
+    let remote = UUID(); synced.values[remote] = ("artificial-there", "Gemini")
+    let other = UUID(); synced.values[other] = ("artificial-x", "Stripe")
+    #expect(try vault.importSyncedKeys() == 2)
+    let names = try vault.configuration.load().secrets.map(\.name).sorted()
+    #expect(names == ["Gemini", "Gemini (\(remote.uuidString.prefix(4)))", "Stripe"])
+    #expect(try vault.importSyncedKeys() == 0)
+    try vault.credentials.delete(id: other)                            // deleting on one Mac removes it everywhere
+    #expect(synced.values[other] == nil)
+}
+
+@Test func withoutEntitlementEverythingStaysLocal() throws {
+    let (vault, synced, local, root) = try syncFixture(); defer { try? FileManager.default.removeItem(at: root) }
+    synced.missingEntitlement = true
+    let id = try vault.addSecret(name: "Lokal", value: "artificial-local")
+    #expect(local.values[id] == "artificial-local")
+    #expect(try vault.credentials.read(id: id) == "artificial-local")
+    #expect(try vault.importSyncedKeys() == 0)
+}
+
+@Test func testHomesNeverShareTheRealSyncedNamespace() {
+    let test = AppPaths(directory: FileManager.default.temporaryDirectory.appendingPathComponent("x"))
+    #expect(test.syncedKeychainService.hasPrefix("dev.moinsen.secretariat.keys.test."))
+    #expect(AppPaths(directory: AppPaths.defaultDirectory).syncedKeychainService == "dev.moinsen.secretariat.keys.v1")
+}

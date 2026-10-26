@@ -27,7 +27,13 @@ final class AppModel {
     var copied = false
     var agentSetup: AgentSetupDraft?
 
-    init() { reload() }
+    init() {
+        // Bring keys from other Macs in and move 0.1/0.2 values into the synced keychain.
+        let vault = Vault(paths: paths)
+        do { try vault.migrateLocalKeys(); try vault.importSyncedKeys() }
+        catch { errorMessage = error.localizedDescription }
+        reload()
+    }
     var vault: Vault { Vault(paths: paths, expectedRevision: configuration.revision) }
     var currentProfile: Profile? { configuration.profiles.first { $0.id.uuidString == selection } }
     var launcherPath: String {
@@ -38,6 +44,7 @@ final class AppModel {
 
     func reload() {
         do {
+            try? Vault(paths: paths).importSyncedKeys()
             configuration = try ConfigurationStore(paths: paths).load()
             loadFailed = false
         } catch { loadFailed = true; errorMessage = error.localizedDescription }

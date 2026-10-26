@@ -65,7 +65,7 @@ public struct AgentService {
     }
     public init(paths: AppPaths = AppPaths()) {
         configuration = ConfigurationStore(paths: paths)
-        credentials = KeychainStore(service: paths.keychainService, allowInteraction: false)
+        credentials = paths.credentialStore(allowInteraction: false)
     }
     public func profiles() throws -> ProfileList {
         ProfileList(profiles: try configuration.load().profiles.sorted { $0.name < $1.name }.map(ProfileInfo.init))

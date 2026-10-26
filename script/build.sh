@@ -28,7 +28,16 @@ identity="${SECRETARIAT_SIGN_IDENTITY:-}"
 if [[ -z "$identity" ]]; then
   identity="$(security find-identity -v -p codesigning | python3 -c 'import re,sys; matches=re.findall(r"\"(Developer ID Application:[^\"]+)\"",sys.stdin.read()); print(matches[0] if matches else "-")')"
 fi
-codesign --force --sign "$identity" --options runtime --timestamp=none "$stage"
+if [[ "$identity" == "Developer ID Application:"* ]]; then
+  # 0.3: synchronizable keys live in the data-protection keychain, which needs the app identifier
+  # and keychain access group — restricted entitlements a Developer ID app only gets with an
+  # embedded provisioning profile (App ID dev.moinsen.secretariat.local, profile "Secretariat Developer ID").
+  cp Resources/Secretariat.provisionprofile "$stage/Contents/embedded.provisionprofile"
+  codesign --force --sign "$identity" --options runtime --timestamp=none --entitlements Resources/Secretariat.entitlements "$stage"
+else
+  # Ad-hoc builds cannot carry restricted entitlements; they keep the local login keychain only.
+  codesign --force --sign "$identity" --options runtime --timestamp=none "$stage"
+fi
 codesign --verify --strict "$stage"
 python3 - "$ROOT/dist/Secretariat.app" <<'PY'
 import pathlib,plistlib,shutil,sys
