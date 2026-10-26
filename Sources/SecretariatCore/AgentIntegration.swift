@@ -99,14 +99,14 @@ public struct AgentService {
 
 public enum AgentCommand {
     public static func handles(_ command: String?) -> Bool {
-        ["profiles", "describe", "check", "instructions", "setup", "keys", "profile"].contains(command ?? "")
+        ["profiles", "describe", "check", "instructions", "setup", "keys", "profile", "import"].contains(command ?? "")
     }
     public static func json<T: Encodable>(_ value: T) throws -> String {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         return String(decoding: try encoder.encode(value), as: UTF8.self)
     }
     public static func execute(_ arguments: [String], service: AgentService, executable: String) throws -> Int32 {
-        if ["keys", "profile"].contains(arguments.first ?? "") { return try ProfileCommand.execute(arguments, service: service) }
+        if ["keys", "profile", "import"].contains(arguments.first ?? "") { return try ProfileCommand.execute(arguments, service: service) }
         let machine = arguments.contains("--json")
         do {
             let command = arguments.first ?? ""

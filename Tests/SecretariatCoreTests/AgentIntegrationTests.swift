@@ -188,3 +188,44 @@ private struct AgentFixture {
     #expect(throws: AgentError.self) { try ProfileCommand.parse(["neu", "--dir"][...], valueOptions: ["--dir"]) }
     #expect(throws: AgentError.self) { try ProfileCommand.parse(["--json", "--json"][...], valueOptions: []) }
 }
+
+@Test func dotenvParsingHandlesExportQuotesAndComments() {
+    let env = DotEnv.parse("""
+    # comment
+    export A=plain # trailing
+    B="dq \\"x\\" \\n y"
+    C='sq # not comment'
+    D=
+    A=last
+    """)
+    #expect(env["A"] == "last")
+    #expect(env["B"] == "dq \"x\" \n y")
+    #expect(env["C"] == "sq # not comment")
+    #expect(env["D"] == "")
+}
+
+@Test func importStoresValuesBindsProfileAndOutputsNamesOnly() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    let file = f.root.appendingPathComponent(".env")
+    try "CF_ID=import-secret-one\nCF_SECRET=\"import-secret-two\"\n".write(to: file, atomically: true, encoding: .utf8)
+    let result = try f.service.importKeys(file: file.path, requests: ["CF_ID", "CF_SECRET=Routing Secret"], profile: "agent-test", replace: false)
+    let json = try AgentCommand.json(result)
+    #expect(!json.contains("import-secret"))
+    #expect(result.imported.map(\.action) == ["created", "created"])
+    #expect(Set(f.credentials.values.values).isSuperset(of: ["import-secret-one", "import-secret-two"]))
+    #expect(try f.service.describe("agent-test").profile.variables.sorted() == ["CF_ID", "CF_SECRET", "TEST_API_KEY"])
+    #expect(try f.service.check("agent-test").ok)
+    // existing key: refused without --replace, overwritten with it
+    func code(_ body: () throws -> Void) -> String? {
+        do { try body(); return nil } catch let e as AgentError { return e.code } catch { return "other" }
+    }
+    try "CF_ID=rotated-value\n".write(to: file, atomically: true, encoding: .utf8)
+    #expect(code { _ = try f.service.importKeys(file: file.path, requests: ["CF_ID"], profile: nil, replace: false) } == "key_exists")
+    let replaced = try f.service.importKeys(file: file.path, requests: ["CF_ID"], profile: nil, replace: true)
+    #expect(replaced.imported.first?.action == "updated")
+    #expect(f.credentials.values.values.contains("rotated-value"))
+    #expect(code { _ = try f.service.importKeys(file: file.path, requests: ["NOPE"], profile: nil, replace: false) } == "variable_missing")
+    #expect(code { _ = try f.service.importKeys(file: file.path + ".fehlt", requests: ["CF_ID"], profile: nil, replace: false) } == "file_unreadable")
+    #expect(code { _ = try f.service.importKeys(file: file.path, requests: ["CF_ID=Neu"], profile: "fehlt", replace: false) } == "profile_not_found")
+    #expect(!f.credentials.values.isEmpty)
+}

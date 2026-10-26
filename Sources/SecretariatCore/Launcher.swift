@@ -37,7 +37,7 @@ public struct PreparedLaunch {
 
 public enum CommandLineInterface {
     public static let help = """
-    Secretariat 0.3 – Schlüssel für deine Projekte
+    Secretariat 0.4 – Schlüssel für deine Projekte
 
     secretariat run PROFIL -- PROGRAMM [ARGUMENTE …]
     secretariat profiles [--json]
@@ -51,9 +51,11 @@ public enum CommandLineInterface {
     secretariat profile bind PROFIL VARIABLE SCHLÜSSELNAME [--json]
     secretariat profile unbind PROFIL VARIABLE [--json]
     secretariat profile delete PROFIL [--json]
+    secretariat import DATEI VARIABLE[=SCHLÜSSELNAME] … [--profile PROFIL] [--replace] [--json]
     secretariat --version
 
-    Schlüsselwerte verwaltest du in der Secretariat-App; Profile auch per CLI.
+    Schlüsselwerte verwaltest du in der Secretariat-App oder übernimmst sie per import aus einer .env;
+    die CLI gibt nie Werte aus. Profile auch per CLI.
     Der Zielprozess erhält die ausgewählten Werte. Es läuft kein Hintergrunddienst.
     """
 
@@ -67,7 +69,7 @@ public enum CommandLineInterface {
         }
         switch arguments.first {
         case "--help", "-h", "help": print(help); return 0
-        case "--version": print("Secretariat 0.3.0"); return 0
+        case "--version": print("Secretariat 0.4.0"); return 0
         case "run":
             guard arguments.count >= 4, arguments[2] == "--" else {
                 throw SecretariatError("Aufruf: secretariat run PROFIL -- PROGRAMM [ARGUMENTE …]")

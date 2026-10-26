@@ -55,6 +55,7 @@
 | R015 | Schlüssel sind per iCloud-Schlüsselbund auf allen Macs desselben Apple-Accounts verfügbar; der Name reist im Eintrag mit, Profile bleiben je Mac |
 | R016 | Bestehende lokale Schlüssel lassen sich ohne Werteverlust in den synchronisierten Bestand übernehmen; ein Abbruch lässt beide Stände nutzbar |
 | R017 | App und CLI (`~/bin/secretariat`) sind auf M5, M1 und Mac Mini installiert und dort mit check/run geprüft |
+| R018 | `secretariat import DATEI VARIABLE[=SCHLÜSSELNAME] …` übernimmt benannte Werte aus einer .env direkt in den (synchronisierten) Schlüsselbund, optional mit Profil-Zuordnung; Ausgabe und Fehler nennen nur Namen; vorhandene Schlüssel nur mit --replace überschrieben |
 
 ## Phases
 
@@ -71,6 +72,7 @@
 | P08 | 8 | Agenten verdrahten Projekte selbst per CLI | P07 |
 | P09 | 9 | Schlüssel über iCloud-Schlüsselbund auf allen Macs | P08 |
 | P10 | 10 | Installation auf M5, M1 und Mac Mini | P09 |
+| P11 | 11 | Agenten übernehmen Werte aus einer .env ohne sie zu sehen | P10 |
 
 ## UseCases
 
@@ -87,6 +89,7 @@
 | UC08 | P08 | Agent listet Schlüssel, legt Profil an, ordnet Variablen zu, prüft und startet ohne die App | R008,R010,R012,R013,R014 | required |
 | UC09 | P09 | Schlüssel auf einem Mac speichern und auf einem zweiten Mac per check und run nutzen | R012,R015,R016 | required |
 | UC10 | P10 | Secretariat auf den weiteren Macs installieren und dort ein Profil prüfen | R002,R007,R017 | required |
+| UC11 | P11 | Agent übernimmt zwei Werte aus einer .env, ordnet sie einem Profil zu und startet ein Programm damit | R008,R012,R014,R018 | required |
 
 ## Tasks
 
@@ -108,6 +111,7 @@
 | T013 | P09 | UC09 | R015 | App-ID und Developer-ID-Provisioning-Profil mit Keychain-Zugriffsgruppe liegen vor und werden beim Build eingebettet; Entitlements im Paket geprüft | build,inspection | normal | T011 | script/build.sh,Resources/Info.plist,Resources/Secretariat.entitlements |
 | T014 | P09 | UC09 | R012,R015,R016 | Data-Protection-Schlüsselbund mit synchronisierbaren Einträgen und gemeinsamem Dienst; Name im Eintrag; keys zeigt synchronisierte Schlüssel; Übernahme lokaler Schlüssel ohne Werteverlust; Schlüssel vom M4 auf zweitem Mac per check und run nutzbar; CLI bleibt dialogfrei | build,unit,macos | normal | T013 | Package.swift,Sources/SecretariatCore/Models.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/Keychain.swift,Sources/SecretariatCore/Launcher.swift,Sources/SecretariatCore/AgentIntegration.swift,Sources/SecretariatCore/AgentProfiles.swift,Sources/SecretariatCore/ProjectInstructions.swift,Sources/Secretariat/Entry.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Views.swift,Sources/Secretariat/Editors.swift,script/build.sh,Tests/SecretariatCoreTests/CoreTests.swift |
 | T015 | P10 | UC10 | R002,R007,R017 | Signiertes Paket 0.3 auf M5, M1 und Mac Mini installiert; CLI-Verweis vorhanden; dort Profil per CLI angelegt, check und run mit synchronisiertem Testschlüssel; keine Autostarts | macos,inspection | normal | T014 | script/install.sh,script/install.py,script/build.sh,Resources/Info.plist |
+| T016 | P11 | UC11 | R008,R012,R014,R018 | import-Befehl mit dotenv-Parser, Vorabprüfung aller Namen, --replace und --profile; Unit-Tests ohne Werte in der Ausgabe; 0.4.0 signiert auf M4, M5, M1, Mini installiert; echter Import mit check auf dem M4 | build,unit,macos | normal | T015 | Sources/SecretariatCore/KeyImport.swift,Sources/SecretariatCore/AgentProfiles.swift,Sources/SecretariatCore/AgentIntegration.swift,Sources/SecretariatCore/Launcher.swift,Tests/SecretariatCoreTests/AgentIntegrationTests.swift,Resources/Info.plist |
 
 ## Modules
 
@@ -209,3 +213,7 @@ CLI-Erweiterung (P08): `keys [--json]` liest nur die Konfiguration. `profile cre
 Abgleich (P09): Schlüsselbund-Einträge wechseln vom dateibasierten Login-Schlüsselbund in den Data-Protection-Schlüsselbund mit `kSecAttrSynchronizable`, einem festen gemeinsamen Dienstnamen (statt des pfadabhängigen Hashes) und dem Schlüsselnamen im Eintrag. `keys` vereinigt lokale Konfiguration und synchronisierte Einträge. Profile bleiben je Mac, weil Projektpfade und Benutzer abweichen (M1: `doedel`). Voraussetzung ist eine App-ID mit Developer-ID-Provisioning-Profil; diese Kontoaktion braucht Uli (Anmeldung von `asc` oder Anlage im Developer-Portal). Bis dahin ist T013 blockiert, P08 läuft unabhängig.
 
 Installation (P10, gleicher lokaler Lieferweg wie D001, eigene Aufgabe T015): per SSH vom M4 aus nach `~/Applications/Secretariat.app` und `~/bin/secretariat` auf M5, M1 und Mac Mini; die Schlüsselwerte selbst kommen über iCloud oder trägt Uli in der App ein.
+
+## Änderungsumfang 0.4
+
+Anlass: Ein Projekt brauchte zwei Werte, die schon in einer anderen .env standen; bisher hätte Uli sie von Hand in die App tippen müssen. Neu (P11): `secretariat import DATEI VARIABLE[=SCHLÜSSELNAME] … [--profile PROFIL] [--replace] [--json]`. Der Wert geht innerhalb des Prozesses von der Datei in den Schlüsselbund; Ausgabe und Fehler nennen nur Namen. Bewusste Lockerung von „Werte nur über die App“ (Uli, 2026-10-26): ein Agent kann die .env ohnehin lesen, der Import hält die Werte aus seinem Kontext. Ausgeben oder Lesen von Werten bleibt unmöglich.

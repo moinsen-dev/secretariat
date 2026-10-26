@@ -104,6 +104,7 @@ enum ProfileCommand {
       secretariat profile bind PROFIL VARIABLE SCHLÜSSELNAME [--json]
       secretariat profile unbind PROFIL VARIABLE [--json]
       secretariat profile delete PROFIL [--json]
+      secretariat import DATEI VARIABLE[=SCHLÜSSELNAME] … [--profile PROFIL] [--replace] [--json]
     """
 
     struct Parsed {
@@ -136,7 +137,17 @@ enum ProfileCommand {
         let machine = arguments.contains("--json")
         do {
             let output: (json: String, text: String)
-            if arguments.first == "keys" {
+            if arguments.first == "import" {
+                var rest = Array(arguments.dropFirst())
+                let replace = rest.contains("--replace"); rest.removeAll { $0 == "--replace" }
+                let p = try parse(rest[...], valueOptions: ["--profile"])
+                guard p.positional.count >= 2 else { throw AgentError("invalid_arguments", usage) }
+                let result = try service.importKeys(file: p.positional[0], requests: Array(p.positional.dropFirst()),
+                                                    profile: p.options["--profile"], replace: replace)
+                output = (try AgentCommand.json(result), result.imported.map {
+                    "\($0.variable) → \($0.key) (\($0.action == "created" ? "neu" : "ersetzt"))"
+                }.joined(separator: "\n") + (result.profile.map { "\nProfil: \($0)" } ?? ""))
+            } else if arguments.first == "keys" {
                 let p = try parse(arguments.dropFirst(), valueOptions: [])
                 guard p.positional.isEmpty else { throw AgentError("invalid_arguments", usage) }
                 let result = try service.keys()
