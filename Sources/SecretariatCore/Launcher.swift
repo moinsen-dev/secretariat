@@ -51,6 +51,7 @@ public enum CommandLineInterface {
     secretariat profile bind PROFIL VARIABLE SCHLÜSSELNAME [--json]
     secretariat profile unbind PROFIL VARIABLE [--json]
     secretariat profile delete PROFIL [--json]
+    secretariat key rename ALTER_NAME NEUER_NAME [--json]
     secretariat import DATEI VARIABLE[=SCHLÜSSELNAME] … [--profile PROFIL] [--replace] [--json]
     secretariat --version
 
@@ -69,7 +70,7 @@ public enum CommandLineInterface {
         }
         switch arguments.first {
         case "--help", "-h", "help": print(help); return 0
-        case "--version": print("Secretariat 0.4.0"); return 0
+        case "--version": print("Secretariat 0.4.1"); return 0
         case "run":
             guard arguments.count >= 4, arguments[2] == "--" else {
                 throw SecretariatError("Aufruf: secretariat run PROFIL -- PROGRAMM [ARGUMENTE …]")

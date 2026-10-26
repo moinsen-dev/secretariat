@@ -33,6 +33,17 @@ extension AgentService {
         })
     }
 
+    /// Rename a key on this Mac; the new name reaches the other Macs through the synced item's label.
+    public func renameKey(_ oldName: String, to newName: String) throws -> KeyList {
+        try vault.importSyncedKeys()
+        guard let secret = try configuration.load().secrets.first(where: { $0.name == oldName }) else {
+            throw AgentError("key_not_found", "Schlüssel nicht gefunden. Vorhandene Namen: secretariat keys --json")
+        }
+        do { try vault.updateSecret(id: secret.id, name: newName, newValue: nil) }
+        catch let error as SecretariatError { throw AgentError("invalid_key", error.message) }
+        return try keys()
+    }
+
     public func createProfile(name: String, directory: String, command: String?) throws -> ProfileDescription {
         if (try? profile(named: name)) != nil {
             throw AgentError("profile_exists", "Ein Profil mit diesem Namen gibt es schon. Ändern: secretariat profile set \(name) …")
@@ -104,6 +115,7 @@ enum ProfileCommand {
       secretariat profile bind PROFIL VARIABLE SCHLÜSSELNAME [--json]
       secretariat profile unbind PROFIL VARIABLE [--json]
       secretariat profile delete PROFIL [--json]
+      secretariat key rename ALTER_NAME NEUER_NAME [--json]
       secretariat import DATEI VARIABLE[=SCHLÜSSELNAME] … [--profile PROFIL] [--replace] [--json]
     """
 
@@ -147,6 +159,11 @@ enum ProfileCommand {
                 output = (try AgentCommand.json(result), result.imported.map {
                     "\($0.variable) → \($0.key) (\($0.action == "created" ? "neu" : "ersetzt"))"
                 }.joined(separator: "\n") + (result.profile.map { "\nProfil: \($0)" } ?? ""))
+            } else if arguments.first == "key" {
+                let p = try parse(arguments.dropFirst(), valueOptions: [])
+                guard p.positional.count == 3, p.positional[0] == "rename" else { throw AgentError("invalid_arguments", usage) }
+                let result = try service.renameKey(p.positional[1], to: p.positional[2])
+                output = (try AgentCommand.json(result), "Umbenannt: \(p.positional[1]) → \(p.positional[2])")
             } else if arguments.first == "keys" {
                 let p = try parse(arguments.dropFirst(), valueOptions: [])
                 guard p.positional.isEmpty else { throw AgentError("invalid_arguments", usage) }

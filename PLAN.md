@@ -56,6 +56,7 @@
 | R016 | Bestehende lokale Schlüssel lassen sich ohne Werteverlust in den synchronisierten Bestand übernehmen; ein Abbruch lässt beide Stände nutzbar |
 | R017 | App und CLI (`~/bin/secretariat`) sind auf M5, M1 und Mac Mini installiert und dort mit check/run geprüft |
 | R018 | `secretariat import DATEI VARIABLE[=SCHLÜSSELNAME] …` übernimmt benannte Werte aus einer .env direkt in den (synchronisierten) Schlüsselbund, optional mit Profil-Zuordnung; Ausgabe und Fehler nennen nur Namen; vorhandene Schlüssel nur mit --replace überschrieben |
+| R019 | `secretariat key rename ALT NEU` benennt einen Schlüssel um, ohne Wert und Profilzuordnungen zu ändern; der neue Name erreicht die anderen Macs über das synchronisierte Etikett (auch Umbenennen in der App) |
 
 ## Phases
 
@@ -73,6 +74,7 @@
 | P09 | 9 | Schlüssel über iCloud-Schlüsselbund auf allen Macs | P08 |
 | P10 | 10 | Installation auf M5, M1 und Mac Mini | P09 |
 | P11 | 11 | Agenten übernehmen Werte aus einer .env ohne sie zu sehen | P10 |
+| P12 | 12 | Schlüssel einheitlich benennen (Organisation/Konto/Name) | P11 |
 
 ## UseCases
 
@@ -90,6 +92,7 @@
 | UC09 | P09 | Schlüssel auf einem Mac speichern und auf einem zweiten Mac per check und run nutzen | R012,R015,R016 | required |
 | UC10 | P10 | Secretariat auf den weiteren Macs installieren und dort ein Profil prüfen | R002,R007,R017 | required |
 | UC11 | P11 | Agent übernimmt zwei Werte aus einer .env, ordnet sie einem Profil zu und startet ein Programm damit | R008,R012,R014,R018 | required |
+| UC12 | P12 | Agent benennt einen Schlüssel nach dem Schema um; ein zweiter Mac zeigt den neuen Namen, Profile funktionieren weiter | R012,R015,R019 | required |
 
 ## Tasks
 
@@ -112,6 +115,7 @@
 | T014 | P09 | UC09 | R012,R015,R016 | Data-Protection-Schlüsselbund mit synchronisierbaren Einträgen und gemeinsamem Dienst; Name im Eintrag; keys zeigt synchronisierte Schlüssel; Übernahme lokaler Schlüssel ohne Werteverlust; Schlüssel vom M4 auf zweitem Mac per check und run nutzbar; CLI bleibt dialogfrei | build,unit,macos | normal | T013 | Package.swift,Sources/SecretariatCore/Models.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/Keychain.swift,Sources/SecretariatCore/Launcher.swift,Sources/SecretariatCore/AgentIntegration.swift,Sources/SecretariatCore/AgentProfiles.swift,Sources/SecretariatCore/ProjectInstructions.swift,Sources/Secretariat/Entry.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Views.swift,Sources/Secretariat/Editors.swift,script/build.sh,Tests/SecretariatCoreTests/CoreTests.swift |
 | T015 | P10 | UC10 | R002,R007,R017 | Signiertes Paket 0.3 auf M5, M1 und Mac Mini installiert; CLI-Verweis vorhanden; dort Profil per CLI angelegt, check und run mit synchronisiertem Testschlüssel; keine Autostarts | macos,inspection | normal | T014 | script/install.sh,script/install.py,script/build.sh,Resources/Info.plist |
 | T016 | P11 | UC11 | R008,R012,R014,R018 | import-Befehl mit dotenv-Parser, Vorabprüfung aller Namen, --replace und --profile; Unit-Tests ohne Werte in der Ausgabe; 0.4.0 signiert auf M4, M5, M1, Mini installiert; echter Import mit check auf dem M4 | build,unit,macos | normal | T015 | Sources/SecretariatCore/KeyImport.swift,Sources/SecretariatCore/AgentProfiles.swift,Sources/SecretariatCore/AgentIntegration.swift,Sources/SecretariatCore/Launcher.swift,Tests/SecretariatCoreTests/AgentIntegrationTests.swift,Resources/Info.plist |
+| T017 | P12 | UC12 | R012,R015,R019 | key rename per CLI; Umbenennen schreibt das Schlüsselbund-Etikett neu; Abgleich übernimmt Umbenennungen anderer Macs ohne Namenskonflikt; Unit-Tests; 0.4.1 signiert installiert; echte Umbenennung zweier Schlüssel auf dem M4, Ankunft auf Mini und M1 beobachtet | build,unit,macos | normal | T016 | Sources/SecretariatCore/AgentProfiles.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/AgentIntegration.swift,Sources/SecretariatCore/Launcher.swift,Tests/SecretariatCoreTests/CoreTests.swift,Tests/SecretariatCoreTests/AgentIntegrationTests.swift,Resources/Info.plist |
 
 ## Modules
 
@@ -217,3 +221,7 @@ Installation (P10, gleicher lokaler Lieferweg wie D001, eigene Aufgabe T015): pe
 ## Änderungsumfang 0.4
 
 Anlass: Ein Projekt brauchte zwei Werte, die schon in einer anderen .env standen; bisher hätte Uli sie von Hand in die App tippen müssen. Neu (P11): `secretariat import DATEI VARIABLE[=SCHLÜSSELNAME] … [--profile PROFIL] [--replace] [--json]`. Der Wert geht innerhalb des Prozesses von der Datei in den Schlüsselbund; Ausgabe und Fehler nennen nur Namen. Bewusste Lockerung von „Werte nur über die App“ (Uli, 2026-10-26): ein Agent kann die .env ohnehin lesen, der Import hält die Werte aus seinem Kontext. Ausgeben oder Lesen von Werten bleibt unmöglich.
+
+## Änderungsumfang 0.4.1
+
+Anlass: Fleet-Register (Uli, 2026-10-26). Kennungen liegen im Register `~/.claude/registry`, Geheimnisse in Secretariat; Schlüsselnamen folgen dem Schema `<org>/<konto>/<name>[@umgebung]`, damit Register-Verweise `secret:<name>` eindeutig sind. Neu: `secretariat key rename`; ein Umbenennen (CLI oder App) schreibt das Etikett des synchronisierten Eintrags neu, und der Abgleich auf den anderen Macs übernimmt den Namen.

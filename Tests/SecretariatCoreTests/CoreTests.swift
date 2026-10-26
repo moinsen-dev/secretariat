@@ -240,3 +240,18 @@ private func syncFixture() throws -> (Vault, FakeSynced, FakeLocal, URL) {
     #expect(test.syncedKeychainService.hasPrefix("dev.moinsen.secretariat.keys.test."))
     #expect(AppPaths(directory: AppPaths.defaultDirectory).syncedKeychainService == "dev.moinsen.secretariat.keys.v1")
 }
+
+@Test func renameRewritesTheSyncedLabelAndOtherMacsTakeItOver() throws {
+    let (vault, synced, _, root) = try syncFixture(); defer { try? FileManager.default.removeItem(at: root) }
+    let id = try vault.addSecret(name: "Adventurist CF Access Client ID", value: "artificial-cf")
+    // second Mac: own configuration, same synced keychain
+    let otherRoot = root.appendingPathComponent("other-mac")
+    let other = Vault(configuration: ConfigurationStore(paths: AppPaths(directory: otherRoot)), credentials: vault.credentials)
+    #expect(try other.importSyncedKeys() == 1)
+    try vault.updateSecret(id: id, name: "moinsen/cloudflare/access-routing-client-id", newValue: nil)
+    #expect(synced.values[id]?.0 == "artificial-cf")                                   // value untouched
+    #expect(synced.values[id]?.1 == "moinsen/cloudflare/access-routing-client-id")     // label carries the new name
+    #expect(try other.importSyncedKeys() == 1)
+    #expect(try other.configuration.load().secrets.map(\.name) == ["moinsen/cloudflare/access-routing-client-id"])
+    #expect(try other.importSyncedKeys() == 0)
+}

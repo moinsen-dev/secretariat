@@ -121,7 +121,10 @@ public struct Vault {
                 let oldName = config.secrets[index].name
                 config.secrets[index].name = name.trimmingCharacters(in: .whitespacesAndNewlines)
                 try config.validate()
-                if let newValue, !newValue.isEmpty {
+                // A rename rewrites the keychain item too: its label carries the name to the other Macs.
+                var value = newValue.flatMap { $0.isEmpty ? nil : $0 }
+                if value == nil, oldName != config.secrets[index].name { value = try? credentials.read(id: id) }
+                if let newValue = value {
                     let oldValue: String?
                     do { oldValue = try credentials.read(id: id) }
                     catch CredentialError.notFound { oldValue = nil }
@@ -164,14 +167,26 @@ public struct Vault {
         }
     }
 
-    /// Add references for keys that arrived from another Mac; a name clash gets a short id suffix.
+    /// Add references for keys that arrived from another Mac and take over renames made there;
+    /// a name clash gets a short id suffix (new keys) or keeps the local name (renames).
     @discardableResult public func importSyncedKeys() throws -> Int {
         guard let listing = credentials as? SyncedKeyListing else { return 0 }
         let entries = try listing.syncedKeys()
-        let known = Set(try configuration.load().secrets.map(\.id))
-        guard entries.contains(where: { !known.contains($0.id) }) else { return 0 }
+        func renamable(_ entry: SyncedKeyEntry, in secrets: [SecretReference]) -> Int? {
+            let name = String(entry.name.prefix(128))
+            guard let index = secrets.firstIndex(where: { $0.id == entry.id }), secrets[index].name != name,
+                  !secrets.contains(where: { $0.id != entry.id && $0.name.lowercased() == name.lowercased() }) else { return nil }
+            return index
+        }
+        let current = try configuration.load().secrets
+        guard entries.contains(where: { entry in !current.contains { $0.id == entry.id } || renamable(entry, in: current) != nil })
+        else { return 0 }
         var added = 0
         try configuration.update { config in
+            for entry in entries {
+                guard let index = renamable(entry, in: config.secrets) else { continue }
+                config.secrets[index].name = String(entry.name.prefix(128)); added += 1
+            }
             for entry in entries where !config.secrets.contains(where: { $0.id == entry.id }) {
                 var name = String(entry.name.prefix(128))
                 if config.secrets.contains(where: { $0.name.lowercased() == name.lowercased() }) {

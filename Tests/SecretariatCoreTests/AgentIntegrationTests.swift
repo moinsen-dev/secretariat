@@ -229,3 +229,16 @@ private struct AgentFixture {
     #expect(code { _ = try f.service.importKeys(file: file.path, requests: ["CF_ID=Neu"], profile: "fehlt", replace: false) } == "profile_not_found")
     #expect(!f.credentials.values.isEmpty)
 }
+
+@Test func keyRenameKeepsBindingsAndRejectsUnknownOrDuplicateNames() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    let keys = try f.service.renameKey("Künstlicher Test", to: "moinsen/test/artificial@dev")
+    #expect(keys.keys.map(\.name) == ["moinsen/test/artificial@dev"])
+    #expect(keys.keys.first?.profiles == ["agent-test"])
+    #expect(try f.service.check("agent-test").ok)
+    func code(_ body: () throws -> Void) -> String? {
+        do { try body(); return nil } catch let e as AgentError { return e.code } catch { return "other" }
+    }
+    #expect(code { _ = try f.service.renameKey("fehlt", to: "x") } == "key_not_found")
+    #expect(code { _ = try f.service.renameKey("moinsen/test/artificial@dev", to: " ") } == "invalid_key")
+}
