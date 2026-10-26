@@ -1,18 +1,18 @@
 #!/bin/bash
-# Builds .artifacts/SyncFixture.app: same identifier, entitlements and profile as Secretariat,
-# so it can see the app's synced keychain items. Only touches test namespaces (see sync_fixture.swift).
+# Builds .artifacts/MigrateV1.app (one-time 0.x → 1.0 move, see migrate_v1.swift) with Secretariat's identifier and entitlements.
+
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
-app="$ROOT/.artifacts/SyncFixture.app"
+app="$ROOT/.artifacts/MigrateV1.app"
 rm -rf "$app"; mkdir -p "$app/Contents/MacOS"
-swiftc -parse-as-library -O "$ROOT/script/sync_fixture.swift" -o "$app/Contents/MacOS/sync-fixture"
+swiftc -parse-as-library -O -module-name MigrateV1 "$ROOT/script/migrate_v1.swift" "$ROOT"/Sources/SecretariatCore/*.swift -o "$app/Contents/MacOS/migrate-v1"
 cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>CFBundleIdentifier</key><string>dev.moinsen.secretariat.local</string>
-<key>CFBundleExecutable</key><string>sync-fixture</string>
-<key>CFBundleName</key><string>SyncFixture</string>
+<key>CFBundleExecutable</key><string>migrate-v1</string>
+<key>CFBundleName</key><string>MigrateV1</string>
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>LSUIElement</key><true/>
 </dict></plist>
