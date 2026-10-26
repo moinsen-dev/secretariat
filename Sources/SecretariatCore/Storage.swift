@@ -42,7 +42,7 @@ public struct ConfigurationStore {
         guard FileManager.default.fileExists(atPath: paths.configuration.path) else { return Configuration() }
         let data: Data
         do { data = try Data(contentsOf: paths.configuration) }
-        catch { throw SecretariatError("Die lokale Konfiguration lässt sich nicht lesen. Sie wurde nicht verändert: \(paths.configuration.path)") }
+        catch { throw SecretariatError("The local configuration can't be read. It was not changed: \(paths.configuration.path)") }
         if let version = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["version"] as? Int, version != 2 {
             try Configuration.validateVersion(version)
         }
@@ -51,7 +51,7 @@ public struct ConfigurationStore {
             try config.validate()
             return config
         } catch let error as SecretariatError { throw error }
-        catch { throw SecretariatError("Die lokale Konfiguration lässt sich nicht lesen. Sie wurde nicht verändert: \(paths.configuration.path)") }
+        catch { throw SecretariatError("The local configuration can't be read. It was not changed: \(paths.configuration.path)") }
     }
 
     public func update(expectedRevision: Int? = nil, _ change: (inout Configuration) throws -> Void) throws {
@@ -60,13 +60,13 @@ public struct ConfigurationStore {
                                     attributes: [.posixPermissions: 0o700])
         let lockURL = paths.directory.appendingPathComponent("configuration.lock")
         let descriptor = open(lockURL.path, O_CREAT | O_RDWR | O_NOFOLLOW, 0o600)
-        guard descriptor >= 0 else { throw SecretariatError("Die Konfiguration kann nicht zum Schreiben geöffnet werden.") }
+        guard descriptor >= 0 else { throw SecretariatError("The configuration can't be opened for writing.") }
         defer { close(descriptor) }
-        guard flock(descriptor, LOCK_EX) == 0 else { throw SecretariatError("Die Konfiguration wird gerade verwendet. Bitte erneut versuchen.") }
+        guard flock(descriptor, LOCK_EX) == 0 else { throw SecretariatError("The configuration is in use right now. Please try again.") }
         defer { _ = flock(descriptor, LOCK_UN) }
         var configuration = try load()
         if let expectedRevision, expectedRevision != configuration.revision {
-            throw SecretariatError("Die Daten wurden in einem anderen Fenster geändert. Bitte die Ansicht aktualisieren und erneut bearbeiten.")
+            throw SecretariatError("The data was changed in another window. Please refresh the view and edit again.")
         }
         try change(&configuration)
         try configuration.validate()
@@ -77,10 +77,10 @@ public struct ConfigurationStore {
         let temporary = paths.directory.appendingPathComponent(".profiles-\(UUID().uuidString).tmp")
         defer { try? manager.removeItem(at: temporary) }
         guard manager.createFile(atPath: temporary.path, contents: data, attributes: [.posixPermissions: 0o600]) else {
-            throw SecretariatError("Die Konfiguration konnte nicht gespeichert werden. Der bisherige Stand bleibt erhalten.")
+            throw SecretariatError("The configuration could not be saved. The previous state is kept.")
         }
         guard rename(temporary.path, paths.configuration.path) == 0 else {
-            throw SecretariatError("Die Konfiguration konnte nicht ersetzt werden. Der bisherige Stand bleibt erhalten.")
+            throw SecretariatError("The configuration could not be replaced. The previous state is kept.")
         }
     }
 }
@@ -139,23 +139,23 @@ public struct Vault {
     public func item(path: String) throws -> ItemMeta {
         let matches = try list().filter { $0.path == path }
         guard let first = matches.first else {
-            throw AgentError("item_not_found", "Eintrag nicht gefunden: \(path). Vorhandene Einträge: secretariat items")
+            throw AgentError("item_not_found", "Item not found: \(path). Existing items: secretariat items")
         }
         guard matches.count == 1 else {
-            throw AgentError("ambiguous_path", "Zwei Einträge heißen \(path) (auf zwei Macs gleichzeitig angelegt). Bitte einen in der App umbenennen.")
+            throw AgentError("ambiguous_path", "Two items are named \(path) (created on two Macs at the same time). Please rename one in the app.")
         }
         return first
     }
     public func item(id: UUID) throws -> ItemMeta {
         guard let item = try list().first(where: { $0.id == id }) else {
-            throw AgentError("item_not_found", "Ein zugeordneter Eintrag fehlt. Vielleicht wurde er auf einem anderen Mac gelöscht.")
+            throw AgentError("item_not_found", "A bound item is missing. It may have been deleted on another Mac.")
         }
         return item
     }
     public func resolve(_ reference: FieldReference) throws -> (ItemMeta, ItemField) {
         let item = try item(path: reference.path)
         guard let field = item.field(reference.field) else {
-            throw AgentError("field_not_found", "\(reference.path) hat kein Feld \(reference.field). Felder: \(item.fields.map(\.name).joined(separator: ", "))")
+            throw AgentError("field_not_found", "\(reference.path) has no field \(reference.field). Fields: \(item.fields.map(\.name).joined(separator: ", "))")
         }
         return (item, field)
     }
@@ -166,13 +166,13 @@ public struct Vault {
         meta.path = meta.path.trimmingCharacters(in: .whitespacesAndNewlines)
         try meta.validate()
         if try list().contains(where: { $0.path.lowercased() == meta.path.lowercased() && $0.id != meta.id }) {
-            throw AgentError("path_exists", "Es gibt schon einen Eintrag \(meta.path).")
+            throw AgentError("path_exists", "An item \(meta.path) already exists.")
         }
         if let secrets {
             let secretFields = Set(meta.fields.filter { $0.kind.isSecret }.map(\.name))
-            guard Set(secrets.keys).isSubset(of: secretFields) else { throw SecretariatError("Werte passen nicht zu den Feldern des Eintrags.") }
+            guard Set(secrets.keys).isSubset(of: secretFields) else { throw SecretariatError("The values don't match the item's fields.") }
             for (name, value) in secrets where value.utf8.contains(0) && meta.field(name)?.kind != .file {
-                throw SecretariatError("Werte dürfen kein Nullzeichen enthalten (\(name)).")
+                throw SecretariatError("Values must not contain a null character (\(name)).")
             }
             if let old = try? items.secrets(id: meta.id), old != secrets { meta.rotated = today() }
             else if (try? items.secrets(id: meta.id)) == nil, !secrets.isEmpty { meta.rotated = today() }
@@ -185,16 +185,16 @@ public struct Vault {
     /// Set one secret value (creating the item or field when missing). Used by import and the app.
     public func setValue(_ reference: FieldReference, value: String, kind: FieldKind = .secret, fileName: String? = nil,
                          itemKind: ItemKind = .api, source: String = "", replace: Bool = false) throws {
-        guard kind.isSecret else { throw SecretariatError("Kennungen werden in der Beschreibung gesetzt, nicht als Wert.") }
-        guard !value.isEmpty else { throw SecretariatError("Leere Werte werden nicht gespeichert (\(reference)).") }
+        guard kind.isSecret else { throw SecretariatError("Identifiers are set in the description, not as a value.") }
+        guard !value.isEmpty else { throw SecretariatError("Empty values are not stored (\(reference)).") }
         var meta = (try? item(path: reference.path)) ?? ItemMeta(path: reference.path, kind: itemKind, source: source)
         var values = (try? items.secrets(id: meta.id)) ?? [:]
         if let existing = meta.field(reference.field) {
             guard replace || values[reference.field] == nil else {
-                throw AgentError("field_exists", "\(reference) hat schon einen Wert. Überschreiben mit --replace.")
+                throw AgentError("field_exists", "\(reference) already has a value. Overwrite with --replace.")
             }
             guard existing.kind == kind || replace else {
-                throw AgentError("field_kind", "\(reference) ist als \(existing.kind.title) angelegt.")
+                throw AgentError("field_kind", "\(reference) already exists as a field of kind '\(existing.kind.title)'.")
             }
             meta.fields.removeAll { $0.name == reference.field }
         }
@@ -215,8 +215,8 @@ public struct Vault {
     public func delete(id: UUID) throws {
         let config = try configuration.load()
         let users = config.profiles.filter { $0.bindings.contains { $0.itemID == id } }.map(\.name)
-            + config.targets.filter { $0.bindings.contains { $0.itemID == id } }.map { "Ziel \($0.name)" }
-        guard users.isEmpty else { throw SecretariatError("Dieser Eintrag wird noch verwendet: \(users.joined(separator: ", ")). Bitte zuerst die Zuordnungen entfernen.") }
+            + config.targets.filter { $0.bindings.contains { $0.itemID == id } }.map { "target \($0.name)" }
+        guard users.isEmpty else { throw SecretariatError("This item is still in use: \(users.joined(separator: ", ")). Please remove the bindings first.") }
         let path = (try? item(id: id).path) ?? id.uuidString
         try items.delete(id: id)
         audit.record("item.delete", ["item": path])
@@ -226,10 +226,10 @@ public struct Vault {
     /// Value of a field for a program. Identifiers come from metadata, personal fields never leave the app.
     public func value(itemID: UUID, field name: String) throws -> String {
         let meta = try item(id: itemID)
-        guard let field = meta.field(name) else { throw AgentError("field_not_found", "\(meta.path) hat kein Feld \(name).") }
+        guard let field = meta.field(name) else { throw AgentError("field_not_found", "\(meta.path) has no field \(name).") }
         switch field.kind {
         case .identifier: return field.value ?? ""
-        case .personal: throw AgentError("personal_field", "\(meta.path)/\(name) ist nur für dich bestimmt und wird an kein Programm weitergegeben.")
+        case .personal: throw AgentError("personal_field", "\(meta.path)/\(name) is only for you and is never passed to a program.")
         case .secret, .file:
             guard let value = try items.secrets(id: itemID)[name], !value.isEmpty else { throw CredentialError.notFound }
             return value
@@ -246,7 +246,7 @@ public struct Vault {
         if field.kind == .identifier {
             var target = (try? item(path: destination.path)) ?? ItemMeta(path: destination.path, kind: fromItem.kind, source: fromItem.source)
             if target.field(destination.field) != nil {
-                guard replace else { throw AgentError("field_exists", "\(destination) gibt es schon. Überschreiben mit --replace.") }
+                guard replace else { throw AgentError("field_exists", "\(destination) already exists. Overwrite with --replace.") }
                 target.fields.removeAll { $0.name == destination.field }
             }
             target.fields.append(ItemField(name: destination.field, kind: .identifier, value: field.value))
@@ -281,7 +281,7 @@ public struct Vault {
     public func saveProfile(_ profile: Profile) throws {
         var isDirectory: ObjCBool = false
         guard profile.isAnywhere || FileManager.default.fileExists(atPath: profile.directory, isDirectory: &isDirectory) && isDirectory.boolValue else {
-            throw SecretariatError("Der gewählte Projektordner existiert nicht. Bitte erneut auswählen.")
+            throw SecretariatError("The chosen project folder doesn't exist. Please choose it again.")
         }
         try configuration.update(expectedRevision: expectedRevision) { config in
             if let index = config.profiles.firstIndex(where: { $0.id == profile.id }) { config.profiles[index] = profile }
@@ -310,19 +310,19 @@ public struct Vault {
     public func preparedLaunch(name: String, arguments: [String], inheritedEnvironment: [String: String]) throws -> PreparedLaunch {
         let config = try configuration.load()
         guard let profile = config.profiles.first(where: { $0.name == name }) else {
-            throw SecretariatError("Profil nicht gefunden. Bitte in Secretariat ein Profil anlegen oder ‚secretariat profiles‘ verwenden.")
+            throw SecretariatError("Profile not found. Create a profile in Secretariat or use 'secretariat profiles'.")
         }
-        guard !arguments.isEmpty, !arguments[0].isEmpty else { throw SecretariatError("Bitte nach -- ein Programm angeben.") }
+        guard !arguments.isEmpty, !arguments[0].isEmpty else { throw SecretariatError("Please name a program after --.") }
         var environment = inheritedEnvironment
         var files: [PreparedLaunch.File] = []
         for binding in profile.bindings {
             let meta = try item(id: binding.itemID)
             let value = try value(itemID: binding.itemID, field: binding.field)
             if meta.field(binding.field)?.kind == .file {
-                guard let data = Data(base64Encoded: value) else { throw SecretariatError("Die Datei in \(meta.path)/\(binding.field) ist beschädigt.") }
+                guard let data = Data(base64Encoded: value) else { throw SecretariatError("The file in \(meta.path)/\(binding.field) is damaged.") }
                 files.append(.init(variable: binding.variable, name: meta.field(binding.field)?.fileName ?? binding.field, data: data))
             } else {
-                guard !value.utf8.contains(0) else { throw SecretariatError("Ein Wert enthält ein für Umgebungsvariablen unzulässiges Nullzeichen.") }
+                guard !value.utf8.contains(0) else { throw SecretariatError("A value contains a null character, which environment variables don't allow.") }
                 environment[binding.variable] = value
             }
         }

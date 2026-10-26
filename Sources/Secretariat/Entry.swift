@@ -29,8 +29,8 @@ struct SecretariatApp: App {
         .defaultSize(width: 990, height: 650)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("Neuer Eintrag …") { model.itemEditor = ItemDraft(revision: model.configuration.revision) }.keyboardShortcut("n")
-                Button("Neues Projektprofil …") { model.profileEditor = ProfileDraft(revision: model.configuration.revision) }.keyboardShortcut("n", modifiers: [.command, .shift])
+                Button("New Item …") { model.itemEditor = ItemDraft(revision: model.configuration.revision) }.keyboardShortcut("n")
+                Button("New Project Profile …") { model.profileEditor = ProfileDraft(revision: model.configuration.revision) }.keyboardShortcut("n", modifiers: [.command, .shift])
             }
         }
     }

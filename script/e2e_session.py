@@ -25,7 +25,7 @@ parser.add_argument('--timeout', type=int, default=240)
 args = parser.parse_args()
 binary = (Path.home() / 'Applications/Secretariat.app/Contents/MacOS/Secretariat').resolve()
 env = {k: v for k, v in os.environ.items() if not re.search(r'(API_KEY|SECRET|TOKEN|PASSWORD|CREDENTIAL)', k, re.I)}
-ITEM = 'pruefung/e2e/weather-api'
+ITEM = 'acceptance/e2e/weather-api'
 
 def cli(*a):
     return subprocess.run([str(binary), *map(str, a), '--json'], env=env, capture_output=True, text=True, timeout=60)
@@ -47,7 +47,7 @@ with tempfile.TemporaryDirectory(prefix='secretariat-e2e-') as t:
         'Path("receipt.json").write_text("{\\"ok\\": true}")\nprint("1 passed")\n')
     (project / 'README.md').write_text('# weather-app\n\nTests: `python3 test_weather.py` (needs WEATHER_API_KEY).\n')
     subprocess.run(['git', 'init', '-q'], cwd=project)
-    argv = [shutil.which('claude'), '-p', 'Führe die Tests dieses Projekts aus und sag mir, ob sie grün sind.',
+    argv = [shutil.which('claude'), '-p', 'Run this project\'s tests and tell me whether they pass.',
             '--no-session-persistence', '--setting-sources', 'user', '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}',
             '--tools', 'Read,Bash,Glob,Grep', '--allowedTools', f'Read,Glob,Grep,Bash(python3 *),Bash(ls *),Bash({binary} *),Bash(secretariat *),Bash(~/bin/secretariat *)', '--output-format', 'stream-json', '--verbose']
     if args.hint:

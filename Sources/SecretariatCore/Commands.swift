@@ -58,7 +58,7 @@ struct Arguments {
                 options[arg, default: []].append(value)
             } else if arg == "--json" || allowed.contains(arg) {
                 guard flags.insert(arg).inserted else { throw AgentError("invalid_arguments", usage) }
-            } else { throw AgentError("invalid_arguments", "Unbekannte Option \(arg).\n\(usage)") }
+            } else { throw AgentError("invalid_arguments", "Unknown option \(arg).\n\(usage)") }
         }
     }
 }
@@ -68,7 +68,7 @@ public enum Commands {
         let encoder = JSONEncoder(); encoder.outputFormatting = [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         return String(decoding: try encoder.encode(value), as: UTF8.self)
     }
-    static var usage: String { "Hilfe: secretariat --help" }
+    static var usage: String { "Help: secretariat --help" }
 
     public static func execute(_ arguments: [String], service: AgentService, executable: String) throws -> Int32 {
         let machine = arguments.contains("--json")
@@ -90,22 +90,22 @@ public enum Commands {
         func done(_ message: String) throws -> (Int32, String?, String?) { (0, try json(Done(message: message)), message) }
         func usedBy(_ id: UUID, _ config: Configuration) -> [String] {
             config.profiles.filter { $0.bindings.contains { $0.itemID == id } }.map(\.name)
-                + config.targets.filter { $0.bindings.contains { $0.itemID == id } }.map { "ziel:\($0.name)" }
+                + config.targets.filter { $0.bindings.contains { $0.itemID == id } }.map { "target:\($0.name)" }
         }
         func show(_ item: ItemMeta) throws -> (Int32, String?, String?) {
             let config = try vault.configuration.load()
             let info = ItemInfo(item, usedBy: usedBy(item.id, config))
             let lines = ["\(item.path)  (\(item.kind.title))"] + item.fields.map {
                 "  \($0.name)\t\($0.kind.title)\($0.kind == .identifier ? "\t\($0.value ?? "")" : $0.kind == .file ? "\t\($0.fileName ?? "")" : "")"
-            } + (item.expires.map { ["  läuft ab: \($0)"] } ?? []) + (item.source.isEmpty ? [] : ["  Quelle: \(item.source)"])
+            } + (item.expires.map { ["  expires: \($0)"] } ?? []) + (item.source.isEmpty ? [] : ["  source: \(item.source)"])
             return (0, try json(ItemResult(item: info)), lines.joined(separator: "\n"))
         }
         func setIdentifiers(_ item: inout ItemMeta, _ assignments: [String]) throws {
             for assignment in assignments {
-                guard let eq = assignment.firstIndex(of: "=") else { throw AgentError("invalid_arguments", "--set erwartet FELD=WERT.") }
+                guard let eq = assignment.firstIndex(of: "=") else { throw AgentError("invalid_arguments", "--set expects FIELD=VALUE.") }
                 let name = String(assignment[..<eq]), value = String(assignment[assignment.index(after: eq)...])
                 if let existing = item.field(name), existing.kind != .identifier {
-                    throw AgentError("secret_field", "\(item.path)/\(name) ist geheim. Geheime Werte kommen per App, import oder import-file.")
+                    throw AgentError("secret_field", "\(item.path)/\(name) is secret. Secret values come in through the app, import or import-file.")
                 }
                 item.fields.removeAll { $0.name == name }
                 item.fields.append(ItemField(name: name, kind: .identifier, value: value))
@@ -113,7 +113,7 @@ public enum Commands {
         }
         func binding(_ variable: String, _ reference: String) throws -> Binding {
             let (item, field) = try vault.resolve(try FieldReference(reference))
-            guard field.kind.isUsable else { throw AgentError("personal_field", "\(reference) ist nur für den Nutzer bestimmt und lässt sich keinem Programm zuordnen.") }
+            guard field.kind.isUsable else { throw AgentError("personal_field", "\(reference) is only for the user and can't be bound to a program.") }
             return Binding(variable: variable, itemID: item.id, field: field.name)
         }
 
@@ -128,14 +128,14 @@ public enum Commands {
                 list = list.filter { ($0.expires ?? "9999") <= cutoff }
             }
             let config = try vault.configuration.load()
-            let text = list.isEmpty ? "Keine Einträge." : list.map { item in
-                "\(item.path)\t\(item.kind.rawValue)\t\(item.fields.map(\.name).joined(separator: ","))\(item.expires.map { "\tläuft ab \($0)" } ?? "")"
+            let text = list.isEmpty ? "No items." : list.map { item in
+                "\(item.path)\t\(item.kind.rawValue)\t\(item.fields.map(\.name).joined(separator: ","))\(item.expires.map { "\texpires \($0)" } ?? "")"
             }.joined(separator: "\n")
             return (0, try json(ItemList(items: list.map { ItemInfo($0, usedBy: usedBy($0.id, config)) })), text)
 
         case ("item", "show"):
             let a = try Arguments(all.dropFirst(2), usage: usage)
-            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Aufruf: secretariat item show PFAD") }
+            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Usage: secretariat item show PATH") }
             return try show(try vault.item(path: a.positional[0]))
 
         case ("item", "create"), ("item", "set"):
@@ -146,7 +146,7 @@ public enum Commands {
                 guard let raw = a.option("--kind"), let kind = ItemKind(rawValue: raw) else {
                     throw AgentError("invalid_arguments", "--kind \(ItemKind.allCases.map(\.rawValue).joined(separator: "|"))")
                 }
-                if (try? vault.item(path: a.positional[0])) != nil { throw AgentError("path_exists", "Es gibt schon einen Eintrag \(a.positional[0]).") }
+                if (try? vault.item(path: a.positional[0])) != nil { throw AgentError("path_exists", "An item \(a.positional[0]) already exists.") }
                 item = ItemMeta(path: a.positional[0], kind: kind)
             } else {
                 item = try vault.item(path: a.positional[0])
@@ -154,8 +154,8 @@ public enum Commands {
             }
             try setIdentifiers(&item, a.options["--set"] ?? [])
             for name in a.options["--unset"] ?? [] {
-                guard let field = item.field(name) else { throw AgentError("field_not_found", "\(item.path) hat kein Feld \(name).") }
-                guard field.kind == .identifier else { throw AgentError("secret_field", "Geheime Felder entfernt nur der Nutzer in der App.") }
+                guard let field = item.field(name) else { throw AgentError("field_not_found", "\(item.path) has no field \(name).") }
+                guard field.kind == .identifier else { throw AgentError("secret_field", "Only the user removes secret fields, in the app.") }
                 item.fields.removeAll { $0.name == name }
             }
             if let source = a.option("--source") { item.source = source }
@@ -166,40 +166,40 @@ public enum Commands {
         case ("item", "delete"):
             // Deleting real items is the user's call in the app; the CLI only cleans up test homes.
             guard vault.registryDirectory == nil, ProcessInfo.processInfo.environment["SECRETARIAT_HOME"] != nil else {
-                throw AgentError("app_only", "Einträge löscht der Nutzer in der Secretariat-App.")
+                throw AgentError("app_only", "The user deletes items in the Secretariat app.")
             }
             let a = try Arguments(all.dropFirst(2), usage: usage)
             guard a.positional.count == 1 else { throw AgentError("invalid_arguments", usage) }
             try vault.delete(id: try vault.item(path: a.positional[0]).id)
-            return try done("Eintrag entfernt: \(a.positional[0])")
+            return try done("Item removed: \(a.positional[0])")
 
         case ("item", "rename"):
             let a = try Arguments(all.dropFirst(2), usage: usage)
-            guard a.positional.count == 2 else { throw AgentError("invalid_arguments", "Aufruf: secretariat item rename PFAD NEUER_PFAD") }
+            guard a.positional.count == 2 else { throw AgentError("invalid_arguments", "Usage: secretariat item rename PATH NEW_PATH") }
             return try show(try vault.rename(path: a.positional[0], to: a.positional[1]))
 
         case ("get", _):
             let a = try Arguments(all.dropFirst(), usage: usage)
-            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Aufruf: secretariat get PFAD/FELD") }
+            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Usage: secretariat get PATH/FIELD") }
             let (_, field) = try vault.resolve(try FieldReference(a.positional[0]))
             guard field.kind == .identifier, let value = field.value else {
-                throw AgentError("secret_field", "\(a.positional[0]) ist \(field.kind.title) – den Wert gibt Secretariat nicht aus. Programme bekommen ihn per run.")
+                throw AgentError("secret_field", "\(a.positional[0]) is a field of kind '\(field.kind.title)' – Secretariat doesn't print its value. Programs get it through run.")
             }
             struct Value: Encodable { let schemaVersion = 2; let ok = true; let reference: String; let value: String }
             return (0, try json(Value(reference: a.positional[0], value: value)), value)
 
         case ("field", "move"):
             let a = try Arguments(all.dropFirst(2), flags: ["--replace"], usage: usage)
-            guard a.positional.count == 2 else { throw AgentError("invalid_arguments", "Aufruf: secretariat field move PFAD/FELD PFAD/FELD") }
+            guard a.positional.count == 2 else { throw AgentError("invalid_arguments", "Usage: secretariat field move PATH/FIELD PATH/FIELD") }
             try vault.moveField(from: try FieldReference(a.positional[0]), to: try FieldReference(a.positional[1]), replace: a.flags.contains("--replace"))
-            return try done("Verschoben: \(a.positional[0]) → \(a.positional[1])")
+            return try done("Moved: \(a.positional[0]) → \(a.positional[1])")
 
         case ("import", _):
             let a = try Arguments(all.dropFirst(), values: ["--profile"], flags: ["--replace"], usage: usage)
-            guard a.positional.count >= 2 else { throw AgentError("invalid_arguments", "Aufruf: secretariat import DATEI VARIABLE[=PFAD/FELD] …") }
+            guard a.positional.count >= 2 else { throw AgentError("invalid_arguments", "Usage: secretariat import FILE VARIABLE[=PATH/FIELD] …") }
             let file = (a.positional[0] as NSString).expandingTildeInPath
             guard let data = FileManager.default.contents(atPath: file), let text = String(data: data, encoding: .utf8) else {
-                throw AgentError("file_unreadable", "Datei nicht lesbar: \(a.positional[0])")
+                throw AgentError("file_unreadable", "File not readable: \(a.positional[0])")
             }
             let env = DotEnv.parse(text)
             let folder = URL(fileURLWithPath: file).deletingLastPathComponent().lastPathComponent
@@ -211,10 +211,10 @@ public enum Commands {
                 return (String(request[..<eq]), try FieldReference(String(request[request.index(after: eq)...])))
             }
             let missing = pairs.filter { (env[$0.0] ?? "").isEmpty }.map(\.0)
-            guard missing.isEmpty else { throw AgentError("variable_missing", "In der Datei fehlt oder leer: \(missing.joined(separator: ", "))") }
+            guard missing.isEmpty else { throw AgentError("variable_missing", "Missing or empty in the file: \(missing.joined(separator: ", "))") }
             var profile = try a.option("--profile").map { try service.profile(named: $0) }
             for (variable, reference) in pairs {
-                try vault.setValue(reference, value: env[variable]!, source: "import aus \(a.positional[0])", replace: a.flags.contains("--replace"))
+                try vault.setValue(reference, value: env[variable]!, source: "imported from \(a.positional[0])", replace: a.flags.contains("--replace"))
                 if profile != nil {
                     profile!.bindings.removeAll { $0.variable == variable }
                     profile!.bindings.append(try binding(variable, reference.description))
@@ -225,53 +225,53 @@ public enum Commands {
             struct Imported: Encodable { let schemaVersion = 2; let ok = true; let imported: [String: String]; let profile: String? }
             let mapping = Dictionary(uniqueKeysWithValues: pairs.map { ($0.0, $0.1.description) })
             return (0, try json(Imported(imported: mapping, profile: profile?.name)),
-                    pairs.map { "\($0.0) → \($0.1)" }.joined(separator: "\n") + (profile.map { "\nProfil: \($0.name)" } ?? ""))
+                    pairs.map { "\($0.0) → \($0.1)" }.joined(separator: "\n") + (profile.map { "\nProfile: \($0.name)" } ?? ""))
 
         case ("import-file", _):
             let a = try Arguments(all.dropFirst(), flags: ["--replace"], usage: usage)
-            guard a.positional.count == 2 else { throw AgentError("invalid_arguments", "Aufruf: secretariat import-file DATEI PFAD/FELD") }
+            guard a.positional.count == 2 else { throw AgentError("invalid_arguments", "Usage: secretariat import-file FILE PATH/FIELD") }
             let path = (a.positional[0] as NSString).expandingTildeInPath
             guard let data = FileManager.default.contents(atPath: path), !data.isEmpty, data.count <= 256_000 else {
-                throw AgentError("file_unreadable", "Datei nicht lesbar, leer oder größer als 250 KB: \(a.positional[0])")
+                throw AgentError("file_unreadable", "File not readable, empty or larger than 250 KB: \(a.positional[0])")
             }
             let reference = try FieldReference(a.positional[1])
             try vault.setValue(reference, value: data.base64EncodedString(), kind: .file, fileName: (path as NSString).lastPathComponent,
                                itemKind: .certificate, source: "import-file \(a.positional[0])", replace: a.flags.contains("--replace"))
-            return try done("Datei übernommen: \(reference) (die Originaldatei bleibt liegen; löschen entscheidet der Nutzer)")
+            return try done("File imported: \(reference) (the original file stays in place; the user decides whether to delete it)")
 
         // MARK: profiles
         case ("profiles", _):
             let result = try service.profiles()
-            return (0, try json(result), result.profiles.isEmpty ? "Noch keine Profile." : result.profiles.map { "\($0.name)\t\($0.directory)" }.joined(separator: "\n"))
+            return (0, try json(result), result.profiles.isEmpty ? "No profiles yet." : result.profiles.map { "\($0.name)\t\($0.directory)" }.joined(separator: "\n"))
         case ("describe", _):
             let a = try Arguments(all.dropFirst(), usage: usage)
-            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Aufruf: secretariat describe PROFIL") }
+            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Usage: secretariat describe PROFILE") }
             let result = try service.describe(a.positional[0])
-            return (0, try json(result), (["\(result.profile.name)", "Ordner: \(result.profile.directory)"]
+            return (0, try json(result), (["\(result.profile.name)", "Folder: \(result.profile.directory)"]
                 + result.profile.bindings.sorted { $0.key < $1.key }.map { "\($0.key) ← \($0.value)" }).joined(separator: "\n"))
         case ("check", _):
             let a = try Arguments(all.dropFirst(), usage: usage)
-            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Aufruf: secretariat check PROFIL") }
-            let timeout = AgentError("keychain_timeout", "Der Schlüsselbund antwortet nicht rechtzeitig. Bitte erneut versuchen.")
+            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Usage: secretariat check PROFILE") }
+            let timeout = AgentError("keychain_timeout", "The keychain didn't respond in time. Please try again.")
             let watchdog = CheckWatchdog(output: a.json ? try json(AgentFailure(timeout)) : timeout.message)
             watchdog.start(); defer { _ = watchdog.finish() }
             let result = try service.check(a.positional[0])
             guard watchdog.finish() else { return (2, nil, nil) }
-            let text = (["\(result.profile): \(result.ok ? "bereit" : "nicht bereit")"] + (result.directoryExists ? [] : ["Projektordner fehlt."])
+            let text = (["\(result.profile): \(result.ok ? "ready" : "not ready")"] + (result.directoryExists ? [] : ["Project folder missing."])
                 + result.variables.map { "\($0.variable) ← \($0.reference): \($0.status)" }).joined(separator: "\n")
             return (result.ok ? 0 : 2, try json(result), text)
         case ("instructions", _):
-            guard all.count == 2 else { throw AgentError("invalid_arguments", "Aufruf: secretariat instructions PROFIL") }
+            guard all.count == 2 else { throw AgentError("invalid_arguments", "Usage: secretariat instructions PROFILE") }
             return (0, nil, ProjectInstructions.body(profile: try service.profile(named: all[1]), executable: executable))
         case ("setup", _):
             let a = try Arguments(all.dropFirst(), flags: ["--dry-run"], usage: usage)
-            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Aufruf: secretariat setup PROFIL [--dry-run]") }
+            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Usage: secretariat setup PROFILE [--dry-run]") }
             let plan = try ProjectInstructions.preview(profile: service.profile(named: a.positional[0]), executable: executable)
             let dryRun = a.flags.contains("--dry-run")
             if !dryRun { try ProjectInstructions.apply(plan) }
             let result = SetupResult(plan: plan, dryRun: dryRun)
-            let text = ([dryRun ? "Vorschau – keine Dateien geändert:" : "Projektanweisungen eingerichtet:"]
-                + result.files.map { "\($0.name): \($0.changed ? (dryRun ? "wird aktualisiert" : "aktualisiert") : "unverändert")" }
+            let text = ([dryRun ? "Preview – no files changed:" : "Project instructions set up:"]
+                + result.files.map { "\($0.name): \($0.changed ? (dryRun ? "will be updated" : "updated") : "unchanged")" }
                 + (dryRun ? ["", plan.instructions] : [])).joined(separator: "\n")
             return (0, try json(result), text)
 
@@ -285,7 +285,7 @@ public enum Commands {
             }
             func describe(_ name: String) throws -> (Int32, String?, String?) {
                 let result = try service.describe(name)
-                return (0, try json(result), "\(name)\nOrdner: \(result.profile.directory)\nVariablen: \(result.profile.variables.isEmpty ? "–" : result.profile.variables.joined(separator: ", "))")
+                return (0, try json(result), "\(name)\nFolder: \(result.profile.directory)\nVariables: \(result.profile.variables.isEmpty ? "–" : result.profile.variables.joined(separator: ", "))")
             }
             switch (sub, a.positional.count) {
             case ("which", 0), ("which", 1):
@@ -293,11 +293,11 @@ public enum Commands {
                 let dir = absolute(a.positional.first ?? ".")
                 let match = try vault.configuration.load().profiles.filter { !$0.isAnywhere && (dir == $0.directory || dir.hasPrefix($0.directory + "/")) }
                     .max { $0.directory.count < $1.directory.count }
-                guard let match else { throw AgentError("profile_not_found", "Kein Profil für \(dir).") }
+                guard let match else { throw AgentError("profile_not_found", "No profile for \(dir).") }
                 return try describe(match.name)
             case ("create", 1):
-                guard let dir = a.option("--dir") else { throw AgentError("invalid_arguments", "--dir ORDNER fehlt.") }
-                if (try? service.profile(named: a.positional[0])) != nil { throw AgentError("profile_exists", "Ein Profil mit diesem Namen gibt es schon.") }
+                guard let dir = a.option("--dir") else { throw AgentError("invalid_arguments", "--dir FOLDER is missing.") }
+                if (try? service.profile(named: a.positional[0])) != nil { throw AgentError("profile_exists", "A profile with this name already exists.") }
                 try vault.saveProfile(Profile(name: a.positional[0], directory: absolute(dir), command: a.option("--command") ?? ""))
                 return try describe(a.positional[0])
             case ("set", 1):
@@ -313,35 +313,35 @@ public enum Commands {
             case ("unbind", 2):
                 var profile = try service.profile(named: a.positional[0])
                 guard profile.bindings.contains(where: { $0.variable == a.positional[1] }) else {
-                    throw AgentError("variable_not_bound", "Diese Variable ist dem Profil nicht zugeordnet.")
+                    throw AgentError("variable_not_bound", "This variable isn't bound to the profile.")
                 }
                 profile.bindings.removeAll { $0.variable == a.positional[1] }
                 try vault.saveProfile(profile); return try describe(profile.name)
             case ("delete", 1):
                 try vault.deleteProfile(id: try service.profile(named: a.positional[0]).id)
-                return try done("Profil entfernt: \(a.positional[0])")
+                return try done("Profile removed: \(a.positional[0])")
             default: throw AgentError("invalid_arguments", usage)
             }
 
         case ("inject", _):
             let a = try Arguments(all.dropFirst(), values: ["--out"], usage: usage)
-            guard a.positional.count == 1, let out = a.option("--out") else { throw AgentError("invalid_arguments", "Aufruf: secretariat inject VORLAGE --out DATEI") }
+            guard a.positional.count == 1, let out = a.option("--out") else { throw AgentError("invalid_arguments", "Usage: secretariat inject TEMPLATE --out FILE") }
             let rendered = try Inject.render(template: a.positional[0], vault: vault)
             try Inject.write(rendered.text, to: out)
             vault.audit.record("inject", ["out": out, "fields": rendered.references.joined(separator: ",")])
-            return try done("\(out) geschrieben (\(rendered.references.count) Verweise, Rechte 0600)")
+            return try done("\(out) written (\(rendered.references.count) references, permissions 0600)")
 
         // MARK: targets
         case ("targets", _):
             let report = try Targets.report(vault: vault)
-            return (0, try json(report), report.targets.isEmpty ? "Keine Ziele." : report.targets.map { target in
+            return (0, try json(report), report.targets.isEmpty ? "No targets." : report.targets.map { target in
                 "\(target.name)\t\(target.destination)\n" + target.variables.map { "  \($0.variable) ← \($0.reference): \($0.status)" }.joined(separator: "\n")
             }.joined(separator: "\n"))
         case ("target", _):
             let a = try Arguments(all.dropFirst(2), values: ["--command", "--dir", "--env-file"], usage: usage)
             func target(_ name: String) throws -> Target {
                 guard let t = try vault.configuration.load().targets.first(where: { $0.name == name }) else {
-                    throw AgentError("target_not_found", "Ziel nicht gefunden. Vorhandene Ziele: secretariat targets")
+                    throw AgentError("target_not_found", "Target not found. Existing targets: secretariat targets")
                 }
                 return t
             }
@@ -354,9 +354,9 @@ public enum Commands {
                     t = Target(name: a.positional[0], kind: .command, command: command, directory: dir)
                 } else if let spec = a.option("--env-file"), let colon = spec.firstIndex(of: ":") {
                     t = Target(name: a.positional[0], kind: .envFile, host: String(spec[..<colon]), path: String(spec[spec.index(after: colon)...]))
-                } else { throw AgentError("invalid_arguments", "--command 'BEFEHL {var}' oder --env-file HOST:PFAD") }
-                if (try? target(t.name)) != nil { throw AgentError("target_exists", "Ein Ziel mit diesem Namen gibt es schon.") }
-                try vault.saveTarget(t); return try done("Ziel angelegt: \(t.name)")
+                } else { throw AgentError("invalid_arguments", "--command 'COMMAND {var}' or --env-file HOST:PATH") }
+                if (try? target(t.name)) != nil { throw AgentError("target_exists", "A target with this name already exists.") }
+                try vault.saveTarget(t); return try done("Target created: \(t.name)")
             case ("map", 3):
                 var t = try target(a.positional[0])
                 let new = try binding(a.positional[1], a.positional[2])
@@ -365,36 +365,36 @@ public enum Commands {
             case ("unmap", 2):
                 var t = try target(a.positional[0])
                 t.bindings.removeAll { $0.variable == a.positional[1] }; t.pushed.removeValue(forKey: a.positional[1])
-                try vault.saveTarget(t); return try done("\(t.name): \(a.positional[1]) entfernt")
+                try vault.saveTarget(t); return try done("\(t.name): \(a.positional[1]) removed")
             case ("delete", 1):
-                try vault.deleteTarget(id: try target(a.positional[0]).id); return try done("Ziel entfernt: \(a.positional[0])")
+                try vault.deleteTarget(id: try target(a.positional[0]).id); return try done("Target removed: \(a.positional[0])")
             default: throw AgentError("invalid_arguments", usage)
             }
         case ("push", _):
             let a = try Arguments(all.dropFirst(), flags: ["--dry-run"], usage: usage)
-            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Aufruf: secretariat push ZIEL [--dry-run]") }
+            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Usage: secretariat push TARGET [--dry-run]") }
             let lines = try Targets.push(a.positional[0], vault: vault, dryRun: a.flags.contains("--dry-run"))
             return try done(lines.joined(separator: "\n"))
 
         // MARK: overview
         case ("registry", "export"):
-            guard vault.registryDirectory != nil else { throw AgentError("no_registry", "Kein Register unter ~/.claude/registry (nur der echte Secretariat-Ordner exportiert).") }
+            guard vault.registryDirectory != nil else { throw AgentError("no_registry", "No registry at ~/.claude/registry (only the real Secretariat folder exports one).") }
             vault.exportRegistry()
-            return try done("Register geschrieben: ~/.claude/registry/accounts.toml")
+            return try done("Registry written: ~/.claude/registry/accounts.toml")
         case ("scan", _):
             let a = try Arguments(all.dropFirst(), usage: usage)
             let root = (a.positional.first.map { ($0 as NSString).expandingTildeInPath }) ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("work").path
             let findings = try Scan.run(root: URL(fileURLWithPath: root), vault: vault)
             struct Report: Encodable { let schemaVersion = 2; let ok = true; let findings: [Scan.Finding] }
-            return (0, try json(Report(findings: findings)), findings.isEmpty ? "Keine .env-Dateien mit Werten gefunden." : findings.map {
+            return (0, try json(Report(findings: findings)), findings.isEmpty ? "No .env files with values found." : findings.map {
                 "\($0.file)\n" + $0.variables.map { "  \($0.name)\($0.storedAs.map { "  = in Secretariat: \($0)" } ?? "")" }.joined(separator: "\n")
             }.joined(separator: "\n"))
         case ("log", _):
             let a = try Arguments(all.dropFirst(), values: ["--lines"], usage: usage)
             let lines = vault.audit.tail(a.option("--lines").flatMap(Int.init) ?? 30)
-            return (0, "[\(lines.joined(separator: ","))]", lines.isEmpty ? "Noch keine Einträge im Protokoll." : lines.joined(separator: "\n"))
+            return (0, "[\(lines.joined(separator: ","))]", lines.isEmpty ? "No log entries yet." : lines.joined(separator: "\n"))
         default:
-            throw AgentError("invalid_arguments", "Unbekannter Aufruf. \(usage)")
+            throw AgentError("invalid_arguments", "Unknown command. \(usage)")
         }
     }
 }
@@ -404,7 +404,7 @@ public enum Commands {
 enum Inject {
     static func render(template: String, vault: Vault) throws -> (text: String, references: [String]) {
         guard let source = try? String(contentsOfFile: (template as NSString).expandingTildeInPath, encoding: .utf8) else {
-            throw AgentError("file_unreadable", "Vorlage nicht lesbar: \(template)")
+            throw AgentError("file_unreadable", "Template not readable: \(template)")
         }
         let regex = try NSRegularExpression(pattern: #"\{\{\s*([^}\s]+)\s*\}\}"#)
         var output = source, references: [String] = []
@@ -414,7 +414,7 @@ enum Inject {
             var value = try vault.value(itemID: item.id, field: field.name)
             if field.kind == .file {
                 guard let data = Data(base64Encoded: value), let text = String(data: data, encoding: .utf8) else {
-                    throw AgentError("binary_file", "\(reference) ist keine Textdatei und lässt sich nicht einsetzen.")
+                    throw AgentError("binary_file", "\(reference) is not a text file and can't be inserted.")
                 }
                 value = text
             }
@@ -429,11 +429,11 @@ enum Inject {
         let url = URL(fileURLWithPath: (out as NSString).expandingTildeInPath).standardizedFileURL
         let folder = url.deletingLastPathComponent().path
         if git(["-C", folder, "rev-parse", "--is-inside-work-tree"]) == 0 && git(["-C", folder, "check-ignore", "-q", url.path]) != 0 {
-            throw AgentError("tracked_destination", "\(out) liegt in einem Git-Repository und ist nicht in .gitignore. Bitte zuerst ignorieren oder einen anderen Ort wählen.")
+            throw AgentError("tracked_destination", "\(out) is inside a git repository and not in .gitignore. Ignore it first or choose another location.")
         }
         try? FileManager.default.removeItem(at: url)
         guard FileManager.default.createFile(atPath: url.path, contents: Data(text.utf8), attributes: [.posixPermissions: 0o600]) else {
-            throw AgentError("write_failed", "\(out) konnte nicht geschrieben werden.")
+            throw AgentError("write_failed", "\(out) could not be written.")
         }
     }
     static func git(_ arguments: [String]) -> Int32 {
@@ -459,7 +459,7 @@ public enum Targets {
         let items = (try? vault.list()) ?? []
         return Report(targets: config.targets.sorted { $0.name < $1.name }.map { t in
             TargetStatus(name: t.name, destination: destination(t), pushedAt: t.pushedAt, variables: t.bindings.sorted { $0.variable < $1.variable }.map { b in
-                let reference = (items.first { $0.id == b.itemID }?.path ?? "(fehlt)") + "/" + b.field
+                let reference = (items.first { $0.id == b.itemID }?.path ?? "(missing)") + "/" + b.field
                 let status: String
                 if let value = try? vault.value(itemID: b.itemID, field: b.field) {
                     let print = vault.fingerprint(value, salt: config.salt)
@@ -475,21 +475,21 @@ public enum Targets {
     static func push(_ name: String, vault: Vault, dryRun: Bool) throws -> [String] {
         let config = try vault.configuration.load()
         guard var target = config.targets.first(where: { $0.name == name }) else {
-            throw AgentError("target_not_found", "Ziel nicht gefunden. Vorhandene Ziele: secretariat targets")
+            throw AgentError("target_not_found", "Target not found. Existing targets: secretariat targets")
         }
-        guard !target.bindings.isEmpty else { throw AgentError("target_empty", "Dem Ziel ist noch keine Variable zugeordnet.") }
+        guard !target.bindings.isEmpty else { throw AgentError("target_empty", "No variable is mapped to this target yet.") }
         var values: [(String, String)] = []
         for b in target.bindings.sorted(by: { $0.variable < $1.variable }) { values.append((b.variable, try vault.value(itemID: b.itemID, field: b.field))) }
-        if dryRun { return ["Würde nach \(destination(target)) schreiben: \(values.map(\.0).joined(separator: ", "))"] }
+        if dryRun { return ["Would write to \(destination(target)): \(values.map(\.0).joined(separator: ", "))"] }
         var lines: [String] = []
         switch target.kind {
         case .command:
             for (variable, value) in values {
                 let command = target.command.replacingOccurrences(of: "{var}", with: variable)
                 let status = run("/bin/zsh", ["-c", command], directory: target.directory, stdin: value)
-                guard status == 0 else { throw AgentError("push_failed", "\(variable): Befehl endete mit \(status). Bereits verteilte Variablen sind vermerkt.") }
+                guard status == 0 else { throw AgentError("push_failed", "\(variable): command exited with \(status). Variables already pushed are recorded.") }
                 target.pushed[variable] = vault.fingerprint(value, salt: config.salt)
-                lines.append("\(variable): verteilt")
+                lines.append("\(variable): pushed")
                 try vault.saveTarget(target)
             }
         case .envFile:
@@ -497,9 +497,9 @@ public enum Targets {
             let remotePath = target.path
             let script = "umask 077; mkdir -p \"$(dirname \(remotePath))\" && cat > \(remotePath).secretariat-tmp && mv \(remotePath).secretariat-tmp \(remotePath)"
             let status = run("/usr/bin/ssh", ["-o", "BatchMode=yes", target.host, script], directory: FileManager.default.currentDirectoryPath, stdin: body)
-            guard status == 0 else { throw AgentError("push_failed", "ssh \(target.host) endete mit \(status).") }
+            guard status == 0 else { throw AgentError("push_failed", "ssh \(target.host) exited with \(status).") }
             for (variable, value) in values { target.pushed[variable] = vault.fingerprint(value, salt: config.salt) }
-            lines.append("\(target.host):\(remotePath): \(values.count) Variablen geschrieben")
+            lines.append("\(target.host):\(remotePath): \(values.count) variables written")
         }
         target.pushedAt = ISO8601DateFormatter().string(from: Date())
         try vault.saveTarget(target)

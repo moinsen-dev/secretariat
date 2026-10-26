@@ -19,7 +19,7 @@ struct ItemDraft: Identifiable {
     let id = UUID()
     var existing: ItemMeta?
     var kind = ItemKind.api
-    /// Path parts: moinsen/<provider>[/<label>]. With `customPath` the path is typed directly (Erweitert).
+    /// Path parts: moinsen/<provider>[/<label>]. With `customPath` the path is typed directly (Advanced).
     var provider = ""
     var label = ""
     var customPath = false
@@ -62,7 +62,7 @@ struct ItemDraft: Identifiable {
     func field(_ name: String) -> FieldDraft? { fields.first { $0.name == name } }
     /// Required fields of the kind that are still empty (stored values count as filled).
     var missing: [String] {
-        (path.isEmpty ? [customPath ? "Ablage" : "Anbieter oder Konto"] : []) + kind.fields.filter(\.required).filter { spec in
+        (path.isEmpty ? [customPath ? "Location" : "Provider or account"] : []) + kind.fields.filter(\.required).filter { spec in
             guard let f = field(spec.name) else { return true }
             return f.value.isEmpty && f.fileData == nil && f.storedName == nil
         }.map(\.label)
@@ -113,7 +113,7 @@ final class AppModel {
         }
     }
     func label(_ binding: SecretariatCore.Binding) -> String {
-        guard let item = items.first(where: { $0.id == binding.itemID }) else { return "Eintrag fehlt (\(binding.field))" }
+        guard let item = items.first(where: { $0.id == binding.itemID }) else { return "Item missing (\(binding.field))" }
         return "\(item.path)/\(binding.field)"
     }
 
@@ -191,7 +191,7 @@ final class AppModel {
     func secretValue(_ item: ItemMeta, _ field: ItemField) -> String? {
         do {
             guard let value = try vault.personalValue(itemID: item.id, field: field.name) else {
-                throw SecretariatError("Für \(item.path)/\(field.name) ist noch kein Wert gespeichert.")
+                throw SecretariatError("No value is stored yet for \(item.path)/\(field.name).")
             }
             return value
         } catch { errorMessage = error.localizedDescription; return nil }
@@ -212,7 +212,7 @@ final class AppModel {
     }
     func exportFile(_ item: ItemMeta, _ field: ItemField) {
         guard let value = secretValue(item, field) else { return }
-        guard let data = Data(base64Encoded: value) else { errorMessage = "Die gespeicherte Datei ist beschädigt."; return }
+        guard let data = Data(base64Encoded: value) else { errorMessage = "The stored file is damaged."; return }
         let panel = NSSavePanel()
         panel.nameFieldStringValue = field.fileName ?? field.name
         guard panel.runModal() == .OK, let url = panel.url else { return }
@@ -236,7 +236,7 @@ final class AppModel {
     }
     func copyLaunch(_ profile: Profile) {
         guard !profile.command.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            errorMessage = "Bitte im Profil einen Startbefehl eintragen."; return
+            errorMessage = "Please enter a start command in the profile."; return
         }
         copyText(launchCommand(profile: profile, executable: launcherPath))
         copied = true
@@ -245,20 +245,20 @@ final class AppModel {
         do {
             let current = try ConfigurationStore(paths: paths).load()
             guard current.revision == configuration.revision else {
-                throw SecretariatError("Die Profile wurden geändert. Bitte Ansicht aktualisieren und erneut einrichten.")
+                throw SecretariatError("The profiles changed. Please refresh the view and set up again.")
             }
             agentSetup = AgentSetupDraft(plan: try ProjectInstructions.preview(profile: profile, executable: launcherPath), revision: current.revision)
         } catch { errorMessage = error.localizedDescription }
     }
     func applyAgentSetup(_ draft: AgentSetupDraft) throws {
         guard try ConfigurationStore(paths: paths).load().revision == draft.revision else {
-            throw SecretariatError("Das Profil wurde seit der Vorschau geändert. Bitte die Vorschau schließen und erneut öffnen.")
+            throw SecretariatError("The profile changed since the preview. Please close the preview and open it again.")
         }
         try ProjectInstructions.apply(draft.plan)
     }
     func usages(of id: UUID) -> [String] {
         configuration.profiles.filter { $0.bindings.contains { $0.itemID == id } }.map(\.name)
-            + configuration.targets.filter { $0.bindings.contains { $0.itemID == id } }.map { "Ziel \($0.name)" }
+            + configuration.targets.filter { $0.bindings.contains { $0.itemID == id } }.map { "Target \($0.name)" }
     }
 }
 

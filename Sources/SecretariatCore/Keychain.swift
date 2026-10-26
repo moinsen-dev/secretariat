@@ -6,8 +6,8 @@ public enum CredentialError: LocalizedError, Sendable {
     case unavailable(Int32)
     public var errorDescription: String? {
         switch self {
-        case .notFound: "Ein Eintrag fehlt im Schlüsselbund. Vielleicht wurde er auf einem anderen Mac gelöscht."
-        case .unavailable(let status): "Der macOS-Schlüsselbund erlaubt den Zugriff nicht (\(status)). Bitte den Zugriff in Secretariat prüfen."
+        case .notFound: "An item is missing from the keychain. It may have been deleted on another Mac."
+        case .unavailable(let status): "The macOS keychain denied access (\(status)). Please check access in Secretariat."
         }
     }
 }
@@ -66,7 +66,7 @@ public struct SyncedItemStore: ItemStore {
         var result: CFTypeRef?
         try check(SecItemCopyMatching(item as CFDictionary, &result))
         guard let data = result as? Data, let values = try? JSONDecoder().decode([String: String].self, from: data) else {
-            throw SecretariatError("Der Schlüsselbund-Eintrag hat ein ungültiges Format.")
+            throw SecretariatError("The keychain entry has an invalid format.")
         }
         return values
     }

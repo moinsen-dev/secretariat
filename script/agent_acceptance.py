@@ -32,7 +32,7 @@ artifacts.mkdir(exist_ok=True)
 # Provider sign-in stays in each client's own store; drop inherited API-key overrides.
 environment = {k: v for k, v in os.environ.items() if not re.search(r'(API_KEY|SECRET|TOKEN|PASSWORD|CREDENTIAL)', k, re.I)}
 results = {'binary_sha256': hashlib.sha256(binary.read_bytes()).hexdigest(), 'clients': {}}
-ITEM = 'pruefung/agenten/acceptance'
+ITEM = 'acceptance/agents/check'
 
 def command(argv, cwd=None, timeout=60):
     return subprocess.run(list(map(str, argv)), cwd=cwd, env=environment, capture_output=True, text=True, timeout=timeout)
@@ -61,10 +61,10 @@ with tempfile.TemporaryDirectory(prefix='secretariat-agent-acceptance-') as temp
         (project / 'AGENTS.md').write_text('# Acceptance project\nExecute only the requested verification; preserve project files.\n')
         (project / 'CLAUDE.md').write_text('# Acceptance project\nUse the project instructions below.\n')
         if not args.self_wire:
-            require(command([binary, 'profile', 'create', 'agent-pruefung', '--dir', project, '--command', 'python3 verify.py', '--json']))
-            require(command([binary, 'profile', 'bind', 'agent-pruefung', 'SECRETARIAT_ACCEPTANCE', f'{ITEM}/value', '--json']))
-            require(command([binary, 'setup', 'agent-pruefung', '--json']))
-            assert json.loads(require(command([binary, 'check', 'agent-pruefung', '--json'])).stdout)['ok']
+            require(command([binary, 'profile', 'create', 'agent-acceptance', '--dir', project, '--command', 'python3 verify.py', '--json']))
+            require(command([binary, 'profile', 'bind', 'agent-acceptance', 'SECRETARIAT_ACCEPTANCE', f'{ITEM}/value', '--json']))
+            require(command([binary, 'setup', 'agent-acceptance', '--json']))
+            assert json.loads(require(command([binary, 'check', 'agent-acceptance', '--json'])).stdout)['ok']
         for client in args.clients:
             executable = shutil.which(client)
             if not executable:
@@ -73,8 +73,8 @@ with tempfile.TemporaryDirectory(prefix='secretariat-agent-acceptance-') as temp
             python = shutil.which('python3')
             prompt = (f'This project needs the environment variable SECRETARIAT_ACCEPTANCE for its test verify.py. Wire it yourself '
                       f'with the Secretariat CLI {binary} (see `{binary} --help`): list the items with `items --json`, create a profile '
-                      f'named agent-pruefung for the folder {project}, bind SECRETARIAT_ACCEPTANCE to the secret field of the item whose '
-                      f'path starts with "pruefung/", check the profile with --json, then run verify.py with argument {client} through '
+                      f'named agent-acceptance for the folder {project}, bind SECRETARIAT_ACCEPTANCE to the secret field of the item whose '
+                      f'path starts with "acceptance/", check the profile with --json, then run verify.py with argument {client} through '
                       f'Secretariat using {python}. Never print environment or credential values, do not create .env files, do not '
                       'modify project files. Report only whether the test passed.') if args.self_wire else (
                       f'Read {project / "AGENTS.md"} in this acceptance project and follow its Secretariat instructions: check the '
@@ -103,18 +103,18 @@ with tempfile.TemporaryDirectory(prefix='secretariat-agent-acceptance-') as temp
                  'artificial_value_in_output': fake_value in output + errors,
                  'env_files_created': sorted(p.name for p in project.glob('.env*'))}
             if args.self_wire:
-                described = json.loads(command([binary, 'describe', 'agent-pruefung', '--json']).stdout)
+                described = json.loads(command([binary, 'describe', 'agent-acceptance', '--json']).stdout)
                 r['self_wired_profile'] = described.get('ok', False) and described['profile']['bindings'].get('SECRETARIAT_ACCEPTANCE') == f'{ITEM}/value'
             if r['artificial_value_in_output'] or r['env_files_created'] or (args.self_wire and not r.get('self_wired_profile')):
                 r['status'] = 'not_verified'
             results['clients'][client] = r
             print(json.dumps({client: r}), flush=True)
             if args.self_wire:
-                command([binary, 'profile', 'delete', 'agent-pruefung', '--json'])
+                command([binary, 'profile', 'delete', 'agent-acceptance', '--json'])
     except Exception as error:
         results['fixture_error'] = str(error).replace(fake_value, '[ARTIFICIAL_VALUE]')
     finally:
-        command([binary, 'profile', 'delete', 'agent-pruefung', '--json'])
+        command([binary, 'profile', 'delete', 'agent-acceptance', '--json'])
         removed = command([binary, 'item', 'delete', ITEM, '--json'])
         results['fixture_item_removed'] = removed.returncode == 0
 (artifacts / ('agent-acceptance-' + ('self-wire-' if args.self_wire else '') + '-'.join(args.clients) + '.json')).write_text(json.dumps(results, indent=2))

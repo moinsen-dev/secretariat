@@ -88,7 +88,7 @@ def git_root(path):
 
 
 def slug(text):
-    return re.sub(r"[^a-z0-9._-]+", "-", text.lower()).strip("-.") or "projekt"
+    return re.sub(r"[^a-z0-9._-]+", "-", text.lower()).strip("-.") or "project"
 
 
 def classify(name, value):
@@ -197,18 +197,18 @@ def plan(root):
     (OUT / "bulk-import-plan.json").write_text(json.dumps({"root": str(root), "groups": public, "identifiers": id_rows, "profiles": profiles,
                                                             "skipped": dict(skipped)}, indent=2, ensure_ascii=False))
     home = str(Path.home())
-    lines = [f"# Prüfliste Massenübernahme ({len(groups)} Werte → Einträge, {len(profiles)} Profile)", "",
-             f"Quelle: {root}. Keine Werte in dieser Liste. Gleiche Werte in mehreren Dateien sind zu einem Feld zusammengefasst.", "",
-             f"Bleibt in den .env-Dateien: {skipped.get('config', 0)} Konfigurationswerte, {skipped.get('public', 0)} öffentliche "
-             f"Client-Schlüssel, {skipped.get('placeholder', 0)} Platzhalter, {skipped.get('local', 0)} lokale Standardwerte.", "",
-             "## Einträge", "", "| Feld | Variable | Dateien | Profile |", "|---|---|---|---|"]
+    lines = [f"# Bulk import review list ({len(groups)} values → items, {len(profiles)} profiles)", "",
+             f"Source: {root}. No values in this list. Identical values in several files are merged into one field.", "",
+             f"Stays in the .env files: {skipped.get('config', 0)} config values, {skipped.get('public', 0)} public "
+             f"client keys, {skipped.get('placeholder', 0)} placeholders, {skipped.get('local', 0)} local defaults.", "",
+             "## Items", "", "| Field | Variable | Files | Profiles |", "|---|---|---|---|"]
     for g in groups:
         files = "<br>".join(f.replace(home, "~") for f in g["files"][:4]) + (f"<br>… +{len(g['files']) - 4}" if len(g["files"]) > 4 else "")
         lines.append(f"| `{g['reference']}` | {g['variable']} | {files} | {', '.join(g['profiles'][:4])}{' …' if len(g['profiles']) > 4 else ''} |")
-    lines += ["", "## Kennungen (nicht geheim, werden als Kennungsfeld gesetzt)", "", "| Feld | Wert | Dateien |", "|---|---|---|"]
+    lines += ["", "## Identifiers (not secret, set as identifier fields)", "", "| Field | Value | Files |", "|---|---|---|"]
     for r in id_rows:
-        lines.append(f"| `{r['reference']}` | {r['value']}{' ⚠ mehrere Werte – wird ausgelassen' if r.get('conflict') else ''} | {len(r['files'])} |")
-    lines += ["", "## Profile", "", "| Profil | Ordner | Variablen |", "|---|---|---|"]
+        lines.append(f"| `{r['reference']}` | {r['value']}{' ⚠ several values – skipped' if r.get('conflict') else ''} | {len(r['files'])} |")
+    lines += ["", "## Profiles", "", "| Profile | Folder | Variables |", "|---|---|---|"]
     for name, p in sorted(profiles.items()):
         lines.append(f"| {name} | {p['directory'].replace(home, '~')} | {', '.join(sorted(p['bindings']))} |")
     (OUT / "bulk-import-plan.md").write_text("\n".join(lines) + "\n")
@@ -242,7 +242,7 @@ def apply():
             continue
         path, field = r["reference"].rsplit("/", 1)
         if run("item", "show", path)[0] != 0:
-            run("item", "create", path, "--kind", "account", "--source", "Massenübernahme aus .env")
+            run("item", "create", path, "--kind", "account", "--source", "bulk import from .env")
         code, out = run("item", "set", path, "--set", f"{field}={r['value']}")
         report["identifiers" if code == 0 else "identifier_failed"] += 1
         if code:

@@ -41,26 +41,26 @@ public enum ProjectInstructions {
         let launcher = shellQuote(executable)
         let name = shellQuote(profile.name)
         return """
-        ## Projektbefehle mit Secretariat
+        ## Project commands with Secretariat
 
-        Für Entwicklungsbefehle und Tests, die Projekt-Credentials benötigen, verwende das lokale Profil `\(profile.name)`:
+        For development commands and tests that need project credentials, use the local profile `\(profile.name)`:
 
-        1. Prüfe die Verfügbarkeit: `\(launcher) check \(name) --json`.
-        2. Bei `ok: true` starte den benötigten Projektbefehl durch Secretariat, z. B. `\(launcher) run \(name) -- npm test`. Ersetze `npm test` durch den zum Projekt passenden Befehl.
-        3. Bei einem Fehler nenne die fehlende Variable oder den gemeldeten Zugriffsschritt. Schlüsselwerte pflegt der Nutzer in der Secretariat-App.
-        4. Braucht das Projekt eine weitere Variable, ordne sie selbst zu: `\(launcher) items --json` zeigt Einträge und Felder (nie Werte), `\(launcher) profile bind \(name) VARIABLE PFAD/FELD` verbindet sie. Steht der Wert schon in einer `.env`, übernimm ihn mit `\(launcher) import DATEI VARIABLE=PFAD/FELD`. Fehlt er ganz, nenne dem Nutzer Variable und Pfad; er legt den Wert in der App an.
-        5. Kennungen (Team-ID, Account-ID, Bundle-ID) liest du mit `\(launcher) get PFAD/FELD`, statt den Nutzer zu fragen.
+        1. Check availability: `\(launcher) check \(name) --json`.
+        2. If `ok: true`, start the project command you need through Secretariat, e.g. `\(launcher) run \(name) -- npm test`. Replace `npm test` with the command that fits the project.
+        3. On an error, name the missing variable or the reported access step. The user manages key values in the Secretariat app.
+        4. If the project needs another variable, bind it yourself: `\(launcher) items --json` lists items and fields (never values), `\(launcher) profile bind \(name) VARIABLE PATH/FIELD` binds it. If the value is already in a `.env`, import it with `\(launcher) import FILE VARIABLE=PATH/FIELD`. If it is missing entirely, tell the user the variable and path; they add the value in the app.
+        5. Read identifiers (team ID, account ID, bundle ID) with `\(launcher) get PATH/FIELD` instead of asking the user.
 
-        Der Projektbefehl erhält die zugeordneten Werte ausschließlich beim Start. Halte Credentialwerte aus Dateien, Chat und Toolausgaben heraus; verwende gezielte Projektbefehle. Führe die Coding-Sitzung mit ihrer normalen Anmeldung aus. Dieser Ablauf setzt den Mac mit installiertem Secretariat voraus; eine Cloud-Umgebung hat keinen direkten Zugriff auf dessen Schlüsselbund.
+        The project command receives the bound values only at launch. Keep credential values out of files, chat and tool output; use targeted project commands. Run the coding session with its normal sign-in. This flow requires the Mac with Secretariat installed; a cloud environment has no direct access to its keychain.
         """
     }
 
     public static func preview(profile: Profile, executable: String) throws -> InstructionPlan {
-        guard !profile.isAnywhere else { throw AgentError("no_project", "Profile ohne festen Ordner haben keine Projektanweisungen.") }
+        guard !profile.isAnywhere else { throw AgentError("no_project", "Profiles without a fixed folder have no project instructions.") }
         // Profile slugs are also used inside markers and inline Markdown.
         guard profile.name.range(of: #"^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$"#, options: .regularExpression) != nil,
               !executable.contains("\n"), !executable.contains("\r"), !executable.contains("`"), executable.hasPrefix("/") else {
-            throw AgentError("invalid_instructions", "Profilname oder absoluter Launcherpfad ist für Projektanweisungen ungeeignet.")
+            throw AgentError("invalid_instructions", "The profile name or absolute launcher path is not suitable for project instructions.")
         }
         let directory = URL(fileURLWithPath: profile.directory, isDirectory: true).resolvingSymlinksInPath()
         let descriptor = try openDirectory(directory)
@@ -104,7 +104,7 @@ public enum ProjectInstructions {
                         try replace(file.name, data: original, mode: file.original.mode, expected: written, in: descriptor)
                     } else if unlinkat(descriptor, file.name, 0) != 0 { throw fileError() }
                 } catch {
-                    throw AgentError("rollback_failed", "Die Einrichtung wurde unterbrochen und konnte nicht vollständig zurückgesetzt werden. Bitte AGENTS.md und CLAUDE.md im Projekt prüfen.")
+                    throw AgentError("rollback_failed", "Setup was interrupted and could not be fully rolled back. Please check AGENTS.md and CLAUDE.md in the project.")
                 }
             }
             throw error
@@ -113,7 +113,7 @@ public enum ProjectInstructions {
 
     private static func merge(_ data: Data?, block: String, begin: String) throws -> Data {
         guard let original = data.map({ String(data: $0, encoding: .utf8) }) ?? "" else {
-            throw AgentError("instructions_conflict", "Eine Anweisungsdatei ist kein UTF-8. Die Dateien bleiben erhalten.")
+            throw AgentError("instructions_conflict", "An instructions file is not UTF-8. The files are kept.")
         }
         let marker = "<!-- secretariat:"
         if original.contains(marker) {
@@ -122,7 +122,7 @@ public enum ProjectInstructions {
                   start.upperBound <= finish.lowerBound,
                   (start.lowerBound == original.startIndex || original[original.index(before: start.lowerBound)] == "\n"),
                   (finish.upperBound == original.endIndex || original[finish.upperBound] == "\n" || original[finish.upperBound] == "\r") else {
-                throw AgentError("instructions_conflict", "Eine Anweisungsdatei enthält andere oder beschädigte Secretariat-Marker. Bitte vorhandene Einrichtung prüfen; die Dateien bleiben erhalten.")
+                throw AgentError("instructions_conflict", "An instructions file contains other or damaged Secretariat markers. Please check the existing setup; the files are kept.")
             }
             var updated = original
             updated.replaceSubrange(start.lowerBound..<finish.upperBound, with: block)
@@ -134,9 +134,9 @@ public enum ProjectInstructions {
 
     private static func openDirectory(_ directory: URL) throws -> Int32 {
         let descriptor = open(directory.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW)
-        guard descriptor >= 0 else { throw AgentError("directory_unavailable", "Der Projektordner fehlt oder ist nicht zugänglich.") }
+        guard descriptor >= 0 else { throw AgentError("directory_unavailable", "The project folder is missing or not accessible.") }
         guard flock(descriptor, LOCK_EX | LOCK_NB) == 0 else {
-            close(descriptor); throw AgentError("setup_busy", "Für dieses Projekt läuft bereits eine Einrichtung. Bitte erneut versuchen.")
+            close(descriptor); throw AgentError("setup_busy", "A setup is already running for this project. Please try again.")
         }
         return descriptor
     }
@@ -144,13 +144,13 @@ public enum ProjectInstructions {
         let descriptor = openat(directory, name, O_RDONLY | O_NOFOLLOW | O_NONBLOCK)
         if descriptor < 0 {
             if errno == ENOENT { return FileSnapshot(data: nil, mode: 0o644, device: 0, inode: 0) }
-            throw AgentError("instructions_conflict", "\(name) ist nicht als normale lokale Datei lesbar. Die Dateien bleiben erhalten.")
+            throw AgentError("instructions_conflict", "\(name) can't be read as a regular local file. The files are kept.")
         }
         defer { close(descriptor) }
         var info = stat()
         guard fstat(descriptor, &info) == 0, (info.st_mode & S_IFMT) == S_IFREG,
               info.st_nlink == 1, info.st_size <= 1_048_576 else {
-            throw AgentError("instructions_conflict", "\(name) muss eine normale Datei ohne weitere Hardlinks und höchstens 1 MiB groß sein. Die Dateien bleiben erhalten.")
+            throw AgentError("instructions_conflict", "\(name) must be a regular file without other hard links and at most 1 MiB. The files are kept.")
         }
         let handle = FileHandle(fileDescriptor: descriptor, closeOnDealloc: false)
         let data = try handle.readToEnd() ?? Data()
@@ -171,6 +171,6 @@ public enum ProjectInstructions {
         guard renameat(directory, temporary, directory, name) == 0 else { throw fileError() }
         return written
     }
-    private static func fileError() -> AgentError { AgentError("setup_write_failed", "Projektanweisungen konnten nicht gespeichert werden. Bitte Schreibrechte und Dateien prüfen.") }
-    private static func staleError() -> AgentError { AgentError("instructions_changed", "Projektanweisungen wurden seit der Vorschau geändert. Bitte Vorschau erneut öffnen.") }
+    private static func fileError() -> AgentError { AgentError("setup_write_failed", "Project instructions could not be saved. Please check write permissions and files.") }
+    private static func staleError() -> AgentError { AgentError("instructions_changed", "Project instructions changed since the preview. Please open the preview again.") }
 }

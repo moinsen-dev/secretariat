@@ -92,7 +92,7 @@ public struct AgentFailure: Encodable, Sendable {
             self.error = .init(code: "invalid", message: error.message)
         } else {
             // A provider error may include its input. Keep machine responses independent of it.
-            self.error = .init(code: "operation_failed", message: "Die Aktion konnte nicht abgeschlossen werden. Bitte die Konfiguration und Zugriffsrechte prüfen.")
+            self.error = .init(code: "operation_failed", message: "The action could not be completed. Please check the configuration and access permissions.")
         }
     }
 }
@@ -104,7 +104,7 @@ public struct AgentService {
     var configuration: ConfigurationStore { vault.configuration }
 
     func reference(_ binding: Binding, in items: [ItemMeta]) -> String {
-        guard let item = items.first(where: { $0.id == binding.itemID }) else { return "(fehlt)/\(binding.field)" }
+        guard let item = items.first(where: { $0.id == binding.itemID }) else { return "(missing)/\(binding.field)" }
         return "\(item.path)/\(binding.field)"
     }
     func info(_ profile: Profile, items: [ItemMeta]) -> ProfileInfo {
@@ -117,7 +117,7 @@ public struct AgentService {
     }
     public func profile(named name: String) throws -> Profile {
         guard let profile = try configuration.load().profiles.first(where: { $0.name == name }) else {
-            throw AgentError("profile_not_found", "Profil nicht gefunden. Verfügbare Profile: secretariat profiles --json")
+            throw AgentError("profile_not_found", "Profile not found. Available profiles: secretariat profiles --json")
         }
         return profile
     }

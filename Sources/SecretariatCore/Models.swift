@@ -21,10 +21,10 @@ public enum FieldKind: String, Codable, CaseIterable, Sendable {
 
     public var title: String {
         switch self {
-        case .identifier: "Kennung"
-        case .secret: "Geheimnis"
-        case .file: "Datei"
-        case .personal: "Nur für mich"
+        case .identifier: "Identifier"
+        case .secret: "Secret"
+        case .file: "File"
+        case .personal: "Only for me"
         }
     }
     public var isSecret: Bool { self != .identifier }
@@ -39,7 +39,7 @@ public struct FieldSpec: Sendable {
     public let kind: FieldKind
     public let required: Bool
     public let prompt: String
-    /// Variable suffix when the item is made available everywhere (`<ANBIETER>_<suffix>`).
+    /// Variable suffix when the item is made available everywhere (`<PROVIDER>_<suffix>`).
     public let envSuffix: String?
     init(_ name: String, _ label: String, _ kind: FieldKind, required: Bool = false, prompt: String = "", env: String? = nil) {
         self.name = name; self.label = label; self.kind = kind; self.required = required; self.prompt = prompt; envSuffix = env
@@ -51,26 +51,26 @@ public enum ItemKind: String, Codable, CaseIterable, Sendable {
 
     public var title: String {
         switch self {
-        case .api: "API-Schlüssel"
-        case .token: "Client-ID und Secret"
-        case .account: "Konto"
-        case .login: "Website-Anmeldung"
-        case .certificate: "Schlüsseldatei"
-        case .database: "Datenbank"
+        case .api: "API key"
+        case .token: "Client ID & secret"
+        case .account: "Account"
+        case .login: "Website login"
+        case .certificate: "Key file"
+        case .database: "Database"
         case .server: "Server"
-        case .note: "Notiz"
+        case .note: "Note"
         }
     }
     public var explanation: String {
         switch self {
-        case .api: "Ein Schlüssel für einen Dienst wie OpenAI, DeepSeek oder Resend."
-        case .token: "Ein Paar aus öffentlicher ID und geheimem Secret, z. B. OAuth oder Cloudflare Access."
-        case .account: "Kontodaten wie Login, Team- oder Account-ID; das Passwort bleibt nur für dich."
-        case .login: "Zugang zu einer Website. Das Passwort bekommt kein Programm."
-        case .certificate: "Eine Datei wie .p8, .p12 oder ein Keystore. Programme bekommen eine temporäre Kopie."
-        case .database: "Verbindungsdaten einer Datenbank."
-        case .server: "Adresse und Benutzer eines Rechners."
-        case .note: "Freier Text nur für dich."
+        case .api: "A key for a service like OpenAI, DeepSeek or Resend."
+        case .token: "A public ID paired with a secret, e.g. for OAuth or Cloudflare Access."
+        case .account: "Account details like login, team or account ID. The password stays only for you."
+        case .login: "Access to a website. No program ever gets the password."
+        case .certificate: "A file like .p8, .p12 or a keystore. Programs get a temporary copy."
+        case .database: "Connection details for a database."
+        case .server: "Address and user of a machine."
+        case .note: "Free text, only for you."
         }
     }
     public var symbol: String {
@@ -88,24 +88,24 @@ public enum ItemKind: String, Codable, CaseIterable, Sendable {
     /// What this kind asks for, in order. Further fields can be added freely.
     public var fields: [FieldSpec] {
         switch self {
-        case .api: [FieldSpec("api_key", "Schlüssel", .secret, required: true, prompt: "sk-…", env: "API_KEY"),
-                    FieldSpec("env_var", "Variablenname", .identifier, prompt: "OPENAI_API_KEY")]
-        case .token: [FieldSpec("client_id", "Client-ID", .identifier, required: true, env: "CLIENT_ID"),
-                      FieldSpec("client_secret", "Client-Secret", .secret, required: true, env: "CLIENT_SECRET")]
-        case .account: [FieldSpec("login", "Login oder E-Mail", .identifier, required: true),
-                        FieldSpec("account_id", "Account- oder Team-ID", .identifier),
-                        FieldSpec("password", "Passwort (nur für dich)", .personal)]
-        case .login: [FieldSpec("url", "Adresse", .identifier, prompt: "https://…"),
-                      FieldSpec("username", "Benutzername", .identifier, required: true),
-                      FieldSpec("password", "Passwort (nur für dich)", .personal, required: true)]
-        case .certificate: [FieldSpec("private_key", "Datei", .file, required: true, env: "KEY_PATH"),
-                            FieldSpec("key_id", "Key-ID", .identifier, env: "KEY_ID"),
-                            FieldSpec("password", "Passwort der Datei", .secret)]
+        case .api: [FieldSpec("api_key", "Key", .secret, required: true, prompt: "sk-…", env: "API_KEY"),
+                    FieldSpec("env_var", "Variable name", .identifier, prompt: "OPENAI_API_KEY")]
+        case .token: [FieldSpec("client_id", "Client ID", .identifier, required: true, env: "CLIENT_ID"),
+                      FieldSpec("client_secret", "Client secret", .secret, required: true, env: "CLIENT_SECRET")]
+        case .account: [FieldSpec("login", "Login or email", .identifier, required: true),
+                        FieldSpec("account_id", "Account or team ID", .identifier),
+                        FieldSpec("password", "Password (only for you)", .personal)]
+        case .login: [FieldSpec("url", "Address", .identifier, prompt: "https://…"),
+                      FieldSpec("username", "Username", .identifier, required: true),
+                      FieldSpec("password", "Password (only for you)", .personal, required: true)]
+        case .certificate: [FieldSpec("private_key", "File", .file, required: true, env: "KEY_PATH"),
+                            FieldSpec("key_id", "Key ID", .identifier, env: "KEY_ID"),
+                            FieldSpec("password", "File password", .secret)]
         case .database: [FieldSpec("host", "Host", .identifier, required: true), FieldSpec("port", "Port", .identifier),
-                         FieldSpec("user", "Benutzer", .identifier), FieldSpec("password", "Passwort", .secret, required: true),
-                         FieldSpec("database", "Datenbank", .identifier)]
-        case .server: [FieldSpec("host", "Host oder IP", .identifier, required: true), FieldSpec("user", "Benutzer", .identifier)]
-        case .note: [FieldSpec("notes", "Notiz", .personal, required: true)]
+                         FieldSpec("user", "User", .identifier), FieldSpec("password", "Password", .secret, required: true),
+                         FieldSpec("database", "Database", .identifier)]
+        case .server: [FieldSpec("host", "Host or IP", .identifier, required: true), FieldSpec("user", "User", .identifier)]
+        case .note: [FieldSpec("notes", "Note", .personal, required: true)]
         }
     }
     public func spec(_ name: String) -> FieldSpec? { fields.first { $0.name == name } }
@@ -151,21 +151,21 @@ public struct ItemMeta: Codable, Equatable, Identifiable, Sendable {
 
     public func validate() throws {
         guard path.count <= 128, path.range(of: Self.pathPattern, options: .regularExpression) != nil else {
-            throw SecretariatError("Pfade bestehen aus Teilen mit Buchstaben, Zahlen, Punkt, @, Bindestrich oder Unterstrich, getrennt durch / (höchstens 128 Zeichen), z. B. moinsen/cloudflare/api-token.")
+            throw SecretariatError("Paths consist of parts made of letters, digits, dot, @, hyphen or underscore, separated by / (at most 128 characters), e.g. moinsen/cloudflare/api-token.")
         }
-        guard Set(fields.map(\.name)).count == fields.count else { throw SecretariatError("Jedes Feld darf in einem Eintrag nur einmal vorkommen.") }
+        guard Set(fields.map(\.name)).count == fields.count else { throw SecretariatError("Each field may appear only once in an item.") }
         for field in fields {
             guard field.name.range(of: Self.fieldPattern, options: .regularExpression) != nil, field.name.count <= 64 else {
-                throw SecretariatError("Feldnamen beginnen mit einem Kleinbuchstaben und enthalten nur Kleinbuchstaben, Zahlen und Unterstriche, z. B. client_id.")
+                throw SecretariatError("Field names start with a lowercase letter and contain only lowercase letters, digits and underscores, e.g. client_id.")
             }
             if field.kind == .identifier {
-                guard let value = field.value, !value.isEmpty else { throw SecretariatError("Die Kennung ‚\(field.name)‘ braucht einen Wert.") }
+                guard let value = field.value, !value.isEmpty else { throw SecretariatError("The identifier '\(field.name)' needs a value.") }
             } else if field.value != nil {
-                throw SecretariatError("Geheime Werte gehören nicht in die Beschreibung eines Eintrags.")
+                throw SecretariatError("Secret values don't belong in an item's description.")
             }
         }
         for date in [expires, rotated].compactMap({ $0 }) where date.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) == nil {
-            throw SecretariatError("Daten bitte als JJJJ-MM-TT angeben.")
+            throw SecretariatError("Please enter dates as YYYY-MM-DD.")
         }
     }
 }
@@ -177,7 +177,7 @@ public struct FieldReference: Equatable, Hashable, Sendable, CustomStringConvert
     public init(path: String, field: String) { self.path = path; self.field = field }
     public init(_ text: String) throws {
         guard let slash = text.lastIndex(of: "/"), slash != text.startIndex, text.index(after: slash) != text.endIndex else {
-            throw AgentError("invalid_reference", "Verweise haben die Form PFAD/FELD, z. B. moinsen/cloudflare/access-routing/client_secret.")
+            throw AgentError("invalid_reference", "References have the form PATH/FIELD, e.g. moinsen/cloudflare/access-routing/client_secret.")
         }
         path = String(text[..<slash]); field = String(text[text.index(after: slash)...])
     }
@@ -249,29 +249,29 @@ public struct Configuration: Codable, Equatable, Sendable {
 
     public func validate() throws {
         guard version == 2 else {
-            throw SecretariatError("Diese Konfiguration stammt aus einer älteren Version. Bitte einmal die Übernahme auf 1.0 ausführen (script/migrate_v1). Die Datei bleibt erhalten.")
+            throw SecretariatError("This configuration comes from an older version. Run the 1.0 migration once (script/migrate_v1). The file is kept.")
         }
         guard Set(profiles.map(\.id)).count == profiles.count, Set(profiles.map { $0.name.lowercased() }).count == profiles.count,
               Set(targets.map { $0.name.lowercased() }).count == targets.count else {
-            throw SecretariatError("Namen oder Kennungen sind doppelt vorhanden. Die Konfiguration bleibt erhalten.")
+            throw SecretariatError("Some names or identifiers appear twice. The configuration is kept.")
         }
         for profile in profiles {
             guard profile.name.range(of: Self.namePattern, options: .regularExpression) != nil else {
-                throw SecretariatError("Profilnamen beginnen mit einem Buchstaben oder einer Zahl und enthalten nur Buchstaben, Zahlen, Punkt, Bindestrich oder Unterstrich (maximal 64 Zeichen).")
+                throw SecretariatError("Profile names start with a letter or digit and contain only letters, digits, dot, hyphen or underscore (at most 64 characters).")
             }
-            guard profile.directory.hasPrefix("/") || profile.isAnywhere else { throw SecretariatError("Bitte einen Projektordner auswählen.") }
+            guard profile.directory.hasPrefix("/") || profile.isAnywhere else { throw SecretariatError("Please choose a project folder.") }
             try Self.validate(profile.bindings)
         }
         for target in targets {
             guard target.name.range(of: Self.namePattern, options: .regularExpression) != nil else {
-                throw SecretariatError("Zielnamen enthalten nur Buchstaben, Zahlen, Punkt, Bindestrich oder Unterstrich.")
+                throw SecretariatError("Target names contain only letters, digits, dot, hyphen or underscore.")
             }
             switch target.kind {
             case .command:
-                guard target.command.contains("{var}") else { throw SecretariatError("Der Befehl eines Ziels braucht den Platzhalter {var}.") }
+                guard target.command.contains("{var}") else { throw SecretariatError("A target's command needs the placeholder {var}.") }
             case .envFile:
                 guard !target.host.isEmpty, target.path.hasPrefix("/") || target.path.hasPrefix("~/") else {
-                    throw SecretariatError("Ein Datei-Ziel braucht Host und absoluten Pfad, z. B. root@hub:/opt/dienst/.env.")
+                    throw SecretariatError("A file target needs a host and an absolute path, e.g. root@hub:/opt/service/.env.")
                 }
             }
             try Self.validate(target.bindings)
@@ -280,10 +280,10 @@ public struct Configuration: Codable, Equatable, Sendable {
 
     static func validate(_ bindings: [Binding]) throws {
         guard Set(bindings.map(\.variable)).count == bindings.count, Set(bindings.map(\.id)).count == bindings.count else {
-            throw SecretariatError("Jede Umgebungsvariable darf nur einmal vorkommen.")
+            throw SecretariatError("Each environment variable may appear only once.")
         }
         for binding in bindings where binding.variable.range(of: variablePattern, options: .regularExpression) == nil {
-            throw SecretariatError("Variablennamen dürfen Buchstaben, Zahlen und Unterstriche enthalten und nicht mit einer Zahl beginnen.")
+            throw SecretariatError("Variable names may contain letters, digits and underscores and must not start with a digit.")
         }
     }
 }

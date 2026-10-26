@@ -13,24 +13,24 @@ public struct PreparedLaunch {
     public let files: [File]
 
     public func execute() throws -> Never {
-        guard chdir(directory) == 0 else { throw SecretariatError("Der Projektordner ist nicht erreichbar. Bitte den Ordner im Profil korrigieren.") }
+        guard chdir(directory) == 0 else { throw SecretariatError("The project folder can't be reached. Please fix the folder in the profile.") }
         let executable = try resolveExecutable()
         // Without files: replace this process, preserving terminal, process group, signals and exit status.
         guard !files.isEmpty else {
             withCStrings(arguments, environment) { argv, envp in _ = execve(executable, argv, envp) }
-            throw SecretariatError("Das Programm konnte nicht gestartet werden (Systemfehler \(errno)).")
+            throw SecretariatError("The program could not be started (system error \(errno)).")
         }
         // With files: write them to a private temporary folder, run the program as a child in the same
         // process group (terminal signals reach it directly), then remove the folder.
         var template = Array((NSTemporaryDirectory() + "secretariat-run-XXXXXX").utf8CString)
-        guard let folderPointer = mkdtemp(&template) else { throw SecretariatError("Kein temporärer Ordner für Dateien verfügbar.") }
+        guard let folderPointer = mkdtemp(&template) else { throw SecretariatError("No temporary folder available for files.") }
         let folder = String(cString: folderPointer)
         defer { try? FileManager.default.removeItem(atPath: folder) }
         var environment = environment
         for file in files {
             let path = (folder as NSString).appendingPathComponent((file.name as NSString).lastPathComponent)
             guard FileManager.default.createFile(atPath: path, contents: file.data, attributes: [.posixPermissions: 0o600]) else {
-                throw SecretariatError("Die Datei für \(file.variable) konnte nicht bereitgestellt werden.")
+                throw SecretariatError("The file for \(file.variable) could not be provided.")
             }
             environment[file.variable] = path
         }
@@ -42,7 +42,7 @@ public struct PreparedLaunch {
         posix_spawnattr_setflags(&attributes, Int16(POSIX_SPAWN_SETSIGDEF))
         var pid: pid_t = 0
         let spawned = withCStrings(arguments, environment) { argv, envp in posix_spawn(&pid, executable, nil, &attributes, argv, envp) }
-        guard spawned == 0 else { throw SecretariatError("Das Programm konnte nicht gestartet werden (Systemfehler \(spawned)).") }
+        guard spawned == 0 else { throw SecretariatError("The program could not be started (system error \(spawned)).") }
         var status: Int32 = 0
         while waitpid(pid, &status, 0) == -1 && errno == EINTR {}
         try? FileManager.default.removeItem(atPath: folder)
@@ -59,7 +59,7 @@ public struct PreparedLaunch {
         let paths = (environment["PATH"] ?? "/usr/bin:/bin").split(separator: ":", omittingEmptySubsequences: false)
         guard let match = paths.map({ URL(fileURLWithPath: String($0.isEmpty ? "." : $0)).appendingPathComponent(program).path })
             .first(where: { access($0, X_OK) == 0 && !isDirectory($0) }) else {
-            throw SecretariatError("Das angegebene Programm wurde im PATH nicht gefunden. Bitte den Befehl prüfen.")
+            throw SecretariatError("The program was not found in PATH. Please check the command.")
         }
         return match
     }
@@ -77,43 +77,43 @@ public struct PreparedLaunch {
 }
 
 public enum CommandLineInterface {
-    public static let version = "1.2.1"
+    public static let version = "1.3.0"
     public static let help = """
-    Secretariat \(version) – vertrauliche Daten für dich und deine Agenten
+    Secretariat \(version) – confidential data for you and your agents
 
-    Einträge (Pfad organisation/konto/name, Felder: Kennung, Geheimnis, Datei, Nur für mich)
-      secretariat items [--expiring TAGE] [--json]
-      secretariat item show PFAD [--json]
-      secretariat item create PFAD --kind ART [--set FELD=WERT …] [--source TEXT] [--expires JJJJ-MM-TT] [--json]
-      secretariat item set PFAD [--set FELD=WERT …] [--unset FELD …] [--source TEXT] [--expires JJJJ-MM-TT] [--json]
-      secretariat item rename PFAD NEUER_PFAD [--json]
-      secretariat get PFAD/FELD                      Wert einer Kennung (Geheimnisse nie)
-      secretariat field move PFAD/FELD PFAD/FELD [--replace] [--json]
-      secretariat import DATEI VARIABLE[=PFAD/FELD] … [--profile PROFIL] [--replace] [--json]
-      secretariat import-file DATEI PFAD/FELD [--replace] [--json]
-      Arten: account, login, api, token, certificate, database, server, note
+    Items (path org/account/name; fields: identifier, secret, file, only for me)
+      secretariat items [--expiring DAYS] [--json]
+      secretariat item show PATH [--json]
+      secretariat item create PATH --kind KIND [--set FIELD=VALUE …] [--source TEXT] [--expires YYYY-MM-DD] [--json]
+      secretariat item set PATH [--set FIELD=VALUE …] [--unset FIELD …] [--source TEXT] [--expires YYYY-MM-DD] [--json]
+      secretariat item rename PATH NEW_PATH [--json]
+      secretariat get PATH/FIELD                     value of an identifier (never secrets)
+      secretariat field move PATH/FIELD PATH/FIELD [--replace] [--json]
+      secretariat import FILE VARIABLE[=PATH/FIELD] … [--profile PROFILE] [--replace] [--json]
+      secretariat import-file FILE PATH/FIELD [--replace] [--json]
+      Kinds: account, login, api, token, certificate, database, server, note
 
-    Projekte
-      secretariat profiles [--json] · describe PROFIL [--json] · check PROFIL [--json]
-      secretariat profile create PROFIL --dir ORDNER [--command BEFEHL] [--json]   --dir '*': ohne festen Ordner (Werkzeug-Tokens)
-      secretariat profile which [ORDNER]               Profil dieses (oder des umgebenden) Projektordners
-      secretariat profile set PROFIL [--dir ORDNER] [--command BEFEHL] [--json]
-      secretariat profile bind PROFIL VARIABLE PFAD/FELD [--json] · unbind PROFIL VARIABLE · delete PROFIL
-      secretariat run PROFIL -- PROGRAMM [ARGUMENTE …]   Dateifelder kommen als Pfad einer temporären Datei
-      secretariat inject VORLAGE --out DATEI            {{ PFAD/FELD }} ersetzen; Ziel nie in Git
-      secretariat instructions PROFIL · setup PROFIL [--dry-run] [--json]
+    Projects
+      secretariat profiles [--json] · describe PROFILE [--json] · check PROFILE [--json]
+      secretariat profile create PROFILE --dir FOLDER [--command COMMAND] [--json]   --dir '*': no fixed folder (tool tokens)
+      secretariat profile which [FOLDER]               profile of this (or the enclosing) project folder
+      secretariat profile set PROFILE [--dir FOLDER] [--command COMMAND] [--json]
+      secretariat profile bind PROFILE VARIABLE PATH/FIELD [--json] · unbind PROFILE VARIABLE · delete PROFILE
+      secretariat run PROFILE -- PROGRAM [ARGUMENTS …]   file fields arrive as the path of a temporary file
+      secretariat inject TEMPLATE --out FILE            replaces {{ PATH/FIELD }}; keep the output out of git
+      secretariat instructions PROFILE · setup PROFILE [--dry-run] [--json]
 
-    Ziele (Kopien außerhalb der Macs: Worker, Supabase, GitHub, Linux-Hosts)
-      secretariat target add NAME --command 'BEFEHL {var}' [--dir ORDNER] [--json]
-      secretariat target add NAME --env-file HOST:PFAD [--json]
-      secretariat target map NAME VARIABLE PFAD/FELD · unmap NAME VARIABLE · delete NAME
-      secretariat targets [--json]                     aktuell / veraltet / nie verteilt
+    Targets (copies outside your Macs: Workers, Supabase, GitHub, Linux hosts)
+      secretariat target add NAME --command 'COMMAND {var}' [--dir FOLDER] [--json]
+      secretariat target add NAME --env-file HOST:PATH [--json]
+      secretariat target map NAME VARIABLE PATH/FIELD · unmap NAME VARIABLE · delete NAME
+      secretariat targets [--json]                     current / stale / never pushed
       secretariat push NAME [--dry-run] [--json]
 
-    Übersicht
-      secretariat registry export · scan [ORDNER] [--json] · log [--lines N] · --version
+    Overview
+      secretariat registry export · scan [FOLDER] [--json] · log [--lines N] · --version
 
-    Werte von Geheimnissen gibt die CLI nie aus. Eingeben: App, import oder import-file.
+    The CLI never prints secret values. Enter them via the app, import or import-file.
     """
 
     public static func run(_ arguments: [String], vault: Vault? = nil) throws -> Int32 {
@@ -123,7 +123,7 @@ public enum CommandLineInterface {
         case "--version": print("Secretariat \(version)"); return 0
         case "run":
             guard arguments.count >= 4, arguments[2] == "--" else {
-                throw SecretariatError("Aufruf: secretariat run PROFIL -- PROGRAMM [ARGUMENTE …]")
+                throw SecretariatError("Usage: secretariat run PROFILE -- PROGRAM [ARGUMENTS …]")
             }
             try vault.preparedLaunch(name: arguments[1], arguments: Array(arguments.dropFirst(3)),
                                      inheritedEnvironment: ProcessInfo.processInfo.environment).execute()

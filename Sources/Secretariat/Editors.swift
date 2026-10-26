@@ -15,18 +15,18 @@ struct ItemEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(draft.existing == nil ? "Eintrag hinzufügen" : "Eintrag bearbeiten").font(.title2.bold())
+            Text(draft.existing == nil ? "Add Item" : "Edit Item").font(.title2.bold())
             if draft.existing == nil { kindPicker }
             Form {
                 if !draft.customPath {
-                    LabeledContent("Anbieter oder Konto") {
+                    LabeledContent("Provider or account") {
                         HStack {
-                            TextField("", text: $draft.provider, prompt: Text("z. B. openai, deepseek, cloudflare"))
+                            TextField("", text: $draft.provider, prompt: Text("e.g. openai, deepseek, cloudflare"))
                             Menu { ForEach(Self.providers, id: \.self) { p in Button(p) { draft.provider = p } } } label: { Image(systemName: "chevron.down") }
-                                .menuStyle(.borderlessButton).fixedSize().accessibilityLabel("Anbieter auswählen")
+                                .menuStyle(.borderlessButton).fixedSize().accessibilityLabel("Choose provider")
                         }
                     }
-                    TextField("Zusatz (optional)", text: $draft.label, prompt: Text("leer = Hauptschlüssel, sonst z. B. Projektname"))
+                    TextField("Suffix (optional)", text: $draft.label, prompt: Text("empty = main key, otherwise e.g. a project name"))
                 }
                 ForEach(draft.kind.fields, id: \.name) { spec in
                     if let index = draft.fields.firstIndex(where: { $0.name == spec.name }) {
@@ -35,7 +35,7 @@ struct ItemEditor: View {
                 }
                 if draft.kind.fields.contains(where: { $0.envSuffix != nil }) && !draft.customPath {
                     Toggle(isOn: $draft.everywhere) {
-                        Text("In allen Projekten und Werkzeugen nutzbar")
+                        Text("Available in all projects and tools")
                         Text(everywhereHint).font(.caption).foregroundStyle(.secondary)
                     }
                 }
@@ -49,22 +49,22 @@ struct ItemEditor: View {
                     draft.fields[i].value = draft.envPrefix.isEmpty ? "" : "\(draft.envPrefix)_API_KEY"
                 }
             }
-            Text(draft.path.isEmpty ? "Ablage: –" : "Ablage: \(draft.path)")
+            Text(draft.path.isEmpty ? "Location: –" : "Location: \(draft.path)")
                 .font(.system(.caption, design: .monospaced)).foregroundStyle(.secondary).textSelection(.enabled)
-            DisclosureGroup("Erweitert", isExpanded: $advanced) { advancedSection }
+            DisclosureGroup("Advanced", isExpanded: $advanced) { advancedSection }
             Text(draft.existing == nil
-                 ? "Kennungen sind lesbar. Geheimnisse und Dateien bekommen nur Programme, „Nur für mich“ bleibt in der App."
-                 : "Lässt du ein geheimes Feld leer, bleibt sein bisheriger Wert erhalten.")
+                 ? "Identifiers are readable. Only programs get secrets and files; “Only for me” stays in the app."
+                 : "If you leave a secret field empty, its current value is kept.")
                 .font(.callout).foregroundStyle(.secondary)
             if let error { Text(error).foregroundStyle(.red).font(.callout) }
             HStack {
                 if let existing = draft.existing {
-                    Button("Löschen …", role: .destructive) { dismiss(); model.pendingDelete = existing }
+                    Button("Delete …", role: .destructive) { dismiss(); model.pendingDelete = existing }
                 }
-                if !draft.missing.isEmpty { Text("Fehlt noch: \(draft.missing.joined(separator: ", "))").font(.caption).foregroundStyle(.secondary) }
+                if !draft.missing.isEmpty { Text("Still missing: \(draft.missing.joined(separator: ", "))").font(.caption).foregroundStyle(.secondary) }
                 Spacer()
-                Button("Abbrechen", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
-                Button("Speichern") {
+                Button("Cancel", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Save") {
                     if model.saveItem(draft) { dismiss() }
                     else { error = model.errorMessage; model.errorMessage = nil }
                 }.keyboardShortcut(.defaultAction)
@@ -80,10 +80,10 @@ struct ItemEditor: View {
                 let scoped = url.startAccessingSecurityScopedResource()
                 defer { if scoped { url.stopAccessingSecurityScopedResource() } }
                 let data = try Data(contentsOf: url)
-                guard data.count <= 250 * 1024 else { error = "Dateien dürfen höchstens 250 KB groß sein."; return }
+                guard data.count <= 250 * 1024 else { error = "Files can be at most 250 KB."; return }
                 draft.fields[index].fileData = data.base64EncodedString()
                 draft.fields[index].fileName = url.lastPathComponent
-            } catch { self.error = "Die Datei konnte nicht gelesen werden. Bitte erneut versuchen." }
+            } catch { self.error = "The file could not be read. Please try again." }
         }
     }
 
@@ -92,12 +92,12 @@ struct ItemEditor: View {
             spec.name == "api_key" ? (draft.field("env_var")?.value.isEmpty == false ? draft.field("env_var")!.value : "\(draft.envPrefix)_API_KEY")
                                    : "\(draft.envPrefix)_\(spec.envSuffix!)"
         }
-        return "Als \(names.joined(separator: ", ")) im Profil „werkzeuge“ – `secretariat run werkzeuge -- …` in jedem Ordner."
+        return "As \(names.joined(separator: ", ")) in the tools profile “werkzeuge” – `secretariat run werkzeuge -- …` in any folder."
     }
 
     private var kindPicker: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Was speicherst du?").font(.headline)
+            Text("What are you storing?").font(.headline)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
                 ForEach(ItemKind.allCases, id: \.self) { kind in
                     Button { draft.kind = kind } label: {
@@ -116,29 +116,29 @@ struct ItemEditor: View {
 
     @ViewBuilder private var advancedSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Toggle("Ablage selbst festlegen", isOn: SwiftUI.Binding(get: { draft.customPath }, set: { on in
+            Toggle("Set location yourself", isOn: SwiftUI.Binding(get: { draft.customPath }, set: { on in
                 if on { draft.typedPath = draft.path }
                 draft.customPath = on
             }))
             if draft.customPath {
-                TextField("Ablage", text: $draft.typedPath, prompt: Text("moinsen/konto/name")).textFieldStyle(.roundedBorder)
+                TextField("Location", text: $draft.typedPath, prompt: Text("moinsen/account/name")).textFieldStyle(.roundedBorder)
             }
-            TextField("Herkunft", text: $draft.source, prompt: Text("Wo kommt der Wert her? z. B. platform.openai.com")).textFieldStyle(.roundedBorder)
-            TextField("Läuft ab", text: $draft.expires, prompt: Text("JJJJ-MM-TT, optional")).textFieldStyle(.roundedBorder)
-            Text("Weitere Felder").font(.subheadline.bold())
+            TextField("Source", text: $draft.source, prompt: Text("Where does the value come from? e.g. platform.openai.com")).textFieldStyle(.roundedBorder)
+            TextField("Expires", text: $draft.expires, prompt: Text("YYYY-MM-DD, optional")).textFieldStyle(.roundedBorder)
+            Text("More fields").font(.subheadline.bold())
             ForEach($draft.fields) { $field in
                 if draft.kind.spec(field.name) == nil {
                     HStack {
-                        TextField("feldname", text: $field.name).textFieldStyle(.roundedBorder).frame(width: 140).accessibilityLabel("Feldname")
-                        Picker("Feldart", selection: $field.kind) { ForEach(FieldKind.allCases, id: \.self) { Text($0.title).tag($0) } }
+                        TextField("field_name", text: $field.name).textFieldStyle(.roundedBorder).frame(width: 140).accessibilityLabel("Field name")
+                        Picker("Field kind", selection: $field.kind) { ForEach(FieldKind.allCases, id: \.self) { Text($0.title).tag($0) } }
                             .labelsHidden().frame(width: 130)
                         valueControl($field, prompt: "")
                         Button { draft.fields.removeAll { $0.id == field.id } } label: { Image(systemName: "minus.circle") }
-                            .buttonStyle(.borderless).accessibilityLabel("Feld entfernen")
+                            .buttonStyle(.borderless).accessibilityLabel("Remove field")
                     }
                 }
             }
-            Button("Feld hinzufügen", systemImage: "plus") { draft.fields.append(FieldDraft(kind: .secret)) }
+            Button("Add Field", systemImage: "plus") { draft.fields.append(FieldDraft(kind: .secret)) }
         }.padding(.top, 6)
     }
 
@@ -146,15 +146,15 @@ struct ItemEditor: View {
         let isStored = field.wrappedValue.storedName != nil
         switch field.wrappedValue.kind {
         case .identifier:
-            TextField("", text: field.value, prompt: Text(prompt)).textFieldStyle(.roundedBorder).accessibilityLabel("Wert der Kennung")
+            TextField("", text: field.value, prompt: Text(prompt)).textFieldStyle(.roundedBorder).accessibilityLabel("Identifier value")
         case .secret, .personal:
-            SecureField("", text: field.value, prompt: Text(isStored ? "unverändert" : prompt)).textFieldStyle(.roundedBorder)
-                .accessibilityLabel("Geheimer Wert")
+            SecureField("", text: field.value, prompt: Text(isStored ? "unchanged" : prompt)).textFieldStyle(.roundedBorder)
+                .accessibilityLabel("Secret value")
         case .file:
             HStack {
-                Text(field.wrappedValue.fileName ?? "Keine Datei").font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                Text(field.wrappedValue.fileName ?? "No file").font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 Spacer(minLength: 4)
-                Button("Datei wählen …") { importingField = field.wrappedValue.id }
+                Button("Choose File …") { importingField = field.wrappedValue.id }
             }.frame(maxWidth: .infinity)
         }
     }
@@ -169,57 +169,57 @@ struct ProfileEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            Text(model.configuration.profiles.contains { $0.id == draft.profile.id } ? "Profil bearbeiten" : "Neues Projektprofil")
+            Text(model.configuration.profiles.contains { $0.id == draft.profile.id } ? "Edit Profile" : "New Project Profile")
                 .font(.title2.bold())
             Form {
-                TextField("Profilname", text: $draft.profile.name, prompt: Text("cooking-ai-local"))
-                LabeledContent("Projektordner") {
+                TextField("Profile name", text: $draft.profile.name, prompt: Text("cooking-ai-local"))
+                LabeledContent("Project folder") {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text(draft.profile.directory.isEmpty ? "Noch kein Ordner ausgewählt" : draft.profile.directory)
+                        Text(draft.profile.directory.isEmpty ? "No folder chosen yet" : draft.profile.directory)
                             .font(.caption).foregroundStyle(.secondary).lineLimit(2)
-                        Button("Ordner auswählen …") { choosingDirectory = true }
+                        Button("Choose Folder …") { choosingDirectory = true }
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
-                TextField("Startbefehl", text: $draft.profile.command, prompt: Text("pnpm dev"))
+                TextField("Start command", text: $draft.profile.command, prompt: Text("pnpm dev"))
             }.textFieldStyle(.roundedBorder)
-            Text("Werte zuordnen").font(.headline)
+            Text("Bind values").font(.headline)
             ScrollView {
                 VStack(spacing: 10) {
                     ForEach($draft.profile.bindings) { $binding in
                         HStack {
                             TextField("VARIABLE_NAME", text: $binding.variable).textFieldStyle(.roundedBorder)
-                                .accessibilityLabel("Umgebungsvariable")
-                            Picker("Feld", selection: SwiftUI.Binding(
+                                .accessibilityLabel("Environment variable")
+                            Picker("Field", selection: SwiftUI.Binding(
                                 get: { "\(binding.itemID)|\(binding.field)" },
                                 set: { tag in
                                     if let field = model.usableFields.first(where: { $0.id == tag }) { binding.itemID = field.itemID; binding.field = field.field }
                                 })) {
                                 ForEach(model.usableFields) { field in Text(field.label).tag(field.id) }
-                            }.labelsHidden().frame(width: 260).accessibilityLabel("Zugeordnetes Feld")
+                            }.labelsHidden().frame(width: 260).accessibilityLabel("Bound field")
                             Button {
                                 draft.profile.bindings.removeAll { $0.id == binding.id }
-                            } label: { Image(systemName: "minus.circle") }.accessibilityLabel("Zuordnung entfernen")
+                            } label: { Image(systemName: "minus.circle") }.accessibilityLabel("Remove binding")
                         }
                     }
                     if draft.profile.bindings.isEmpty {
-                        Text("Wähle die Felder, die dieses Projekt beim Start benötigt.").foregroundStyle(.secondary)
+                        Text("Choose the fields this project needs at launch.").foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }.padding(.vertical, 2)
             }.frame(minHeight: 60, maxHeight: 200)
-            Button("Feld zuordnen", systemImage: "plus") {
+            Button("Bind Field", systemImage: "plus") {
                 if let first = model.usableFields.first {
                     draft.profile.bindings.append(SecretariatCore.Binding(variable: "", itemID: first.itemID, field: first.field))
                 }
             }.disabled(model.usableFields.isEmpty)
-            if model.usableFields.isEmpty { Text("Füge zuerst einen Eintrag mit Kennung, Geheimnis oder Datei hinzu.").font(.caption).foregroundStyle(.secondary) }
-            Text("Der Startbefehl enthält keine Schlüsselwerte und wird erst durch deinen Aufruf im Terminal ausgeführt.")
+            if model.usableFields.isEmpty { Text("First add an item with an identifier, secret or file.").font(.caption).foregroundStyle(.secondary) }
+            Text("The start command contains no key values and only runs when you launch it in Terminal.")
                 .font(.caption).foregroundStyle(.secondary)
             if let error { Text(error).foregroundStyle(.red).font(.callout) }
             HStack {
                 Spacer()
-                Button("Abbrechen", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
-                Button("Speichern") {
+                Button("Cancel", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Save") {
                     if model.saveProfile(draft.profile, expectedRevision: draft.revision) { dismiss() }
                     else { error = model.errorMessage; model.errorMessage = nil }
                 }.keyboardShortcut(.defaultAction)
@@ -229,7 +229,7 @@ struct ProfileEditor: View {
         .fileImporter(isPresented: $choosingDirectory, allowedContentTypes: [.folder], allowsMultipleSelection: false) { result in
             switch result {
             case .success(let urls): if let url = urls.first { draft.profile.directory = url.path }
-            case .failure: error = "Der Ordner konnte nicht ausgewählt werden. Bitte erneut versuchen."
+            case .failure: error = "The folder could not be chosen. Please try again."
             }
         }
     }

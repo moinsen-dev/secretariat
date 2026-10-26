@@ -88,4 +88,4 @@ else:
         destination = trash / ('Secretariat-' + datetime.datetime.now().strftime('%Y%m%d-%H%M%S-%f') + '.app')
         bundle.rename(destination)
         print(f'App im Papierkorb: {destination}')
-    print('Secretariat entfernt. Gespeicherte Schlüssel und Profile bleiben erhalten.')
+    print('Secretariat removed. Stored keys and profiles are kept.')
