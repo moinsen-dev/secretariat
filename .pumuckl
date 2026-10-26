@@ -1,0 +1,285 @@
+{
+  "git" : {
+    "current_branch" : "main",
+    "github_url" : "https:\/\/github.com\/moinsen-dev\/secretariat",
+    "has_uncommitted_changes" : false,
+    "is_repo" : true,
+    "last_commit_author" : "Ulrich Diedrichsen",
+    "last_commit_date" : "2026-10-23T08:35:23Z",
+    "last_commit_message" : "Refresh Secretariat completion state",
+    "local_secret_files" : 0,
+    "stale_days" : 2,
+    "stash_count" : 0,
+    "total_commits" : 4,
+    "uncommitted_files_count" : 0,
+    "unpushed_commits" : 0
+  },
+  "last_scanned" : "2026-10-25T15:19:58Z",
+  "project_path" : "\/Users\/udi\/work\/moinsen\/ideas\/local_secrets_orchestrator",
+  "pumuckl_version" : 1,
+  "report" : {
+    "accent" : "#0a84ff",
+    "ai_note" : "Secretariat ist schon erstaunlich rund: Schlüsselbund, CLI und Agenten-Einrichtung greifen ineinander, nur der letzte Schritt zum verteilbaren Release fehlt noch.",
+    "ai_suggestion" : "Die Developer-ID-signierte App lokal mit notarytool notarisieren, das Ticket anheften und mit spctl auf einem sauberen Nutzerkonto prüfen.",
+    "architecture" : [
+      {
+        "lbl" : "UI",
+        "mods" : [
+          "SwiftUI-Oberfläche",
+          "Profilformular"
+        ]
+      },
+      {
+        "lbl" : "CLI",
+        "mods" : [
+          "profiles",
+          "run",
+          "check",
+          "setup",
+          "describe"
+        ]
+      },
+      {
+        "lbl" : "Core",
+        "mods" : [
+          "SecretariatCore",
+          "Profilverwaltung",
+          "Agenten-Einrichtung"
+        ]
+      },
+      {
+        "lbl" : "Speicher",
+        "mods" : [
+          "CredentialStore",
+          "macOS-Schlüsselbund",
+          "profiles.json"
+        ]
+      },
+      {
+        "lbl" : "Skripte",
+        "mods" : [
+          "build_and_run.sh",
+          "install.sh",
+          "uninstall.sh"
+        ]
+      }
+    ],
+    "dimensions" : [
+      {
+        "g" : "Kernfluss steht; MCP- und Cloud-Zugriff sind bewusst noch nicht enthalten.",
+        "k" : "funktion",
+        "l" : "Funktion",
+        "v" : 85
+      },
+      {
+        "g" : "Saubere Trennung von Core und App; Keychain und JSON ohne gemeinsame Transaktion.",
+        "k" : "code",
+        "l" : "Code & Struktur",
+        "v" : 82
+      },
+      {
+        "g" : "Tests laufen mit künstlichen Stores; der echte Keychain-Test ist nur Opt-in.",
+        "k" : "tests",
+        "l" : "Tests & Stabilität",
+        "v" : 70
+      },
+      {
+        "g" : "Sehr ausführlich; eine Kurzanleitung für den Release-Ablauf fehlt.",
+        "k" : "doku",
+        "l" : "Dokumentation",
+        "v" : 90
+      },
+      {
+        "g" : "Nutzerfluss ist klar beschrieben; Oberfläche ist nur als Minimal-App belegt.",
+        "k" : "design",
+        "l" : "Usability & Design",
+        "v" : 68
+      },
+      {
+        "g" : "Developer-ID-signiert, aber nicht notarisiert und ohne Verteilpaket.",
+        "k" : "release",
+        "l" : "Release-Reife",
+        "v" : 45
+      }
+    ],
+    "edges" : [
+      {
+        "f" : "UI",
+        "t" : "Core"
+      },
+      {
+        "f" : "CLI",
+        "t" : "Core"
+      },
+      {
+        "f" : "Core",
+        "t" : "Speicher"
+      },
+      {
+        "f" : "Skripte",
+        "t" : "UI"
+      },
+      {
+        "f" : "Skripte",
+        "t" : "CLI"
+      }
+    ],
+    "effort_to_complete" : 25,
+    "history" : [
+      "Das Projekt begann als Neubau einer nativen Minimal-App, der Altstand liegt im Legacy-Archiv. Danach kamen die Agenten-Einrichtung und die nichtinteraktive Keychain-CLI, zuletzt die lokale Abnahme von Version 0.2."
+    ],
+    "impact" : 68,
+    "last_state" : [
+      {
+        "meta" : "Abschlussstand in PLAN\/TRACKER aktualisiert, vor 2 Tagen",
+        "msg" : "Refresh Secretariat completion state",
+        "wip" : false
+      },
+      {
+        "meta" : "Lokale Abnahme von Version 0.2 abgeschlossen",
+        "msg" : "Complete Secretariat 0.2 local acceptance",
+        "wip" : false
+      },
+      {
+        "meta" : "Agenten-Einrichtung und nichtinteraktive CLI ergänzt",
+        "msg" : "Add Secretariat agent setup and noninteractive keychain CLI",
+        "wip" : false
+      },
+      {
+        "meta" : "Native Minimal-App gebaut, Altstand archiviert",
+        "msg" : "Build native Secretariat minimal app and archive legacy",
+        "wip" : false
+      }
+    ],
+    "overall_gem_score" : 78,
+    "progress" : 85,
+    "re_entry_action" : "Die signierte dist\/Secretariat.app lokal mit xcrun notarytool notarisieren, das Ticket mit stapler anheften und die Installation per spctl --assess sowie einen echten Lauf von .\/script\/install.sh prüfen.",
+    "re_entry_effort" : "~2-3 Stunden",
+    "re_entry_why" : "Release-Reife ist die schwächste Dimension, weil die Abnahme zwar mit Developer-ID signiert, aber nicht notarisiert ist; erst damit lässt sich die App außerhalb dieses Macs ohne Gatekeeper-Warnung weitergeben.",
+    "recency" : 95,
+    "resumption_ease" : 88,
+    "roadmap" : [
+      {
+        "d" : "Signierte App mit notarytool notarisieren, Ticket anheften, mit spctl prüfen",
+        "next" : true,
+        "t" : "Lokal notarisieren",
+        "tag" : "NEXT"
+      },
+      {
+        "d" : "Build und swift test mit aktuellem Xcode\/Swift erneut grün bestätigen",
+        "next" : false,
+        "t" : "Abhängigkeiten und Toolchain prüfen",
+        "tag" : "DANN"
+      },
+      {
+        "d" : "SECRETARIAT_RUN_KEYCHAIN_TESTS=1 swift test lokal ausführen",
+        "next" : false,
+        "t" : "Keychain-Roundtrip real prüfen",
+        "tag" : "DANN"
+      },
+      {
+        "d" : "Notarisierte App als ZIP oder DMG lokal bauen",
+        "next" : false,
+        "t" : "Verteilbares Paket erstellen",
+        "tag" : "SPÄTER"
+      }
+    ],
+    "score_breakdown" : [
+      {
+        "c" : "#30d158",
+        "k" : "Aktivität",
+        "v" : 90
+      },
+      {
+        "c" : "#0a84ff",
+        "k" : "Qualität",
+        "v" : 80
+      },
+      {
+        "c" : "#64d2ff",
+        "k" : "Wartung",
+        "v" : 78
+      },
+      {
+        "c" : "#bf5af2",
+        "k" : "Doku",
+        "v" : 88
+      },
+      {
+        "c" : "#ff9f0a",
+        "k" : "Klarheit",
+        "v" : 85
+      }
+    ],
+    "stack" : [
+      {
+        "n" : "Swift",
+        "p" : "92%"
+      },
+      {
+        "n" : "Shell",
+        "p" : "6%"
+      },
+      {
+        "n" : "Markdown",
+        "p" : "2%"
+      }
+    ],
+    "threads" : [
+      {
+        "c" : "#ff9f0a",
+        "icon" : "🔏",
+        "s" : "script\/build_and_run.sh",
+        "t" : "Notarisierung fehlt"
+      },
+      {
+        "c" : "#bf5af2",
+        "icon" : "🔐",
+        "s" : "README: Daten und Grenzen",
+        "t" : "Keychain und JSON ohne gemeinsame Transaktion"
+      },
+      {
+        "c" : "#30d158",
+        "icon" : "🧪",
+        "s" : "SECRETARIAT_RUN_KEYCHAIN_TESTS=1",
+        "t" : "Echter Keychain-Test nur per Opt-in"
+      },
+      {
+        "c" : "#0a84ff",
+        "icon" : "📋",
+        "s" : "PLAN.md \/ TRACKER.md",
+        "t" : "Anforderungen und Nachweise pflegen"
+      }
+    ],
+    "vision" : "Secretariat ist eine kleine native Mac-App, die API-Schlüssel einmal im macOS-Schlüsselbund ablegt und sie projektbezogen an Startbefehle übergibt. So landen keine Geheimnisse in Konfigurationsdateien oder kopierten Aufrufen, und auch Coding-Agenten wie Codex, Claude Code und OpenCode können Projekte sauber starten."
+  },
+  "scan" : {
+    "capability" : {
+      "at" : "2026-10-25T09:06:48Z",
+      "head" : "64e0af0",
+      "mtime" : 1792744508.0694146
+    },
+    "deep" : {
+      "at" : "2026-10-25T15:19:58Z",
+      "head" : "64e0af0"
+    },
+    "fast" : {
+      "at" : "2026-10-25T15:19:58Z",
+      "head" : "64e0af0"
+    },
+    "git" : {
+      "at" : "2026-10-23T12:11:48Z",
+      "head" : "64e0af0",
+      "mtime" : 1792744508.0694146
+    }
+  },
+  "scoring" : {
+    "ai_note" : "Secretariat ist schon erstaunlich rund: Schlüsselbund, CLI und Agenten-Einrichtung greifen ineinander, nur der letzte Schritt zum verteilbaren Release fehlt noch.",
+    "ai_suggestion" : "Die Developer-ID-signierte App lokal mit notarytool notarisieren, das Ticket anheften und mit spctl auf einem sauberen Nutzerkonto prüfen.",
+    "effort_to_complete" : 25,
+    "impact" : 68,
+    "overall_gem_score" : 78,
+    "progress" : 85,
+    "recency" : 95
+  }
+}
