@@ -181,6 +181,10 @@ final class AppModel {
         }
         try Vault(paths: paths).saveProfile(profile)
     }
+    /// Item waiting for the delete confirmation (list, detail, editor, Delete key).
+    var pendingDelete: ItemMeta?
+    func item(_ id: UUID) -> ItemMeta? { items.first { $0.id == id } }
+    func edit(_ item: ItemMeta) { itemEditor = ItemDraft(item: item, revision: configuration.revision) }
     func deleteItem(_ item: ItemMeta) {
         if perform({ try vault.delete(id: item.id) }) { selectedItem = nil }
     }

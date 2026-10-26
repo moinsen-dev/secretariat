@@ -58,6 +58,9 @@ struct ItemEditor: View {
                 .font(.callout).foregroundStyle(.secondary)
             if let error { Text(error).foregroundStyle(.red).font(.callout) }
             HStack {
+                if let existing = draft.existing {
+                    Button("Löschen …", role: .destructive) { dismiss(); model.pendingDelete = existing }
+                }
                 if !draft.missing.isEmpty { Text("Fehlt noch: \(draft.missing.joined(separator: ", "))").font(.caption).foregroundStyle(.secondary) }
                 Spacer()
                 Button("Abbrechen", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)

@@ -3,7 +3,6 @@ import SecretariatCore
 
 struct MainView: View {
     @Bindable var model: AppModel
-    @State private var deletingItem: ItemMeta?
     @State private var deletingProfile: Profile?
     @State private var deletingTarget: String?
     @State private var search = ""
@@ -55,12 +54,12 @@ struct MainView: View {
         .alert("Das hat nicht geklappt", isPresented: flag(model.errorMessage != nil) { model.errorMessage = nil }) {
             Button("OK", role: .cancel) { model.errorMessage = nil }
         } message: { Text(model.errorMessage ?? "") }
-        .alert("Eintrag löschen?", isPresented: flag(deletingItem != nil) { deletingItem = nil }) {
-            Button("Abbrechen", role: .cancel) { deletingItem = nil }
+        .alert("Eintrag löschen?", isPresented: flag(model.pendingDelete != nil) { model.pendingDelete = nil }) {
+            Button("Abbrechen", role: .cancel) { model.pendingDelete = nil }
             Button("Löschen", role: .destructive) {
-                if let item = deletingItem { model.deleteItem(item) }; deletingItem = nil
+                if let item = model.pendingDelete { model.deleteItem(item) }; model.pendingDelete = nil
             }
-        } message: { Text("‚\(deletingItem?.path ?? "")‘ wird auf allen deinen Macs entfernt. Verwendete Einträge bleiben geschützt.") }
+        } message: { Text("‚\(model.pendingDelete?.path ?? "")‘ wird auf allen deinen Macs entfernt. Verwendete Einträge bleiben geschützt.") }
         .alert("Profil löschen?", isPresented: flag(deletingProfile != nil) { deletingProfile = nil }) {
             Button("Abbrechen", role: .cancel) { deletingProfile = nil }
             Button("Löschen", role: .destructive) {
@@ -122,6 +121,16 @@ struct MainView: View {
                         }
                     }
                     .listStyle(.inset)
+                    // Double-click edits; right-click offers edit and delete; the Delete key deletes.
+                    .contextMenu(forSelectionType: UUID.self) { ids in
+                        if let item = ids.first.flatMap(model.item) {
+                            Button("Bearbeiten …") { model.edit(item) }
+                            Button("Löschen …", role: .destructive) { model.pendingDelete = item }
+                        }
+                    } primaryAction: { ids in
+                        if let item = ids.first.flatMap(model.item) { model.edit(item) }
+                    }
+                    .onDeleteCommand { if let item = model.currentItem { model.pendingDelete = item } }
                     .overlay { if filteredItems.isEmpty { ContentUnavailableView.search(text: search) } }
                 }
                 Label("Die Werte bleiben im macOS-Schlüsselbund.", systemImage: "lock.shield")
@@ -130,7 +139,7 @@ struct MainView: View {
             .padding(28)
             .frame(minWidth: 380, idealWidth: 460, maxHeight: .infinity, alignment: .topLeading)
             Group {
-                if let item = model.currentItem { ItemDetail(model: model, item: item, delete: { deletingItem = item }).id(item.id) }
+                if let item = model.currentItem { ItemDetail(model: model, item: item, delete: { model.pendingDelete = item }).id(item.id) }
                 else {
                     ContentUnavailableView("Kein Eintrag ausgewählt", systemImage: "sidebar.right",
                                            description: Text("Wähle links einen Eintrag, um seine Felder zu sehen."))
@@ -273,7 +282,8 @@ struct ItemDetail: View {
                         Text(item.kind.title).foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button("Bearbeiten") { model.itemEditor = ItemDraft(item: item, revision: model.configuration.revision) }
+                    Button("Bearbeiten") { model.edit(item) }
+                    Button(role: .destructive, action: delete) { Label("Löschen", systemImage: "trash") }
                 }
                 Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 6) {
                     if !item.source.isEmpty { info("Herkunft", item.source) }
@@ -295,7 +305,6 @@ struct ItemDetail: View {
                         Divider()
                     }
                 }
-                Button("Eintrag löschen", role: .destructive, action: delete).buttonStyle(.borderless)
             }.padding(28)
         }
     }
