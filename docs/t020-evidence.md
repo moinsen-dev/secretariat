@@ -9,3 +9,7 @@
 
 - Doppelklick auf einen Eintrag öffnet „Eintrag bearbeiten“ (echt per Mausereignis in einer Testinstanz, Screenshot geprüft); Rechtsklick-Menü „Bearbeiten …/Löschen …“; Entf-Taste; „Löschen“ im Detailkopf und im Bearbeiten-Dialog, jeweils mit Rückfrage. 32/32, 1.2.1 auf allen Macs.
 - Massenübernahme ausgeführt: 283 Werte übernommen, 13 schon vorhanden, 10 Kennungen, 146 Profile (alle `check` bereit), 209 Einträge auf allen Macs; Profil werkzeuge mit 18 Variablen bereit.
+
+## Nachtrag 1.3.0 (Build 695e61a)
+
+- Auf Wunsch von Uli komplett englisch: App, CLI-Ausgaben, Fehlermeldungen, Hilfe, Projektanweisungen, Prüfliste, Sitzungshinweis. Fehlercodes, JSON-Schlüssel und Statuswerte unverändert; `usedBy` nennt Ziele jetzt `target:NAME`. 32/32; Dialog „Add Item“ per Screenshot geprüft; 1.3.0 auf allen Macs, `check werkzeuge` ready.
