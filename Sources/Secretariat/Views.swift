@@ -13,7 +13,7 @@ struct MainView: View {
                 Label("All Items", systemImage: "key.horizontal").tag("items")
                 Label("Targets", systemImage: "arrow.up.forward.app").tag("targets")
                 Section("Project Profiles") {
-                    ForEach(model.configuration.profiles.sorted { $0.name < $1.name }) { profile in
+                    ForEach(filteredProfiles) { profile in
                         Label(profile.name, systemImage: "folder").tag(profile.id.uuidString)
                     }
                 }
@@ -41,6 +41,8 @@ struct MainView: View {
             .background(Color(nsColor: .textBackgroundColor))
         }
         .navigationTitle("Secretariat")
+        // One search for everything: items (path, field, identifier, kind), profiles (name, folder, variables), targets. ⌘F focuses it.
+        .searchable(text: $search, placement: .toolbar, prompt: Text("Search items, profiles, targets"))
         .onChange(of: model.selection) { _, selection in
             model.copied = false
             if selection == "targets" { model.refreshTargets() }
@@ -80,13 +82,24 @@ struct MainView: View {
 
     // MARK: Items
 
+    private var query: String { search.trimmingCharacters(in: .whitespaces).lowercased() }
     private var filteredItems: [ItemMeta] {
-        let query = search.trimmingCharacters(in: .whitespaces).lowercased()
         guard !query.isEmpty else { return model.items }
         return model.items.filter { item in
-            item.path.lowercased().contains(query) || item.fields.contains {
-                $0.name.lowercased().contains(query) || ($0.value?.lowercased().contains(query) ?? false)
-            }
+            item.path.lowercased().contains(query) || item.kind.title.lowercased().contains(query)
+                || item.source.lowercased().contains(query) || item.fields.contains {
+                    $0.name.lowercased().contains(query) || ($0.value?.lowercased().contains(query) ?? false)
+                        || (item.kind.spec($0.name)?.label.lowercased().contains(query) ?? false)
+                }
+        }
+    }
+    private var filteredProfiles: [Profile] {
+        let profiles = model.configuration.profiles.sorted { $0.name < $1.name }
+        guard !query.isEmpty else { return profiles }
+        let pathsByID = Dictionary(uniqueKeysWithValues: model.items.map { ($0.id, $0.path) })
+        return profiles.filter { p in
+            p.name.lowercased().contains(query) || p.directory.lowercased().contains(query)
+                || p.bindings.contains { $0.variable.lowercased().contains(query) || (pathsByID[$0.itemID]?.lowercased().contains(query) ?? false) }
         }
     }
 
@@ -111,8 +124,10 @@ struct MainView: View {
                         Button("Add First Item") { model.itemEditor = ItemDraft(revision: model.configuration.revision) }
                     }.frame(maxHeight: .infinity)
                 } else {
-                    TextField("Search", text: $search, prompt: Text("Search path, field or identifier"))
-                        .textFieldStyle(.roundedBorder)
+                    if !query.isEmpty {
+                        Text("\(filteredItems.count) of \(model.items.count) items · \(filteredProfiles.count) profiles match")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
                     List(selection: $model.selectedItem) {
                         ForEach(Dictionary(grouping: filteredItems, by: \.group).sorted { $0.key < $1.key }, id: \.key) { group, items in
                             Section(group) {
@@ -171,7 +186,9 @@ struct MainView: View {
                 }
                 Label("You push from Terminal and create targets with the CLI (secretariat target add …).", systemImage: "terminal")
                     .font(.callout).foregroundStyle(.secondary)
-                if let targets = model.targetReport?.targets, !targets.isEmpty {
+                if let targets = model.targetReport?.targets.filter({ query.isEmpty || $0.name.lowercased().contains(query)
+                        || $0.destination.lowercased().contains(query) || $0.variables.contains { $0.variable.lowercased().contains(query) || $0.reference.lowercased().contains(query) } }),
+                   !targets.isEmpty {
                     ForEach(targets, id: \.name) { target in targetCard(target) }
                 } else {
                     ContentUnavailableView("No Targets Yet", systemImage: "arrow.up.forward.app",
