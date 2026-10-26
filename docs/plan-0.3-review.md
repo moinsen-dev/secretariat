@@ -52,3 +52,7 @@ R013/R016/R018/R019 auf das Eintragsmodell umformuliert (Verhalten hat sich geä
 ## Plan-Prüfung 1.1 (Selbstprüfung)
 
 R024/P14/UC14/T019 ergänzt; prüfbar über Unit-Tests, echten Werkzeug-Lauf und End-to-End-Sitzung. PASS.
+
+## Plan-Prüfung 1.2 (Selbstprüfung)
+
+R025/P15/UC15/T020 aus Nutzerrückmeldung zum Dialog ergänzt. PASS.
