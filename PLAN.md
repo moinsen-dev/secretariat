@@ -62,6 +62,7 @@
 | R022 | Ziele (Befehl je Variable mit Wert auf stdin, env-Datei per ssh) führen je Variable einen Verteilstand (aktuell, veraltet, nie, fehlt) über gesalzene Prüfsummen; `push` verteilt |
 | R023 | Kennungen werden ins Fleet-Register exportiert; `scan` findet .env-Dateien mit Werten (nur Namen) und erkennt gespeicherte; `log` protokolliert nur Namen; die App zeigt Einträge gruppiert mit Detail, Editor, Dateiexport und Zielen |
 | R024 | Profile ohne festen Ordner (`--dir '*'`) laufen im aktuellen Ordner (Werkzeug-Tokens); `profile which` findet das Profil eines Ordners; ein Sitzungsstart-Hinweis nennt Agenten Profil oder .env-Geheimnisse; `bulk_import.py` übernimmt viele .env-Dateien nach einer Prüfliste; eine frische Claude-Sitzung nutzt Secretariat ohne Hinweis im Auftrag |
+| R025 | Der Eintrags-Dialog führt nach Art: Art wählen, Anbieter, beschriftete Pflicht- und Kannfelder je Art; Ablage ergibt sich (moinsen/<anbieter>[/<zusatz>]); Herkunft, Ablauf, eigene Ablage und weitere Felder unter „Erweitert“; „In allen Projekten nutzbar“ ordnet die Felder dem Profil werkzeuge zu |
 
 ## Phases
 
@@ -82,6 +83,7 @@
 | P12 | 12 | Schlüssel einheitlich benennen (Organisation/Konto/Name) | P11 |
 | P13 | 13 | Secretariat 1.0: Einträge mit Feldern und Dateien, Ziele, Register | P12 |
 | P14 | 14 | Effizienz: Sitzungshinweis, Werkzeug-Profil, Massenübernahme, End-to-End | P13 |
+| P15 | 15 | Verständlicher Eintrags-Dialog und globale Schlüssel | P14 |
 
 ## UseCases
 
@@ -102,6 +104,7 @@
 | UC12 | P12 | Agent benennt einen Schlüssel nach dem Schema um; ein zweiter Mac zeigt den neuen Namen, Profile funktionieren weiter | R012,R015,R019 | required |
 | UC13 | P13 | Konto mit mehreren Feldern und Schlüsseldatei anlegen; Agent verdrahtet ein Projekt selbst, Programm erhält Werte und Datei; Ziel zeigt Verteilstand; Register zeigt Kennungen | R008,R012,R013,R014,R016,R018,R019,R020,R021,R022,R023 | required |
 | UC14 | P14 | Frische Agenten-Sitzung in einem Projekt führt Tests mit Secretariat aus, ohne dass der Nutzer es erwähnt; Werkzeug-Tokens funktionieren in jedem Ordner | R020,R024 | required |
+| UC15 | P15 | Nutzer legt einen API-Schlüssel ohne Vorwissen an und macht ihn überall nutzbar | R020,R024,R025 | required |
 
 ## Tasks
 
@@ -127,6 +130,7 @@
 | T017 | P12 | UC12 | R012,R015,R019 | key rename per CLI; Umbenennen schreibt das Schlüsselbund-Etikett neu; Abgleich übernimmt Umbenennungen anderer Macs ohne Namenskonflikt; Unit-Tests; 0.4.1 signiert installiert; echte Umbenennung zweier Schlüssel auf dem M4, Ankunft auf Mini und M1 beobachtet | build,unit,macos | normal | T016 | Sources/SecretariatCore/Commands.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/AgentIntegration.swift,Sources/SecretariatCore/Launcher.swift,Tests/SecretariatCoreTests/CoreTests.swift,Tests/SecretariatCoreTests/CommandTests.swift,Resources/Info.plist |
 | T018 | P13 | UC13 | R008,R012,R013,R014,R016,R018,R019,R020,R021,R022,R023 | Kern, CLI und App auf Einträge umgestellt; 30 Unit-Tests; signiertes 1.0 auf M4, Mini, M1 installiert, 0.x-Daten migriert und alte Einträge entfernt; Register-Konten und zwei .p8-Dateien übernommen; echter run mit Datei (Prüfsumme gleich, Temp-Datei entfernt); Claude verdrahtet selbst und über Anweisungen; App zeigt gruppierte Einträge | build,unit,macos,inspection | normal | T017 | Sources/SecretariatCore/Models.swift,Sources/SecretariatCore/Keychain.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/Commands.swift,Sources/SecretariatCore/AgentIntegration.swift,Sources/SecretariatCore/Launcher.swift,Sources/SecretariatCore/ProjectInstructions.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Views.swift,Sources/Secretariat/Editors.swift,Sources/Secretariat/Entry.swift,Tests/SecretariatCoreTests/CoreTests.swift,Tests/SecretariatCoreTests/CommandTests.swift,Tests/SecretariatCoreTests/TestSupport.swift,script/migrate_v1.swift,script/build_migrate_v1.sh,script/agent_acceptance.py,Resources/Info.plist |
 | T019 | P14 | UC14 | R020,R024 | Profil `*` und `profile which` mit Tests (32/32); 1.1.0 auf allen vier Macs; Profil werkzeuge läuft im aktuellen Ordner mit Datei; Prüfliste 296 Werte/20 Kennungen/144 Profile ohne Werte; frische Claude-Sitzung ohne und mit Hinweis grün, kein Wert in der Ausgabe | build,unit,macos | normal | T018 | Sources/SecretariatCore/Models.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/Commands.swift,Sources/SecretariatCore/AgentIntegration.swift,Sources/SecretariatCore/Launcher.swift,Sources/SecretariatCore/ProjectInstructions.swift,Tests/SecretariatCoreTests/CoreTests.swift,Tests/SecretariatCoreTests/CommandTests.swift,script/bulk_import.py,script/e2e_session.py,script/cleanup_test_items.swift,script/build_cleanup_test_items.sh,Resources/Info.plist |
+| T020 | P15 | UC15 | R020,R024,R025 | Arten mit beschrifteten Feldern im Kern; geführter Dialog (Screenshot geprüft); globale Zuordnung über werkzeuge; Nutzereintrag moinsen → moinsen/deepseek repariert und global; 1.2.0 auf allen Macs | build,unit,macos | normal | T019 | Sources/SecretariatCore/Models.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Editors.swift,Sources/Secretariat/Views.swift,Sources/SecretariatCore/Launcher.swift,Resources/Info.plist |
 
 ## Modules
 

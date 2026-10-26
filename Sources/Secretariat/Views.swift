@@ -307,8 +307,8 @@ struct ItemDetail: View {
     private func fieldRow(_ field: ItemField) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(field.name).font(.system(.body, design: .monospaced))
-                Text(field.kind.title).font(.caption).foregroundStyle(.secondary)
+                Text(item.kind.spec(field.name)?.label ?? field.name)
+                Text("\(field.name) · \(field.kind.title)").font(.caption).foregroundStyle(.secondary)
             }.frame(width: 150, alignment: .leading)
             switch field.kind {
             case .identifier:

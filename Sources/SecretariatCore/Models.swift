@@ -32,46 +32,83 @@ public enum FieldKind: String, Codable, CaseIterable, Sendable {
     public var isUsable: Bool { self != .personal }
 }
 
+/// One field an item kind asks for, with a plain-language label.
+public struct FieldSpec: Sendable {
+    public let name: String
+    public let label: String
+    public let kind: FieldKind
+    public let required: Bool
+    public let prompt: String
+    /// Variable suffix when the item is made available everywhere (`<ANBIETER>_<suffix>`).
+    public let envSuffix: String?
+    init(_ name: String, _ label: String, _ kind: FieldKind, required: Bool = false, prompt: String = "", env: String? = nil) {
+        self.name = name; self.label = label; self.kind = kind; self.required = required; self.prompt = prompt; envSuffix = env
+    }
+}
+
 public enum ItemKind: String, Codable, CaseIterable, Sendable {
-    case account, login, api, token, certificate, database, server, note
+    case api, token, account, login, certificate, database, server, note
 
     public var title: String {
         switch self {
+        case .api: "API-Schlüssel"
+        case .token: "Client-ID und Secret"
         case .account: "Konto"
-        case .login: "Anmeldung"
-        case .api: "API-Zugang"
-        case .token: "Dienst-Token"
-        case .certificate: "Zertifikat oder Schlüsseldatei"
+        case .login: "Website-Anmeldung"
+        case .certificate: "Schlüsseldatei"
         case .database: "Datenbank"
         case .server: "Server"
         case .note: "Notiz"
         }
     }
+    public var explanation: String {
+        switch self {
+        case .api: "Ein Schlüssel für einen Dienst wie OpenAI, DeepSeek oder Resend."
+        case .token: "Ein Paar aus öffentlicher ID und geheimem Secret, z. B. OAuth oder Cloudflare Access."
+        case .account: "Kontodaten wie Login, Team- oder Account-ID; das Passwort bleibt nur für dich."
+        case .login: "Zugang zu einer Website. Das Passwort bekommt kein Programm."
+        case .certificate: "Eine Datei wie .p8, .p12 oder ein Keystore. Programme bekommen eine temporäre Kopie."
+        case .database: "Verbindungsdaten einer Datenbank."
+        case .server: "Adresse und Benutzer eines Rechners."
+        case .note: "Freier Text nur für dich."
+        }
+    }
     public var symbol: String {
         switch self {
-        case .account: "building.2"
-        case .login: "person.badge.key"
         case .api: "key.horizontal"
         case .token: "ticket"
+        case .account: "building.2"
+        case .login: "person.badge.key"
         case .certificate: "doc.badge.gearshape"
         case .database: "cylinder.split.1x2"
         case .server: "server.rack"
         case .note: "note.text"
         }
     }
-    /// Suggested fields for a new item of this kind.
-    public var template: [(String, FieldKind)] {
+    /// What this kind asks for, in order. Further fields can be added freely.
+    public var fields: [FieldSpec] {
         switch self {
-        case .account: [("login", .identifier), ("team_id", .identifier), ("password", .personal)]
-        case .login: [("username", .identifier), ("url", .identifier), ("password", .personal)]
-        case .api: [("key_id", .identifier), ("secret", .secret)]
-        case .token: [("client_id", .identifier), ("client_secret", .secret)]
-        case .certificate: [("key_id", .identifier), ("private_key", .file)]
-        case .database: [("host", .identifier), ("port", .identifier), ("user", .identifier), ("password", .secret)]
-        case .server: [("host", .identifier), ("user", .identifier)]
-        case .note: [("notes", .personal)]
+        case .api: [FieldSpec("api_key", "Schlüssel", .secret, required: true, prompt: "sk-…", env: "API_KEY"),
+                    FieldSpec("env_var", "Variablenname", .identifier, prompt: "OPENAI_API_KEY")]
+        case .token: [FieldSpec("client_id", "Client-ID", .identifier, required: true, env: "CLIENT_ID"),
+                      FieldSpec("client_secret", "Client-Secret", .secret, required: true, env: "CLIENT_SECRET")]
+        case .account: [FieldSpec("login", "Login oder E-Mail", .identifier, required: true),
+                        FieldSpec("account_id", "Account- oder Team-ID", .identifier),
+                        FieldSpec("password", "Passwort (nur für dich)", .personal)]
+        case .login: [FieldSpec("url", "Adresse", .identifier, prompt: "https://…"),
+                      FieldSpec("username", "Benutzername", .identifier, required: true),
+                      FieldSpec("password", "Passwort (nur für dich)", .personal, required: true)]
+        case .certificate: [FieldSpec("private_key", "Datei", .file, required: true, env: "KEY_PATH"),
+                            FieldSpec("key_id", "Key-ID", .identifier, env: "KEY_ID"),
+                            FieldSpec("password", "Passwort der Datei", .secret)]
+        case .database: [FieldSpec("host", "Host", .identifier, required: true), FieldSpec("port", "Port", .identifier),
+                         FieldSpec("user", "Benutzer", .identifier), FieldSpec("password", "Passwort", .secret, required: true),
+                         FieldSpec("database", "Datenbank", .identifier)]
+        case .server: [FieldSpec("host", "Host oder IP", .identifier, required: true), FieldSpec("user", "Benutzer", .identifier)]
+        case .note: [FieldSpec("notes", "Notiz", .personal, required: true)]
         }
     }
+    public func spec(_ name: String) -> FieldSpec? { fields.first { $0.name == name } }
 }
 
 public struct ItemField: Codable, Equatable, Identifiable, Sendable {

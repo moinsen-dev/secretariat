@@ -18,23 +18,54 @@ struct FieldDraft: Identifiable {
 struct ItemDraft: Identifiable {
     let id = UUID()
     var existing: ItemMeta?
-    var path = ""
     var kind = ItemKind.api
+    /// Path parts: moinsen/<provider>[/<label>]. With `customPath` the path is typed directly (Erweitert).
+    var provider = ""
+    var label = ""
+    var customPath = false
+    var typedPath = ""
     var source = ""
     var expires = ""
     var fields: [FieldDraft] = []
+    /// Bind the usable fields into the profile "werkzeuge" (available in every folder).
+    var everywhere = false
     var revision = 0
 
     init(revision: Int) {
         self.revision = revision
-        fields = kind.template.map { FieldDraft(name: $0.0, kind: $0.1) }
+        fields = Self.template(kind)
     }
     init(item: ItemMeta, revision: Int) {
-        existing = item; path = item.path; kind = item.kind; source = item.source; expires = item.expires ?? ""
+        existing = item; kind = item.kind; source = item.source; expires = item.expires ?? ""
+        let parts = item.path.split(separator: "/").map(String.init)
+        if parts.count >= 2, parts.count <= 3, parts[0] == "moinsen" {
+            provider = parts[1]; label = parts.count == 3 ? parts[2] : ""
+        } else { customPath = true; typedPath = item.path }
         fields = item.fields.map {
             FieldDraft(id: $0.id, name: $0.name, kind: $0.kind, value: $0.value ?? "", fileName: $0.fileName, storedName: $0.name)
         }
         self.revision = revision
+    }
+    static func template(_ kind: ItemKind) -> [FieldDraft] { kind.fields.map { FieldDraft(name: $0.name, kind: $0.kind) } }
+
+    static func slug(_ text: String) -> String {
+        text.lowercased().replacingOccurrences(of: #"[^a-z0-9._@-]+"#, with: "-", options: .regularExpression)
+            .trimmingCharacters(in: CharacterSet(charactersIn: "-."))
+    }
+    var path: String {
+        if customPath { return typedPath.trimmingCharacters(in: .whitespacesAndNewlines) }
+        let p = Self.slug(provider), l = Self.slug(label)
+        return p.isEmpty ? "" : "moinsen/\(p)" + (l.isEmpty ? "" : "/\(l)")
+    }
+    /// Variable prefix for "everywhere": OPENAI from moinsen/openai.
+    var envPrefix: String { Self.slug(provider).uppercased().replacingOccurrences(of: #"[^A-Z0-9]+"#, with: "_", options: .regularExpression) }
+    func field(_ name: String) -> FieldDraft? { fields.first { $0.name == name } }
+    /// Required fields of the kind that are still empty (stored values count as filled).
+    var missing: [String] {
+        (path.isEmpty ? [customPath ? "Ablage" : "Anbieter oder Konto"] : []) + kind.fields.filter(\.required).filter { spec in
+            guard let f = field(spec.name) else { return true }
+            return f.value.isEmpty && f.fileData == nil && f.storedName == nil
+        }.map(\.label)
     }
 }
 
@@ -111,7 +142,10 @@ final class AppModel {
             let expires = draft.expires.trimmingCharacters(in: .whitespaces)
             let meta = ItemMeta(
                 id: draft.existing?.id ?? UUID(), path: draft.path, kind: draft.kind,
-                fields: draft.fields.map {
+                // Optional fields of the kind that stayed empty are not stored.
+                fields: draft.fields.filter { f in
+                    !(draft.kind.spec(f.name).map { !$0.required } ?? false) || !f.value.isEmpty || f.fileData != nil || f.storedName != nil
+                }.map {
                     ItemField(id: $0.id, name: $0.name.trimmingCharacters(in: .whitespaces), kind: $0.kind,
                               value: $0.kind == .identifier ? $0.value.trimmingCharacters(in: .whitespacesAndNewlines) : nil,
                               fileName: $0.kind == .file ? $0.fileName : nil)
@@ -129,9 +163,23 @@ final class AppModel {
             }
             try vault.save(meta, secrets: secrets)
             savedID = meta.id
+            if draft.everywhere { try makeAvailableEverywhere(draft, meta: meta, vault: vault) }
         }
         if saved { selectedItem = savedID }
         return saved
+    }
+    /// Binds the item's usable fields into the profile "werkzeuge" (runs in any folder): OPENAI_API_KEY etc.
+    private func makeAvailableEverywhere(_ draft: ItemDraft, meta: ItemMeta, vault: Vault) throws {
+        let config = try ConfigurationStore(paths: paths).load()
+        var profile = config.profiles.first { $0.name == "werkzeuge" } ?? Profile(name: "werkzeuge", directory: Profile.anywhere)
+        for field in meta.fields where field.kind.isUsable {
+            guard let suffix = draft.kind.spec(field.name)?.envSuffix else { continue }
+            var variable = "\(draft.envPrefix)_\(suffix)"
+            if field.name == "api_key", let custom = meta.field("env_var")?.value, !custom.isEmpty { variable = custom }
+            profile.bindings.removeAll { $0.variable == variable }
+            profile.bindings.append(SecretariatCore.Binding(variable: variable, itemID: meta.id, field: field.name))
+        }
+        try Vault(paths: paths).saveProfile(profile)
     }
     func deleteItem(_ item: ItemMeta) {
         if perform({ try vault.delete(id: item.id) }) { selectedItem = nil }
