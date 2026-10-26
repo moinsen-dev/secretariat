@@ -48,6 +48,7 @@ public enum ProjectInstructions {
         1. Prüfe die Verfügbarkeit: `\(launcher) check \(name) --json`.
         2. Bei `ok: true` starte den benötigten Projektbefehl durch Secretariat, z. B. `\(launcher) run \(name) -- npm test`. Ersetze `npm test` durch den zum Projekt passenden Befehl.
         3. Bei einem Fehler nenne die fehlende Variable oder den gemeldeten Zugriffsschritt. Schlüsselwerte pflegt der Nutzer in der Secretariat-App.
+        4. Braucht das Projekt eine weitere Variable, ordne sie selbst zu: `\(launcher) keys --json` zeigt die vorhandenen Schlüsselnamen, `\(launcher) profile bind \(name) VARIABLE SCHLÜSSELNAME` verbindet sie. Fehlt der Schlüssel ganz, nenne dem Nutzer den Variablennamen; er legt den Wert in der App an.
 
         Der Projektbefehl erhält die zugeordneten Werte ausschließlich beim Start. Halte Credentialwerte aus Dateien, Chat und Toolausgaben heraus; verwende gezielte Projektbefehle. Führe die Coding-Sitzung mit ihrer normalen Anmeldung aus. Dieser Ablauf setzt den Mac mit installiertem Secretariat voraus; eine Cloud-Umgebung hat keinen direkten Zugriff auf dessen Schlüsselbund.
         """

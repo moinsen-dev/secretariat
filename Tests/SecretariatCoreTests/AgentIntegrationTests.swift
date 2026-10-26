@@ -131,3 +131,60 @@ private struct AgentFixture {
     #expect(try Data(contentsOf: agents) == original)
     #expect(try Data(contentsOf: claude) == original)
 }
+
+@Test func keysListNamesAndUsageWithoutReadingValues() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    let keys = try f.service.keys()
+    let json = try AgentCommand.json(keys)
+    #expect(f.credentials.reads == 0)
+    #expect(keys.keys.map(\.name) == ["Künstlicher Test"])
+    #expect(keys.keys.first?.profiles == ["agent-test"])
+    #expect(!json.contains("never-output-this-value"))
+}
+
+@Test func profileCreateBindUnbindDeleteRoundTrip() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    let dir = f.root.appendingPathComponent("projekt"); try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+    let created = try f.service.createProfile(name: "neu", directory: dir.path, command: "pnpm dev")
+    #expect(created.profile.directory == dir.resolvingSymlinksInPath().path)
+    #expect(created.profile.variables.isEmpty)
+    // bind by name, case-insensitive fallback; rebinding a variable replaces it
+    _ = try f.service.bind(profile: "neu", variable: "GEMINI_API_KEY", key: "künstlicher test")
+    let rebound = try f.service.bind(profile: "neu", variable: "GEMINI_API_KEY", key: "Künstlicher Test")
+    #expect(rebound.profile.variables == ["GEMINI_API_KEY"])
+    #expect(try f.service.check("neu").ok)
+    #expect(try f.service.keys().keys.first?.profiles == ["agent-test", "neu"])
+    let unbound = try f.service.unbind(profile: "neu", variable: "GEMINI_API_KEY")
+    #expect(unbound.profile.variables.isEmpty)
+    _ = try f.service.deleteProfile(name: "neu")
+    #expect(throws: AgentError.self) { try f.service.describe("neu") }
+    #expect(!(try f.service.profiles().profiles.map(\.name).contains("neu")))
+}
+
+@Test func profileCommandsRejectInvalidInputWithStableCodes() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    func code(_ body: () throws -> Void) -> String? {
+        do { try body(); return nil } catch let e as AgentError { return e.code } catch { return "other" }
+    }
+    #expect(code { _ = try f.service.createProfile(name: "agent-test", directory: f.root.path, command: nil) } == "profile_exists")
+    #expect(code { _ = try f.service.createProfile(name: "x", directory: f.root.appendingPathComponent("fehlt").path, command: nil) } == "invalid_profile")
+    #expect(code { _ = try f.service.createProfile(name: "-bad name", directory: f.root.path, command: nil) } == "invalid_profile")
+    #expect(code { _ = try f.service.bind(profile: "agent-test", variable: "OK_VAR", key: "gibt es nicht") } == "key_not_found")
+    #expect(code { _ = try f.service.bind(profile: "agent-test", variable: "1BAD", key: "Künstlicher Test") } == "invalid_profile")
+    #expect(code { _ = try f.service.unbind(profile: "agent-test", variable: "NOPE") } == "variable_not_bound")
+    #expect(code { _ = try f.service.deleteProfile(name: "fehlt") } == "profile_not_found")
+    // a failed mutation leaves the configuration untouched
+    let before = try Data(contentsOf: f.store.paths.configuration)
+    _ = code { _ = try f.service.bind(profile: "agent-test", variable: "1BAD", key: "Künstlicher Test") }
+    #expect(try Data(contentsOf: f.store.paths.configuration) == before)
+    #expect(f.credentials.reads == 0)
+}
+
+@Test func profileArgumentParserHandlesValuesAndRejectsUnknownOptions() throws {
+    let p = try ProfileCommand.parse(["neu", "--dir", "/tmp/x", "--command", "--weird but valid", "--json"][...], valueOptions: ["--dir", "--command"])
+    #expect(p.positional == ["neu"]); #expect(p.options["--dir"] == "/tmp/x")
+    #expect(p.options["--command"] == "--weird but valid"); #expect(p.json)
+    #expect(throws: AgentError.self) { try ProfileCommand.parse(["neu", "--force"][...], valueOptions: ["--dir"]) }
+    #expect(throws: AgentError.self) { try ProfileCommand.parse(["neu", "--dir"][...], valueOptions: ["--dir"]) }
+    #expect(throws: AgentError.self) { try ProfileCommand.parse(["--json", "--json"][...], valueOptions: []) }
+}

@@ -27,6 +27,7 @@ parser.add_argument('--timeout', type=int, default=150)
 parser.add_argument('--denied-fixture', action='store_true', help='Verify fail-closed CLI against a deliberately untrusted artificial item')
 parser.add_argument('--opencode-model', help='Optional explicit model; otherwise keep the user default')
 parser.add_argument('--codex-policy', choices=['workspace-write', 'user'], default='workspace-write')
+parser.add_argument('--self-wire', action='store_true', help='No profile is prepared: the client must list keys, create the profile, bind the variable, check and run (0.3)')
 args = parser.parse_args()
 binary = args.binary.resolve()
 artifacts = ROOT / '.artifacts'
@@ -64,7 +65,7 @@ with tempfile.TemporaryDirectory(prefix='secretariat-agent-acceptance-') as temp
     service = require(command([helper, 'service', home])).stdout.strip()
     require(command([helper, 'seed-denied' if args.denied_fixture else 'seed', service, account, binary, fake_value]))
     try:
-        config = {'version': 1, 'revision': 0, 'secrets': [{'id': account, 'name': 'Prüfung Agenten'}], 'profiles': [
+        config = {'version': 1, 'revision': 0, 'secrets': [{'id': account, 'name': 'Prüfung Agenten'}], 'profiles': [] if args.self_wire else [
             {'id': str(uuid.uuid4()), 'name': 'agent-pruefung', 'directory': str(project), 'command': 'python3 verify.py', 'bindings': [
                 {'id': str(uuid.uuid4()), 'variable': 'SECRETARIAT_ACCEPTANCE', 'secretID': account}]}]}
         metadata = home / 'profiles.json'
@@ -79,9 +80,12 @@ with tempfile.TemporaryDirectory(prefix='secretariat-agent-acceptance-') as temp
             'print("SECRETARIAT_TEST_OK")\n')
         (project / 'AGENTS.md').write_text('# Acceptance project\nExecute only the requested verification; preserve project files.\n')
         (project / 'CLAUDE.md').write_text('# Acceptance project\nUse the project instructions below.\n')
-        require(command([binary, 'setup', 'agent-pruefung', '--json'], env=environment))
+        if not args.self_wire:
+            require(command([binary, 'setup', 'agent-pruefung', '--json'], env=environment))
         check = command([binary, 'check', 'agent-pruefung', '--json'], env=environment, timeout=60)
-        if args.denied_fixture:
+        if args.self_wire:
+            assert check.returncode == 1 and json.loads(check.stdout)['error']['code'] == 'profile_not_found', 'self-wire must start without a profile'
+        elif args.denied_fixture:
             assert check.returncode == 2 and not json.loads(check.stdout)['ok']
             elapsed = []
             for _ in range(3):
@@ -106,7 +110,13 @@ with tempfile.TemporaryDirectory(prefix='secretariat-agent-acceptance-') as temp
                 results['clients'][client] = {'status': 'not_installed'}
                 continue
             receipt = project / f'receipt-{client}.json'
-            prompt = (f'Read {project / "AGENTS.md"} (and {project / "CLAUDE.md"} if applicable) in this acceptance project. '
+            prompt = (f'This project needs the environment variable SECRETARIAT_ACCEPTANCE for its test verify.py. '
+                      f'Wire it yourself with the Secretariat CLI {binary} (see `{binary} --help`): list the key names with '
+                      f'`keys --json`, create a profile named agent-pruefung for the folder {project}, bind SECRETARIAT_ACCEPTANCE '
+                      f'to the key whose name starts with "Prüfung", check the profile with --json, then run the test verify.py with '
+                      f'argument {client} through Secretariat using {shutil.which("python3")}. Never print environment or credential '
+                      'values, do not create .env files, do not modify project files. Report only whether the test passed.') if args.self_wire else (
+                      f'Read {project / "AGENTS.md"} (and {project / "CLAUDE.md"} if applicable) in this acceptance project. '
                       f'Follow its Secretariat instructions: first check the profile with --json; '
                       f'if ready, run the project test verify.py with argument {client} through Secretariat using '
                       f'{shutil.which("python3")}. Do not print environment or credential values. '
@@ -153,6 +163,14 @@ with tempfile.TemporaryDirectory(prefix='secretariat-agent-acceptance-') as temp
                 'exit_code': process.returncode, 'elapsed_seconds': round(time.monotonic() - started, 1),
                 'receipt': json.loads(receipt.read_text()) if receipt.exists() else None,
                 'artificial_value_in_output': fake_value in output + errors}
+            if args.self_wire:
+                wired = json.loads((home / 'profiles.json').read_text())
+                profile = next((p for p in wired['profiles'] if p['name'] == 'agent-pruefung'), None)
+                results['clients'][client]['self_wired_profile'] = bool(profile and Path(profile['directory']).resolve() == project
+                    and any(b['variable'] == 'SECRETARIAT_ACCEPTANCE' and b['secretID'] == account for b in profile['bindings']))
+                results['clients'][client]['env_files_created'] = sorted(p.name for p in project.glob('.env*'))
+                if not results['clients'][client]['self_wired_profile'] or results['clients'][client]['env_files_created']:
+                    results['clients'][client]['status'] = 'not_verified'
             print(json.dumps({client: results['clients'][client]}), flush=True)
     except Exception as error:
         results['fixture_error'] = str(error).replace(fake_value, '[ARTIFICIAL_VALUE]')
@@ -160,7 +178,7 @@ with tempfile.TemporaryDirectory(prefix='secretariat-agent-acceptance-') as temp
         removed = command([helper, 'remove', service, account, binary, fake_value])
         results['fixture_credential_removed'] = removed.returncode == 0
         if removed.returncode: print('Cleanup status:', removed.stderr, flush=True)
-(artifacts / ('agent-acceptance-' + ('denied' if args.denied_fixture else ('-'.join(args.clients) if args.clients else 'process')) + '.json')).write_text(json.dumps(results, indent=2))
+(artifacts / ('agent-acceptance-' + ('self-wire-' if args.self_wire else '') + ('denied' if args.denied_fixture else ('-'.join(args.clients) if args.clients else 'process')) + '.json')).write_text(json.dumps(results, indent=2))
 print(json.dumps(results, indent=2))
 
 if results.get("fixture_error") or not results.get("fixture_credential_removed") or any(item["status"] != "passed" for item in results["clients"].values()):
