@@ -13,3 +13,7 @@
 ## Nachtrag 1.3.0 (Build 695e61a)
 
 - Auf Wunsch von Uli komplett englisch: App, CLI-Ausgaben, Fehlermeldungen, Hilfe, Projektanweisungen, Prüfliste, Sitzungshinweis. Fehlercodes, JSON-Schlüssel und Statuswerte unverändert; `usedBy` nennt Ziele jetzt `target:NAME`. 32/32; Dialog „Add Item“ per Screenshot geprüft; 1.3.0 auf allen Macs, `check werkzeuge` ready.
+
+## Nachtrag 1.3.1 (Build 0980775)
+
+- Suche in der Werkzeugleiste (⌘F) filtert gleichzeitig Einträge (Pfad, Art, Herkunft, Feldname/-bezeichnung, Kennungswert), Profile in der Seitenleiste (Name, Ordner, Variablen, zugeordnete Einträge) und Ziele; Trefferzahl über der Liste. Echt per Tastaturereignis in einer Testinstanz geprüft: „openai“ → 1 von 2 Einträgen, 1 Profil (Screenshot). 32/32, 1.3.1 auf allen Macs.
