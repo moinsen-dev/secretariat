@@ -40,3 +40,7 @@ PASS — mit der Einschränkung, dass es eine Selbstprüfung ist und T013 eine N
 ## Plan-Prüfung 0.4 (Selbstprüfung)
 
 R018/P11/UC11/T016 ergänzt. Anforderung prüfbar (Namen-only-Ausgabe, --replace, Vorabprüfung), Aufgabe nennt alle geänderten Quellen, Abhängigkeit T015 korrekt, Lockerung der Wertregel als Entscheidung mit Begründung dokumentiert. PASS.
+
+## Plan-Prüfung 0.4.1 (Selbstprüfung)
+
+R019/P12/UC12/T017 ergänzt; Abgleich über Etikett prüfbar mit zwei Konfigurationen; alle geänderten Quellen in Files. PASS.
