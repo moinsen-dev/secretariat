@@ -1,4 +1,4 @@
-# Regression 1.0 (Build 80e78e5)
+# Regression 1.0 (Build 80e78e5; erneut geprüft auf 533ffaa, 1.1.0: gleiche Prüfungen grün, 32/32)
 
 Umbau des Kerns (Einträge statt Einzelschlüssel); alle älteren Aufgaben neu geprüft, weil ihre Quellen sich geändert haben.
 

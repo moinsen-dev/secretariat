@@ -48,3 +48,7 @@ R019/P12/UC12/T017 ergänzt; Abgleich über Etikett prüfbar mit zwei Konfigurat
 ## Plan-Prüfung 1.0 (Selbstprüfung)
 
 R013/R016/R018/R019 auf das Eintragsmodell umformuliert (Verhalten hat sich geändert), R020–R023, P13, UC13, T018 ergänzt; Files gelöschter Dateien auf die Nachfolger umgestellt; T018 nennt alle geänderten Quellen. Entfernte Befehle ohne Kompatibilitätsschicht, wie im Projektgrundsatz. PASS.
+
+## Plan-Prüfung 1.1 (Selbstprüfung)
+
+R024/P14/UC14/T019 ergänzt; prüfbar über Unit-Tests, echten Werkzeug-Lauf und End-to-End-Sitzung. PASS.
