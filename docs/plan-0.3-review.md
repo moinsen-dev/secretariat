@@ -44,3 +44,7 @@ R018/P11/UC11/T016 ergänzt. Anforderung prüfbar (Namen-only-Ausgabe, --replace
 ## Plan-Prüfung 0.4.1 (Selbstprüfung)
 
 R019/P12/UC12/T017 ergänzt; Abgleich über Etikett prüfbar mit zwei Konfigurationen; alle geänderten Quellen in Files. PASS.
+
+## Plan-Prüfung 1.0 (Selbstprüfung)
+
+R013/R016/R018/R019 auf das Eintragsmodell umformuliert (Verhalten hat sich geändert), R020–R023, P13, UC13, T018 ergänzt; Files gelöschter Dateien auf die Nachfolger umgestellt; T018 nennt alle geänderten Quellen. Entfernte Befehle ohne Kompatibilitätsschicht, wie im Projektgrundsatz. PASS.
