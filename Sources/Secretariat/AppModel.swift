@@ -45,6 +45,10 @@ struct ItemDraft: Identifiable {
         fields = item.fields.map {
             FieldDraft(id: $0.id, name: $0.name, kind: $0.kind, value: $0.value ?? "", fileName: $0.fileName, storedName: $0.name)
         }
+        // Optional fields of the kind that were left empty are not stored; offer them again when editing.
+        for spec in item.kind.fields where !fields.contains(where: { $0.name == spec.name }) {
+            fields.append(FieldDraft(name: spec.name, kind: spec.kind))
+        }
         self.revision = revision
     }
     static func template(_ kind: ItemKind) -> [FieldDraft] { kind.fields.map { FieldDraft(name: $0.name, kind: $0.kind) } }
