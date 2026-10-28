@@ -93,5 +93,5 @@ import Testing
 
 @Test func gitGuardIgnoresPlainWordsButKeepsCredentialLikeValues() {
     #expect(!GitGuard.distinctive("identifier")); #expect(!GitGuard.distinctive("short1"))
-    #expect(GitGuard.distinctive("password123")); #expect(GitGuard.distinctive("sk-proj-abc")); #expect(GitGuard.distinctive("averyveryverylongword"))
+    #expect(GitGuard.distinctive("password123")); #expect(GitGuard.distinctive("sk-proj-abc9")); #expect(GitGuard.distinctive("averyveryverylongword"))
 }
