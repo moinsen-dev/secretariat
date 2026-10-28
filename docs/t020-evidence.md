@@ -22,3 +22,8 @@
 
 - Neue Art „Company“ (Organisation → `<org>/company`, Standard `moinsen/company`) mit Impressumsfeldern; Secretariat schreibt daraus `~/.claude/rules/company.md` (immer geladen, ohne Werte → Hinweis „Not set up yet“). Dialog per Screenshot geprüft (Organisation vorbelegt, Ablage moinsen/company, Pflichtfelder markiert). Test companyRuleListsIdentityAndNamesWhatIsMissing; 33/33.
 - Build-Skript nutzt `xcrun swift`, weil eine swiftly-Toolchain im PATH vor Xcode stand (CryptoKit fehlte).
+
+## Nachtrag 1.5.0 (Build 0e7cacb)
+
+- Vorlagen sind Daten: synchronisierte Schlüsselbund-Einträge (eigener Dienst), in der App unter „Templates“ bearbeitbar (anlegen, Felder mit Bezeichnung/Art/Pflicht/Platzhalter/Env-Endung, Reihenfolge, ausblenden/wiederherstellen eingebauter, zurücksetzen) und per CLI (`template list|show|create|set|field add/remove|delete|reset`). Art eines Eintrags = Vorlagen-ID (Text); unbekannte Vorlage → Eintrag mit schlichten Feldnamen. company.md über Vorlagen-Merkmal „identity“. Migrationsprogramm 0.x entfernt.
+- Geprüft: Test templatesAreDataUsersCanExtendHideAndReset; 34/34; Vorlagenliste und Editor per Screenshot im Testheim mit echtem Schlüsselbund (danach aufgeräumt); echte Daten nach Installation: moinsen/company als Company erkannt, company.md unverändert, werkzeuge ready, 211 Einträge. 1.5.0 auf M4, M1, Mini.
