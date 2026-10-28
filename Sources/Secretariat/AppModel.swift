@@ -38,7 +38,8 @@ struct ItemDraft: Identifiable {
     init(item: ItemMeta, revision: Int) {
         existing = item; kind = item.kind; source = item.source; expires = item.expires ?? ""
         let parts = item.path.split(separator: "/").map(String.init)
-        if parts.count >= 2, parts.count <= 3, parts[0] == "moinsen" {
+        if item.kind == .company, parts.count == 2, parts[1] == "company" { provider = parts[0] }
+        else if parts.count >= 2, parts.count <= 3, parts[0] == "moinsen" {
             provider = parts[1]; label = parts.count == 3 ? parts[2] : ""
         } else { customPath = true; typedPath = item.path }
         fields = item.fields.map {
@@ -54,6 +55,8 @@ struct ItemDraft: Identifiable {
     }
     var path: String {
         if customPath { return typedPath.trimmingCharacters(in: .whitespacesAndNewlines) }
+        // A company lives at <organisation>/company (moinsen/company is the default every agent reads first).
+        if kind == .company { let o = Self.slug(provider); return o.isEmpty ? "" : "\(o)/company" }
         let p = Self.slug(provider), l = Self.slug(label)
         return p.isEmpty ? "" : "moinsen/\(p)" + (l.isEmpty ? "" : "/\(l)")
     }
@@ -62,7 +65,7 @@ struct ItemDraft: Identifiable {
     func field(_ name: String) -> FieldDraft? { fields.first { $0.name == name } }
     /// Required fields of the kind that are still empty (stored values count as filled).
     var missing: [String] {
-        (path.isEmpty ? [customPath ? "Location" : "Provider or account"] : []) + kind.fields.filter(\.required).filter { spec in
+        (path.isEmpty ? [customPath ? "Location" : (kind == .company ? "Organisation" : "Provider or account")] : []) + kind.fields.filter(\.required).filter { spec in
             guard let f = field(spec.name) else { return true }
             return f.value.isEmpty && f.fileData == nil && f.storedName == nil
         }.map(\.label)

@@ -167,3 +167,17 @@ extension Vault {
     #expect(try f.service.check("werkzeuge").ok)
     #expect(throws: AgentError.self) { try ProjectInstructions.preview(profile: try f.service.profile(named: "werkzeuge"), executable: "/tmp/s") }
 }
+
+@Test func companyRuleListsIdentityAndNamesWhatIsMissing() {
+    let empty = CompanyRule.render([])
+    #expect(empty.contains("Not set up yet"))
+    let company = ItemMeta(path: "moinsen/company", kind: .company, fields: [
+        ItemField(name: "legal_name", kind: .identifier, value: "Example GmbH"),
+        ItemField(name: "city", kind: .identifier, value: "Hamburg"),
+        ItemField(name: "bank_note", kind: .identifier, value: "extra")])
+    let text = CompanyRule.render([ItemMeta(path: "private/company", kind: .company, fields: [ItemField(name: "legal_name", kind: .identifier, value: "Privat")]), company])
+    #expect(text.contains("## `moinsen/company` (default)"))
+    #expect(text.range(of: "## `moinsen/company`")!.lowerBound < text.range(of: "## `private/company`")!.lowerBound)
+    #expect(text.contains("- Company name: Example GmbH")); #expect(text.contains("- City: Hamburg")); #expect(text.contains("- bank_note: extra"))
+    #expect(text.contains("_Not recorded:_")); #expect(text.contains("Never ask Uli"))
+}

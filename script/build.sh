@@ -2,7 +2,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
 cd "$ROOT"
-swift build
+xcrun swift build
 mkdir -p Assets dist
 if [[ ! -f Assets/AppIcon.icns ]]; then
   icon_tmp="$(mktemp -d)"
@@ -21,7 +21,7 @@ fi
 stage="$ROOT/dist/.Secretariat-stage-$$.app"
 trap 'rm -rf "$stage"' EXIT
 mkdir -p "$stage/Contents/MacOS" "$stage/Contents/Resources"
-cp "$(swift build --show-bin-path)/Secretariat" "$stage/Contents/MacOS/Secretariat"
+cp "$(xcrun swift build --show-bin-path)/Secretariat" "$stage/Contents/MacOS/Secretariat"
 cp Resources/Info.plist "$stage/Contents/Info.plist"
 cp Assets/AppIcon.icns "$stage/Contents/Resources/AppIcon.icns"
 identity="${SECRETARIAT_SIGN_IDENTITY:-}"

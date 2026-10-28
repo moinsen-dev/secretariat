@@ -18,7 +18,9 @@ struct ItemEditor: View {
             Text(draft.existing == nil ? "Add Item" : "Edit Item").font(.title2.bold())
             if draft.existing == nil { kindPicker }
             Form {
-                if !draft.customPath {
+                if !draft.customPath && draft.kind == .company {
+                    TextField("Organisation", text: $draft.provider, prompt: Text("moinsen (default), or e.g. private"))
+                } else if !draft.customPath {
                     LabeledContent("Provider or account") {
                         HStack {
                             TextField("", text: $draft.provider, prompt: Text("e.g. openai, deepseek, cloudflare"))
@@ -43,6 +45,7 @@ struct ItemEditor: View {
             .onChange(of: draft.kind) { _, kind in
                 let untouched = draft.fields.allSatisfy { $0.value.isEmpty && $0.fileData == nil }
                 if draft.existing == nil && untouched { draft.fields = ItemDraft.template(kind) }
+                if draft.existing == nil && kind == .company && draft.provider.isEmpty { draft.provider = "moinsen" }
             }
             .onChange(of: draft.provider) { _, _ in
                 if draft.kind == .api, let i = draft.fields.firstIndex(where: { $0.name == "env_var" }) {

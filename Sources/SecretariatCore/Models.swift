@@ -47,7 +47,7 @@ public struct FieldSpec: Sendable {
 }
 
 public enum ItemKind: String, Codable, CaseIterable, Sendable {
-    case api, token, account, login, certificate, database, server, note
+    case company, api, token, account, login, certificate, database, server, note
 
     public var title: String {
         switch self {
@@ -59,6 +59,7 @@ public enum ItemKind: String, Codable, CaseIterable, Sendable {
         case .database: "Database"
         case .server: "Server"
         case .note: "Note"
+        case .company: "Company"
         }
     }
     public var explanation: String {
@@ -71,6 +72,7 @@ public enum ItemKind: String, Codable, CaseIterable, Sendable {
         case .database: "Connection details for a database."
         case .server: "Address and user of a machine."
         case .note: "Free text, only for you."
+        case .company: "Who you work as: imprint, legal texts, sender details. Every agent session knows these."
         }
     }
     public var symbol: String {
@@ -83,6 +85,7 @@ public enum ItemKind: String, Codable, CaseIterable, Sendable {
         case .database: "cylinder.split.1x2"
         case .server: "server.rack"
         case .note: "note.text"
+        case .company: "building.columns"
         }
     }
     /// What this kind asks for, in order. Further fields can be added freely.
@@ -106,6 +109,19 @@ public enum ItemKind: String, Codable, CaseIterable, Sendable {
                          FieldSpec("database", "Database", .identifier)]
         case .server: [FieldSpec("host", "Host or IP", .identifier, required: true), FieldSpec("user", "User", .identifier)]
         case .note: [FieldSpec("notes", "Note", .personal, required: true)]
+        case .company: [FieldSpec("legal_name", "Company name", .identifier, required: true, prompt: "moinsen GmbH"),
+                        FieldSpec("legal_form", "Legal form", .identifier, prompt: "GmbH, UG, sole proprietor …"),
+                        FieldSpec("represented_by", "Owner / managing director", .identifier, required: true),
+                        FieldSpec("street", "Street and number", .identifier, required: true),
+                        FieldSpec("postal_code", "Postal code", .identifier, required: true),
+                        FieldSpec("city", "City", .identifier, required: true),
+                        FieldSpec("country", "Country", .identifier, prompt: "Germany"),
+                        FieldSpec("email", "Email", .identifier, required: true),
+                        FieldSpec("phone", "Phone", .identifier),
+                        FieldSpec("website", "Website", .identifier, prompt: "https://…"),
+                        FieldSpec("vat_id", "VAT ID", .identifier, prompt: "DE…"),
+                        FieldSpec("register", "Commercial register", .identifier, prompt: "Amtsgericht …, HRB …"),
+                        FieldSpec("privacy_contact", "Privacy contact", .identifier, prompt: "privacy@…")]
         }
     }
     public func spec(_ name: String) -> FieldSpec? { fields.first { $0.name == name } }
