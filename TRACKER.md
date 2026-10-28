@@ -5,25 +5,25 @@
 | ID | Status | Evidence | Reason |
 |---|---|---|---|
 | T001 | ERLEDIGT | E019 | Betroffene Bestandsnachweise beim Abschluss von 0.2 abgleichen und erneuern |
-| T002 | ERLEDIGT | E368,E369,E370 | Signiertes 0.2-Paket normal geöffnet; künstlicher Schlüsselwert via GUI und CLI-Prozess geprüft, Verweigerungsfall und Unit-/Buildchecks bestanden |
-| T003 | ERLEDIGT | E371,E372 | Schlüssel und Profil im aktuellen GUI angelegt, geändert und gelöscht; In-use-Schutz, Bindung, Neustart und Unitvalidierung geprüft |
-| T004 | ERLEDIGT | E373 | Aktueller Paketdurchlauf mit acht Prozesschecks und Unitprüfungen; Fehler vor Kindstart, Signal, I/O und Datenintegrität geprüft |
-| T005 | ERLEDIGT | E374 | Aktueller GUI-Neustart, schmaler Leerzustand, kopierter Aufruf und vorhandenes DailyInspirations-Projekt mit künstlichem Wert: Expo HTTP 200; Testdaten entfernt |
-| T006 | ERLEDIGT | E375,E376 | 0.2-Bundle entfernt und erneut installiert, Signatur/Hash/Symlink geprüft und neu installierte GUI geöffnet; Datenpfade unberührt |
-| T007 | ERLEDIGT | E377,E378 | Versionierte CLI-Auskunft, Fehlercodes und dialogfreie Profilprüfung mit aktuellem Paket und Unitprüfungen bestanden |
-| T008 | ERLEDIGT | E379,E380 | Projektanweisungen in normaler GUI mit Vorschau, Abbruch, Einrichten, Idempotenz, Neustart und Konfliktschutz geprüft |
-| T009 | ERLEDIGT | E381 | Codex und Claude Code mit Receipt; OpenCode real versucht, ECONNRESET ohne Receipt als Grenze dokumentiert; künstliche Fixtures bereinigt |
-| T010 | ERLEDIGT | E382,E383,E384,E385 | 0.2-App signiert lokal installiert, neue GUI und alte Kernabläufe samt Realprojekt geprüft; Testdaten entfernt, kein Autostart |
-| T011 | ERLEDIGT | E386,E387 | - |
-| T013 | ERLEDIGT | E390,E391 | App-ID + Developer-ID-Provisioning-Profil mit keychain-access-groups fehlt; Uli: asc auth login (Key T5YN77H557) oder Anlage im Developer-Portal |
-| T014 | ERLEDIGT | E392,E393,E394 | - |
-| T015 | ERLEDIGT | E395,E396 | - |
-| T012 | ERLEDIGT | E388,E389 | - |
-| T016 | ERLEDIGT | E397,E398,E399 | - |
-| T017 | ERLEDIGT | E400,E401,E402 | - |
-| T018 | ERLEDIGT | E403,E404,E405,E406 | - |
-| T019 | ERLEDIGT | E407,E408,E409 | - |
-| T020 | ERLEDIGT | E410,E411,E412 | - |
+| T002 | ERLEDIGT | E413,E414,E415 | Signiertes 0.2-Paket normal geöffnet; künstlicher Schlüsselwert via GUI und CLI-Prozess geprüft, Verweigerungsfall und Unit-/Buildchecks bestanden |
+| T003 | ERLEDIGT | E416,E417 | Schlüssel und Profil im aktuellen GUI angelegt, geändert und gelöscht; In-use-Schutz, Bindung, Neustart und Unitvalidierung geprüft |
+| T004 | ERLEDIGT | E418 | Aktueller Paketdurchlauf mit acht Prozesschecks und Unitprüfungen; Fehler vor Kindstart, Signal, I/O und Datenintegrität geprüft |
+| T005 | ERLEDIGT | E419 | Aktueller GUI-Neustart, schmaler Leerzustand, kopierter Aufruf und vorhandenes DailyInspirations-Projekt mit künstlichem Wert: Expo HTTP 200; Testdaten entfernt |
+| T006 | ERLEDIGT | E420,E421 | 0.2-Bundle entfernt und erneut installiert, Signatur/Hash/Symlink geprüft und neu installierte GUI geöffnet; Datenpfade unberührt |
+| T007 | ERLEDIGT | E422,E423 | Versionierte CLI-Auskunft, Fehlercodes und dialogfreie Profilprüfung mit aktuellem Paket und Unitprüfungen bestanden |
+| T008 | ERLEDIGT | E424,E425 | Projektanweisungen in normaler GUI mit Vorschau, Abbruch, Einrichten, Idempotenz, Neustart und Konfliktschutz geprüft |
+| T009 | ERLEDIGT | E426 | Codex und Claude Code mit Receipt; OpenCode real versucht, ECONNRESET ohne Receipt als Grenze dokumentiert; künstliche Fixtures bereinigt |
+| T010 | ERLEDIGT | E427,E428,E429,E430 | 0.2-App signiert lokal installiert, neue GUI und alte Kernabläufe samt Realprojekt geprüft; Testdaten entfernt, kein Autostart |
+| T011 | ERLEDIGT | E431,E432 | - |
+| T013 | ERLEDIGT | E435,E436 | App-ID + Developer-ID-Provisioning-Profil mit keychain-access-groups fehlt; Uli: asc auth login (Key T5YN77H557) oder Anlage im Developer-Portal |
+| T014 | ERLEDIGT | E437,E438,E439 | - |
+| T015 | ERLEDIGT | E440,E441 | - |
+| T012 | ERLEDIGT | E433,E434 | - |
+| T016 | ERLEDIGT | E442,E443,E444 | - |
+| T017 | ERLEDIGT | E445,E446,E447 | - |
+| T018 | ERLEDIGT | E448,E449,E450,E451 | - |
+| T019 | ERLEDIGT | E452,E453,E454 | - |
+| T020 | ERLEDIGT | E455,E456,E457 | - |
 
 ## Evidence
 
@@ -441,6 +441,51 @@
 | E410 | T020 | build | build | normal | 2026-10-26T18:27:55+00:00 | 0980775 | 4781f2deebd3b92b6b890f86 | docs/t020-evidence.md | PASS |
 | E411 | T020 | macos | ui | normal | 2026-10-26T18:27:55+00:00 | 0980775 | 4781f2deebd3b92b6b890f86 | docs/t020-evidence.md | PASS |
 | E412 | T020 | unit | unit | normal | 2026-10-26T18:27:55+00:00 | 0980775 | 4781f2deebd3b92b6b890f86 | docs/t020-evidence.md | PASS |
+| E413 | T002 | build | build | normal | 2026-10-28T07:27:08+00:00 | ee067a8 | 8d6666d83f10018a14578ed5 | docs/regression-1.0.md | PASS |
+| E414 | T002 | macos | ui | normal | 2026-10-28T07:27:08+00:00 | ee067a8 | 8d6666d83f10018a14578ed5 | docs/regression-1.0.md | PASS |
+| E415 | T002 | unit | unit | normal | 2026-10-28T07:27:08+00:00 | ee067a8 | 8d6666d83f10018a14578ed5 | docs/regression-1.0.md | PASS |
+| E416 | T003 | macos | ui | normal | 2026-10-28T07:27:09+00:00 | ee067a8 | 844448a9345dbe022be523e2 | docs/regression-1.0.md | PASS |
+| E417 | T003 | unit | unit | normal | 2026-10-28T07:27:09+00:00 | ee067a8 | 844448a9345dbe022be523e2 | docs/regression-1.0.md | PASS |
+| E418 | T004 | unit | unit | normal | 2026-10-28T07:27:09+00:00 | ee067a8 | 9ced02bfd62165938021d2c4 | docs/regression-1.0.md | PASS |
+| E419 | T005 | macos | ui | normal | 2026-10-28T07:27:09+00:00 | ee067a8 | 9d93b7231cc17610543df0a6 | docs/regression-1.0.md | PASS |
+| E420 | T006 | inspection | inspection | normal | 2026-10-28T07:27:10+00:00 | ee067a8 | 408034f7c8ded29afde867f9 | docs/regression-1.0.md | PASS |
+| E421 | T006 | macos | ui | normal | 2026-10-28T07:27:10+00:00 | ee067a8 | 408034f7c8ded29afde867f9 | docs/regression-1.0.md | PASS |
+| E422 | T007 | build | build | normal | 2026-10-28T07:27:10+00:00 | ee067a8 | 1311211b5463241d608eff49 | docs/regression-1.0.md | PASS |
+| E423 | T007 | unit | unit | normal | 2026-10-28T07:27:11+00:00 | ee067a8 | 1311211b5463241d608eff49 | docs/regression-1.0.md | PASS |
+| E424 | T008 | macos | ui | normal | 2026-10-28T07:27:11+00:00 | ee067a8 | 3c3194b07fcf7bf17e9d7974 | docs/regression-1.0.md | PASS |
+| E425 | T008 | unit | unit | normal | 2026-10-28T07:27:11+00:00 | ee067a8 | 3c3194b07fcf7bf17e9d7974 | docs/regression-1.0.md | PASS |
+| E426 | T009 | inspection | inspection | normal | 2026-10-28T07:27:11+00:00 | ee067a8 | 1e4518b94ad2be7e60b93054 | docs/regression-1.0.md | PASS |
+| E427 | T010 | build | build | normal | 2026-10-28T07:27:12+00:00 | ee067a8 | 2079e648adcfb6e248a0e9b1 | docs/regression-1.0.md | PASS |
+| E428 | T010 | inspection | inspection | normal | 2026-10-28T07:27:12+00:00 | ee067a8 | 2079e648adcfb6e248a0e9b1 | docs/regression-1.0.md | PASS |
+| E429 | T010 | macos | ui | normal | 2026-10-28T07:27:12+00:00 | ee067a8 | 2079e648adcfb6e248a0e9b1 | docs/regression-1.0.md | PASS |
+| E430 | T010 | unit | unit | normal | 2026-10-28T07:27:12+00:00 | ee067a8 | 2079e648adcfb6e248a0e9b1 | docs/regression-1.0.md | PASS |
+| E431 | T011 | build | build | normal | 2026-10-28T07:27:12+00:00 | ee067a8 | 0745b3626fc265f4aeeaddbc | docs/regression-1.0.md | PASS |
+| E432 | T011 | unit | unit | normal | 2026-10-28T07:27:12+00:00 | ee067a8 | 0745b3626fc265f4aeeaddbc | docs/regression-1.0.md | PASS |
+| E433 | T012 | inspection | inspection | normal | 2026-10-28T07:27:13+00:00 | ee067a8 | 83ec18afc52e8ce8151c1398 | docs/regression-1.0.md | PASS |
+| E434 | T012 | macos | ui | normal | 2026-10-28T07:27:13+00:00 | ee067a8 | 83ec18afc52e8ce8151c1398 | docs/regression-1.0.md | PASS |
+| E435 | T013 | build | build | normal | 2026-10-28T07:27:13+00:00 | ee067a8 | c2e3a2417637c99fc2ddf516 | docs/regression-1.0.md | PASS |
+| E436 | T013 | inspection | inspection | normal | 2026-10-28T07:27:13+00:00 | ee067a8 | c2e3a2417637c99fc2ddf516 | docs/regression-1.0.md | PASS |
+| E437 | T014 | build | build | normal | 2026-10-28T07:27:14+00:00 | ee067a8 | 53b466d0344f146cc22acd8e | docs/regression-1.0.md | PASS |
+| E438 | T014 | macos | ui | normal | 2026-10-28T07:27:14+00:00 | ee067a8 | 53b466d0344f146cc22acd8e | docs/regression-1.0.md | PASS |
+| E439 | T014 | unit | unit | normal | 2026-10-28T07:27:14+00:00 | ee067a8 | 53b466d0344f146cc22acd8e | docs/regression-1.0.md | PASS |
+| E440 | T015 | inspection | inspection | normal | 2026-10-28T07:27:14+00:00 | ee067a8 | 097a80d3aa9873e8a9090d7f | docs/regression-1.0.md | PASS |
+| E441 | T015 | macos | ui | normal | 2026-10-28T07:27:14+00:00 | ee067a8 | 097a80d3aa9873e8a9090d7f | docs/regression-1.0.md | PASS |
+| E442 | T016 | build | build | normal | 2026-10-28T07:27:15+00:00 | ee067a8 | cf384745c596e34afdf8905b | docs/regression-1.0.md | PASS |
+| E443 | T016 | macos | ui | normal | 2026-10-28T07:27:15+00:00 | ee067a8 | cf384745c596e34afdf8905b | docs/regression-1.0.md | PASS |
+| E444 | T016 | unit | unit | normal | 2026-10-28T07:27:15+00:00 | ee067a8 | cf384745c596e34afdf8905b | docs/regression-1.0.md | PASS |
+| E445 | T017 | build | build | normal | 2026-10-28T07:27:15+00:00 | ee067a8 | 58220817e68e1e12144c9f8b | docs/regression-1.0.md | PASS |
+| E446 | T017 | macos | ui | normal | 2026-10-28T07:27:16+00:00 | ee067a8 | 58220817e68e1e12144c9f8b | docs/regression-1.0.md | PASS |
+| E447 | T017 | unit | unit | normal | 2026-10-28T07:27:16+00:00 | ee067a8 | 58220817e68e1e12144c9f8b | docs/regression-1.0.md | PASS |
+| E448 | T018 | build | build | normal | 2026-10-28T07:27:16+00:00 | ee067a8 | de923abd24c26bca7228fb84 | docs/regression-1.0.md | PASS |
+| E449 | T018 | inspection | inspection | normal | 2026-10-28T07:27:16+00:00 | ee067a8 | de923abd24c26bca7228fb84 | docs/regression-1.0.md | PASS |
+| E450 | T018 | macos | ui | normal | 2026-10-28T07:27:16+00:00 | ee067a8 | de923abd24c26bca7228fb84 | docs/regression-1.0.md | PASS |
+| E451 | T018 | unit | unit | normal | 2026-10-28T07:27:16+00:00 | ee067a8 | de923abd24c26bca7228fb84 | docs/regression-1.0.md | PASS |
+| E452 | T019 | build | build | normal | 2026-10-28T07:27:17+00:00 | ee067a8 | a68e1b5246b6619fb2c65b24 | docs/regression-1.0.md | PASS |
+| E453 | T019 | macos | ui | normal | 2026-10-28T07:27:17+00:00 | ee067a8 | a68e1b5246b6619fb2c65b24 | docs/regression-1.0.md | PASS |
+| E454 | T019 | unit | unit | normal | 2026-10-28T07:27:17+00:00 | ee067a8 | a68e1b5246b6619fb2c65b24 | docs/regression-1.0.md | PASS |
+| E455 | T020 | build | build | normal | 2026-10-28T07:27:18+00:00 | ee067a8 | 03bfb05218489a75839bd935 | docs/t020-evidence.md | PASS |
+| E456 | T020 | macos | ui | normal | 2026-10-28T07:27:18+00:00 | ee067a8 | 03bfb05218489a75839bd935 | docs/t020-evidence.md | PASS |
+| E457 | T020 | unit | unit | normal | 2026-10-28T07:27:18+00:00 | ee067a8 | 03bfb05218489a75839bd935 | docs/t020-evidence.md | PASS |
 
 ## Reviews
 
@@ -620,6 +665,22 @@
 | RV172 | UC15 | self | PASS | f8f263228abadbdded9debfb | docs/t020-evidence.md |
 | RV173 | UC05 | self | PASS | d251919f719e681761a26e7e | docs/regression-1.0.md |
 | RV174 | UC07 | self | PASS | 0750c9310cc2b13d93306d14 | docs/regression-1.0.md |
+| RV175 | UC02 | self | PASS | 8511257b2b6c19be2567ca2e | docs/regression-1.0.md |
+| RV176 | UC03 | self | PASS | 501df0c80eb490e925251ef3 | docs/regression-1.0.md |
+| RV177 | UC04 | self | PASS | 4700650bdda1eb211ba58ceb | docs/regression-1.0.md |
+| RV178 | UC05 | self | PASS | 218eac718994c7754d74a769 | docs/regression-1.0.md |
+| RV179 | UC06 | self | PASS | 756f3c69c512333e5bbec613 | docs/regression-1.0.md |
+| RV180 | UC07 | self | PASS | 6ae0b30985e98714c90110df | docs/regression-1.0.md |
+| RV181 | UC08 | self | PASS | 6a63b23de9384a6f5f7a8a94 | docs/regression-1.0.md |
+| RV182 | UC09 | self | PASS | f1d57ce548dacb2fde324446 | docs/regression-1.0.md |
+| RV183 | UC10 | self | PASS | 80731cd430b68628059028d0 | docs/regression-1.0.md |
+| RV184 | UC11 | self | PASS | f6f8572760247b0197399f01 | docs/regression-1.0.md |
+| RV185 | UC12 | self | PASS | 1fe1dd4250995e5088802c6f | docs/regression-1.0.md |
+| RV186 | UC13 | self | PASS | 9a11000316e9920a532ea68d | docs/regression-1.0.md |
+| RV187 | UC14 | self | PASS | 8edb8670a82bd9aa992c2091 | docs/regression-1.0.md |
+| RV188 | UC15 | self | PASS | f3b93ad3bd6c3309919edd4a | docs/t020-evidence.md |
+| RV189 | UC05 | self | PASS | a2f32149d57bdd2a973acd4c | docs/regression-1.0.md |
+| RV190 | UC07 | self | PASS | 32b991ded290cd30da735726 | docs/regression-1.0.md |
 
 ## Releases
 
@@ -636,5 +697,6 @@
 | L009 | D001 | LOCAL | 6598dc9 | /Users/udi/Applications/Secretariat.app | E285,E286,E292,E293,E294,E295 |
 | L010 | D001 | LOCAL | 695e61a | /Users/udi/Applications/Secretariat.app | E330,E331,E337,E338,E339,E340 |
 | L011 | D001 | LOCAL | 0980775 | /Users/udi/Applications/Secretariat.app | E375,E376,E382,E383,E384,E385 |
+| L012 | D001 | LOCAL | ee067a8 | /Users/udi/Applications/Secretariat.app | E420,E421,E427,E428,E429,E430 |
 
 Status, Beleg und Kritik sind unterschiedliche Angaben. `Evidence` in der Aufgabenzeile referenziert die für ihren Abschluss maßgeblichen Beleg-IDs. Ältere Belege dürfen als Historie bleiben. Bei Reviews ist die letzte Zeile je Scope maßgeblich.

@@ -17,3 +17,8 @@
 ## Nachtrag 1.3.1 (Build 0980775)
 
 - Suche in der Werkzeugleiste (⌘F) filtert gleichzeitig Einträge (Pfad, Art, Herkunft, Feldname/-bezeichnung, Kennungswert), Profile in der Seitenleiste (Name, Ordner, Variablen, zugeordnete Einträge) und Ziele; Trefferzahl über der Liste. Echt per Tastaturereignis in einer Testinstanz geprüft: „openai“ → 1 von 2 Einträgen, 1 Profil (Screenshot). 32/32, 1.3.1 auf allen Macs.
+
+## Nachtrag 1.4.1 (Build ee067a8)
+
+- Neue Art „Company“ (Organisation → `<org>/company`, Standard `moinsen/company`) mit Impressumsfeldern; Secretariat schreibt daraus `~/.claude/rules/company.md` (immer geladen, ohne Werte → Hinweis „Not set up yet“). Dialog per Screenshot geprüft (Organisation vorbelegt, Ablage moinsen/company, Pflichtfelder markiert). Test companyRuleListsIdentityAndNamesWhatIsMissing; 33/33.
+- Build-Skript nutzt `xcrun swift`, weil eine swiftly-Toolchain im PATH vor Xcode stand (CryptoKit fehlte).
