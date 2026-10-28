@@ -12,9 +12,9 @@ workers_dev = true
 [vars]
 PRODUCT_NAME = "Secretariat"
 # Lemon Squeezy product id of Secretariat. Empty = every order is refused with 503.
-PRODUCT_ID = ""
+PRODUCT_ID = "1479989"
 # "true" only while testing with Lemon Squeezy test orders.
-ALLOW_TEST_MODE = "false"
+ALLOW_TEST_MODE = "true"
 DOWNLOAD_URL = "https://secretariat.moinsen.dev/Secretariat-latest.zip"
 # moinsen convention: transactional mail from the one verified Resend domain.
 FROM_EMAIL = "Secretariat <business@moinsen.dev>"

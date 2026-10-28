@@ -422,6 +422,7 @@ struct LicenseView: View {
                 }
             }
         }
+        .fixedSize(horizontal: false, vertical: true)
         .padding(24).frame(width: 520)
     }
 }

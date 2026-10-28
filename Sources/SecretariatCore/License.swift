@@ -81,7 +81,7 @@ public struct Licensing {
     public static let buyURL = URL(string: "https://secretariat.moinsen.dev/buy")!
     /// Public half of the issuer's keypair (raw 32 bytes, base64). The private half lives only in the
     /// Worker secret LICENSE_PRIVATE_KEY_BASE64 and in Secretariat (moinsen/secretariat-license).
-    public static let productionPublicKeyBase64 = ""
+    public static let productionPublicKeyBase64 = "ZpFO0CayUtXyG+mpRmXonXCG5zwIYOjOakVaTsWjUB4="
 
     public enum State: Equatable, Sendable {
         case licensed(email: String)

@@ -495,9 +495,10 @@ public enum Commands {
                 "\($0.file)\n" + $0.variables.map { "  \($0.name)\($0.storedAs.map { "  = in Secretariat: \($0)" } ?? "")" }.joined(separator: "\n")
             }.joined(separator: "\n"))
         case ("license", _):
-            let a = try Arguments(all.dropFirst(2), usage: usage)
+            let action = sub.hasPrefix("--") ? "" : sub
+            let a = try Arguments(all.dropFirst(action.isEmpty && !sub.isEmpty ? 1 : 2), usage: usage)
             let licensing = vault.licensing
-            switch sub {
+            switch action {
             case "activate":
                 // From a file, or the JSON block on stdin: pbpaste | secretariat license activate
                 let raw = a.positional.first.map { $0 == "-" ? nil : $0 } ?? nil
