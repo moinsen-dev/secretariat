@@ -494,6 +494,35 @@ public enum Commands {
             return (0, try json(Report(findings: findings)), findings.isEmpty ? "No .env files with values found." : findings.map {
                 "\($0.file)\n" + $0.variables.map { "  \($0.name)\($0.storedAs.map { "  = in Secretariat: \($0)" } ?? "")" }.joined(separator: "\n")
             }.joined(separator: "\n"))
+        case ("status", _):
+            // Overview for dashboards (the fleet Leitstand): names, dates and counts only — never a value.
+            let a = try Arguments(all.dropFirst(), values: ["--days", "--lines"], usage: usage)
+            let days = a.option("--days").flatMap(Int.init) ?? 30
+            let items = try vault.list()
+            let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"
+            let cutoff = f.string(from: Calendar.current.date(byAdding: .day, value: days, to: Date())!)
+            struct Expiring: Encodable { let path: String; let expires: String }
+            struct TargetState: Encodable { let name: String; let stale: [String]; let never: [String]; let missing: [String] }
+            struct Out: Encodable {
+                let schemaVersion = 2; let ok = true; let version: String; let items: Int; let profiles: Int
+                let expiring: [Expiring]; let approval: [String]; let targets: [TargetState]; let recent: [String]
+            }
+            let report = try Targets.report(vault: vault)
+            let targets = report.targets.map { t in
+                TargetState(name: t.name, stale: t.variables.filter { $0.status == "stale" }.map(\.variable),
+                            never: t.variables.filter { $0.status == "never" }.map(\.variable),
+                            missing: t.variables.filter { $0.status == "missing" }.map(\.variable))
+            }
+            let out = Out(version: CommandLineInterface.version, items: items.count, profiles: try vault.configuration.load().profiles.count,
+                          expiring: items.compactMap { i in i.expires.flatMap { $0 <= cutoff ? Expiring(path: i.path, expires: $0) : nil } }.sorted { $0.expires < $1.expires },
+                          approval: items.filter(\.needsApproval).map(\.path).sorted(), targets: targets,
+                          recent: vault.audit.tail(a.option("--lines").flatMap(Int.init) ?? 20))
+            let text = ["Secretariat \(out.version): \(out.items) items, \(out.profiles) profiles",
+                        "expiring within \(days) days: \(out.expiring.isEmpty ? "none" : out.expiring.map { "\($0.path) (\($0.expires))" }.joined(separator: ", "))",
+                        "need Touch ID: \(out.approval.isEmpty ? "none" : out.approval.joined(separator: ", "))",
+                        "targets: \(targets.isEmpty ? "none" : targets.map { "\($0.name)\($0.stale.isEmpty && $0.never.isEmpty && $0.missing.isEmpty ? " ok" : " stale \($0.stale.count) never \($0.never.count) missing \($0.missing.count)")" }.joined(separator: ", "))"]
+            return (0, try json(out), text.joined(separator: "\n"))
+
         case ("log", _):
             let a = try Arguments(all.dropFirst(), values: ["--lines"], usage: usage)
             let lines = vault.audit.tail(a.option("--lines").flatMap(Int.init) ?? 30)

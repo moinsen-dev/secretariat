@@ -117,7 +117,7 @@ public struct PreparedLaunch {
 }
 
 public enum CommandLineInterface {
-    public static let version = "1.6.0"
+    public static let version = "1.6.1"
     public static let help = """
     Secretariat \(version) – confidential data for you and your agents
 
@@ -161,6 +161,7 @@ public enum CommandLineInterface {
       secretariat item set PATH --approval on          programs need Touch ID before they get this item (off: app only)
 
     Overview
+      secretariat status [--days N] [--json]          overview: counts, expiring items, Touch ID items, targets, recent log
       secretariat registry export · scan [FOLDER] [--json] · log [--lines N] · --version
 
     The CLI never prints secret values. Enter them via the app, import or import-file.
