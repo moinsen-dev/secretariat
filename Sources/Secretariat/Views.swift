@@ -53,7 +53,11 @@ struct MainView: View {
         }
         .toolbar {
             ToolbarItem { Button { model.reload() } label: { Label("Refresh", systemImage: "arrow.clockwise") } }
+            if let badge = licenseBadge {
+                ToolbarItem { Button { model.showLicense = true } label: { Text(badge) }.help("Secretariat license") }
+            }
         }
+        .sheet(isPresented: $model.showLicense) { LicenseView(model: model) }
         .sheet(item: $model.itemEditor) { draft in ItemEditor(model: model, draft: draft) }
         .sheet(item: $model.agentSetup) { draft in AgentSetupView(model: model, draft: draft) }
         .sheet(item: $model.profileEditor) { draft in ProfileEditor(model: model, draft: draft) }
@@ -361,6 +365,64 @@ struct MainView: View {
             Button("Delete Profile", role: .destructive) { deletingProfile = profile }.buttonStyle(.borderless)
         }
         }
+    }
+}
+
+extension MainView {
+    /// Visible during the trial and after it; gone once licensed. Nothing is ever blocked.
+    var licenseBadge: String? {
+        switch model.license {
+        case .licensed: nil
+        case .trial(let days): "Trial · \(days) day\(days == 1 ? "" : "s") left"
+        case .expired: "Trial ended · Buy license"
+        }
+    }
+}
+
+struct LicenseView: View {
+    let model: AppModel
+    @State private var text = ""
+    @State private var error: String?
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Secretariat License").font(.title2.bold())
+            switch model.license {
+            case .licensed(let email):
+                Label(email.isEmpty ? "This build doesn't check licenses." : "Licensed to \(email). Thank you!", systemImage: "checkmark.seal.fill")
+                    .foregroundStyle(.green)
+            case .trial(let days):
+                Text("You're trying Secretariat: \(days) day\(days == 1 ? "" : "s") left. Everything works during the trial and afterwards — a license keeps the project going.")
+            case .expired:
+                Text("The 14-day trial has ended. Everything keeps working; please buy a license if Secretariat is useful to you.")
+            }
+            if case .licensed = model.license {} else {
+                Text("Paste the license block from your purchase email. It is stored in your iCloud Keychain and covers all your Macs.")
+                    .font(.callout).foregroundStyle(.secondary)
+                TextEditor(text: $text)
+                    .font(.system(.caption, design: .monospaced))
+                    .frame(height: 110)
+                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(.quaternary))
+                    .accessibilityLabel("License")
+                if let error { Text(error).foregroundStyle(.red).font(.callout) }
+            }
+            HStack {
+                if case .licensed = model.license {} else {
+                    Button("Buy License (39 €)") { openURL(Licensing.buyURL) }
+                }
+                Spacer()
+                Button("Close") { dismiss() }.keyboardShortcut(.cancelAction)
+                if case .licensed = model.license {} else {
+                    Button("Activate") {
+                        do { try model.activateLicense(text); error = nil; dismiss() }
+                        catch { self.error = error.localizedDescription }
+                    }.keyboardShortcut(.defaultAction).disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+            }
+        }
+        .padding(24).frame(width: 520)
     }
 }
 

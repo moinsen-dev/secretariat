@@ -16,6 +16,7 @@ public struct AppPaths: Sendable {
         return "dev.moinsen.secretariat.items.test." + digest.prefix(12).map { String(format: "%02x", $0) }.joined()
     }
     public var templateService: String { itemService.replacingOccurrences(of: ".items.", with: ".templates.") }
+    public var licenseService: String { itemService.replacingOccurrences(of: ".items.", with: ".license.") }
     public var isDefault: Bool { directory == AppPaths.defaultDirectory }
     static func canonical(_ path: String) -> String {
         for root in ["/tmp/", "/var/", "/etc/"] where path.hasPrefix("/private" + root) { return String(path.dropFirst(8)) }
@@ -127,22 +128,25 @@ public struct Vault {
     public let configuration: ConfigurationStore
     public let items: any ItemStore
     public let templates: any TemplateStore
+    public let licenses: any LicenseStore
     public let approver: any Approver
     public let audit: AuditLog
     public let registryDirectory: URL?
     public let expectedRevision: Int?
     public init(configuration: ConfigurationStore, items: any ItemStore, templates: any TemplateStore = InMemoryTemplateStore(),
-                approver: any Approver = DeviceOwnerApprover(),
+                licenses: any LicenseStore = InMemoryLicenseStore(), approver: any Approver = DeviceOwnerApprover(),
                 audit: AuditLog = AuditLog(url: nil), registryDirectory: URL? = nil, expectedRevision: Int? = nil) {
-        self.configuration = configuration; self.items = items; self.templates = templates; self.approver = approver; self.audit = audit
+        self.configuration = configuration; self.items = items; self.templates = templates; self.licenses = licenses; self.approver = approver; self.audit = audit
         self.registryDirectory = registryDirectory; self.expectedRevision = expectedRevision
     }
     public init(paths: AppPaths = AppPaths(), expectedRevision: Int? = nil) {
         self.init(configuration: ConfigurationStore(paths: paths), items: SyncedItemStore(service: paths.itemService),
-                  templates: SyncedTemplateStore(service: paths.templateService), audit: AuditLog(url: paths.auditLog), registryDirectory: paths.registryDirectory, expectedRevision: expectedRevision)
+                  templates: SyncedTemplateStore(service: paths.templateService), licenses: SyncedLicenseStore(service: paths.licenseService), audit: AuditLog(url: paths.auditLog), registryDirectory: paths.registryDirectory, expectedRevision: expectedRevision)
     }
 
     // MARK: templates
+
+    public var licensing: Licensing { Licensing(store: licenses) }
 
     public func catalog() -> TemplateCatalog { TemplateCatalog(stored: (try? templates.list()) ?? []) }
 

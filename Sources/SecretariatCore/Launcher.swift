@@ -117,7 +117,7 @@ public struct PreparedLaunch {
 }
 
 public enum CommandLineInterface {
-    public static let version = "1.7.0"
+    public static let version = "1.8.0"
     public static let help = """
     Secretariat \(version) – confidential data for you and your agents
 
@@ -165,6 +165,10 @@ public enum CommandLineInterface {
       secretariat status [--days N] [--json]          overview: counts, expiring items, Touch ID items, targets, recent log
       secretariat registry export · scan [FOLDER] [--json] · log [--lines N] · --version
 
+    License (14 days to try everything; nothing is ever blocked)
+      secretariat license [--json] · license activate [FILE|-] · license remove
+                                                     pbpaste | secretariat license activate
+
     The CLI never prints secret values. Enter them via the app, import or import-file.
     """
 
@@ -192,7 +196,13 @@ public enum CommandLineInterface {
                 .execute(mask: options.contains("--mask") ? true : options.contains("--no-mask") ? false : nil)
         default:
             let executable = Bundle.main.executableURL?.path ?? URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL.path
-            return try Commands.execute(arguments, service: AgentService(vault: vault), executable: executable)
+            let code = try Commands.execute(arguments, service: AgentService(vault: vault), executable: executable)
+            // The trial reminder goes to people at a terminal only; agents, pipes and values stay untouched.
+            if isatty(STDERR_FILENO) == 1, isatty(STDOUT_FILENO) == 1, !arguments.contains("--json"),
+               !["get", "inject", "license"].contains(arguments.first ?? ""), let reminder = Licensing.reminder(vault.licensing.state()) {
+                FileHandle.standardError.write(Data("\n\(reminder)\n".utf8))
+            }
+            return code
         }
     }
 }

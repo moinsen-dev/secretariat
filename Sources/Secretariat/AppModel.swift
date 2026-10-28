@@ -145,6 +145,8 @@ final class AppModel {
     var templateEditor: TemplateDraft?
     var copied = false
     var agentSetup: AgentSetupDraft?
+    var license: Licensing.State = .licensed(email: "")
+    var showLicense = false
 
     init() { reload() }
     func template(_ id: String) -> Template { catalog.template(id) }
@@ -183,6 +185,11 @@ final class AppModel {
         do { items = try Vault(paths: paths).list() }
         catch { items = []; errorMessage = error.localizedDescription }
         if selection == "targets" { refreshTargets() }
+        license = Vault(paths: paths).licensing.state()
+    }
+    func activateLicense(_ text: String) throws {
+        try Vault(paths: paths).licensing.activate(text)
+        license = Vault(paths: paths).licensing.state()
     }
     func refreshTargets() {
         do { targetReport = try Targets.report(vault: Vault(paths: paths)) }

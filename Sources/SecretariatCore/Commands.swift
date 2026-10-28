@@ -494,6 +494,39 @@ public enum Commands {
             return (0, try json(Report(findings: findings)), findings.isEmpty ? "No .env files with values found." : findings.map {
                 "\($0.file)\n" + $0.variables.map { "  \($0.name)\($0.storedAs.map { "  = in Secretariat: \($0)" } ?? "")" }.joined(separator: "\n")
             }.joined(separator: "\n"))
+        case ("license", _):
+            let a = try Arguments(all.dropFirst(2), usage: usage)
+            let licensing = vault.licensing
+            switch sub {
+            case "activate":
+                // From a file, or the JSON block on stdin: pbpaste | secretariat license activate
+                let raw = a.positional.first.map { $0 == "-" ? nil : $0 } ?? nil
+                let text = try raw.map { try String(contentsOfFile: ($0 as NSString).expandingTildeInPath, encoding: .utf8) }
+                    ?? String(decoding: FileHandle.standardInput.readDataToEndOfFile(), as: UTF8.self)
+                let license = try licensing.activate(text)
+                vault.audit.record("license.activate", [:])
+                return try done("Licensed to \(license.email). Thank you! The license is valid on all your Macs.")
+            case "remove":
+                try licensing.remove(); return try done("License removed from this keychain (all Macs).")
+            case "", "status":
+                struct Out: Encodable { let schemaVersion = 2; let ok = true; let state: String; let email: String?; let daysLeft: Int?; let buyURL: String }
+                let state = licensing.state()
+                let out: Out, text: String
+                switch state {
+                case .licensed(let email):
+                    out = Out(state: "licensed", email: email, daysLeft: nil, buyURL: Licensing.buyURL.absoluteString)
+                    text = email.isEmpty ? "This build doesn't check licenses." : "Licensed to \(email)."
+                case .trial(let days):
+                    out = Out(state: "trial", email: nil, daysLeft: days, buyURL: Licensing.buyURL.absoluteString)
+                    text = "Trial: \(days) day\(days == 1 ? "" : "s") left. Buy: \(Licensing.buyURL.absoluteString)"
+                case .expired:
+                    out = Out(state: "expired", email: nil, daysLeft: 0, buyURL: Licensing.buyURL.absoluteString)
+                    text = Licensing.reminder(state)!
+                }
+                return (0, try json(out), text)
+            default: throw AgentError("invalid_arguments", "secretariat license [status] | activate [FILE|-] | remove")
+            }
+
         case ("status", _):
             // Overview for dashboards (the fleet Leitstand): names, dates and counts only — never a value.
             let a = try Arguments(all.dropFirst(), values: ["--days", "--lines"], usage: usage)
@@ -505,9 +538,14 @@ public enum Commands {
             struct TargetState: Encodable { let name: String; let stale: [String]; let never: [String]; let missing: [String] }
             struct Out: Encodable {
                 let schemaVersion = 2; let ok = true; let version: String; let items: Int; let profiles: Int
-                let expiring: [Expiring]; let approval: [String]; let targets: [TargetState]; let recent: [String]
+                let expiring: [Expiring]; let approval: [String]; let targets: [TargetState]; let recent: [String]; let license: String
             }
             let report = try Targets.report(vault: vault)
+            let license: String = switch vault.licensing.state() {
+            case .licensed: "licensed"
+            case .trial(let days): "trial, \(days) days left"
+            case .expired: "trial ended – \(Licensing.buyURL.absoluteString)"
+            }
             let targets = report.targets.map { t in
                 TargetState(name: t.name, stale: t.variables.filter { $0.status == "stale" }.map(\.variable),
                             never: t.variables.filter { $0.status == "never" }.map(\.variable),
@@ -516,10 +554,11 @@ public enum Commands {
             let out = Out(version: CommandLineInterface.version, items: items.count, profiles: try vault.configuration.load().profiles.count,
                           expiring: items.compactMap { i in i.expires.flatMap { $0 <= cutoff ? Expiring(path: i.path, expires: $0) : nil } }.sorted { $0.expires < $1.expires },
                           approval: items.filter(\.needsApproval).map(\.path).sorted(), targets: targets,
-                          recent: vault.audit.tail(a.option("--lines").flatMap(Int.init) ?? 20))
+                          recent: vault.audit.tail(a.option("--lines").flatMap(Int.init) ?? 20), license: license)
             let text = ["Secretariat \(out.version): \(out.items) items, \(out.profiles) profiles",
                         "expiring within \(days) days: \(out.expiring.isEmpty ? "none" : out.expiring.map { "\($0.path) (\($0.expires))" }.joined(separator: ", "))",
                         "need Touch ID: \(out.approval.isEmpty ? "none" : out.approval.joined(separator: ", "))",
+                        "license: \(license)",
                         "targets: \(targets.isEmpty ? "none" : targets.map { "\($0.name)\($0.stale.isEmpty && $0.never.isEmpty && $0.missing.isEmpty ? " ok" : " stale \($0.stale.count) never \($0.never.count) missing \($0.missing.count)")" }.joined(separator: ", "))"]
             return (0, try json(out), text.joined(separator: "\n"))
 

@@ -1,0 +1,20 @@
+name = "secretariat-license-issuer"
+main = "src/index.ts"
+compatibility_date = "2024-09-01"
+workers_dev = true
+
+# Set by script/sales-setup.sh (never printed, never written to a file):
+#   LEMONSQUEEZY_WEBHOOK_SECRET   shared HMAC secret of the Lemon Squeezy webhook
+#   LICENSE_PRIVATE_KEY_BASE64    32-byte Ed25519 private key (raw, base64), Secretariat's OWN keypair;
+#                                 public half: Sources/SecretariatCore/License.swift → productionPublicKeyBase64
+#   RESEND_API_KEY                Resend API key for the license mail
+
+[vars]
+PRODUCT_NAME = "Secretariat"
+# Lemon Squeezy product id of Secretariat. Empty = every order is refused with 503.
+PRODUCT_ID = ""
+# "true" only while testing with Lemon Squeezy test orders.
+ALLOW_TEST_MODE = "false"
+DOWNLOAD_URL = "https://secretariat.moinsen.dev/Secretariat-latest.zip"
+# moinsen convention: transactional mail from the one verified Resend domain.
+FROM_EMAIL = "Secretariat <business@moinsen.dev>"
