@@ -24,10 +24,19 @@ mkdir -p "$stage/Contents/MacOS" "$stage/Contents/Resources"
 cp "$(xcrun swift build --show-bin-path)/Secretariat" "$stage/Contents/MacOS/Secretariat"
 cp Resources/Info.plist "$stage/Contents/Info.plist"
 cp Assets/AppIcon.icns "$stage/Contents/Resources/AppIcon.icns"
+# Sparkle (updates): the framework goes next to the executable; the XPC services are for sandboxed apps only.
+mkdir -p "$stage/Contents/Frameworks"
+/usr/bin/ditto "$(xcrun swift build --show-bin-path)/Sparkle.framework" "$stage/Contents/Frameworks/Sparkle.framework"
+rm -rf "$stage/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices" "$stage/Contents/Frameworks/Sparkle.framework/XPCServices"
 identity="${SECRETARIAT_SIGN_IDENTITY:-}"
 if [[ -z "$identity" ]]; then
   identity="$(security find-identity -v -p codesigning | python3 -c 'import re,sys; matches=re.findall(r"\"(Developer ID Application:[^\"]+)\"",sys.stdin.read()); print(matches[0] if matches else "-")')"
 fi
+timestamp=$([[ "$identity" == "Developer ID Application:"* && -n "${SECRETARIAT_TIMESTAMP:-}" ]] && echo --timestamp || echo --timestamp=none)
+sparkle="$stage/Contents/Frameworks/Sparkle.framework"
+for nested in "$sparkle/Versions/B/Autoupdate" "$sparkle/Versions/B/Updater.app" "$sparkle"; do
+  codesign --force --sign "$identity" --options runtime $timestamp "$nested"
+done
 if [[ "$identity" == "Developer ID Application:"* ]]; then
   # 0.3: synchronizable keys live in the data-protection keychain, which needs the app identifier
   # and keychain access group — restricted entitlements a Developer ID app only gets with an

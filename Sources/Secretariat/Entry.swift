@@ -20,6 +20,7 @@ enum Entry {
 
 struct SecretariatApp: App {
     @State private var model = AppModel()
+    private let updates = Updates()
     var body: some Scene {
         WindowGroup("Secretariat") {
             MainView(model: model)
@@ -28,7 +29,10 @@ struct SecretariatApp: App {
         }
         .defaultSize(width: 990, height: 650)
         .commands {
-            CommandGroup(after: .appInfo) { Button("License …") { model.showLicense = true } }
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates …") { updates.check() }.disabled(!updates.available)
+                Button("License …") { model.showLicense = true }
+            }
             CommandGroup(replacing: .newItem) {
                 Button("New Item …") { model.itemEditor = model.newItemDraft() }.keyboardShortcut("n")
                 Button("New Project Profile …") { model.profileEditor = ProfileDraft(revision: model.configuration.revision) }.keyboardShortcut("n", modifiers: [.command, .shift])

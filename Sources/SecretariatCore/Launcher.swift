@@ -117,7 +117,7 @@ public struct PreparedLaunch {
 }
 
 public enum CommandLineInterface {
-    public static let version = "1.9.0"
+    public static let version = "1.10.0"
     public static let help = """
     Secretariat \(version) – confidential data for you and your agents
 
