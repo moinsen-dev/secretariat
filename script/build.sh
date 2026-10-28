@@ -33,7 +33,7 @@ if [[ "$identity" == "Developer ID Application:"* ]]; then
   # and keychain access group — restricted entitlements a Developer ID app only gets with an
   # embedded provisioning profile (App ID dev.moinsen.secretariat.local, profile "Secretariat Developer ID").
   cp Resources/Secretariat.provisionprofile "$stage/Contents/embedded.provisionprofile"
-  codesign --force --sign "$identity" --options runtime --timestamp=none --entitlements Resources/Secretariat.entitlements "$stage"
+  codesign --force --sign "$identity" --options runtime $([[ -n "${SECRETARIAT_TIMESTAMP:-}" ]] && echo --timestamp || echo --timestamp=none) --entitlements Resources/Secretariat.entitlements "$stage"
 else
   # Ad-hoc builds cannot carry restricted entitlements; they keep the local login keychain only.
   codesign --force --sign "$identity" --options runtime --timestamp=none "$stage"

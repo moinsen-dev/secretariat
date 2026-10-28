@@ -78,13 +78,21 @@ public enum GitGuard {
     public static let marker = "# secretariat-guard"
     public static let minimumLength = 8
 
+    /// A plain word ("identifier", "postgres") would block ordinary code; guard values that look like credentials:
+    /// long ones, or ones with a digit or a symbol.
+    static func distinctive(_ value: String) -> Bool {
+        guard value.count >= minimumLength else { return false }
+        if value.count >= 16 { return true }
+        return value.contains { $0.isNumber || (!$0.isLetter && $0 != "-" && $0 != "_") }
+    }
+
     /// Known values worth guarding: every secret and personal text field (files are binary blobs).
     public static func secrets(_ vault: Vault) -> [(String, String)] {
         var out: [(String, String)] = []
         for item in (try? vault.list()) ?? [] {
             guard let values = try? vault.items.secrets(id: item.id) else { continue }
             for field in item.fields where field.kind == .secret || field.kind == .personal {
-                if let v = values[field.name], v.count >= minimumLength { out.append((v, "\(item.path)/\(field.name)")) }
+                if let v = values[field.name], distinctive(v) { out.append((v, "\(item.path)/\(field.name)")) }
             }
         }
         return out

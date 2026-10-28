@@ -76,3 +76,22 @@ import Testing
     #expect(try GitGuard.install(in: repo.path, executable: "/tmp/secretariat", remove: true) == "removed")
     #expect(!(try String(contentsOf: repo.appendingPathComponent(".git/hooks/pre-commit"), encoding: .utf8)).contains("guard check"))
 }
+
+@Test func mcpToolsMapOntoCliAndRunMasksOutput() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    let (list, listError) = McpServer.call("list_items", [:], service: f.service, executable: "/tmp/s")
+    #expect(!listError); #expect(list.contains("moinsen/test/api")); #expect(!list.contains("never-output"))
+    let (secret, secretError) = McpServer.call("get_identifier", ["reference": "moinsen/test/api/secret"], service: f.service, executable: "/tmp/s")
+    #expect(secretError); #expect(secret.contains("secret_field"))
+    let (id, _) = McpServer.call("get_identifier", ["reference": "moinsen/test/api/key_id"], service: f.service, executable: "/tmp/s")
+    #expect(id.contains("KEY-123"))
+    let (run, runError) = McpServer.call("run_command", ["profile": "agent-test", "command": ["/bin/sh", "-c", "echo got $TEST_API_KEY; exit 3"]], service: f.service, executable: "/tmp/s")
+    #expect(runError); #expect(run.contains("[masked moinsen/test/api/secret]")); #expect(!run.contains("never-output")); #expect(run.contains("\"exitCode\" : 3"))
+    let (unknown, unknownError) = McpServer.call("nope", [:], service: f.service, executable: "/tmp/s")
+    #expect(unknownError); #expect(unknown.contains("unknown_tool"))
+}
+
+@Test func gitGuardIgnoresPlainWordsButKeepsCredentialLikeValues() {
+    #expect(!GitGuard.distinctive("identifier")); #expect(!GitGuard.distinctive("short1"))
+    #expect(GitGuard.distinctive("password123")); #expect(GitGuard.distinctive("sk-proj-abc")); #expect(GitGuard.distinctive("averyveryverylongword"))
+}

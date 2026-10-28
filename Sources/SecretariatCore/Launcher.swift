@@ -117,7 +117,7 @@ public struct PreparedLaunch {
 }
 
 public enum CommandLineInterface {
-    public static let version = "1.6.1"
+    public static let version = "1.7.0"
     public static let help = """
     Secretariat \(version) – confidential data for you and your agents
 
@@ -161,6 +161,7 @@ public enum CommandLineInterface {
       secretariat item set PATH --approval on          programs need Touch ID before they get this item (off: app only)
 
     Overview
+      secretariat mcp                                 MCP server (stdio) for Claude Desktop, Cursor & co.
       secretariat status [--days N] [--json]          overview: counts, expiring items, Touch ID items, targets, recent log
       secretariat registry export · scan [FOLDER] [--json] · log [--lines N] · --version
 
@@ -172,6 +173,11 @@ public enum CommandLineInterface {
         switch arguments.first {
         case "--help", "-h", "help", nil: print(help); return 0
         case "--version": print("Secretariat \(version)"); return 0
+        case "mcp":
+            // MCP server over stdio for agents without a shell (Claude Desktop, Cursor …).
+            let executable = Bundle.main.executableURL?.path ?? URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL.path
+            McpServer.serve(service: AgentService(vault: vault), executable: executable)
+            return 0
         case "run":
             // run PROFILE [--mask|--no-mask] -- PROGRAM …
             guard arguments.count >= 4, let dashes = arguments.firstIndex(of: "--"), dashes >= 2, dashes < arguments.count - 1 else {
