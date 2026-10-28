@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Threat model — Secretariat</title>
+<meta name="description" content="What Secretariat protects against, what it does not, and how to set it up so the boundaries hold.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b6e69'/%3E%3Ccircle cx='16' cy='13' r='4.5' fill='white'/%3E%3Cpath d='M13.6 15.5h4.8l1.4 9h-7.6z' fill='white'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="Secretariat home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><circle cx="16" cy="13" r="4.5" fill="var(--on-accent)"/><path d="M13.6 15.5h4.8l1.4 9h-7.6z" fill="var(--on-accent)"/></svg>
+      Secretariat
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#guard">Agent Guard</a>
+      <a href="threat-model.html" aria-current="page">Threat model</a>
+      <a class="btn small" href="index.html#pricing">Buy</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="prose">
+  <div class="wrap narrow">
+    <p class="eyebrow">Threat model</p>
+    <h1>What Secretariat protects, and what it doesn't</h1>
+    <p class="lead">Secretariat is built against accidents: a key landing in an agent's context, a log or a commit. It is not a sandbox. This page says where the line is, so you can decide what else you need.</p>
+    <p class="updated">Applies to Secretariat 1.7.</p>
+
+    <div class="split">
+      <article class="card yes">
+        <h2>Protects against</h2>
+        <ul>
+          <li>Keys in plain <code>.env</code> files that an agent reads, greps or summarizes</li>
+          <li>Values printed by a program and pulled into the agent's context</li>
+          <li>Values in tool output that ends up in logs or transcripts</li>
+          <li>Committing a value you have stored in Secretariat</li>
+          <li>Forgotten copies in Cloudflare, Supabase, GitHub or on servers after you rotate a key</li>
+        </ul>
+      </article>
+      <article class="card no">
+        <h2>Does not protect against</h2>
+        <ul>
+          <li>An agent that deliberately extracts a value it is allowed to run with</li>
+          <li>Values written to files instead of printed</li>
+          <li>Malware running with your user rights</li>
+          <li>A compromised Apple Account or iCloud keychain</li>
+          <li>Secrets Secretariat doesn't know about</li>
+        </ul>
+      </article>
+    </div>
+
+    <h2>How each layer works</h2>
+
+    <h3>No plain files</h3>
+    <p>Values live in your iCloud keychain, not in your project folders. <code>secretariat run</code> hands them to the program as environment variables; key files become temporary files with mode 0600. An agent that reads your project finds profile and item names, not values. Fields marked only-for-me never reach any program.</p>
+
+    <h3>Output masking</h3>
+    <p>When stdout or stderr is not a terminal, which is the case when an agent or a pipe reads it, Secretariat replaces every value it handed to the program with <code>[masked path/field]</code>. This catches the common accident: a debug print, a stack trace with the config, a verbose CLI.</p>
+    <p>Limits you should know:</p>
+    <ul>
+      <li>It only covers stdout and stderr of the program started by <code>run</code>. A value the program writes to a file, sends over the network or passes on in another form is not masked.</li>
+      <li>It matches the exact value. An encoded or transformed value (base64, split across lines by the program, URL-encoded) is not recognized. Very short values (under 6 characters) are not masked.</li>
+      <li>Whoever calls <code>run</code> can pass <code>--no-mask</code>. Masking prevents accidents; it is not a lock.</li>
+    </ul>
+
+    <h3>Touch ID approval per item: the hard boundary</h3>
+    <p>For an item with approval switched on, every <code>run</code>, <code>push</code> or <code>inject</code> that needs it waits for your fingerprint. An agent can switch approval on for an item, never off; that is only possible in the app.</p>
+    <p>This is the one layer that holds against an agent that is trying. Without it, the reality is simple: an agent running as your user can call <code>secretariat run PROFILE -- env &gt; values.txt</code> itself, or any program that writes its environment to a file, and then read the file. No tool can fully hide a secret from a process that runs as the same user and is allowed to use it.</p>
+    <p>Approval only helps if you read the prompt. Approve when you started the command or expected it, and decline otherwise.</p>
+
+    <h3>Commit guard</h3>
+    <p>The git pre-commit hook compares staged changes with the values Secretariat knows and refuses the commit if one appears. It catches your real values, including ones no pattern scanner would recognize. It does not catch secrets you never stored in Secretariat, values shorter than 8 characters, or commits made with <code>git commit --no-verify</code>, which skips all hooks.</p>
+
+    <h3>Targets and rotation</h3>
+    <p>Secretariat remembers where it pushed each value: Cloudflare Workers, Supabase, GitHub, Linux env files over ssh. After a rotation, <code>secretariat targets</code> lists every copy that is now stale. It knows only the copies it pushed itself, not ones you placed by hand.</p>
+
+    <h2>Out of scope</h2>
+    <h3>Malware with your user rights</h3>
+    <p>Software that runs as you can do what you can do: start programs through Secretariat, read their environment, wait for you to approve a prompt. Secretariat doesn't defend against a compromised user account.</p>
+    <h3>Your Apple Account and iCloud keychain</h3>
+    <p>Sync is Apple's iCloud keychain. Whoever controls your Apple Account and can add a device to your keychain can read what is in it. Secretariat has no server of its own, so there is nothing else to break into, and nothing else to rely on.</p>
+    <h3>The services your keys belong to</h3>
+    <p>Once a program has a key, it can do whatever the key allows. Secretariat doesn't limit what a key can do at the provider.</p>
+
+    <h2>Recommendations</h2>
+    <ul>
+      <li><strong>Switch on Touch ID approval</strong> for everything that would hurt: production databases, payment providers, deploy tokens, signing keys. Leave it off for test keys you use a hundred times a day.</li>
+      <li><strong>Install the commit guard everywhere:</strong> <code>secretariat guard install --all ~/work</code>. Don't bypass it with <code>--no-verify</code> unless you know why.</li>
+      <li><strong>Import, then delete the plain files.</strong> Bulk-import your <code>.env</code> files, check the review list, and remove the originals so there is nothing left to read.</li>
+      <li><strong>Use scoped keys.</strong> Prefer test-mode and restricted keys for agent work. A masked full-access key is still a full-access key.</li>
+      <li><strong>Rotate after an incident and follow the list.</strong> Run <code>secretariat targets</code> and push until no copy is stale.</li>
+      <li><strong>Secure your Apple Account</strong> with a strong password and two-factor authentication, and keep macOS up to date.</li>
+      <li><strong>Use your agent's own restrictions as well.</strong> Permission prompts and sandbox modes add to Secretariat; they don't compete with it.</li>
+    </ul>
+
+    <h2>Reporting a problem</h2>
+    <p>If you find a way around a boundary described here, please email <a href="mailto:business@moinsen.dev">business@moinsen.dev</a>. The source is available on GitHub, so you can check these claims against the code.</p>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>© 2026 moinsen · Ulrich Diedrichsen, Hamburg</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="impressum.html" lang="de">Impressum</a>
+      <a href="datenschutz.html" lang="de">Datenschutz</a>
+      <a href="mailto:business@moinsen.dev">business@moinsen.dev</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

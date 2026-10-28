@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Secretariat — keys for your coding agents, on your Mac</title>
+<meta name="description" content="Secretariat keeps your API keys in the iCloud keychain. Your coding agents run your tools with them, but the values stay out of their context, logs and commits. No server, no account, no subscription.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b6e69'/%3E%3Ccircle cx='16' cy='13' r='4.5' fill='white'/%3E%3Cpath d='M13.6 15.5h4.8l1.4 9h-7.6z' fill='white'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="Secretariat home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><circle cx="16" cy="13" r="4.5" fill="var(--on-accent)"/><path d="M13.6 15.5h4.8l1.4 9h-7.6z" fill="var(--on-accent)"/></svg>
+      Secretariat
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="#how">How it works</a>
+      <a href="#guard">Agent Guard</a>
+      <a href="#compare">Compare</a>
+      <a href="threat-model.html">Threat model</a>
+      <a class="btn small" href="#pricing">Buy</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- Hero -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">For macOS 14 and later</p>
+      <h1>Your coding agents use your keys. They don't get to read them.</h1>
+      <p class="lead">Secretariat keeps your credentials once, in your iCloud keychain. Agents start your tools through it: the program gets the values, the agent sees <code>[masked]</code>. No server, no account, no subscription.</p>
+      <div class="cta-row">
+        <a class="btn" href="#pricing">Buy for 39 €</a>
+        <a class="btn secondary" href="#how">See how it works</a>
+      </div>
+      <p class="fineprint">One-time purchase. Honest about its limits: <a href="threat-model.html">read the threat model</a>.</p>
+    </div>
+    <div>
+      <figure class="terminal" aria-label="Example: an agent runs a command through Secretariat and sees masked output">
+        <div class="terminal-bar" aria-hidden="true"><span></span><span></span><span></span><em>agent shell · ~/work/acme-shop</em></div>
+<pre><code><span class="c"># the agent knows the profile, not the values</span>
+<span class="p">$</span> secretariat run acme-shop -- node check.js
+STRIPE_SECRET_KEY=<span class="m">[masked acme/stripe/api/api_key]</span>
+OPENAI_API_KEY=<span class="m">[masked acme/openai/api/api_key]</span>
+connected to Stripe (test mode) ✓
+
+<span class="p">$</span> git commit -m "add debug dump"
+Secretariat guard: commit blocked — staged
+changes contain secret values:
+  dump.txt:1  value of <span class="m">acme/stripe/api/api_key</span></code></pre>
+      </figure>
+      <p class="terminal-caption">Demo values. Masking and guard messages as printed by Secretariat 1.7; the guard message is shortened.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Problem -->
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">The problem</p>
+      <h2>Agents read <code>.env</code>. Blocking the file isn't enough.</h2>
+      <p class="lead">A key in a plain file ends up in the agent's context, in a log, or in a commit sooner or later. This happened in public throughout 2026.</p>
+    </div>
+    <ul class="evidence">
+      <li>
+        <blockquote>“This is a security-critical issue that should be addressed urgently.”</blockquote>
+        <p>Claude Code v2.1.12 read <code>.env</code> files despite <code>.claudeignore</code> (issue #20966), reported by The Register, 28 January 2026. Follow-up issues kept coming until June.</p>
+        <a class="source" href="https://www.theregister.com/2026/01/28/claude_code_ai_secrets_files/" rel="noopener">The Register →</a>
+      </li>
+      <li>
+        <blockquote>“My agent stole my (api) keys”</blockquote>
+        <p>A developer on r/ClaudeAI (February 2026) had blocked <code>.env</code>. The agent got the keys anyway, via <code>docker compose config</code>.</p>
+        <a class="source" href="https://reddit.sentinel-team.org/posts/1r186gl/snapshots/2026-02-10T19%3A31%3A46.22038Z" rel="noopener">Thread (mirror) →</a>
+      </li>
+      <li>
+        <blockquote>3.2 % of Claude Code commits leaked a secret, against 1.5 % overall.</blockquote>
+        <p>GitGuardian's State of Secrets Sprawl 2026 (March) also counts 24,008 secrets in MCP configuration files. Vendor figures.</p>
+        <a class="source" href="https://gitguardian.com/state-of-secrets-sprawl-report-2026" rel="noopener">GitGuardian report →</a>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<!-- How it works -->
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">How it works</p>
+      <h2>Store once. Bind per project. Run through Secretariat.</h2>
+    </div>
+    <ol class="steps">
+      <li>
+        <h3>Store it once</h3>
+        <p>Add items in the app, or import an existing <code>.env</code> without reading it. A whole folder tree can be imported at once, with a review list before anything is saved. Your Macs sync through iCloud keychain.</p>
+<pre class="cmd">secretariat import .env \
+  STRIPE_SECRET_KEY \
+  OPENAI_API_KEY \
+  --profile acme-shop</pre>
+      </li>
+      <li>
+        <h3>Your agent wires the project</h3>
+        <p>A profile maps environment variables to items for one folder. Agents create and bind profiles themselves, using names only. In Claude Code, each session learns at start which profile belongs to the folder.</p>
+<pre class="cmd">secretariat profile create \
+  acme-shop --dir .
+secretariat profile bind \
+  acme-shop STRIPE_SECRET_KEY \
+  acme/stripe/api/api_key</pre>
+      </li>
+      <li>
+        <h3>Run through Secretariat</h3>
+        <p>The program gets the values as environment variables. Key files arrive as temporary files with mode 0600. The agent sees the program's output, with known values masked.</p>
+<pre class="cmd">secretariat run acme-shop \
+  -- pnpm dev</pre>
+      </li>
+    </ol>
+    <figure class="shot">
+      <img src="img/app-items.png" width="1561" height="953" alt="The Secretariat app window: a sidebar with All Items, Targets, Templates and a project profile, and a list of demo items such as acme/stripe/api and acme/postgres/db with their field names. No values are shown." loading="lazy">
+      <figcaption>The app with demo data. Items are listed by path and field name; values stay in the keychain.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- Agent Guard -->
+<section id="guard">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Agent Guard</p>
+      <h2>Three layers, in one tool.</h2>
+      <p class="lead">Each layer covers a different way a key escapes. Together they turn most accidents into a masked line or a refused commit.</p>
+    </div>
+    <div class="cards">
+      <article class="card">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 10l3 2-3 2M13 14h4"/></svg></div>
+        <h3>Output masking</h3>
+        <p>When output goes to an agent or a pipe, every value the program received becomes <code>[masked path/field]</code> in stdout and stderr. In your own terminal you see the real output.</p>
+      </article>
+      <article class="card">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 11c0 3-1 6-3 8M8.5 8.5A5 5 0 0 1 17 12c0 2-.3 4-1 6M5.5 6.5A9 9 0 0 1 21 12c0 1.4-.1 2.7-.4 4M3 11a9 9 0 0 1 .7-3.5M12 15c0 2-.5 4-1.5 5.5"/></svg></div>
+        <h3>Touch ID per item</h3>
+        <p>Mark an item and every <code>run</code>, <code>push</code> or <code>inject</code> that needs it waits for your fingerprint. Agents can switch approval on. Only you, in the app, can switch it off.</p>
+      </article>
+      <article class="card">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M3 12h5.8M15.2 12H21"/></svg></div>
+        <h3>Commit guard</h3>
+        <p>A git pre-commit hook refuses any commit that contains a value Secretariat knows. Your actual values, not patterns. Install it in every repository at once:</p>
+        <pre class="cmd">secretariat guard install \
+  --all ~/work</pre>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section id="features">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Everything else</p>
+      <h2>Built for one developer with many projects.</h2>
+    </div>
+    <div class="features">
+      <div class="feature">
+        <h3>Typed fields</h3>
+        <p>Identifier (agents may read it), secret, file, and only-for-me, which never reaches any program.</p>
+      </div>
+      <div class="feature">
+        <h3>Templates are data</h3>
+        <p>Company, API key, client ID &amp; secret, account, website login, key file, database, server, note. Edit them or add your own.</p>
+      </div>
+      <div class="feature">
+        <h3>Key files</h3>
+        <p><code>.p8</code>, <code>.p12</code> or a keystore arrive as a temporary file with mode 0600, only for the program that needs it.</p>
+      </div>
+      <div class="feature">
+        <h3>Push to targets</h3>
+        <p>Write values to Cloudflare Workers, Supabase, GitHub, or a Linux env file over ssh.</p>
+      </div>
+      <div class="feature">
+        <h3>Rotation, finished</h3>
+        <p>After you rotate a key, <code>secretariat targets</code> shows every copy that is now stale.</p>
+      </div>
+      <div class="feature">
+        <h3>MCP server</h3>
+        <p><code>secretariat mcp</code> for Claude Desktop, Cursor and other clients without a shell, with a masked <code>run_command</code>.</p>
+      </div>
+      <div class="feature">
+        <h3>Company identity</h3>
+        <p>A Company item becomes a rule file every Claude Code session reads. Imprints and legal texts fill themselves. Never get asked for your VAT ID again.</p>
+      </div>
+      <div class="feature">
+        <h3>Bulk import</h3>
+        <p>Import every <code>.env</code> in a folder tree, review the list, and retire the plain files.</p>
+      </div>
+      <div class="feature">
+        <h3>Native and notarized</h3>
+        <p>A signed, notarized Developer ID app for macOS 14 and later. No background service, no account.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Comparison -->
+<section id="compare">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Alternatives</p>
+      <h2>Why not 1Password, Doppler, Infisical or a free tool?</h2>
+      <p class="lead">They are good tools, and in 2026 most of them keep values away from agents too. Here is where Secretariat differs. Competitor details as of October 2026.</p>
+    </div>
+    <div class="compare">
+      <article class="card">
+        <h3>1Password <small>password manager subscription</small></h3>
+        <dl>
+          <dt>What it does</dt>
+          <dd>Since 30 July 2026: Environments, an MCP server and a plugin for Cursor and Claude Code. The agent never sees the value; <code>op run</code> injects it into the child process. Included for password manager users.</dd>
+          <dt>Choose Secretariat if</dt>
+          <dd>you don't want an account or a subscription, or you want output masking, a commit guard against your own values, and stale-copy tracking after rotation.</dd>
+        </dl>
+      </article>
+      <article class="card">
+        <h3>Doppler <small>cloud, for teams</small></h3>
+        <dl>
+          <dt>What it does</dt>
+          <dd><code>doppler run</code> injects values; “Doppler for Agents” and an official MCP server. Developer plan free for up to 3 users, Team $21 per user per month.</dd>
+          <dt>Choose Secretariat if</dt>
+          <dd>you work alone and would rather not keep your keys on a third-party server.</dd>
+        </dl>
+      </article>
+      <article class="card">
+        <h3>Infisical <small>cloud or self-hosted</small></h3>
+        <dl>
+          <dt>What it does</dt>
+          <dd>Agent Vault and Agent Proxy attach credentials to outgoing requests, so the agent never holds them. Free up to 5 identities, Pro $20 per identity per month; Agent Vault has 5,000 free requests, then $2 per 1,000.</dd>
+          <dt>Choose Secretariat if</dt>
+          <dd>you don't want to run or rent infrastructure for a one-person setup.</dd>
+        </dl>
+      </article>
+      <article class="card">
+        <h3>Free tools <small>Varlock, dotenvx, LLM Secrets and others</small></h3>
+        <dl>
+          <dt>What they do</dt>
+          <dd>Varlock gives agents names and types and scans commits; dotenvx <code>--redact</code> replaces values in output, though the agent's process still receives them; LLM Secrets, secretctl, tsm and others inject values with passkey or Touch ID. All free, most open source.</dd>
+          <dt>Choose Secretariat if</dt>
+          <dd>you want the bundle in one Mac app: per-item Touch ID, masking, commit guard, targets and rotation tracking, bulk import, without assembling it yourself.</dd>
+        </dl>
+      </article>
+    </div>
+    <p class="note">If one of these already covers what you need, keep using it. Prices and features are taken from each vendor's own pages; they change, so check before you decide.</p>
+  </div>
+</section>
+
+<!-- Honest limits -->
+<section id="limits">
+  <div class="wrap">
+    <div class="callout">
+      <div>
+        <h2>What Secretariat can't do</h2>
+        <p>An agent running as your user can call <code>secretariat run</code> itself and write a value to a file. Masking only covers what is printed. The hard boundary is Touch ID per item. The threat model spells out what is protected and what isn't.</p>
+      </div>
+      <a class="btn secondary" href="threat-model.html">Read the threat model</a>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section id="pricing">
+  <div class="wrap pricing-grid">
+    <div>
+      <p class="eyebrow">Pricing</p>
+      <h2>Pay once. Keep it.</h2>
+      <p class="lead">There is no server to pay for, so there is no subscription. You buy the signed, notarized app and get every 1.x update.</p>
+      <p>Payment runs through Lemon Squeezy. As merchant of record they handle VAT, invoices and refunds.</p>
+    </div>
+    <div class="price-card" id="buy">
+      <h3>Secretariat 1.x</h3>
+      <div class="price"><strong>39 €</strong><span>one-time</span></div>
+      <div class="launch">Launch price: 29 € for the first four weeks</div>
+      <ul class="checklist">
+        <li>Mac app and <code>secretariat</code> CLI</li>
+        <li>Agent Guard: masking, Touch ID per item, commit guard</li>
+        <li>Targets, rotation tracking, MCP server</li>
+        <li>All 1.x updates included</li>
+        <li>macOS 14 or later</li>
+      </ul>
+      <!-- TODO: checkout URL from Lemon Squeezy is not set yet. Replace href="#buy" with the checkout link and fill data-checkout. -->
+      <a class="btn block" href="#buy" data-checkout="TODO">Buy Secretariat</a>
+      <p class="fineprint">Checkout opens on Lemon Squeezy. VAT is calculated there.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="wrap narrow">
+    <div class="section-head">
+      <p class="eyebrow">FAQ</p>
+      <h2>Questions</h2>
+    </div>
+    <div class="faq">
+      <details>
+        <summary>Why isn't it in the Mac App Store?</summary>
+        <div><p>App Store apps must run in a sandbox, and every program they start inherits that sandbox. <code>secretariat run -- wrangler deploy</code> couldn't run your tools or read your project folders. So Secretariat ships as a notarized Developer ID app instead.</p></div>
+      </details>
+      <details>
+        <summary>Where are my keys, and what leaves my Mac?</summary>
+        <div><p>Values live in your iCloud keychain. Syncing between your Macs is Apple's iCloud keychain, under your Apple Account. Secretariat itself has no server and sends no data anywhere: no telemetry, no account.</p></div>
+      </details>
+      <details>
+        <summary>What happens if I stop paying?</summary>
+        <div><p>Nothing. It's a one-time purchase, not a subscription. The app keeps working, and your keys stay in your keychain.</p></div>
+      </details>
+      <details>
+        <summary>Linux or Windows?</summary>
+        <div><p>The app and CLI run on macOS 14 and later. Linux servers are supported as targets: Secretariat can push values to an env file over ssh. There is no Windows support.</p></div>
+      </details>
+      <details>
+        <summary>Which agents does it work with?</summary>
+        <div><p>Any agent that can run a shell command can use <code>secretariat run</code>. Claude Code also gets the session hint and the company rule file. Claude Desktop, Cursor and other MCP clients without a shell use <code>secretariat mcp</code>.</p></div>
+      </details>
+      <details>
+        <summary>Is it open source?</summary>
+        <div><p>The source is available: you can read the code on GitHub. The license is still being chosen. What you buy is the signed, notarized build and its updates.</p></div>
+      </details>
+      <details>
+        <summary>Does it stop a malicious agent?</summary>
+        <div><p>Not by itself. It prevents accidental leaks. Against an agent that actively tries, your boundary is Touch ID approval per item. Details in the <a href="threat-model.html">threat model</a>.</p></div>
+      </details>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>© 2026 moinsen · Ulrich Diedrichsen, Hamburg</span>
+    <nav aria-label="Footer">
+      <a href="threat-model.html">Threat model</a>
+      <a href="impressum.html" lang="de">Impressum</a>
+      <a href="datenschutz.html" lang="de">Datenschutz</a>
+      <a href="mailto:business@moinsen.dev">business@moinsen.dev</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>
