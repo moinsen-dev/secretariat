@@ -189,3 +189,31 @@ import Testing
     #expect(json.contains("agent-test"))
     #expect(f.code("profile", "which", "/") == "profile_not_found")
 }
+
+@Test func templatesAreDataUsersCanExtendHideAndReset() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    // a new template with its own fields, usable as a kind right away
+    try f.cli("template", "create", "bank-account", "--title", "Bank account", "--symbol", "banknote", "--identity")
+    try f.cli("template", "field", "add", "bank-account", "iban", "--label", "IBAN", "--required")
+    try f.cli("template", "field", "add", "bank-account", "online_pin", "--label", "Online banking PIN", "--kind", "personal")
+    let t = f.vault.catalog().template("bank-account")
+    #expect(t.title == "Bank account"); #expect(t.fields.map(\.name) == ["iban", "online_pin"]); #expect(t.identity)
+    #expect(t.spec("online_pin")?.kind == .personal); #expect(t.spec("iban")?.required == true)
+    try f.cli("item", "create", "moinsen/bank", "--kind", "bank-account", "--set", "iban=DE00 1234")
+    #expect(CompanyRule.render(try f.vault.list(), catalog: f.vault.catalog()).contains("- IBAN: DE00 1234"))
+    #expect(f.code("item", "create", "x/y", "--kind", "nope") == "invalid_arguments")
+    // built-ins: change, hide everywhere, bring back
+    try f.cli("template", "field", "add", "company", "trade_name", "--label", "Trade name")
+    #expect(f.vault.catalog().template("company").spec("trade_name") != nil)
+    try f.cli("template", "delete", "note")
+    #expect(!f.vault.catalog().isKnown("note"))
+    try f.cli("template", "reset", "note"); try f.cli("template", "reset", "company")
+    #expect(f.vault.catalog().isKnown("note")); #expect(f.vault.catalog().template("company").spec("trade_name") == nil)
+    // deleting an own template keeps its items readable with plain field names
+    try f.cli("template", "delete", "bank-account")
+    #expect(f.vault.catalog().template("bank-account").title == "bank-account")
+    #expect(try f.vault.get("moinsen/bank/iban") == "DE00 1234")
+    #expect(f.code("template", "create", "Bad ID") == "invalid")
+    #expect(f.code("template", "create", "company") == "template_exists")
+    #expect(f.code("template", "reset", "bank-account") == "not_builtin")
+}

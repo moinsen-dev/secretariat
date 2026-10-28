@@ -32,84 +32,62 @@ public enum FieldKind: String, Codable, CaseIterable, Sendable {
     public var isUsable: Bool { self != .personal }
 }
 
-/// One field an item kind asks for, with a plain-language label.
-public struct FieldSpec: Sendable {
-    public let name: String
-    public let label: String
-    public let kind: FieldKind
-    public let required: Bool
-    public let prompt: String
+/// One field a template asks for, with a plain-language label.
+public struct FieldSpec: Codable, Equatable, Identifiable, Sendable {
+    public var id: String { name }
+    public var name: String
+    public var label: String
+    public var kind: FieldKind
+    public var required: Bool
+    public var prompt: String
     /// Variable suffix when the item is made available everywhere (`<PROVIDER>_<suffix>`).
-    public let envSuffix: String?
-    init(_ name: String, _ label: String, _ kind: FieldKind, required: Bool = false, prompt: String = "", env: String? = nil) {
+    public var envSuffix: String?
+    public init(_ name: String, _ label: String, _ kind: FieldKind, required: Bool = false, prompt: String = "", env: String? = nil) {
         self.name = name; self.label = label; self.kind = kind; self.required = required; self.prompt = prompt; envSuffix = env
     }
 }
 
-public enum ItemKind: String, Codable, CaseIterable, Sendable {
-    case company, api, token, account, login, certificate, database, server, note
+/// What a kind of item asks for. Templates are data: the built-in ones are only the starting set; the user
+/// adds, changes, hides and resets them, and they sync to every Mac like items do. An item stores the
+/// template id as its `kind`; an unknown id shows the item with plain field names.
+public struct Template: Codable, Equatable, Identifiable, Sendable {
+    public var id: String
+    public var title: String
+    public var symbol: String
+    public var explanation: String
+    public var fields: [FieldSpec]
+    /// Items of this template describe who Uli works as and go into ~/.claude/rules/company.md.
+    public var identity: Bool
+    /// A built-in template the user removed (kept as a marker so it stays removed on every Mac).
+    public var hidden: Bool
+    public init(id: String, title: String, symbol: String = "square.dashed", explanation: String = "", fields: [FieldSpec] = [],
+                identity: Bool = false, hidden: Bool = false) {
+        self.id = id; self.title = title; self.symbol = symbol; self.explanation = explanation
+        self.fields = fields; self.identity = identity; self.hidden = hidden
+    }
+    public func spec(_ name: String) -> FieldSpec? { fields.first { $0.name == name } }
+    public var isBuiltin: Bool { Template.builtins.contains { $0.id == id } }
 
-    public var title: String {
-        switch self {
-        case .api: "API key"
-        case .token: "Client ID & secret"
-        case .account: "Account"
-        case .login: "Website login"
-        case .certificate: "Key file"
-        case .database: "Database"
-        case .server: "Server"
-        case .note: "Note"
-        case .company: "Company"
+    public static let idPattern = #"^[a-z][a-z0-9-]{0,31}$"#
+    public func validate() throws {
+        guard id.range(of: Self.idPattern, options: .regularExpression) != nil else {
+            throw SecretariatError("Template IDs start with a lowercase letter and contain only lowercase letters, digits and dashes (max. 32), e.g. bank-account.")
+        }
+        guard !title.trimmingCharacters(in: .whitespaces).isEmpty else { throw SecretariatError("A template needs a title.") }
+        guard Set(fields.map(\.name)).count == fields.count else { throw SecretariatError("Each field may appear only once in a template.") }
+        for field in fields {
+            guard field.name.range(of: ItemMeta.fieldPattern, options: .regularExpression) != nil, field.name.count <= 64 else {
+                throw SecretariatError("Field names start with a lowercase letter and contain only lowercase letters, digits and underscores, e.g. iban.")
+            }
+            guard !field.label.trimmingCharacters(in: .whitespaces).isEmpty else { throw SecretariatError("The field '\(field.name)' needs a label.") }
         }
     }
-    public var explanation: String {
-        switch self {
-        case .api: "A key for a service like OpenAI, DeepSeek or Resend."
-        case .token: "A public ID paired with a secret, e.g. for OAuth or Cloudflare Access."
-        case .account: "Account details like login, team or account ID. The password stays only for you."
-        case .login: "Access to a website. No program ever gets the password."
-        case .certificate: "A file like .p8, .p12 or a keystore. Programs get a temporary copy."
-        case .database: "Connection details for a database."
-        case .server: "Address and user of a machine."
-        case .note: "Free text, only for you."
-        case .company: "Who you work as: imprint, legal texts, sender details. Every agent session knows these."
-        }
-    }
-    public var symbol: String {
-        switch self {
-        case .api: "key.horizontal"
-        case .token: "ticket"
-        case .account: "building.2"
-        case .login: "person.badge.key"
-        case .certificate: "doc.badge.gearshape"
-        case .database: "cylinder.split.1x2"
-        case .server: "server.rack"
-        case .note: "note.text"
-        case .company: "building.columns"
-        }
-    }
-    /// What this kind asks for, in order. Further fields can be added freely.
-    public var fields: [FieldSpec] {
-        switch self {
-        case .api: [FieldSpec("api_key", "Key", .secret, required: true, prompt: "sk-…", env: "API_KEY"),
-                    FieldSpec("env_var", "Variable name", .identifier, prompt: "OPENAI_API_KEY")]
-        case .token: [FieldSpec("client_id", "Client ID", .identifier, required: true, env: "CLIENT_ID"),
-                      FieldSpec("client_secret", "Client secret", .secret, required: true, env: "CLIENT_SECRET")]
-        case .account: [FieldSpec("login", "Login or email", .identifier, required: true),
-                        FieldSpec("account_id", "Account or team ID", .identifier),
-                        FieldSpec("password", "Password (only for you)", .personal)]
-        case .login: [FieldSpec("url", "Address", .identifier, prompt: "https://…"),
-                      FieldSpec("username", "Username", .identifier, required: true),
-                      FieldSpec("password", "Password (only for you)", .personal, required: true)]
-        case .certificate: [FieldSpec("private_key", "File", .file, required: true, env: "KEY_PATH"),
-                            FieldSpec("key_id", "Key ID", .identifier, env: "KEY_ID"),
-                            FieldSpec("password", "File password", .secret)]
-        case .database: [FieldSpec("host", "Host", .identifier, required: true), FieldSpec("port", "Port", .identifier),
-                         FieldSpec("user", "User", .identifier), FieldSpec("password", "Password", .secret, required: true),
-                         FieldSpec("database", "Database", .identifier)]
-        case .server: [FieldSpec("host", "Host or IP", .identifier, required: true), FieldSpec("user", "User", .identifier)]
-        case .note: [FieldSpec("notes", "Note", .personal, required: true)]
-        case .company: [FieldSpec("legal_name", "Company name", .identifier, required: true, prompt: "moinsen GmbH"),
+    /// Stand-in for an item whose template is unknown here (deleted, or made on another Mac with a newer version).
+    public static func generic(_ id: String) -> Template { Template(id: id, title: id, symbol: "square.dashed") }
+
+    public static let builtins: [Template] = [
+        Template(id: "company", title: "Company", symbol: "building.columns", explanation: "Who you work as: imprint, legal texts, sender details. Every agent session knows these.",
+                 fields: [FieldSpec("legal_name", "Company name", .identifier, required: true, prompt: "moinsen GmbH"),
                         FieldSpec("legal_form", "Legal form", .identifier, prompt: "GmbH, UG, sole proprietor …"),
                         FieldSpec("represented_by", "Owner / managing director", .identifier, required: true),
                         FieldSpec("street", "Street and number", .identifier, required: true),
@@ -121,10 +99,49 @@ public enum ItemKind: String, Codable, CaseIterable, Sendable {
                         FieldSpec("website", "Website", .identifier, prompt: "https://…"),
                         FieldSpec("vat_id", "VAT ID", .identifier, prompt: "DE…"),
                         FieldSpec("register", "Commercial register", .identifier, prompt: "Amtsgericht …, HRB …"),
-                        FieldSpec("privacy_contact", "Privacy contact", .identifier, prompt: "privacy@…")]
-        }
+                        FieldSpec("privacy_contact", "Privacy contact", .identifier, prompt: "privacy@…")], identity: true),
+        Template(id: "api", title: "API key", symbol: "key.horizontal", explanation: "A key for a service like OpenAI, DeepSeek or Resend.",
+                 fields: [FieldSpec("api_key", "Key", .secret, required: true, prompt: "sk-…", env: "API_KEY"),
+                    FieldSpec("env_var", "Variable name", .identifier, prompt: "OPENAI_API_KEY")]),
+        Template(id: "token", title: "Client ID & secret", symbol: "ticket", explanation: "A public ID paired with a secret, e.g. for OAuth or Cloudflare Access.",
+                 fields: [FieldSpec("client_id", "Client ID", .identifier, required: true, env: "CLIENT_ID"),
+                      FieldSpec("client_secret", "Client secret", .secret, required: true, env: "CLIENT_SECRET")]),
+        Template(id: "account", title: "Account", symbol: "building.2", explanation: "Account details like login, team or account ID. The password stays only for you.",
+                 fields: [FieldSpec("login", "Login or email", .identifier, required: true),
+                        FieldSpec("account_id", "Account or team ID", .identifier),
+                        FieldSpec("password", "Password (only for you)", .personal)]),
+        Template(id: "login", title: "Website login", symbol: "person.badge.key", explanation: "Access to a website. No program ever gets the password.",
+                 fields: [FieldSpec("url", "Address", .identifier, prompt: "https://…"),
+                      FieldSpec("username", "Username", .identifier, required: true),
+                      FieldSpec("password", "Password (only for you)", .personal, required: true)]),
+        Template(id: "certificate", title: "Key file", symbol: "doc.badge.gearshape", explanation: "A file like .p8, .p12 or a keystore. Programs get a temporary copy.",
+                 fields: [FieldSpec("private_key", "File", .file, required: true, env: "KEY_PATH"),
+                            FieldSpec("key_id", "Key ID", .identifier, env: "KEY_ID"),
+                            FieldSpec("password", "File password", .secret)]),
+        Template(id: "database", title: "Database", symbol: "cylinder.split.1x2", explanation: "Connection details for a database.",
+                 fields: [FieldSpec("host", "Host", .identifier, required: true), FieldSpec("port", "Port", .identifier),
+                         FieldSpec("user", "User", .identifier), FieldSpec("password", "Password", .secret, required: true),
+                         FieldSpec("database", "Database", .identifier)]),
+        Template(id: "server", title: "Server", symbol: "server.rack", explanation: "Address and user of a machine.",
+                 fields: [FieldSpec("host", "Host or IP", .identifier, required: true), FieldSpec("user", "User", .identifier)]),
+        Template(id: "note", title: "Note", symbol: "note.text", explanation: "Free text, only for you.",
+                 fields: [FieldSpec("notes", "Note", .personal, required: true)])
+    ]
+}
+
+/// The templates in effect: built-ins, overridden or hidden by stored ones, plus the user's own.
+public struct TemplateCatalog: Sendable {
+    public let stored: [Template]
+    public init(stored: [Template]) { self.stored = stored }
+    public var all: [Template] {
+        let overrides = Dictionary(stored.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+        let builtins = Template.builtins.map { overrides[$0.id] ?? $0 }
+        let own = stored.filter { s in !Template.builtins.contains { $0.id == s.id } }.sorted { $0.title < $1.title }
+        return (builtins + own).filter { !$0.hidden }
     }
-    public func spec(_ name: String) -> FieldSpec? { fields.first { $0.name == name } }
+    public func template(_ id: String) -> Template { all.first { $0.id == id } ?? Template.generic(id) }
+    public func isKnown(_ id: String) -> Bool { all.contains { $0.id == id } }
+    public static let builtin = TemplateCatalog(stored: [])
 }
 
 public struct ItemField: Codable, Equatable, Identifiable, Sendable {
@@ -145,7 +162,7 @@ public struct ItemField: Codable, Equatable, Identifiable, Sendable {
 public struct ItemMeta: Codable, Equatable, Identifiable, Sendable {
     public var id: UUID
     public var path: String
-    public var kind: ItemKind
+    public var kind: String
     public var fields: [ItemField]
     /// yyyy-MM-dd; certificates and tokens that run out.
     public var expires: String?
@@ -153,7 +170,7 @@ public struct ItemMeta: Codable, Equatable, Identifiable, Sendable {
     public var rotated: String?
     /// Where the values came from (console, file, command).
     public var source: String
-    public init(id: UUID = UUID(), path: String, kind: ItemKind, fields: [ItemField] = [], expires: String? = nil,
+    public init(id: UUID = UUID(), path: String, kind: String, fields: [ItemField] = [], expires: String? = nil,
                 rotated: String? = nil, source: String = "") {
         self.id = id; self.path = path; self.kind = kind; self.fields = fields
         self.expires = expires; self.rotated = rotated; self.source = source

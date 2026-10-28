@@ -5,6 +5,8 @@ struct MainView: View {
     @Bindable var model: AppModel
     @State private var deletingProfile: Profile?
     @State private var deletingTarget: String?
+    @State private var deletingTemplate: Template?
+    @State private var selectedTemplate: String?
     @State private var search = ""
 
     var body: some View {
@@ -12,6 +14,7 @@ struct MainView: View {
             List(selection: $model.selection) {
                 Label("All Items", systemImage: "key.horizontal").tag("items")
                 Label("Targets", systemImage: "arrow.up.forward.app").tag("targets")
+                Label("Templates", systemImage: "square.grid.2x2").tag("templates")
                 Section("Project Profiles") {
                     ForEach(filteredProfiles) { profile in
                         Label(profile.name, systemImage: "folder").tag(profile.id.uuidString)
@@ -35,6 +38,7 @@ struct MainView: View {
                     } actions: { Button("Reload") { model.reload() } }.padding(28)
                 } else if let profile = model.currentProfile { profileDetail(profile).padding(28) }
                 else if model.selection == "targets" { targetsView.padding(28) }
+                else if model.selection == "templates" { templatesView.padding(28) }
                 else { itemLibrary }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -53,6 +57,7 @@ struct MainView: View {
         .sheet(item: $model.itemEditor) { draft in ItemEditor(model: model, draft: draft) }
         .sheet(item: $model.agentSetup) { draft in AgentSetupView(model: model, draft: draft) }
         .sheet(item: $model.profileEditor) { draft in ProfileEditor(model: model, draft: draft) }
+        .sheet(item: $model.templateEditor) { draft in TemplateEditor(model: model, draft: draft) }
         .alert("That didn't work", isPresented: flag(model.errorMessage != nil) { model.errorMessage = nil }) {
             Button("OK", role: .cancel) { model.errorMessage = nil }
         } message: { Text(model.errorMessage ?? "") }
@@ -74,6 +79,16 @@ struct MainView: View {
                 if let name = deletingTarget { model.deleteTarget(named: name); model.refreshTargets() }; deletingTarget = nil
             }
         } message: { Text("‘\(deletingTarget ?? "")’ will be removed from the list. Values already pushed stay where they are.") }
+        .alert("Delete template?", isPresented: flag(deletingTemplate != nil) { deletingTemplate = nil }) {
+            Button("Cancel", role: .cancel) { deletingTemplate = nil }
+            Button(deletingTemplate?.isBuiltin == true ? "Hide" : "Delete", role: .destructive) {
+                if let template = deletingTemplate { model.deleteTemplate(template) }; deletingTemplate = nil
+            }
+        } message: {
+            Text(deletingTemplate?.isBuiltin == true
+                 ? "The built-in template ‘\(deletingTemplate?.title ?? "")’ will be hidden on all your Macs. You can restore it later. Existing items keep their fields."
+                 : "‘\(deletingTemplate?.title ?? "")’ will be removed from all your Macs. Existing items keep their fields and show plain field names.")
+        }
     }
 
     private func flag(_ value: Bool, clear: @escaping () -> Void) -> SwiftUI.Binding<Bool> {
@@ -86,10 +101,10 @@ struct MainView: View {
     private var filteredItems: [ItemMeta] {
         guard !query.isEmpty else { return model.items }
         return model.items.filter { item in
-            item.path.lowercased().contains(query) || item.kind.title.lowercased().contains(query)
+            item.path.lowercased().contains(query) || model.template(item.kind).title.lowercased().contains(query)
                 || item.source.lowercased().contains(query) || item.fields.contains {
                     $0.name.lowercased().contains(query) || ($0.value?.lowercased().contains(query) ?? false)
-                        || (item.kind.spec($0.name)?.label.lowercased().contains(query) ?? false)
+                        || (model.template(item.kind).spec($0.name)?.label.lowercased().contains(query) ?? false)
                 }
         }
     }
@@ -112,7 +127,7 @@ struct MainView: View {
                         Text("Store it once. Use it on all your Macs and in your projects.").foregroundStyle(.secondary)
                     }
                     Spacer()
-                    Button("Add Item", systemImage: "plus") { model.itemEditor = ItemDraft(revision: model.configuration.revision) }
+                    Button("Add Item", systemImage: "plus") { model.itemEditor = model.newItemDraft() }
                         .buttonStyle(.borderedProminent)
                 }
                 if model.items.isEmpty {
@@ -121,7 +136,7 @@ struct MainView: View {
                     } description: {
                         Text("Add your first credential. Values live in the keychain and sync through iCloud.")
                     } actions: {
-                        Button("Add First Item") { model.itemEditor = ItemDraft(revision: model.configuration.revision) }
+                        Button("Add First Item") { model.itemEditor = model.newItemDraft() }
                     }.frame(maxHeight: .infinity)
                 } else {
                     if !query.isEmpty {
@@ -165,7 +180,7 @@ struct MainView: View {
 
     private func itemRow(_ item: ItemMeta) -> some View {
         HStack(spacing: 12) {
-            Image(systemName: item.kind.symbol).foregroundStyle(.tint).frame(width: 22)
+            Image(systemName: model.template(item.kind).symbol).foregroundStyle(.tint).frame(width: 22)
             VStack(alignment: .leading, spacing: 3) {
                 Text(item.path).font(.headline)
                 Text(item.fields.map(\.name).joined(separator: ", ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
@@ -227,6 +242,70 @@ struct MainView: View {
         }
         .padding(16).frame(maxWidth: .infinity, alignment: .leading)
         .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    // MARK: Templates
+
+    private var filteredTemplates: [Template] {
+        guard !query.isEmpty else { return model.catalog.all }
+        return model.catalog.all.filter { $0.id.contains(query) || $0.title.lowercased().contains(query) }
+    }
+
+    private var templatesView: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Templates").font(.largeTitle.bold())
+                    Text("What each kind of item asks for. Changes sync to all your Macs.").foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("New Template", systemImage: "plus") { model.templateEditor = TemplateDraft(template: Template(id: "", title: ""), isNew: true) }
+                    .buttonStyle(.borderedProminent)
+            }
+            List(selection: $selectedTemplate) {
+                ForEach(filteredTemplates) { template in templateRow(template).tag(template.id) }
+            }
+            .listStyle(.inset)
+            .contextMenu(forSelectionType: String.self) { ids in
+                if let template = ids.first.map(model.template) {
+                    Button("Edit …") { model.templateEditor = TemplateDraft(template: template, isNew: false) }
+                    if model.isOverridden(template) { Button("Reset to Default") { model.resetTemplate(template) } }
+                    Button("Delete …", role: .destructive) { deletingTemplate = template }
+                }
+            } primaryAction: { ids in
+                if let template = ids.first.map(model.template) { model.templateEditor = TemplateDraft(template: template, isNew: false) }
+            }
+            .overlay { if filteredTemplates.isEmpty && !query.isEmpty { ContentUnavailableView.search(text: search) } }
+            if !model.hiddenBuiltins.isEmpty {
+                HStack(spacing: 8) {
+                    Text("Hidden built-ins:").foregroundStyle(.secondary)
+                    ForEach(model.hiddenBuiltins) { template in
+                        Text(template.title).foregroundStyle(.secondary)
+                        Button("Restore") { model.resetTemplate(template) }.controlSize(.small)
+                    }
+                }.font(.callout)
+            }
+        }
+    }
+
+    private func templateRow(_ template: Template) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: template.symbol).foregroundStyle(.tint).frame(width: 22)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(template.title).font(.headline)
+                    if template.isBuiltin { TagBadge(title: model.isOverridden(template) ? "built-in, changed" : "built-in") }
+                    if template.identity { TagBadge(title: "identity") }
+                }
+                Text("\(template.id) · \(template.fields.count) \(template.fields.count == 1 ? "field" : "fields")")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 8)
+            if model.isOverridden(template) { Button("Reset to Default") { model.resetTemplate(template) }.buttonStyle(.borderless) }
+            Button("Edit") { model.templateEditor = TemplateDraft(template: template, isNew: false) }
+            Button { deletingTemplate = template } label: { Image(systemName: "trash") }
+                .buttonStyle(.borderless).accessibilityLabel("Delete template \(template.title)")
+        }.padding(.vertical, 4)
     }
 
     // MARK: Profiles
@@ -293,10 +372,10 @@ struct ItemDetail: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 HStack(alignment: .top) {
-                    Image(systemName: item.kind.symbol).font(.title).foregroundStyle(.tint)
+                    Image(systemName: model.template(item.kind).symbol).font(.title).foregroundStyle(.tint)
                     VStack(alignment: .leading, spacing: 4) {
                         Text(item.path).font(.title2.bold()).textSelection(.enabled)
-                        Text(item.kind.title).foregroundStyle(.secondary)
+                        Text(model.template(item.kind).title).foregroundStyle(.secondary)
                     }
                     Spacer()
                     Button("Edit") { model.edit(item) }
@@ -333,7 +412,7 @@ struct ItemDetail: View {
     private func fieldRow(_ field: ItemField) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.kind.spec(field.name)?.label ?? field.name)
+                Text(model.template(item.kind).spec(field.name)?.label ?? field.name)
                 Text("\(field.name) · \(field.kind.title)").font(.caption).foregroundStyle(.secondary)
             }.frame(width: 150, alignment: .leading)
             switch field.kind {
@@ -375,6 +454,14 @@ struct ExpiryBadge: View {
                 .font(.caption.bold()).padding(.horizontal, 7).padding(.vertical, 2)
                 .foregroundStyle(.white).background(days < 0 ? Color.red : Color.orange, in: Capsule())
         }
+    }
+}
+
+struct TagBadge: View {
+    let title: String
+    var body: some View {
+        Text(title).font(.caption2.bold()).padding(.horizontal, 6).padding(.vertical, 1)
+            .foregroundStyle(.secondary).background(.quaternary, in: Capsule())
     }
 }
 

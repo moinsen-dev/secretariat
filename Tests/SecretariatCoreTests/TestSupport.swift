@@ -32,7 +32,7 @@ struct AgentFixture {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let paths = AppPaths(directory: root.appendingPathComponent("vault"))
         vault = Vault(configuration: ConfigurationStore(paths: paths), items: items, audit: AuditLog(url: paths.auditLog))
-        item = ItemMeta(path: "moinsen/test/api", kind: .api,
+        item = ItemMeta(path: "moinsen/test/api", kind: "api",
                         fields: [ItemField(name: "key_id", kind: .identifier, value: "KEY-123"), ItemField(name: "secret", kind: .secret),
                                  ItemField(name: "password", kind: .personal)])
         try vault.save(item, secrets: ["secret": "never-output-this-value", "password": "personal-never-out"])

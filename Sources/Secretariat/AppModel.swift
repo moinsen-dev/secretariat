@@ -18,7 +18,9 @@ struct FieldDraft: Identifiable {
 struct ItemDraft: Identifiable {
     let id = UUID()
     var existing: ItemMeta?
-    var kind = ItemKind.api
+    /// The template the item follows; the item stores its id as `kind`.
+    var template: Template
+    var kind: String { template.id }
     /// Path parts: moinsen/<provider>[/<label>]. With `customPath` the path is typed directly (Advanced).
     var provider = ""
     var label = ""
@@ -31,27 +33,29 @@ struct ItemDraft: Identifiable {
     var everywhere = false
     var revision = 0
 
-    init(revision: Int) {
+    init(template: Template, revision: Int) {
+        self.template = template
         self.revision = revision
-        fields = Self.template(kind)
+        fields = Self.fields(template)
+        if template.identity { provider = "moinsen" }
     }
-    init(item: ItemMeta, revision: Int) {
-        existing = item; kind = item.kind; source = item.source; expires = item.expires ?? ""
+    init(item: ItemMeta, template: Template, revision: Int) {
+        existing = item; self.template = template; source = item.source; expires = item.expires ?? ""
         let parts = item.path.split(separator: "/").map(String.init)
-        if item.kind == .company, parts.count == 2, parts[1] == "company" { provider = parts[0] }
+        if template.identity, parts.count == 2, parts[1] == item.kind { provider = parts[0] }
         else if parts.count >= 2, parts.count <= 3, parts[0] == "moinsen" {
             provider = parts[1]; label = parts.count == 3 ? parts[2] : ""
         } else { customPath = true; typedPath = item.path }
         fields = item.fields.map {
             FieldDraft(id: $0.id, name: $0.name, kind: $0.kind, value: $0.value ?? "", fileName: $0.fileName, storedName: $0.name)
         }
-        // Optional fields of the kind that were left empty are not stored; offer them again when editing.
-        for spec in item.kind.fields where !fields.contains(where: { $0.name == spec.name }) {
+        // Optional fields of the template that were left empty are not stored; offer them again when editing.
+        for spec in template.fields where !fields.contains(where: { $0.name == spec.name }) {
             fields.append(FieldDraft(name: spec.name, kind: spec.kind))
         }
         self.revision = revision
     }
-    static func template(_ kind: ItemKind) -> [FieldDraft] { kind.fields.map { FieldDraft(name: $0.name, kind: $0.kind) } }
+    static func fields(_ template: Template) -> [FieldDraft] { template.fields.map { FieldDraft(name: $0.name, kind: $0.kind) } }
 
     static func slug(_ text: String) -> String {
         text.lowercased().replacingOccurrences(of: #"[^a-z0-9._@-]+"#, with: "-", options: .regularExpression)
@@ -59,20 +63,53 @@ struct ItemDraft: Identifiable {
     }
     var path: String {
         if customPath { return typedPath.trimmingCharacters(in: .whitespacesAndNewlines) }
-        // A company lives at <organisation>/company (moinsen/company is the default every agent reads first).
-        if kind == .company { let o = Self.slug(provider); return o.isEmpty ? "" : "\(o)/company" }
+        // Identity items live at <organisation>/<template id> (moinsen/company is the default every agent reads first).
+        if template.identity { let o = Self.slug(provider); return o.isEmpty ? "" : "\(o)/\(kind)" }
         let p = Self.slug(provider), l = Self.slug(label)
         return p.isEmpty ? "" : "moinsen/\(p)" + (l.isEmpty ? "" : "/\(l)")
     }
     /// Variable prefix for "everywhere": OPENAI from moinsen/openai.
     var envPrefix: String { Self.slug(provider).uppercased().replacingOccurrences(of: #"[^A-Z0-9]+"#, with: "_", options: .regularExpression) }
     func field(_ name: String) -> FieldDraft? { fields.first { $0.name == name } }
-    /// Required fields of the kind that are still empty (stored values count as filled).
+    /// Required fields of the template that are still empty (stored values count as filled).
     var missing: [String] {
-        (path.isEmpty ? [customPath ? "Location" : (kind == .company ? "Organisation" : "Provider or account")] : []) + kind.fields.filter(\.required).filter { spec in
+        (path.isEmpty ? [customPath ? "Location" : (template.identity ? "Organisation" : "Provider or account")] : []) + template.fields.filter(\.required).filter { spec in
             guard let f = field(spec.name) else { return true }
             return f.value.isEmpty && f.fileData == nil && f.storedName == nil
         }.map(\.label)
+    }
+}
+
+/// A template field row in the template editor (stable identity while the name is being typed).
+struct FieldSpecDraft: Identifiable {
+    let id = UUID()
+    var spec: FieldSpec
+}
+
+struct TemplateDraft: Identifiable {
+    let id = UUID()
+    var isNew: Bool
+    var template: Template
+    var fields: [FieldSpecDraft]
+    init(template: Template, isNew: Bool) {
+        self.isNew = isNew; self.template = template
+        fields = template.fields.map { FieldSpecDraft(spec: $0) }
+    }
+    /// The template as it would be saved: trimmed names, labels and suffixes.
+    var result: Template {
+        var t = template
+        t.id = t.id.trimmingCharacters(in: .whitespaces)
+        t.symbol = t.symbol.trimmingCharacters(in: .whitespaces)
+        t.explanation = t.explanation.trimmingCharacters(in: .whitespacesAndNewlines)
+        t.fields = fields.map { row in
+            var spec = row.spec
+            spec.name = spec.name.trimmingCharacters(in: .whitespaces)
+            spec.label = spec.label.trimmingCharacters(in: .whitespaces)
+            let suffix = spec.envSuffix?.trimmingCharacters(in: .whitespaces) ?? ""
+            spec.envSuffix = suffix.isEmpty ? nil : suffix
+            return spec
+        }
+        return t
     }
 }
 
@@ -95,6 +132,7 @@ final class AppModel {
     let paths = AppPaths()
     var configuration = Configuration()
     var items: [ItemMeta] = []
+    var catalog = TemplateCatalog.builtin
     var targetReport: Targets.Report?
     var selection = "items"
     var selectedItem: UUID?
@@ -102,10 +140,20 @@ final class AppModel {
     var loadFailed = false
     var itemEditor: ItemDraft?
     var profileEditor: ProfileDraft?
+    var templateEditor: TemplateDraft?
     var copied = false
     var agentSetup: AgentSetupDraft?
 
     init() { reload() }
+    func template(_ id: String) -> Template { catalog.template(id) }
+    /// Built-ins removed by the user (hidden on every Mac, restorable).
+    var hiddenBuiltins: [Template] { catalog.stored.filter { $0.hidden && $0.isBuiltin } }
+    /// A built-in whose stored version differs from the default.
+    func isOverridden(_ template: Template) -> Bool { template.isBuiltin && catalog.stored.contains { $0.id == template.id && !$0.hidden } }
+    func newItemDraft() -> ItemDraft {
+        let start = catalog.isKnown("api") ? template("api") : (catalog.all.first ?? Template.generic("api"))
+        return ItemDraft(template: start, revision: configuration.revision)
+    }
     var vault: Vault { Vault(paths: paths, expectedRevision: configuration.revision) }
     var currentProfile: Profile? { configuration.profiles.first { $0.id.uuidString == selection } }
     var currentItem: ItemMeta? { items.first { $0.id == selectedItem } }
@@ -129,6 +177,7 @@ final class AppModel {
             configuration = try ConfigurationStore(paths: paths).load()
             loadFailed = false
         } catch { loadFailed = true; errorMessage = error.localizedDescription; return }
+        catalog = Vault(paths: paths).catalog()
         do { items = try Vault(paths: paths).list() }
         catch { items = []; errorMessage = error.localizedDescription }
         if selection == "targets" { refreshTargets() }
@@ -149,9 +198,9 @@ final class AppModel {
             let expires = draft.expires.trimmingCharacters(in: .whitespaces)
             let meta = ItemMeta(
                 id: draft.existing?.id ?? UUID(), path: draft.path, kind: draft.kind,
-                // Optional fields of the kind that stayed empty are not stored.
+                // Optional fields of the template that stayed empty are not stored.
                 fields: draft.fields.filter { f in
-                    !(draft.kind.spec(f.name).map { !$0.required } ?? false) || !f.value.isEmpty || f.fileData != nil || f.storedName != nil
+                    !(draft.template.spec(f.name).map { !$0.required } ?? false) || !f.value.isEmpty || f.fileData != nil || f.storedName != nil
                 }.map {
                     ItemField(id: $0.id, name: $0.name.trimmingCharacters(in: .whitespaces), kind: $0.kind,
                               value: $0.kind == .identifier ? $0.value.trimmingCharacters(in: .whitespacesAndNewlines) : nil,
@@ -180,7 +229,7 @@ final class AppModel {
         let config = try ConfigurationStore(paths: paths).load()
         var profile = config.profiles.first { $0.name == "werkzeuge" } ?? Profile(name: "werkzeuge", directory: Profile.anywhere)
         for field in meta.fields where field.kind.isUsable {
-            guard let suffix = draft.kind.spec(field.name)?.envSuffix else { continue }
+            guard let suffix = draft.template.spec(field.name)?.envSuffix else { continue }
             var variable = "\(draft.envPrefix)_\(suffix)"
             if field.name == "api_key", let custom = meta.field("env_var")?.value, !custom.isEmpty { variable = custom }
             profile.bindings.removeAll { $0.variable == variable }
@@ -191,7 +240,7 @@ final class AppModel {
     /// Item waiting for the delete confirmation (list, detail, editor, Delete key).
     var pendingDelete: ItemMeta?
     func item(_ id: UUID) -> ItemMeta? { items.first { $0.id == id } }
-    func edit(_ item: ItemMeta) { itemEditor = ItemDraft(item: item, revision: configuration.revision) }
+    func edit(_ item: ItemMeta) { itemEditor = ItemDraft(item: item, template: template(item.kind), revision: configuration.revision) }
     func deleteItem(_ item: ItemMeta) {
         if perform({ try vault.delete(id: item.id) }) { selectedItem = nil }
     }
@@ -228,6 +277,18 @@ final class AppModel {
             try FileManager.default.setAttributes([.posixPermissions: 0o600], ofItemAtPath: url.path)
         } catch { errorMessage = error.localizedDescription }
     }
+
+    // MARK: templates
+
+    func saveTemplate(_ draft: TemplateDraft) -> Bool {
+        let template = draft.result
+        return perform {
+            if draft.isNew && catalog.isKnown(template.id) { throw SecretariatError("A template \(template.id) already exists.") }
+            try Vault(paths: paths).saveTemplate(template)
+        }
+    }
+    func deleteTemplate(_ template: Template) { perform { try Vault(paths: paths).deleteTemplate(id: template.id) } }
+    func resetTemplate(_ template: Template) { perform { try Vault(paths: paths).resetTemplate(id: template.id) } }
 
     func saveProfile(_ profile: Profile, expectedRevision: Int) -> Bool {
         let saved = perform { try Vault(paths: paths, expectedRevision: expectedRevision).saveProfile(profile) }

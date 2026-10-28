@@ -29,8 +29,10 @@ struct SecretariatApp: App {
         .defaultSize(width: 990, height: 650)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("New Item …") { model.itemEditor = ItemDraft(revision: model.configuration.revision) }.keyboardShortcut("n")
+                Button("New Item …") { model.itemEditor = model.newItemDraft() }.keyboardShortcut("n")
                 Button("New Project Profile …") { model.profileEditor = ProfileDraft(revision: model.configuration.revision) }.keyboardShortcut("n", modifiers: [.command, .shift])
+                Button("New Template …") { model.templateEditor = TemplateDraft(template: Template(id: "", title: ""), isNew: true) }
+                    .keyboardShortcut("n", modifiers: [.command, .option])
             }
         }
     }

@@ -18,7 +18,7 @@ struct ItemEditor: View {
             Text(draft.existing == nil ? "Add Item" : "Edit Item").font(.title2.bold())
             if draft.existing == nil { kindPicker }
             Form {
-                if !draft.customPath && draft.kind == .company {
+                if !draft.customPath && draft.template.identity {
                     TextField("Organisation", text: $draft.provider, prompt: Text("moinsen (default), or e.g. private"))
                 } else if !draft.customPath {
                     LabeledContent("Provider or account") {
@@ -30,25 +30,25 @@ struct ItemEditor: View {
                     }
                     TextField("Suffix (optional)", text: $draft.label, prompt: Text("empty = main key, otherwise e.g. a project name"))
                 }
-                ForEach(draft.kind.fields, id: \.name) { spec in
+                ForEach(draft.template.fields, id: \.name) { spec in
                     if let index = draft.fields.firstIndex(where: { $0.name == spec.name }) {
                         LabeledContent(spec.label + (spec.required ? " *" : "")) { valueControl($draft.fields[index], prompt: spec.prompt) }
                     }
                 }
-                if draft.kind.fields.contains(where: { $0.envSuffix != nil }) && !draft.customPath {
+                if draft.template.fields.contains(where: { $0.envSuffix != nil }) && !draft.customPath {
                     Toggle(isOn: $draft.everywhere) {
                         Text("Available in all projects and tools")
                         Text(everywhereHint).font(.caption).foregroundStyle(.secondary)
                     }
                 }
             }.textFieldStyle(.roundedBorder)
-            .onChange(of: draft.kind) { _, kind in
+            .onChange(of: draft.kind) { _, _ in
                 let untouched = draft.fields.allSatisfy { $0.value.isEmpty && $0.fileData == nil }
-                if draft.existing == nil && untouched { draft.fields = ItemDraft.template(kind) }
-                if draft.existing == nil && kind == .company && draft.provider.isEmpty { draft.provider = "moinsen" }
+                if draft.existing == nil && untouched { draft.fields = ItemDraft.fields(draft.template) }
+                if draft.existing == nil && draft.template.identity && draft.provider.isEmpty { draft.provider = "moinsen" }
             }
             .onChange(of: draft.provider) { _, _ in
-                if draft.kind == .api, let i = draft.fields.firstIndex(where: { $0.name == "env_var" }) {
+                if draft.kind == "api", let i = draft.fields.firstIndex(where: { $0.name == "env_var" }) {
                     draft.fields[i].value = draft.envPrefix.isEmpty ? "" : "\(draft.envPrefix)_API_KEY"
                 }
             }
@@ -91,7 +91,7 @@ struct ItemEditor: View {
     }
 
     private var everywhereHint: String {
-        let names = draft.kind.fields.compactMap { spec in spec.envSuffix.map { _ in spec } }.map { spec in
+        let names = draft.template.fields.compactMap { spec in spec.envSuffix.map { _ in spec } }.map { spec in
             spec.name == "api_key" ? (draft.field("env_var")?.value.isEmpty == false ? draft.field("env_var")!.value : "\(draft.envPrefix)_API_KEY")
                                    : "\(draft.envPrefix)_\(spec.envSuffix!)"
         }
@@ -102,18 +102,18 @@ struct ItemEditor: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("What are you storing?").font(.headline)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
-                ForEach(ItemKind.allCases, id: \.self) { kind in
-                    Button { draft.kind = kind } label: {
+                ForEach(model.catalog.all) { template in
+                    Button { draft.template = template } label: {
                         VStack(spacing: 4) {
-                            Image(systemName: kind.symbol).font(.title3)
-                            Text(kind.title).font(.caption).multilineTextAlignment(.center).lineLimit(2)
+                            Image(systemName: template.symbol).font(.title3)
+                            Text(template.title).font(.caption).multilineTextAlignment(.center).lineLimit(2)
                         }.frame(maxWidth: .infinity, minHeight: 48).padding(6)
-                        .background(draft.kind == kind ? Color.accentColor.opacity(0.18) : Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
-                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(draft.kind == kind ? Color.accentColor : .clear))
-                    }.buttonStyle(.plain).accessibilityLabel(kind.title)
+                        .background(draft.kind == template.id ? Color.accentColor.opacity(0.18) : Color.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 8))
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(draft.kind == template.id ? Color.accentColor : .clear))
+                    }.buttonStyle(.plain).accessibilityLabel(template.title)
                 }
             }
-            Text(draft.kind.explanation).font(.caption).foregroundStyle(.secondary)
+            Text(draft.template.explanation).font(.caption).foregroundStyle(.secondary)
         }
     }
 
@@ -130,7 +130,7 @@ struct ItemEditor: View {
             TextField("Expires", text: $draft.expires, prompt: Text("YYYY-MM-DD, optional")).textFieldStyle(.roundedBorder)
             Text("More fields").font(.subheadline.bold())
             ForEach($draft.fields) { $field in
-                if draft.kind.spec(field.name) == nil {
+                if draft.template.spec(field.name) == nil {
                     HStack {
                         TextField("field_name", text: $field.name).textFieldStyle(.roundedBorder).frame(width: 140).accessibilityLabel("Field name")
                         Picker("Field kind", selection: $field.kind) { ForEach(FieldKind.allCases, id: \.self) { Text($0.title).tag($0) } }
@@ -235,5 +235,98 @@ struct ProfileEditor: View {
             case .failure: error = "The folder could not be chosen. Please try again."
             }
         }
+    }
+}
+
+struct TemplateEditor: View {
+    let model: AppModel
+    @State var draft: TemplateDraft
+    @State private var error: String?
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(draft.isNew ? "New Template" : "Edit Template").font(.title2.bold())
+            Form {
+                if draft.isNew {
+                    LabeledContent("ID") {
+                        VStack(alignment: .leading, spacing: 2) {
+                            TextField("", text: $draft.template.id, prompt: Text("bank-account")).accessibilityLabel("ID")
+                            Text("lowercase, e.g. bank-account").font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                } else {
+                    LabeledContent("ID") { Text(draft.template.id).font(.system(.body, design: .monospaced)).textSelection(.enabled) }
+                }
+                TextField("Title", text: $draft.template.title, prompt: Text("Bank account"))
+                LabeledContent("Symbol") {
+                    HStack {
+                        TextField("", text: $draft.template.symbol, prompt: Text("SF Symbol name, e.g. banknote")).accessibilityLabel("Symbol")
+                        Image(systemName: draft.template.symbol.isEmpty ? "square.dashed" : draft.template.symbol)
+                            .font(.title3).foregroundStyle(.tint).frame(width: 28)
+                    }
+                }
+                TextField("Explanation", text: $draft.template.explanation, prompt: Text("What is this for?"), axis: .vertical).lineLimit(1...3)
+                Toggle("Identity — export to company.md (who you work as)", isOn: $draft.template.identity)
+            }.textFieldStyle(.roundedBorder)
+            Text("Fields").font(.headline)
+            ScrollView {
+                VStack(spacing: 8) {
+                    if !draft.fields.isEmpty {
+                        HStack(spacing: 6) {
+                            Text("Name").frame(width: 110, alignment: .leading)
+                            Text("Label").frame(width: 130, alignment: .leading)
+                            Text("Kind").frame(width: 110, alignment: .leading)
+                            Text("Req.").frame(width: 34, alignment: .leading)
+                            Text("Prompt").frame(maxWidth: .infinity, alignment: .leading)
+                            Text("Env suffix").frame(width: 90, alignment: .leading)
+                            Spacer().frame(width: 76)
+                        }.font(.caption).foregroundStyle(.secondary)
+                    }
+                    ForEach($draft.fields) { $row in
+                        HStack(spacing: 6) {
+                            TextField("", text: $row.spec.name, prompt: Text("field_name")).frame(width: 110).accessibilityLabel("Field name")
+                            TextField("", text: $row.spec.label, prompt: Text("Label")).frame(width: 130).accessibilityLabel("Field label")
+                            Picker("Field kind", selection: $row.spec.kind) { ForEach(FieldKind.allCases, id: \.self) { Text($0.title).tag($0) } }
+                                .labelsHidden().frame(width: 110)
+                            Toggle("Required", isOn: $row.spec.required).labelsHidden().frame(width: 34)
+                            TextField("", text: $row.spec.prompt, prompt: Text("optional")).accessibilityLabel("Prompt")
+                            TextField("", text: SwiftUI.Binding(get: { row.spec.envSuffix ?? "" }, set: { row.spec.envSuffix = $0.isEmpty ? nil : $0 }),
+                                      prompt: Text("optional")).frame(width: 90).accessibilityLabel("Env suffix")
+                            HStack(spacing: 2) {
+                                Button { move(row.id, by: -1) } label: { Image(systemName: "chevron.up") }
+                                    .disabled(draft.fields.first?.id == row.id).accessibilityLabel("Move up")
+                                Button { move(row.id, by: 1) } label: { Image(systemName: "chevron.down") }
+                                    .disabled(draft.fields.last?.id == row.id).accessibilityLabel("Move down")
+                                Button { draft.fields.removeAll { $0.id == row.id } } label: { Image(systemName: "minus.circle") }
+                                    .accessibilityLabel("Remove field")
+                            }.buttonStyle(.borderless).frame(width: 76)
+                        }.textFieldStyle(.roundedBorder)
+                    }
+                    if draft.fields.isEmpty {
+                        Text("No fields yet. Items of this template then only get the fields you add per item.")
+                            .foregroundStyle(.secondary).frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }.padding(.vertical, 2)
+            }.frame(minHeight: 80, maxHeight: 280)
+            Button("Add Field", systemImage: "plus") { draft.fields.append(FieldSpecDraft(spec: FieldSpec("", "", .identifier))) }
+            Text("Env suffix: with “Available in all projects and tools” the field becomes <PROVIDER>_<suffix>, e.g. API_KEY.")
+                .font(.caption).foregroundStyle(.secondary)
+            if let error { Text(error).foregroundStyle(.red).font(.callout) }
+            HStack {
+                Spacer()
+                Button("Cancel", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Save") {
+                    if model.saveTemplate(draft) { dismiss() }
+                    else { error = model.errorMessage; model.errorMessage = nil }
+                }.keyboardShortcut(.defaultAction)
+                    .disabled(draft.template.id.isEmpty || draft.template.title.trimmingCharacters(in: .whitespaces).isEmpty)
+            }
+        }.padding(28).frame(width: 860)
+    }
+
+    private func move(_ id: UUID, by offset: Int) {
+        guard let index = draft.fields.firstIndex(where: { $0.id == id }), draft.fields.indices.contains(index + offset) else { return }
+        draft.fields.swapAt(index, index + offset)
     }
 }

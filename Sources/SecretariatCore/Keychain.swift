@@ -96,3 +96,68 @@ public struct SyncedItemStore: ItemStore {
         throw CredentialError.unavailable(status)
     }
 }
+
+// MARK: - Templates
+
+public protocol TemplateStore {
+    func list() throws -> [Template]
+    func save(_ template: Template) throws
+    func delete(id: String) throws
+}
+
+/// Templates sync like items: one data-protection keychain entry per template (account = template id,
+/// data = template JSON). No secrets in here, but the same store keeps them on every Mac.
+public struct SyncedTemplateStore: TemplateStore {
+    public let service: String
+    public let accessGroup: String?
+    public init(service: String, accessGroup: String? = SyncedItemStore.accessGroup) {
+        self.service = service; self.accessGroup = accessGroup
+    }
+    private func base() -> [String: Any] {
+        var query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
+            kSecUseDataProtectionKeychain as String: true, kSecAttrSynchronizable as String: true,
+        ]
+        if let accessGroup { query[kSecAttrAccessGroup as String] = accessGroup }
+        return query
+    }
+    public func list() throws -> [Template] {
+        var query = base()
+        query[kSecReturnAttributes as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitAll
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        if status == errSecItemNotFound { return [] }
+        guard status == errSecSuccess else { throw CredentialError.unavailable(status) }
+        return (result as? [[String: Any]] ?? []).compactMap { a in
+            (a[kSecAttrGeneric as String] as? Data).flatMap { try? JSONDecoder().decode(Template.self, from: $0) }
+        }
+    }
+    public func save(_ template: Template) throws {
+        var query = base(); query[kSecAttrAccount as String] = template.id
+        let attributes: [String: Any] = [kSecAttrGeneric as String: try JSONEncoder().encode(template),
+                                         kSecAttrLabel as String: "Secretariat template · \(template.id)"]
+        var status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
+        if status == errSecItemNotFound {
+            query.merge(attributes) { _, new in new }
+            query[kSecValueData as String] = Data()
+            query[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlock
+            status = SecItemAdd(query as CFDictionary, nil)
+        }
+        guard status == errSecSuccess else { throw CredentialError.unavailable(status) }
+    }
+    public func delete(id: String) throws {
+        var query = base(); query[kSecAttrAccount as String] = id
+        let status = SecItemDelete(query as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else { throw CredentialError.unavailable(status) }
+    }
+}
+
+/// Templates kept in memory: tests and homes without keychain access.
+public final class InMemoryTemplateStore: TemplateStore, @unchecked Sendable {
+    public var templates: [String: Template] = [:]
+    public init() {}
+    public func list() throws -> [Template] { Array(templates.values) }
+    public func save(_ template: Template) throws { templates[template.id] = template }
+    public func delete(id: String) throws { templates[id] = nil }
+}

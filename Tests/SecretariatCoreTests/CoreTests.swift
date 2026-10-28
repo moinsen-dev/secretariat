@@ -3,13 +3,13 @@ import Testing
 @testable import SecretariatCore
 
 @Test func itemValidationGuardsPathsFieldsAndWhereValuesLive() throws {
-    #expect(throws: SecretariatError.self) { try ItemMeta(path: "/bad", kind: .api).validate() }
-    #expect(throws: SecretariatError.self) { try ItemMeta(path: "a b", kind: .api).validate() }
-    #expect(throws: SecretariatError.self) { try ItemMeta(path: "x", kind: .api, fields: [ItemField(name: "Bad", kind: .secret)]).validate() }
-    #expect(throws: SecretariatError.self) { try ItemMeta(path: "x", kind: .api, fields: [ItemField(name: "id", kind: .identifier)]).validate() }
-    #expect(throws: SecretariatError.self) { try ItemMeta(path: "x", kind: .api, fields: [ItemField(name: "s", kind: .secret, value: "leak")]).validate() }
-    #expect(throws: SecretariatError.self) { try ItemMeta(path: "x", kind: .api, fields: [ItemField(name: "a", kind: .secret), ItemField(name: "a", kind: .file)]).validate() }
-    try ItemMeta(path: "moinsen/apple-developer@prod", kind: .account, fields: [ItemField(name: "team_id", kind: .identifier, value: "VXX")], expires: "2027-01-31").validate()
+    #expect(throws: SecretariatError.self) { try ItemMeta(path: "/bad", kind: "api").validate() }
+    #expect(throws: SecretariatError.self) { try ItemMeta(path: "a b", kind: "api").validate() }
+    #expect(throws: SecretariatError.self) { try ItemMeta(path: "x", kind: "api", fields: [ItemField(name: "Bad", kind: .secret)]).validate() }
+    #expect(throws: SecretariatError.self) { try ItemMeta(path: "x", kind: "api", fields: [ItemField(name: "id", kind: .identifier)]).validate() }
+    #expect(throws: SecretariatError.self) { try ItemMeta(path: "x", kind: "api", fields: [ItemField(name: "s", kind: .secret, value: "leak")]).validate() }
+    #expect(throws: SecretariatError.self) { try ItemMeta(path: "x", kind: "api", fields: [ItemField(name: "a", kind: .secret), ItemField(name: "a", kind: .file)]).validate() }
+    try ItemMeta(path: "moinsen/apple-developer@prod", kind: "account", fields: [ItemField(name: "team_id", kind: .identifier, value: "VXX")], expires: "2027-01-31").validate()
     #expect(try FieldReference("moinsen/cloudflare/access/client_secret") == FieldReference(path: "moinsen/cloudflare/access", field: "client_secret"))
     #expect(throws: AgentError.self) { try FieldReference("nofield") }
 }
@@ -29,22 +29,22 @@ import Testing
 
 @Test func pathsAreUniqueAndRotationIsStampedOnValueChange() throws {
     let f = try AgentFixture(); defer { f.cleanup() }
-    #expect(throws: AgentError.self) { try f.vault.save(ItemMeta(path: "MOINSEN/test/api", kind: .api)) }
+    #expect(throws: AgentError.self) { try f.vault.save(ItemMeta(path: "MOINSEN/test/api", kind: "api")) }
     var item = try f.vault.item(path: "moinsen/test/api")
     item.rotated = "2020-01-01"; try f.vault.save(item)                       // metadata only: no stamp
     #expect(try f.vault.item(path: "moinsen/test/api").rotated == "2020-01-01")
     try f.vault.save(item, secrets: ["secret": "new", "password": "personal-never-out"])
     #expect(try f.vault.item(path: "moinsen/test/api").rotated == today())
     // two Macs created the same path at once: lookups refuse to guess
-    f.items.metas[UUID()] = ItemMeta(path: "moinsen/test/api", kind: .api)
+    f.items.metas[UUID()] = ItemMeta(path: "moinsen/test/api", kind: "api")
     #expect(throws: AgentError.self) { try f.vault.item(path: "moinsen/test/api") }
 }
 
 @Test func setValueCreatesItemsAndFieldsButNeverOverwritesSilently() throws {
     let f = try AgentFixture(); defer { f.cleanup() }
     let ref = FieldReference(path: "moinsen/new/token", field: "client_secret")
-    try f.vault.setValue(ref, value: "v1", itemKind: .token)
-    #expect(try f.vault.item(path: "moinsen/new/token").kind == .token)
+    try f.vault.setValue(ref, value: "v1", itemKind: "token")
+    #expect(try f.vault.item(path: "moinsen/new/token").kind == "token")
     #expect(throws: AgentError.self) { try f.vault.setValue(ref, value: "v2") }
     try f.vault.setValue(ref, value: "v2", replace: true)
     let item = try f.vault.item(path: "moinsen/new/token")
@@ -81,7 +81,7 @@ import Testing
 @Test func launchPutsSecretsInTheEnvironmentAndFilesIntoTemporaryPaths() throws {
     let f = try AgentFixture(); defer { f.cleanup() }
     try f.vault.setValue(FieldReference(path: "moinsen/asc", field: "private_key"), value: Data("-----BEGIN KEY-----".utf8).base64EncodedString(),
-                         kind: .file, fileName: "AuthKey_X.p8", itemKind: .certificate)
+                         kind: .file, fileName: "AuthKey_X.p8", itemKind: "certificate")
     let asc = try f.vault.item(path: "moinsen/asc")
     var profile = f.profile
     profile.bindings.append(Binding(variable: "ASC_KEY_PATH", itemID: asc.id, field: "private_key"))
@@ -148,7 +148,7 @@ import Testing
 @Test(.enabled(if: ProcessInfo.processInfo.environment["SECRETARIAT_RUN_KEYCHAIN_TESTS"] == "1", "Opt-in: braucht das signierte Paket mit Entitlement"))
 func realKeychainRoundTripInATestNamespace() throws {
     let store = SyncedItemStore(service: "dev.moinsen.secretariat.items.test.\(UUID().uuidString)")
-    let meta = ItemMeta(path: "test/roundtrip", kind: .api, fields: [ItemField(name: "id", kind: .identifier, value: "x"), ItemField(name: "s", kind: .secret)])
+    let meta = ItemMeta(path: "test/roundtrip", kind: "api", fields: [ItemField(name: "id", kind: .identifier, value: "x"), ItemField(name: "s", kind: .secret)])
     defer { try? store.delete(id: meta.id) }
     try store.save(meta, secrets: ["s": "artificial"])
     #expect(try store.list().map(\.path) == ["test/roundtrip"])
@@ -171,11 +171,11 @@ extension Vault {
 @Test func companyRuleListsIdentityAndNamesWhatIsMissing() {
     let empty = CompanyRule.render([])
     #expect(empty.contains("Not set up yet"))
-    let company = ItemMeta(path: "moinsen/company", kind: .company, fields: [
+    let company = ItemMeta(path: "moinsen/company", kind: "company", fields: [
         ItemField(name: "legal_name", kind: .identifier, value: "Example GmbH"),
         ItemField(name: "city", kind: .identifier, value: "Hamburg"),
         ItemField(name: "bank_note", kind: .identifier, value: "extra")])
-    let text = CompanyRule.render([ItemMeta(path: "private/company", kind: .company, fields: [ItemField(name: "legal_name", kind: .identifier, value: "Privat")]), company])
+    let text = CompanyRule.render([ItemMeta(path: "private/company", kind: "company", fields: [ItemField(name: "legal_name", kind: .identifier, value: "Privat")]), company])
     #expect(text.contains("## `moinsen/company` (default)"))
     #expect(text.range(of: "## `moinsen/company`")!.lowerBound < text.range(of: "## `private/company`")!.lowerBound)
     #expect(text.contains("- Company name: Example GmbH")); #expect(text.contains("- City: Hamburg")); #expect(text.contains("- bank_note: extra"))

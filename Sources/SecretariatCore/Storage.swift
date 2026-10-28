@@ -13,6 +13,7 @@ public struct AppPaths: Sendable {
         let digest = SHA256.hash(data: Data(directory.standardizedFileURL.path.utf8))
         return "dev.moinsen.secretariat.items.test." + digest.prefix(12).map { String(format: "%02x", $0) }.joined()
     }
+    public var templateService: String { itemService.replacingOccurrences(of: ".items.", with: ".templates.") }
     public var isDefault: Bool { directory == AppPaths.defaultDirectory }
     public static var defaultDirectory: URL {
         FileManager.default.homeDirectoryForCurrentUser
@@ -119,17 +120,45 @@ public struct AuditLog: Sendable {
 public struct Vault {
     public let configuration: ConfigurationStore
     public let items: any ItemStore
+    public let templates: any TemplateStore
     public let audit: AuditLog
     public let registryDirectory: URL?
     public let expectedRevision: Int?
-    public init(configuration: ConfigurationStore, items: any ItemStore, audit: AuditLog = AuditLog(url: nil),
-                registryDirectory: URL? = nil, expectedRevision: Int? = nil) {
-        self.configuration = configuration; self.items = items; self.audit = audit
+    public init(configuration: ConfigurationStore, items: any ItemStore, templates: any TemplateStore = InMemoryTemplateStore(),
+                audit: AuditLog = AuditLog(url: nil), registryDirectory: URL? = nil, expectedRevision: Int? = nil) {
+        self.configuration = configuration; self.items = items; self.templates = templates; self.audit = audit
         self.registryDirectory = registryDirectory; self.expectedRevision = expectedRevision
     }
     public init(paths: AppPaths = AppPaths(), expectedRevision: Int? = nil) {
         self.init(configuration: ConfigurationStore(paths: paths), items: SyncedItemStore(service: paths.itemService),
-                  audit: AuditLog(url: paths.auditLog), registryDirectory: paths.registryDirectory, expectedRevision: expectedRevision)
+                  templates: SyncedTemplateStore(service: paths.templateService), audit: AuditLog(url: paths.auditLog), registryDirectory: paths.registryDirectory, expectedRevision: expectedRevision)
+    }
+
+    // MARK: templates
+
+    public func catalog() -> TemplateCatalog { TemplateCatalog(stored: (try? templates.list()) ?? []) }
+
+    public func saveTemplate(_ template: Template) throws {
+        var template = template
+        template.title = template.title.trimmingCharacters(in: .whitespaces)
+        try template.validate()
+        try templates.save(template)
+        audit.record("template.save", ["template": template.id])
+        exportRegistry()
+    }
+    /// Own templates are deleted; built-ins are hidden on every Mac (`resetTemplate` brings them back).
+    /// Items keep their fields either way and show plain field names.
+    public func deleteTemplate(id: String) throws {
+        if let builtin = Template.builtins.first(where: { $0.id == id }) {
+            var marker = builtin; marker.hidden = true; try templates.save(marker)
+        } else { try templates.delete(id: id) }
+        audit.record("template.delete", ["template": id])
+        exportRegistry()
+    }
+    public func resetTemplate(id: String) throws {
+        try templates.delete(id: id)
+        audit.record("template.reset", ["template": id])
+        exportRegistry()
     }
 
     // MARK: items
@@ -184,7 +213,7 @@ public struct Vault {
 
     /// Set one secret value (creating the item or field when missing). Used by import and the app.
     public func setValue(_ reference: FieldReference, value: String, kind: FieldKind = .secret, fileName: String? = nil,
-                         itemKind: ItemKind = .api, source: String = "", replace: Bool = false) throws {
+                         itemKind: String = "api", source: String = "", replace: Bool = false) throws {
         guard kind.isSecret else { throw SecretariatError("Identifiers are set in the description, not as a value.") }
         guard !value.isEmpty else { throw SecretariatError("Empty values are not stored (\(reference)).") }
         var meta = (try? item(path: reference.path)) ?? ItemMeta(path: reference.path, kind: itemKind, source: source)
@@ -342,7 +371,7 @@ public struct Vault {
         if (try? String(contentsOf: url, encoding: .utf8)) != text { try? text.write(to: url, atomically: true, encoding: .utf8) }
         // Company identity goes into an always-loaded rule, so every agent session knows who it works for.
         let rule = registryDirectory.deletingLastPathComponent().appendingPathComponent("rules/company.md")
-        let ruleText = CompanyRule.render(all)
+        let ruleText = CompanyRule.render(all, catalog: catalog())
         if FileManager.default.fileExists(atPath: rule.deletingLastPathComponent().path),
            (try? String(contentsOf: rule, encoding: .utf8)) != ruleText { try? ruleText.write(to: rule, atomically: true, encoding: .utf8) }
     }
@@ -351,28 +380,31 @@ public struct Vault {
 /// `~/.claude/rules/company.md`: loaded by every Claude Code session (rules without `paths:`) and read by Hermes.
 public enum CompanyRule {
     public static let defaultPath = "moinsen/company"
-    public static func render(_ items: [ItemMeta]) -> String {
-        let companies = items.filter { $0.kind == .company }.sorted { ($0.path == defaultPath ? "" : $0.path) < ($1.path == defaultPath ? "" : $1.path) }
+    public static func render(_ items: [ItemMeta], catalog: TemplateCatalog = .builtin) -> String {
+        let identity = Set(catalog.all.filter(\.identity).map(\.id))
+        let companies = items.filter { identity.contains($0.kind) }
+            .sorted { ($0.path == defaultPath ? "" : $0.path) < ($1.path == defaultPath ? "" : $1.path) }
         var lines = ["# Company identity — who you work for", "",
-                     "<!-- GENERATED by Secretariat from items of kind Company. Edit in the Secretariat app; every Mac rewrites this file. -->", "",
+                     "<!-- GENERATED by Secretariat from items whose template is marked as identity. Edit in the Secretariat app; every Mac rewrites this file. -->", "",
                      "Use these details for imprints (Impressum), privacy policies, terms, email senders, footers, store listings",
                      "and app metadata. **Never ask Uli for them.** The first company is the default; a project belongs to another one",
                      "only if its CLAUDE.md says so (e.g. `Company: private/company`). A field that is missing here: ask once, then tell",
-                     "Uli to add it in Secretariat (item \(defaultPath), kind Company) — don't invent it.", ""]
+                     "Uli to add it in Secretariat (item \(defaultPath)) — don't invent it.", ""]
         guard !companies.isEmpty else {
-            lines.append("**Not set up yet.** Ask Uli to create the item `\(defaultPath)` (kind Company) in the Secretariat app; until then ask for the details once per task.")
+            lines.append("**Not set up yet.** Ask Uli to create the item `\(defaultPath)` (template Company) in the Secretariat app; until then ask for the details once per task.")
             return lines.joined(separator: "\n") + "\n"
         }
         for company in companies {
+            let template = catalog.template(company.kind)
             lines.append("## `\(company.path)`" + (company.path == defaultPath ? " (default)" : ""))
             lines.append("")
-            for spec in ItemKind.company.fields {
+            for spec in template.fields {
                 if let value = company.field(spec.name)?.value { lines.append("- \(spec.label): \(value)") }
             }
-            for field in company.fields where ItemKind.company.spec(field.name) == nil && field.kind == .identifier {
+            for field in company.fields where template.spec(field.name) == nil && field.kind == .identifier {
                 lines.append("- \(field.name): \(field.value ?? "")")
             }
-            let missing = ItemKind.company.fields.filter { company.field($0.name)?.value == nil }.map(\.label)
+            let missing = template.fields.filter { company.field($0.name)?.value == nil }.map(\.label)
             if !missing.isEmpty { lines.append("- _Not recorded:_ \(missing.joined(separator: ", "))") }
             lines.append("")
         }
@@ -400,7 +432,7 @@ public enum RegistryExport {
                      "# Identifiers only. \"secret:<path>/<field>\" names a Secretariat field; its value never appears here.", ""]
         for item in items.sorted(by: { $0.path < $1.path }) {
             lines.append("[\(q(item.path))]")
-            lines.append("_kind = \(q(item.kind.rawValue))")
+            lines.append("_kind = \(q(item.kind))")
             if !item.source.isEmpty { lines.append("_source = \(q(item.source))") }
             if let expires = item.expires { lines.append("_expires = \(q(expires))") }
             if let rotated = item.rotated { lines.append("_rotated = \(q(rotated))") }

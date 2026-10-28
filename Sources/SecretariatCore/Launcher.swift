@@ -77,7 +77,7 @@ public struct PreparedLaunch {
 }
 
 public enum CommandLineInterface {
-    public static let version = "1.4.2"
+    public static let version = "1.5.0"
     public static let help = """
     Secretariat \(version) – confidential data for you and your agents
 
@@ -91,7 +91,11 @@ public enum CommandLineInterface {
       secretariat field move PATH/FIELD PATH/FIELD [--replace] [--json]
       secretariat import FILE VARIABLE[=PATH/FIELD] … [--profile PROFILE] [--replace] [--json]
       secretariat import-file FILE PATH/FIELD [--replace] [--json]
-      Kinds: account, login, api, token, certificate, database, server, note
+      Kinds are templates: secretariat template list | show ID
+      secretariat template create ID --title T [--symbol SF] [--explanation E] [--identity]
+      secretariat template set ID [--title T] [--symbol SF] [--explanation E] [--identity|--no-identity]
+      secretariat template field add ID NAME [--label L] [--kind identifier|secret|file|personal] [--required] [--prompt P] [--env SUFFIX]
+      secretariat template field remove ID NAME · template delete ID · template reset ID
 
     Projects
       secretariat profiles [--json] · describe PROFILE [--json] · check PROFILE [--json]

@@ -95,7 +95,7 @@ public enum Commands {
         func show(_ item: ItemMeta) throws -> (Int32, String?, String?) {
             let config = try vault.configuration.load()
             let info = ItemInfo(item, usedBy: usedBy(item.id, config))
-            let lines = ["\(item.path)  (\(item.kind.title))"] + item.fields.map {
+            let lines = ["\(item.path)  (\(vault.catalog().template(item.kind).title))"] + item.fields.map {
                 "  \($0.name)\t\($0.kind.title)\($0.kind == .identifier ? "\t\($0.value ?? "")" : $0.kind == .file ? "\t\($0.fileName ?? "")" : "")"
             } + (item.expires.map { ["  expires: \($0)"] } ?? []) + (item.source.isEmpty ? [] : ["  source: \(item.source)"])
             return (0, try json(ItemResult(item: info)), lines.joined(separator: "\n"))
@@ -129,7 +129,7 @@ public enum Commands {
             }
             let config = try vault.configuration.load()
             let text = list.isEmpty ? "No items." : list.map { item in
-                "\(item.path)\t\(item.kind.rawValue)\t\(item.fields.map(\.name).joined(separator: ","))\(item.expires.map { "\texpires \($0)" } ?? "")"
+                "\(item.path)\t\(item.kind)\t\(item.fields.map(\.name).joined(separator: ","))\(item.expires.map { "\texpires \($0)" } ?? "")"
             }.joined(separator: "\n")
             return (0, try json(ItemList(items: list.map { ItemInfo($0, usedBy: usedBy($0.id, config)) })), text)
 
@@ -143,14 +143,18 @@ public enum Commands {
             guard a.positional.count == 1 else { throw AgentError("invalid_arguments", usage) }
             var item: ItemMeta
             if sub == "create" {
-                guard let raw = a.option("--kind"), let kind = ItemKind(rawValue: raw) else {
-                    throw AgentError("invalid_arguments", "--kind \(ItemKind.allCases.map(\.rawValue).joined(separator: "|"))")
+                let catalog = vault.catalog()
+                guard let kind = a.option("--kind"), catalog.isKnown(kind) else {
+                    throw AgentError("invalid_arguments", "--kind \(catalog.all.map(\.id).joined(separator: "|")) (templates: secretariat template list)")
                 }
                 if (try? vault.item(path: a.positional[0])) != nil { throw AgentError("path_exists", "An item \(a.positional[0]) already exists.") }
                 item = ItemMeta(path: a.positional[0], kind: kind)
             } else {
                 item = try vault.item(path: a.positional[0])
-                if let raw = a.option("--kind") { guard let kind = ItemKind(rawValue: raw) else { throw AgentError("invalid_arguments", usage) }; item.kind = kind }
+                if let kind = a.option("--kind") {
+                    guard vault.catalog().isKnown(kind) else { throw AgentError("unknown_template", "No template \(kind). Templates: secretariat template list") }
+                    item.kind = kind
+                }
             }
             try setIdentifiers(&item, a.options["--set"] ?? [])
             for name in a.options["--unset"] ?? [] {
@@ -172,6 +176,67 @@ public enum Commands {
             guard a.positional.count == 1 else { throw AgentError("invalid_arguments", usage) }
             try vault.delete(id: try vault.item(path: a.positional[0]).id)
             return try done("Item removed: \(a.positional[0])")
+
+        case ("template", _):
+            let a = try Arguments(all.dropFirst(2), values: ["--title", "--symbol", "--explanation", "--label", "--kind", "--prompt", "--env"],
+                                  flags: ["--identity", "--no-identity", "--required"], usage: usage)
+            let catalog = vault.catalog()
+            func render(_ t: Template) throws -> (Int32, String?, String?) {
+                struct Out: Encodable { let schemaVersion = 2; let ok = true; let template: Template; let builtin: Bool }
+                let text = (["\(t.id)  \(t.title)\(t.identity ? "  [identity]" : "")\(t.isBuiltin ? "  (built-in)" : "")"]
+                    + t.fields.map { "  \($0.name)\t\($0.label)\t\($0.kind.rawValue)\($0.required ? " *" : "")\($0.envSuffix.map { "\tenv _\($0)" } ?? "")" }).joined(separator: "\n")
+                return (0, try json(Out(template: t, builtin: t.isBuiltin)), text)
+            }
+            func existing(_ id: String) throws -> Template {
+                guard catalog.isKnown(id) else { throw AgentError("unknown_template", "No template \(id). Templates: secretariat template list") }
+                return catalog.template(id)
+            }
+            switch (sub, a.positional.count) {
+            case ("list", 0):
+                struct Out: Encodable { let schemaVersion = 2; let ok = true; let templates: [Template] }
+                return (0, try json(Out(templates: catalog.all)), catalog.all.map { "\($0.id)\t\($0.title)\t\($0.fields.map(\.name).joined(separator: ","))" }.joined(separator: "\n"))
+            case ("show", 1):
+                return try render(try existing(a.positional[0]))
+            case ("create", 1), ("set", 1):
+                var t: Template
+                if sub == "create" {
+                    guard !catalog.isKnown(a.positional[0]) else { throw AgentError("template_exists", "A template \(a.positional[0]) already exists.") }
+                    guard !Template.builtins.contains(where: { $0.id == a.positional[0] }) else {
+                        throw AgentError("template_exists", "\(a.positional[0]) is a hidden built-in template. Bring it back with: secretariat template reset \(a.positional[0])")
+                    }
+                    t = Template(id: a.positional[0], title: a.option("--title") ?? a.positional[0])
+                } else { t = try existing(a.positional[0]) }
+                if let title = a.option("--title") { t.title = title }
+                if let symbol = a.option("--symbol") { t.symbol = symbol }
+                if let explanation = a.option("--explanation") { t.explanation = explanation }
+                if a.flags.contains("--identity") { t.identity = true }
+                if a.flags.contains("--no-identity") { t.identity = false }
+                try vault.saveTemplate(t); return try render(vault.catalog().template(t.id))
+            case ("field", 3):
+                // template field add|remove ID NAME
+                var t = try existing(a.positional[1]); let name = a.positional[2]
+                switch a.positional[0] {
+                case "add":
+                    guard let raw = a.option("--kind") ?? Optional("identifier"), let kind = FieldKind(rawValue: raw) else {
+                        throw AgentError("invalid_arguments", "--kind identifier|secret|file|personal")
+                    }
+                    let spec = FieldSpec(name, a.option("--label") ?? name, kind, required: a.flags.contains("--required"),
+                                         prompt: a.option("--prompt") ?? "", env: a.option("--env"))
+                    if let i = t.fields.firstIndex(where: { $0.name == name }) { t.fields[i] = spec } else { t.fields.append(spec) }
+                case "remove":
+                    guard t.fields.contains(where: { $0.name == name }) else { throw AgentError("field_not_found", "\(t.id) has no field \(name).") }
+                    t.fields.removeAll { $0.name == name }
+                default: throw AgentError("invalid_arguments", usage)
+                }
+                try vault.saveTemplate(t); return try render(vault.catalog().template(t.id))
+            case ("delete", 1):
+                _ = try existing(a.positional[0]); try vault.deleteTemplate(id: a.positional[0])
+                return try done("Template removed: \(a.positional[0]) (items keep their fields)")
+            case ("reset", 1):
+                guard Template.builtins.contains(where: { $0.id == a.positional[0] }) else { throw AgentError("not_builtin", "Only built-in templates can be reset.") }
+                try vault.resetTemplate(id: a.positional[0]); return try render(vault.catalog().template(a.positional[0]))
+            default: throw AgentError("invalid_arguments", usage)
+            }
 
         case ("item", "rename"):
             let a = try Arguments(all.dropFirst(2), usage: usage)
@@ -236,7 +301,7 @@ public enum Commands {
             }
             let reference = try FieldReference(a.positional[1])
             try vault.setValue(reference, value: data.base64EncodedString(), kind: .file, fileName: (path as NSString).lastPathComponent,
-                               itemKind: .certificate, source: "import-file \(a.positional[0])", replace: a.flags.contains("--replace"))
+                               itemKind: "certificate", source: "import-file \(a.positional[0])", replace: a.flags.contains("--replace"))
             return try done("File imported: \(reference) (the original file stays in place; the user decides whether to delete it)")
 
         // MARK: profiles
