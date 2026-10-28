@@ -34,3 +34,7 @@
 - Freigabe: Einträge mit Freigabe brauchen Touch ID/Passwort vor run/push/inject; Agenten können sie nur einschalten (Test approvalItemsNeedConfirmationForRunPushAndInject). Echter Touch-ID-Dialog nicht automatisiert geprüft (braucht Ulis Finger).
 - Git-Sperre: `guard install/uninstall/check`; echter Commit mit bekanntem Wert blockiert (leak.env:1, nur Name), sauberer Commit läuft; Prüfung über 211 echte Einträge 0,15 s. Installation in Ulis Repos bleibt Ulis Befehl.
 - Nebenbefund behoben: Test-Namensraum wechselte zwischen erstem und zweitem Schreiben (/private-Kürzung); Test testNamespaceStaysTheSameBeforeAndAfterTheFolderExists. 40/40.
+
+## Nachtrag 1.7.0 (Build 9faa20d)
+
+- `secretariat status` (Übersicht für den Leitstand, nur Namen/Daten/Zahlen); `secretariat mcp` (MCP über stdio, 13 Werkzeuge, run_command maskiert immer) — echt per JSON-RPC geprüft: Kennung moinsen/company/city lesbar, Client-Secret maskiert. Git-Sperre ignoriert reine Wörter (Fehlalarm in Mcp.swift gefunden und behoben). Notarisierte Fassung (notarytool Accepted, stapler ok, spctl „Notarized Developer ID“), Zugangsdaten aus Profil werkzeuge. 42/42.
