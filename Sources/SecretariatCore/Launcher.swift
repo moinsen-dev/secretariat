@@ -117,7 +117,7 @@ public struct PreparedLaunch {
 }
 
 public enum CommandLineInterface {
-    public static let version = "1.8.0"
+    public static let version = "1.9.0"
     public static let help = """
     Secretariat \(version) – confidential data for you and your agents
 
@@ -159,6 +159,10 @@ public enum CommandLineInterface {
       secretariat guard install [DIR …] [--all ROOT]  pre-commit hook: refuse commits with known secret values
       secretariat guard uninstall [DIR …] [--all ROOT] · guard check [DIR]
       secretariat item set PATH --approval on          programs need Touch ID before they get this item (off: app only)
+      secretariat guard claude install|uninstall      Claude Code hook: refuse cat .env, printenv, docker compose config … before they run
+      secretariat sweep [ROOT] [--current] [--json]   known secret values in your repositories and their git history (default ~/work)
+      secretariat tidy [ROOT] [--apply]               .env files whose values are all in Secretariat → Trash (+ .env.example)
+      secretariat lint [--json]                       stored values that are .env comments or template placeholders (names only)
 
     Overview
       secretariat mcp                                 MCP server (stdio) for Claude Desktop, Cursor & co.
@@ -177,6 +181,13 @@ public enum CommandLineInterface {
         switch arguments.first {
         case "--help", "-h", "help", nil: print(help); return 0
         case "--version": print("Secretariat \(version)"); return 0
+        case "guard" where arguments.dropFirst().first == "claude-hook":
+            // Claude Code PreToolUse hook: tool call JSON on stdin, a deny decision on stdout. Silent = allowed.
+            if let answer = AgentHook.handle(FileHandle.standardInput.readDataToEndOfFile()) {
+                print(answer)
+                vault.audit.record("guard.agent", [:])
+            }
+            return 0
         case "mcp":
             // MCP server over stdio for agents without a shell (Claude Desktop, Cursor …).
             let executable = Bundle.main.executableURL?.path ?? URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL.path

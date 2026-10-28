@@ -81,7 +81,7 @@ public enum GitGuard {
     /// A plain word ("identifier", "postgres") would block ordinary code; guard values that look like credentials:
     /// long ones, or ones with a digit or a symbol.
     static func distinctive(_ value: String) -> Bool {
-        guard value.count >= minimumLength else { return false }
+        guard value.count >= minimumLength, Placeholder.reason(value) == nil else { return false }
         if value.count >= 16 { return true }
         return value.contains { $0.isNumber || (!$0.isLetter && $0 != "-" && $0 != "_") }
     }
@@ -152,5 +152,31 @@ public enum GitGuard {
         try text.write(toFile: hook, atomically: true, encoding: .utf8)
         try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: hook)
         return remove ? "removed" : "installed"
+    }
+}
+
+/// Values that aren't credentials: a comment or template text an import took for the value.
+public enum Placeholder {
+    public struct Problem: Encodable, Sendable, Equatable { public let reference: String; public let reason: String }
+
+    public static func reason(_ value: String) -> String? {
+        let v = value.trimmingCharacters(in: .whitespaces)
+        if v.hasPrefix("#") { return "is a comment from the .env file, not a value" }
+        if v.range(of: #"^(<.*>|your[-_ ].*|.*[-_]here|x{4,}|changeme|replace[-_ ]?me|todo|\.\.\.)$"#, options: [.regularExpression, .caseInsensitive]) != nil {
+            return "looks like a template placeholder"
+        }
+        return nil
+    }
+
+    /// Secret and personal text fields whose stored value is a placeholder. Names only, never values.
+    public static func scan(_ vault: Vault) -> [Problem] {
+        var out: [Problem] = []
+        for item in (try? vault.list()) ?? [] {
+            guard let values = try? vault.items.secrets(id: item.id) else { continue }
+            for field in item.fields where field.kind == .secret || field.kind == .personal {
+                if let v = values[field.name], let reason = reason(v) { out.append(Problem(reference: "\(item.path)/\(field.name)", reason: reason)) }
+            }
+        }
+        return out.sorted { $0.reference < $1.reference }
     }
 }

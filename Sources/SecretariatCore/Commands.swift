@@ -36,7 +36,9 @@ enum DotEnv {
             }
             return out
         }
-        if let hash = rest.range(of: " #") { return rest[..<hash.lowerBound].trimmingCharacters(in: .whitespaces) }
+        // Unquoted: a # at the start or after whitespace begins a comment (`KEY=   # what it is for` is empty).
+        if rest.hasPrefix("#") { return "" }
+        if let hash = rest.range(of: #"\s#"#, options: .regularExpression) { return rest[..<hash.lowerBound].trimmingCharacters(in: .whitespaces) }
         return rest
     }
 }
@@ -275,7 +277,16 @@ public enum Commands {
                 let counts = Dictionary(grouping: results.values, by: { $0 }).mapValues(\.count)
                 return (0, try json(Out(repositories: results)),
                         results.count == 1 ? "\(results.keys.first!): \(results.values.first!)" : counts.map { "\($0.key): \($0.value)" }.sorted().joined(separator: "\n"))
-            default: throw AgentError("invalid_arguments", "secretariat guard check | install [DIR …] [--all ROOT] | uninstall [DIR …] [--all ROOT]")
+            case "claude":
+                // guard claude install|uninstall [--settings FILE]: the PreToolUse hook in Claude Code's user settings.
+                let b = try Arguments(all.dropFirst(3), values: ["--settings"], usage: usage)
+                let action = all.dropFirst(2).first ?? ""
+                guard action == "install" || action == "uninstall" else { throw AgentError("invalid_arguments", "secretariat guard claude install|uninstall [--settings FILE]") }
+                let settings = b.option("--settings").map { ($0 as NSString).expandingTildeInPath }
+                    ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".claude/settings.json").path
+                let result = try AgentHook.install(settings: settings, executable: executable, remove: action == "uninstall")
+                return try done("Claude Code agent guard \(result): \(settings.replacingOccurrences(of: NSHomeDirectory(), with: "~"))")
+            default: throw AgentError("invalid_arguments", "secretariat guard check | install [DIR …] [--all ROOT] | uninstall [DIR …] [--all ROOT] | claude install|uninstall")
             }
 
         case ("item", "rename"):
@@ -494,6 +505,45 @@ public enum Commands {
             return (0, try json(Report(findings: findings)), findings.isEmpty ? "No .env files with values found." : findings.map {
                 "\($0.file)\n" + $0.variables.map { "  \($0.name)\($0.storedAs.map { "  = in Secretariat: \($0)" } ?? "")" }.joined(separator: "\n")
             }.joined(separator: "\n"))
+        case ("sweep", _):
+            let a = try Arguments(all.dropFirst(), flags: ["--current"], usage: usage)
+            let root = (a.positional.first.map { ($0 as NSString).expandingTildeInPath }) ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("work").path
+            let repos = Sweep.repositories(under: root)
+            let findings = try Sweep.run(repositories: repos, secrets: GitGuard.secrets(vault), history: !a.flags.contains("--current"))
+            vault.audit.record("sweep", ["repositories": String(repos.count), "findings": String(findings.count)])
+            struct Out: Encodable { let schemaVersion = 2; let ok: Bool; let repositories: Int; let findings: [Sweep.Finding]; let rotate: [String] }
+            let rotate = Array(Set(findings.map(\.reference))).sorted()
+            var lines = ["Secretariat sweep: \(repos.count) repositories, \(findings.isEmpty ? "no known secret values found" : "\(findings.count) places with known secret values")."]
+            for (repo, group) in Dictionary(grouping: findings, by: \.repository).sorted(by: { $0.key < $1.key }) {
+                lines.append(repo)
+                lines += group.map { "  \($0.file)  value of \($0.reference)  \($0.current ? "in the current files" : "in history")\($0.commit.map { " since \($0)" } ?? "")" }
+            }
+            if !rotate.isEmpty {
+                lines.append("Rotate these keys (they are in git, so every clone and fork has them): \(rotate.joined(separator: ", "))")
+                lines.append("Then push the new values with secretariat push, and remove current copies from the files.")
+            }
+            return (findings.isEmpty ? 0 : 1, try json(Out(ok: findings.isEmpty, repositories: repos.count, findings: findings, rotate: rotate)), lines.joined(separator: "\n"))
+
+        case ("lint", _):
+            _ = try Arguments(all.dropFirst(), flags: [], usage: usage)
+            let problems = Placeholder.scan(vault)
+            struct Out: Encodable { let schemaVersion = 2; let ok: Bool; let problems: [Placeholder.Problem] }
+            let text = problems.isEmpty ? "All stored values look like real values." : (["\(problems.count) stored value(s) are not real values:"]
+                + problems.map { "  \($0.reference)  – \($0.reason)" }
+                + ["Store the real value (secretariat set PATH/FIELD) or remove the field."]).joined(separator: "\n")
+            return (problems.isEmpty ? 0 : 1, try json(Out(ok: problems.isEmpty, problems: problems)), text)
+
+        case ("tidy", _):
+            let a = try Arguments(all.dropFirst(), flags: ["--apply"], usage: usage)
+            let root = (a.positional.first.map { ($0 as NSString).expandingTildeInPath }) ?? FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("work").path
+            let entries = try Tidy.run(root: URL(fileURLWithPath: root), vault: vault, apply: a.flags.contains("--apply"))
+            struct Out: Encodable { let schemaVersion = 2; let ok = true; let applied: Bool; let files: [Tidy.Entry] }
+            let movable = entries.filter { $0.action == "trash" }.count
+            let text = entries.isEmpty ? "No .env files with values found." : (entries.map {
+                "\($0.action == "keep" ? "keep   " : $0.action == "trash" ? "trash  " : "trashed")  \($0.file)  – \($0.reason)\($0.profile.map { " (profile \($0))" } ?? "")"
+            } + (movable > 0 ? ["\(movable) file(s) can go to the Trash: secretariat tidy \(a.positional.first ?? "") --apply"] : [])).joined(separator: "\n")
+            return (0, try json(Out(applied: a.flags.contains("--apply"), files: entries)), text)
+
         case ("license", _):
             let action = sub.hasPrefix("--") ? "" : sub
             let a = try Arguments(all.dropFirst(action.isEmpty && !sub.isEmpty ? 1 : 2), usage: usage)
@@ -701,7 +751,7 @@ public enum Targets {
 
 enum Scan {
     struct Variable: Encodable { let name: String; let storedAs: String? }
-    struct Finding: Encodable { let file: String; let variables: [Variable] }
+    struct Finding: Encodable { let file: String; let path: String; let variables: [Variable] }
     static let skip: Set<String> = ["node_modules", ".git", "Pods", ".dart_tool", "build", "dist", ".next", ".venv", "DerivedData", ".build", "archive"]
 
     /// .env files with real values under `root`; names only, plus where an identical value already lives.
@@ -723,7 +773,7 @@ enum Scan {
                 guard name == ".env" || (name.hasPrefix(".env.") && !["example", "sample", "template", "dist"].contains(where: { name.hasSuffix($0) })) else { continue }
                 guard let text = try? String(contentsOf: entry, encoding: .utf8) else { continue }
                 let vars = DotEnv.parse(text).filter { !$0.value.isEmpty }.sorted { $0.key < $1.key }.map { Variable(name: $0.key, storedAs: known[$0.value]) }
-                if !vars.isEmpty { findings.append(Finding(file: entry.path.replacingOccurrences(of: NSHomeDirectory(), with: "~"), variables: vars)) }
+                if !vars.isEmpty { findings.append(Finding(file: entry.path.replacingOccurrences(of: NSHomeDirectory(), with: "~"), path: entry.path, variables: vars)) }
             }
         }
         walk(root, depth: 6)

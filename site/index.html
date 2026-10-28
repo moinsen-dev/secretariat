@@ -134,8 +134,8 @@ secretariat profile bind \
   <div class="wrap">
     <div class="section-head">
       <p class="eyebrow">Agent Guard</p>
-      <h2>Three layers, in one tool.</h2>
-      <p class="lead">Each layer covers a different way a key escapes. Together they turn most accidents into a masked line or a refused commit.</p>
+      <h2>Before, during and after. In one tool.</h2>
+      <p class="lead">Each layer covers a different way a key escapes: an agent reading it, a program printing it, a commit carrying it, or a leak that already happened years ago.</p>
     </div>
     <div class="cards">
       <article class="card">
@@ -154,6 +154,24 @@ secretariat profile bind \
         <p>A git pre-commit hook refuses any commit that contains a value Secretariat knows. Your actual values, not patterns. Install it in every repository at once:</p>
         <pre class="cmd">secretariat guard install \
   --all ~/work</pre>
+      </article>
+      <article class="card">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <h3>Agent guard for Claude Code</h3>
+        <p>A hook refuses <code>cat .env</code>, <code>printenv</code>, <code>docker compose config</code> and reading keychain passwords before they run, and tells the agent to use <code>secretariat run</code> instead.</p>
+        <pre class="cmd">secretariat guard claude install</pre>
+      </article>
+      <article class="card">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6"/><path d="M20 20l-4.2-4.2M11 8v3l2 1.5"/></svg></div>
+        <h3>Leak sweep, backwards in time</h3>
+        <p>Checks every repository and its whole git history for your actual values, and names each key that was ever committed, with the commit. Those are the ones to rotate.</p>
+        <pre class="cmd">secretariat sweep ~/work</pre>
+      </article>
+      <article class="card">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M5 7l1 13h12l1-13M9 7V4h6v3"/></svg></div>
+        <h3>Retire your .env files</h3>
+        <p>Once every value of a <code>.env</code> is in Secretariat, it goes to the Trash and a <code>.env.example</code> keeps the names. Files with anything unknown stay put.</p>
+        <pre class="cmd">secretariat tidy ~/work --apply</pre>
       </article>
     </div>
   </div>
@@ -298,7 +316,9 @@ secretariat profile bind \
       <div class="launch">Launch price: 29 € for the first four weeks</div>
       <ul class="checklist">
         <li>Mac app and <code>secretariat</code> CLI</li>
-        <li>Agent Guard: masking, Touch ID per item, commit guard</li>
+        <li>Agent Guard: masking, Touch ID per item, commit guard, Claude Code hook</li>
+        <li>Leak sweep through all repositories and their history</li>
+        <li>.env import and cleanup across all projects</li>
         <li>Targets, rotation tracking, MCP server</li>
         <li>All 1.x updates included, on all your Macs</li>
         <li>macOS 14 or later</li>

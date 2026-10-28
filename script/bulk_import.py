@@ -66,8 +66,10 @@ def parse(text):
         k, v = k.strip(), v.strip()
         if v and v[0] in "\"'" and v[0] in v[1:]:
             v = v[1:v.index(v[0], 1)]
-        elif " #" in v:
-            v = v[:v.index(" #")].strip()
+        elif v.startswith("#"):
+            v = ""
+        elif re.search(r"\s#", v):
+            v = v[:re.search(r"\s#", v).start()].strip()
         out[k] = v
     return out
 
