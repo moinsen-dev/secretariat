@@ -27,3 +27,10 @@
 
 - Vorlagen sind Daten: synchronisierte Schlüsselbund-Einträge (eigener Dienst), in der App unter „Templates“ bearbeitbar (anlegen, Felder mit Bezeichnung/Art/Pflicht/Platzhalter/Env-Endung, Reihenfolge, ausblenden/wiederherstellen eingebauter, zurücksetzen) und per CLI (`template list|show|create|set|field add/remove|delete|reset`). Art eines Eintrags = Vorlagen-ID (Text); unbekannte Vorlage → Eintrag mit schlichten Feldnamen. company.md über Vorlagen-Merkmal „identity“. Migrationsprogramm 0.x entfernt.
 - Geprüft: Test templatesAreDataUsersCanExtendHideAndReset; 34/34; Vorlagenliste und Editor per Screenshot im Testheim mit echtem Schlüsselbund (danach aufgeräumt); echte Daten nach Installation: moinsen/company als Company erkannt, company.md unverändert, werkzeuge ready, 211 Einträge. 1.5.0 auf M4, M1, Mini.
+
+## Nachtrag 1.6.0 Agent Guard (Build f89c452)
+
+- Ausgabe-Maskierung: `run` ersetzt Geheimniswerte des Profils in stdout/stderr, sobald die Ausgabe nicht an ein Terminal geht (Agent/Pipe); Werte über Lesegrenzen hinweg (Test maskerReplacesValuesEvenWhenSplitAcrossReads). Echt geprüft: Ausgabe „key is [masked test/guard/api_key]“, `--no-mask` zeigt den Wert, Exit-Code 7 durchgereicht.
+- Freigabe: Einträge mit Freigabe brauchen Touch ID/Passwort vor run/push/inject; Agenten können sie nur einschalten (Test approvalItemsNeedConfirmationForRunPushAndInject). Echter Touch-ID-Dialog nicht automatisiert geprüft (braucht Ulis Finger).
+- Git-Sperre: `guard install/uninstall/check`; echter Commit mit bekanntem Wert blockiert (leak.env:1, nur Name), sauberer Commit läuft; Prüfung über 211 echte Einträge 0,15 s. Installation in Ulis Repos bleibt Ulis Befehl.
+- Nebenbefund behoben: Test-Namensraum wechselte zwischen erstem und zweitem Schreiben (/private-Kürzung); Test testNamespaceStaysTheSameBeforeAndAfterTheFolderExists. 40/40.
