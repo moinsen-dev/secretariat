@@ -182,7 +182,10 @@ struct MainView: View {
         HStack(spacing: 12) {
             Image(systemName: model.template(item.kind).symbol).foregroundStyle(.tint).frame(width: 22)
             VStack(alignment: .leading, spacing: 3) {
-                Text(item.path).font(.headline)
+                HStack(spacing: 5) {
+                    Text(item.path).font(.headline)
+                    if item.needsApproval { Image(systemName: "touchid").foregroundStyle(.orange).help("Needs Touch ID before a program uses it") }
+                }
                 Text(item.fields.map(\.name).joined(separator: ", ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer(minLength: 8)
@@ -375,7 +378,7 @@ struct ItemDetail: View {
                     Image(systemName: model.template(item.kind).symbol).font(.title).foregroundStyle(.tint)
                     VStack(alignment: .leading, spacing: 4) {
                         Text(item.path).font(.title2.bold()).textSelection(.enabled)
-                        Text(model.template(item.kind).title).foregroundStyle(.secondary)
+                        Text(model.template(item.kind).title + (item.needsApproval ? " · needs Touch ID for programs" : "")).foregroundStyle(.secondary)
                     }
                     Spacer()
                     Button("Edit") { model.edit(item) }

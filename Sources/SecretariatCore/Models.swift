@@ -170,10 +170,14 @@ public struct ItemMeta: Codable, Equatable, Identifiable, Sendable {
     public var rotated: String?
     /// Where the values came from (console, file, command).
     public var source: String
+    /// Agent Guard: a program may use this item's values only after Uli confirms with Touch ID (or the Mac password).
+    /// Agents can switch it on, never off.
+    public var approval: Bool?
+    public var needsApproval: Bool { approval == true }
     public init(id: UUID = UUID(), path: String, kind: String, fields: [ItemField] = [], expires: String? = nil,
-                rotated: String? = nil, source: String = "") {
+                rotated: String? = nil, source: String = "", approval: Bool? = nil) {
         self.id = id; self.path = path; self.kind = kind; self.fields = fields
-        self.expires = expires; self.rotated = rotated; self.source = source
+        self.expires = expires; self.rotated = rotated; self.source = source; self.approval = approval
     }
     public func field(_ name: String) -> ItemField? { fields.first { $0.name == name } }
     /// Org and account part of the path, for grouping ("moinsen/cloudflare").

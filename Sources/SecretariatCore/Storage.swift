@@ -10,11 +10,17 @@ public struct AppPaths: Sendable {
     /// (path and user differ per Mac); any other home (tests, fixtures) gets its own namespace.
     public var itemService: String {
         guard directory != AppPaths.defaultDirectory else { return "dev.moinsen.secretariat.items.v1" }
-        let digest = SHA256.hash(data: Data(directory.standardizedFileURL.path.utf8))
+        // Hash a canonical path: macOS drops "/private" from /private/tmp paths only once the folder exists,
+        // which would switch test namespaces between the first and the second write.
+        let digest = SHA256.hash(data: Data(AppPaths.canonical(directory.path).utf8))
         return "dev.moinsen.secretariat.items.test." + digest.prefix(12).map { String(format: "%02x", $0) }.joined()
     }
     public var templateService: String { itemService.replacingOccurrences(of: ".items.", with: ".templates.") }
     public var isDefault: Bool { directory == AppPaths.defaultDirectory }
+    static func canonical(_ path: String) -> String {
+        for root in ["/tmp/", "/var/", "/etc/"] where path.hasPrefix("/private" + root) { return String(path.dropFirst(8)) }
+        return path
+    }
     public static var defaultDirectory: URL {
         FileManager.default.homeDirectoryForCurrentUser
             .appendingPathComponent("Library/Application Support/SecretariatLocal", isDirectory: true).standardizedFileURL
@@ -121,12 +127,14 @@ public struct Vault {
     public let configuration: ConfigurationStore
     public let items: any ItemStore
     public let templates: any TemplateStore
+    public let approver: any Approver
     public let audit: AuditLog
     public let registryDirectory: URL?
     public let expectedRevision: Int?
     public init(configuration: ConfigurationStore, items: any ItemStore, templates: any TemplateStore = InMemoryTemplateStore(),
+                approver: any Approver = DeviceOwnerApprover(),
                 audit: AuditLog = AuditLog(url: nil), registryDirectory: URL? = nil, expectedRevision: Int? = nil) {
-        self.configuration = configuration; self.items = items; self.templates = templates; self.audit = audit
+        self.configuration = configuration; self.items = items; self.templates = templates; self.approver = approver; self.audit = audit
         self.registryDirectory = registryDirectory; self.expectedRevision = expectedRevision
     }
     public init(paths: AppPaths = AppPaths(), expectedRevision: Int? = nil) {
@@ -164,6 +172,14 @@ public struct Vault {
     // MARK: items
 
     public func list() throws -> [ItemMeta] { try items.list() }
+
+    /// Agent Guard: one Touch ID / password prompt for every approval item a program is about to get.
+    public func requireApproval(_ itemIDs: [UUID], for purpose: String) throws {
+        let needing = Set(itemIDs).compactMap { try? item(id: $0) }.filter(\.needsApproval).map(\.path).sorted()
+        guard !needing.isEmpty else { return }
+        try approver.approve("\(purpose) wants to use \(needing.joined(separator: ", "))")
+        audit.record("approval", ["items": needing.joined(separator: ","), "purpose": purpose])
+    }
 
     public func item(path: String) throws -> ItemMeta {
         let matches = try list().filter { $0.path == path }
@@ -342,8 +358,10 @@ public struct Vault {
             throw SecretariatError("Profile not found. Create a profile in Secretariat or use 'secretariat profiles'.")
         }
         guard !arguments.isEmpty, !arguments[0].isEmpty else { throw SecretariatError("Please name a program after --.") }
+        try requireApproval(profile.bindings.map(\.itemID), for: "run \(name): \(arguments.joined(separator: " ").prefix(80))")
         var environment = inheritedEnvironment
         var files: [PreparedLaunch.File] = []
+        var masks: [StreamMasker.Secret] = []
         for binding in profile.bindings {
             let meta = try item(id: binding.itemID)
             let value = try value(itemID: binding.itemID, field: binding.field)
@@ -353,11 +371,14 @@ public struct Vault {
             } else {
                 guard !value.utf8.contains(0) else { throw SecretariatError("A value contains a null character, which environment variables don't allow.") }
                 environment[binding.variable] = value
+                if meta.field(binding.field)?.kind != .identifier {
+                    masks.append(.init(value: Data(value.utf8), label: "\(meta.path)/\(binding.field)"))
+                }
             }
         }
         audit.record("run", ["profile": name, "variables": profile.bindings.map(\.variable).sorted().joined(separator: ",")])
         let directory = profile.isAnywhere ? FileManager.default.currentDirectoryPath : profile.directory
-        return PreparedLaunch(directory: directory, arguments: arguments, environment: environment, files: files)
+        return PreparedLaunch(directory: directory, arguments: arguments, environment: environment, files: files, masks: masks)
     }
 
     // MARK: registry

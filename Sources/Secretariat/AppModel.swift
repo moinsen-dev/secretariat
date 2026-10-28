@@ -31,6 +31,8 @@ struct ItemDraft: Identifiable {
     var fields: [FieldDraft] = []
     /// Bind the usable fields into the profile "werkzeuge" (available in every folder).
     var everywhere = false
+    /// Agent Guard: programs need Touch ID before they get this item's values.
+    var approval = false
     var revision = 0
 
     init(template: Template, revision: Int) {
@@ -40,7 +42,7 @@ struct ItemDraft: Identifiable {
         if template.identity { provider = "moinsen" }
     }
     init(item: ItemMeta, template: Template, revision: Int) {
-        existing = item; self.template = template; source = item.source; expires = item.expires ?? ""
+        existing = item; self.template = template; source = item.source; expires = item.expires ?? ""; approval = item.needsApproval
         let parts = item.path.split(separator: "/").map(String.init)
         if template.identity, parts.count == 2, parts[1] == item.kind { provider = parts[0] }
         else if parts.count >= 2, parts.count <= 3, parts[0] == "moinsen" {
@@ -207,7 +209,8 @@ final class AppModel {
                               fileName: $0.kind == .file ? $0.fileName : nil)
                 },
                 expires: expires.isEmpty ? nil : expires,
-                rotated: draft.existing?.rotated, source: draft.source.trimmingCharacters(in: .whitespacesAndNewlines))
+                rotated: draft.existing?.rotated, source: draft.source.trimmingCharacters(in: .whitespacesAndNewlines),
+                approval: draft.approval ? true : nil)
             // Complete value map: stored values (following renames), overridden by what was typed or chosen now.
             let stored = draft.existing == nil ? [:] : try vault.items.secrets(id: meta.id)
             var secrets: [String: String] = [:]

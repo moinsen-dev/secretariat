@@ -24,6 +24,7 @@ final class MemoryItems: ItemStore {
 struct AgentFixture {
     let root: URL
     let items = MemoryItems()
+    let approver = SwitchApprover()
     let vault: Vault
     let profile: Profile
     let item: ItemMeta
@@ -31,7 +32,7 @@ struct AgentFixture {
         root = FileManager.default.temporaryDirectory.appendingPathComponent("secretariat-test-\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let paths = AppPaths(directory: root.appendingPathComponent("vault"))
-        vault = Vault(configuration: ConfigurationStore(paths: paths), items: items, audit: AuditLog(url: paths.auditLog))
+        vault = Vault(configuration: ConfigurationStore(paths: paths), items: items, approver: approver, audit: AuditLog(url: paths.auditLog))
         item = ItemMeta(path: "moinsen/test/api", kind: "api",
                         fields: [ItemField(name: "key_id", kind: .identifier, value: "KEY-123"), ItemField(name: "secret", kind: .secret),
                                  ItemField(name: "password", kind: .personal)])
@@ -54,4 +55,14 @@ struct AgentFixture {
         catch let e as AgentError { return e.code } catch is SecretariatError { return "invalid" } catch { return "other" }
     }
     func cleanup() { try? FileManager.default.removeItem(at: root) }
+}
+
+/// Approver for tests: records reasons, allows or denies on demand.
+final class SwitchApprover: Approver, @unchecked Sendable {
+    var allow = true
+    var reasons: [String] = []
+    func approve(_ reason: String) throws {
+        reasons.append(reason)
+        if !allow { throw AgentError("approval_denied", "denied: \(reason)") }
+    }
 }

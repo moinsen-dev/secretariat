@@ -139,7 +139,7 @@ public enum Commands {
             return try show(try vault.item(path: a.positional[0]))
 
         case ("item", "create"), ("item", "set"):
-            let a = try Arguments(all.dropFirst(2), values: ["--kind", "--set", "--unset", "--source", "--expires"], usage: usage)
+            let a = try Arguments(all.dropFirst(2), values: ["--kind", "--set", "--unset", "--source", "--expires", "--approval"], usage: usage)
             guard a.positional.count == 1 else { throw AgentError("invalid_arguments", usage) }
             var item: ItemMeta
             if sub == "create" {
@@ -161,6 +161,11 @@ public enum Commands {
                 guard let field = item.field(name) else { throw AgentError("field_not_found", "\(item.path) has no field \(name).") }
                 guard field.kind == .identifier else { throw AgentError("secret_field", "Only the user removes secret fields, in the app.") }
                 item.fields.removeAll { $0.name == name }
+            }
+            if let approval = a.option("--approval") {
+                // Agents may tighten, never loosen: switching approval off is Uli's call, in the app.
+                guard approval == "on" else { throw AgentError("app_only", "Approval can only be switched off in the Secretariat app.") }
+                item.approval = true
             }
             if let source = a.option("--source") { item.source = source }
             if let expires = a.option("--expires") { item.expires = expires.isEmpty ? nil : expires }
@@ -236,6 +241,41 @@ public enum Commands {
                 guard Template.builtins.contains(where: { $0.id == a.positional[0] }) else { throw AgentError("not_builtin", "Only built-in templates can be reset.") }
                 try vault.resetTemplate(id: a.positional[0]); return try render(vault.catalog().template(a.positional[0]))
             default: throw AgentError("invalid_arguments", usage)
+            }
+
+        case ("guard", _):
+            let a = try Arguments(all.dropFirst(2), values: ["--all"], usage: usage)
+            switch sub {
+            case "check":
+                let dir = a.positional.first ?? FileManager.default.currentDirectoryPath
+                let findings = GitGuard.scan(diff: GitGuard.stagedDiff(in: dir), secrets: GitGuard.secrets(vault))
+                struct Out: Encodable { let schemaVersion = 2; let ok: Bool; let findings: [GitGuard.Finding] }
+                if !findings.isEmpty { vault.audit.record("guard.blocked", ["files": Set(findings.map(\.file)).sorted().joined(separator: ",")]) }
+                let text = findings.isEmpty ? "Secretariat guard: no known secret values in the staged changes." :
+                    (["Secretariat guard: commit blocked — staged changes contain secret values:"]
+                     + findings.map { "  \($0.file):\($0.line)  value of \($0.reference)" }
+                     + ["Read it from the environment instead (secretariat run), then stage again. Bypass only knowingly: git commit --no-verify"]).joined(separator: "\n")
+                return (findings.isEmpty ? 0 : 1, try json(Out(ok: findings.isEmpty, findings: findings)), text)
+            case "install", "uninstall":
+                var dirs = a.positional.isEmpty && a.option("--all") == nil ? [FileManager.default.currentDirectoryPath] : a.positional
+                if let root = a.option("--all") {
+                    let base = (root as NSString).expandingTildeInPath
+                    let finder = Process(); finder.executableURL = URL(fileURLWithPath: "/usr/bin/find")
+                    finder.arguments = [base, "-maxdepth", "6", "-name", ".git", "-type", "d", "-not", "-path", "*/node_modules/*", "-prune"]
+                    let pipe = Pipe(); finder.standardOutput = pipe; finder.standardError = FileHandle.nullDevice
+                    try finder.run(); let out = pipe.fileHandleForReading.readDataToEndOfFile(); finder.waitUntilExit()
+                    dirs += String(decoding: out, as: UTF8.self).split(separator: "\n").map { ($0 as NSString).deletingLastPathComponent }
+                }
+                var results: [String: String] = [:]
+                for dir in dirs {
+                    let path = (dir as NSString).expandingTildeInPath
+                    results[path] = (try? GitGuard.install(in: path, executable: executable, remove: sub == "uninstall")) ?? "not a git repository"
+                }
+                struct Out: Encodable { let schemaVersion = 2; let ok = true; let repositories: [String: String] }
+                let counts = Dictionary(grouping: results.values, by: { $0 }).mapValues(\.count)
+                return (0, try json(Out(repositories: results)),
+                        results.count == 1 ? "\(results.keys.first!): \(results.values.first!)" : counts.map { "\($0.key): \($0.value)" }.sorted().joined(separator: "\n"))
+            default: throw AgentError("invalid_arguments", "secretariat guard check | install [DIR …] [--all ROOT] | uninstall [DIR …] [--all ROOT]")
             }
 
         case ("item", "rename"):
@@ -473,6 +513,10 @@ enum Inject {
         }
         let regex = try NSRegularExpression(pattern: #"\{\{\s*([^}\s]+)\s*\}\}"#)
         var output = source, references: [String] = []
+        let all = regex.matches(in: source, range: NSRange(source.startIndex..., in: source)).compactMap {
+            try? vault.resolve(try FieldReference(String(source[Range($0.range(at: 1), in: source)!]))).0.id
+        }
+        try vault.requireApproval(all, for: "inject \((template as NSString).lastPathComponent)")
         for match in regex.matches(in: source, range: NSRange(source.startIndex..., in: source)).reversed() {
             let reference = String(source[Range(match.range(at: 1), in: source)!])
             let (item, field) = try vault.resolve(try FieldReference(reference))
@@ -543,6 +587,7 @@ public enum Targets {
             throw AgentError("target_not_found", "Target not found. Existing targets: secretariat targets")
         }
         guard !target.bindings.isEmpty else { throw AgentError("target_empty", "No variable is mapped to this target yet.") }
+        try vault.requireApproval(target.bindings.map(\.itemID), for: "push \(name)")
         var values: [(String, String)] = []
         for b in target.bindings.sorted(by: { $0.variable < $1.variable }) { values.append((b.variable, try vault.value(itemID: b.itemID, field: b.field))) }
         if dryRun { return ["Would write to \(destination(target)): \(values.map(\.0).joined(separator: ", "))"] }

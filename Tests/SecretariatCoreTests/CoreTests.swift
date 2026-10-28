@@ -181,3 +181,12 @@ extension Vault {
     #expect(text.contains("- Company name: Example GmbH")); #expect(text.contains("- City: Hamburg")); #expect(text.contains("- bank_note: extra"))
     #expect(text.contains("_Not recorded:_")); #expect(text.contains("Never ask Uli"))
 }
+
+@Test func testNamespaceStaysTheSameBeforeAndAfterTheFolderExists() throws {
+    let base = URL(fileURLWithPath: "/private/tmp/secretariat-ns-\(UUID().uuidString)", isDirectory: true)
+    let before = AppPaths(directory: base).itemService
+    try FileManager.default.createDirectory(at: base, withIntermediateDirectories: true); defer { try? FileManager.default.removeItem(at: base) }
+    #expect(AppPaths(directory: base).itemService == before)
+    let paths = AppPaths(directory: base)
+    #expect(paths.itemService == before)
+}

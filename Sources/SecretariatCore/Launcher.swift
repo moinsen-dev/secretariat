@@ -11,12 +11,20 @@ public struct PreparedLaunch {
     public let arguments: [String]
     public let environment: [String: String]
     public let files: [File]
+    /// Values to mask in the program's output (Agent Guard).
+    public var masks: [StreamMasker.Secret] = []
+    public init(directory: String, arguments: [String], environment: [String: String], files: [File], masks: [StreamMasker.Secret] = []) {
+        self.directory = directory; self.arguments = arguments; self.environment = environment; self.files = files; self.masks = masks
+    }
 
-    public func execute() throws -> Never {
+    /// `mask`: nil = automatic — mask when stdout or stderr is not a terminal (an agent or a pipe reads it);
+    /// a person at a terminal keeps the untouched, interactive program.
+    public func execute(mask: Bool? = nil) throws -> Never {
         guard chdir(directory) == 0 else { throw SecretariatError("The project folder can't be reached. Please fix the folder in the profile.") }
         let executable = try resolveExecutable()
-        // Without files: replace this process, preserving terminal, process group, signals and exit status.
-        guard !files.isEmpty else {
+        let masking = !masks.isEmpty && (mask ?? (isatty(1) == 0 || isatty(2) == 0))
+        // Without files or masking: replace this process, preserving terminal, process group, signals and exit status.
+        guard !files.isEmpty || masking else {
             withCStrings(arguments, environment) { argv, envp in _ = execve(executable, argv, envp) }
             throw SecretariatError("The program could not be started (system error \(errno)).")
         }
@@ -40,11 +48,43 @@ public struct PreparedLaunch {
         var defaults = sigset_t(); sigemptyset(&defaults); sigaddset(&defaults, SIGINT); sigaddset(&defaults, SIGQUIT)
         posix_spawnattr_setsigdefault(&attributes, &defaults)
         posix_spawnattr_setflags(&attributes, Int16(POSIX_SPAWN_SETSIGDEF))
+        // Masking: the child writes into pipes; two readers filter and forward to our own stdout/stderr.
+        var actions: posix_spawn_file_actions_t?
+        posix_spawn_file_actions_init(&actions); defer { posix_spawn_file_actions_destroy(&actions) }
+        var pipes: [[Int32]] = []
+        if masking {
+            for target in [Int32(1), Int32(2)] {
+                var fds: [Int32] = [0, 0]
+                guard pipe(&fds) == 0 else { throw SecretariatError("Output masking could not be set up.") }
+                posix_spawn_file_actions_adddup2(&actions, fds[1], target)
+                posix_spawn_file_actions_addclose(&actions, fds[0]); posix_spawn_file_actions_addclose(&actions, fds[1])
+                pipes.append(fds)
+            }
+        }
         var pid: pid_t = 0
-        let spawned = withCStrings(arguments, environment) { argv, envp in posix_spawn(&pid, executable, nil, &attributes, argv, envp) }
+        let spawned = withCStrings(arguments, environment) { argv, envp in posix_spawn(&pid, executable, &actions, &attributes, argv, envp) }
         guard spawned == 0 else { throw SecretariatError("The program could not be started (system error \(spawned)).") }
+        let readers = DispatchGroup()
+        for (index, fds) in pipes.enumerated() {
+            close(fds[1])
+            let source = fds[0], target = Int32(index + 1), secrets = masks
+            readers.enter()
+            Thread.detachNewThread {
+                var masker = StreamMasker(secrets)
+                var buffer = [UInt8](repeating: 0, count: 65536)
+                func write(_ data: Data) { data.withUnsafeBytes { raw in var off = 0
+                    while off < raw.count { let n = Darwin.write(target, raw.baseAddress! + off, raw.count - off); if n <= 0 { break }; off += n } } }
+                while true {
+                    let n = read(source, &buffer, buffer.count)
+                    if n <= 0 { break }
+                    write(masker.feed(Data(buffer[0..<n])))
+                }
+                write(masker.finish()); close(source); readers.leave()
+            }
+        }
         var status: Int32 = 0
         while waitpid(pid, &status, 0) == -1 && errno == EINTR {}
+        readers.wait()
         try? FileManager.default.removeItem(atPath: folder)
         if status & 0x7f == 0 { exit((status >> 8) & 0xff) }
         signal(status & 0x7f, SIG_DFL); kill(getpid(), status & 0x7f)
@@ -77,7 +117,7 @@ public struct PreparedLaunch {
 }
 
 public enum CommandLineInterface {
-    public static let version = "1.5.0"
+    public static let version = "1.6.0"
     public static let help = """
     Secretariat \(version) – confidential data for you and your agents
 
@@ -103,7 +143,8 @@ public enum CommandLineInterface {
       secretariat profile which [FOLDER]               profile of this (or the enclosing) project folder
       secretariat profile set PROFILE [--dir FOLDER] [--command COMMAND] [--json]
       secretariat profile bind PROFILE VARIABLE PATH/FIELD [--json] · unbind PROFILE VARIABLE · delete PROFILE
-      secretariat run PROFILE -- PROGRAM [ARGUMENTS …]   file fields arrive as the path of a temporary file
+      secretariat run PROFILE [--mask|--no-mask] -- PROGRAM [ARGUMENTS …]
+                                                     output to a pipe/agent: known values are masked automatically   file fields arrive as the path of a temporary file
       secretariat inject TEMPLATE --out FILE            replaces {{ PATH/FIELD }}; keep the output out of git
       secretariat instructions PROFILE · setup PROFILE [--dry-run] [--json]
 
@@ -113,6 +154,11 @@ public enum CommandLineInterface {
       secretariat target map NAME VARIABLE PATH/FIELD · unmap NAME VARIABLE · delete NAME
       secretariat targets [--json]                     current / stale / never pushed
       secretariat push NAME [--dry-run] [--json]
+
+    Agent Guard
+      secretariat guard install [DIR …] [--all ROOT]  pre-commit hook: refuse commits with known secret values
+      secretariat guard uninstall [DIR …] [--all ROOT] · guard check [DIR]
+      secretariat item set PATH --approval on          programs need Touch ID before they get this item (off: app only)
 
     Overview
       secretariat registry export · scan [FOLDER] [--json] · log [--lines N] · --version
@@ -126,11 +172,17 @@ public enum CommandLineInterface {
         case "--help", "-h", "help", nil: print(help); return 0
         case "--version": print("Secretariat \(version)"); return 0
         case "run":
-            guard arguments.count >= 4, arguments[2] == "--" else {
-                throw SecretariatError("Usage: secretariat run PROFILE -- PROGRAM [ARGUMENTS …]")
+            // run PROFILE [--mask|--no-mask] -- PROGRAM …
+            guard arguments.count >= 4, let dashes = arguments.firstIndex(of: "--"), dashes >= 2, dashes < arguments.count - 1 else {
+                throw SecretariatError("Usage: secretariat run PROFILE [--mask|--no-mask] -- PROGRAM [ARGUMENTS …]")
             }
-            try vault.preparedLaunch(name: arguments[1], arguments: Array(arguments.dropFirst(3)),
-                                     inheritedEnvironment: ProcessInfo.processInfo.environment).execute()
+            let options = Set(arguments[2..<dashes])
+            guard options.isSubset(of: ["--mask", "--no-mask"]), options.count < 2 else {
+                throw SecretariatError("Usage: secretariat run PROFILE [--mask|--no-mask] -- PROGRAM [ARGUMENTS …]")
+            }
+            try vault.preparedLaunch(name: arguments[1], arguments: Array(arguments[(dashes + 1)...]),
+                                     inheritedEnvironment: ProcessInfo.processInfo.environment)
+                .execute(mask: options.contains("--mask") ? true : options.contains("--no-mask") ? false : nil)
         default:
             let executable = Bundle.main.executableURL?.path ?? URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL.path
             return try Commands.execute(arguments, service: AgentService(vault: vault), executable: executable)

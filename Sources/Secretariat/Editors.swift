@@ -126,6 +126,11 @@ struct ItemEditor: View {
             if draft.customPath {
                 TextField("Location", text: $draft.typedPath, prompt: Text("moinsen/account/name")).textFieldStyle(.roundedBorder)
             }
+            Toggle(isOn: $draft.approval) {
+                Text("Ask with Touch ID before a program uses this item")
+                Text("Agent Guard: run, push and inject wait for your confirmation. Agents can turn this on, only you can turn it off.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             TextField("Source", text: $draft.source, prompt: Text("Where does the value come from? e.g. platform.openai.com")).textFieldStyle(.roundedBorder)
             TextField("Expires", text: $draft.expires, prompt: Text("YYYY-MM-DD, optional")).textFieldStyle(.roundedBorder)
             Text("More fields").font(.subheadline.bold())
