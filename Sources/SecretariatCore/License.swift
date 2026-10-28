@@ -1,8 +1,8 @@
 import CryptoKit
 import Foundation
 
-/// A Secretariat license: the JSON the license-issuer Worker mails after a purchase
-/// (`worker/license-issuer`, same format as Klabauter, own keypair).
+/// A Secretariat license: the JSON the shared `moinsen-licenses` Worker (repo moinsen-edge) mails after a
+/// purchase (same format as Klabauter, own keypair per product).
 public struct License: Codable, Equatable, Sendable {
     public var email: String
     public var issuedAt: Date
@@ -80,7 +80,7 @@ public struct Licensing {
     public static let trialDays = 14
     public static let buyURL = URL(string: "https://secretariat.moinsen.dev/buy")!
     /// Public half of the issuer's keypair (raw 32 bytes, base64). The private half lives only in the
-    /// Worker secret LICENSE_PRIVATE_KEY_BASE64 and in Secretariat (moinsen/secretariat-license).
+    /// moinsen-licenses Worker secret and in Secretariat (moinsen/secretariat-license).
     public static let productionPublicKeyBase64 = "ZpFO0CayUtXyG+mpRmXonXCG5zwIYOjOakVaTsWjUB4="
 
     public enum State: Equatable, Sendable {
