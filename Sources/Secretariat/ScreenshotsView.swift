@@ -10,6 +10,8 @@ struct ScreenshotDraft: Identifiable {
     var format: String
     var title = ""
     var note = ""
+    /// Set when the image came from the clipboard: saving clears it there, unless something else was copied meanwhile.
+    var clipboardChange: Int?
 }
 
 extension AppModel {
@@ -34,7 +36,7 @@ extension AppModel {
             errorMessage = "The clipboard holds no image. Take a screenshot with ⌃⇧⌘4 (copies it) and try again."
             return
         }
-        screenshotDraft = ScreenshotDraft(image: png, format: "png")
+        screenshotDraft = ScreenshotDraft(image: png, format: "png", clipboardChange: pasteboard.changeCount)
     }
 
     func screenshotFromFile(_ url: URL) {
@@ -57,6 +59,7 @@ extension AppModel {
         guard let library = screenshotLibrary else { errorMessage = "Screenshots are still loading."; return false }
         do {
             let shot = try library.add(image: draft.image, format: draft.format, title: draft.title, note: draft.note)
+            if let change = draft.clipboardChange, NSPasteboard.general.changeCount == change { NSPasteboard.general.clearContents() }
             reloadScreenshots(); selection = "screenshots"; selectedScreenshot = shot.id
             return true
         } catch { errorMessage = error.localizedDescription; return false }
@@ -64,8 +67,9 @@ extension AppModel {
 
     func updateScreenshot(_ shot: Screenshot, title: String, note: String) {
         guard let library = screenshotLibrary, title != shot.title || note != shot.note else { return }
-        do { _ = try library.update(shot.id, title: title, note: note); reloadScreenshots() }
+        do { _ = try library.update(shot.id, title: title, note: note, basedOn: shot.changed) }
         catch { errorMessage = error.localizedDescription }
+        reloadScreenshots()
     }
 
     func deleteScreenshot(_ shot: Screenshot) {
@@ -78,6 +82,14 @@ extension AppModel {
         guard let library = screenshotLibrary else { return nil }
         do { return NSImage(data: try library.image(shot.id)) }
         catch { errorMessage = error.localizedDescription; return nil }
+    }
+
+    /// Full image, decrypted off the main thread. nil while iCloud is still downloading it.
+    func loadImage(_ shot: Screenshot) async -> Result<NSImage, Error> {
+        guard let library = screenshotLibrary else { return .failure(ScreenshotError.downloading) }
+        let id = shot.id
+        let data = await Task.detached { Result { try library.image(id) } }.value
+        return data.flatMap { NSImage(data: $0).map(Result.success) ?? .failure(SecretariatError("The image can't be shown.")) }
     }
 
     func loadThumbnail(_ shot: Screenshot) async {
@@ -96,10 +108,19 @@ extension AppModel {
         catch { errorMessage = error.localizedDescription }
     }
 
+    /// Copies the image marked as concealed (clipboard managers skip it) and clears it after 60 s,
+    /// unless something else was copied meanwhile, like copied secrets.
     func copyScreenshot(_ shot: Screenshot) {
         guard let image = screenshotImage(shot) else { return }
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.writeObjects([image])
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        pasteboard.writeObjects([image])
+        pasteboard.setData(Data(), forType: NSPasteboard.PasteboardType("org.nspasteboard.ConcealedType"))
+        let count = pasteboard.changeCount
+        Task {
+            try? await Task.sleep(for: .seconds(60))
+            if pasteboard.changeCount == count { pasteboard.clearContents() }
+        }
     }
 }
 
@@ -108,10 +129,19 @@ extension NSImage {
         guard let tiff = tiffRepresentation, let bitmap = NSBitmapImageRep(data: tiff) else { return nil }
         return bitmap.representation(using: .png, properties: [:])
     }
+    /// A small rendered copy that doesn't keep the full image alive.
     func thumbnail(maxSide: CGFloat) -> NSImage {
         let scale = min(1, maxSide / max(size.width, size.height, 1))
-        let target = NSSize(width: size.width * scale, height: size.height * scale)
-        return NSImage(size: target, flipped: false) { rect in self.draw(in: rect); return true }
+        let width = max(1, Int(size.width * scale * 2)), height = max(1, Int(size.height * scale * 2))
+        guard let bitmap = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: width, pixelsHigh: height, bitsPerSample: 8, samplesPerPixel: 4,
+                                            hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: 0, bitsPerPixel: 0) else { return NSImage() }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
+        draw(in: NSRect(x: 0, y: 0, width: width, height: height))
+        NSGraphicsContext.restoreGraphicsState()
+        let image = NSImage(size: NSSize(width: CGFloat(width) / 2, height: CGFloat(height) / 2))
+        image.addRepresentation(bitmap)
+        return image
     }
 }
 
@@ -211,6 +241,7 @@ struct ScreenshotDetail: View {
     @State private var title = ""
     @State private var note = ""
     @State private var image: NSImage?
+    @State private var imageError: String?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -224,6 +255,8 @@ struct ScreenshotDetail: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .background(Color(nsColor: .controlBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 6))
                         .onDrag { NSItemProvider(object: image) }
+                } else if let imageError {
+                    ContentUnavailableView(imageError, systemImage: "icloud.and.arrow.down").frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else { ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity) }
             }
             Text("Note").font(.headline)
@@ -239,7 +272,13 @@ struct ScreenshotDetail: View {
             }
         }
         .padding(20)
-        .onAppear { title = shot.title; note = shot.note; image = model.screenshotImage(shot) }
+        .onAppear { title = shot.title; note = shot.note }
+        .task {
+            switch await model.loadImage(shot) {
+            case .success(let loaded): image = loaded
+            case .failure(let error): imageError = error.localizedDescription
+            }
+        }
         .onDisappear(perform: save)
     }
 

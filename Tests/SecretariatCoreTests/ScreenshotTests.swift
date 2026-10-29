@@ -26,7 +26,7 @@ private func temporaryFolder() throws -> URL {
         let raw = try Data(contentsOf: root.appendingPathComponent(name))
         for plain in ["PNG-PIXELS", "Stripe", "whsec_123"] { #expect(raw.range(of: Data(plain.utf8)) == nil) }
     }
-    let changed = try shots.update(shot.id, title: "Stripe", note: "rotated")
+    let changed = try shots.update(shot.id, title: "Stripe", note: "rotated", basedOn: shot.changed)
     #expect(try shots.list().screenshots.first?.note == "rotated")
     #expect(changed.created == shot.created)
     try shots.delete(shot.id)
@@ -79,11 +79,39 @@ private func temporaryFolder() throws -> URL {
     try Data().write(to: root.appendingPathComponent(".\(id).image.icloud"))
     let listing = try library(in: root).list()
     #expect(listing.pending == 1 && listing.screenshots.isEmpty && listing.unreadable == 0)
-    #expect(throws: SecretariatError.self) { try library(in: root).image(UUID(uuidString: id)!) }
+    #expect(throws: ScreenshotError.downloading) { try library(in: root).image(UUID(uuidString: id)!) }
 
     let paths = AppPaths(directory: root.appendingPathComponent("vault"))
     let resolved = ScreenshotLibrary.resolve(paths: paths)
     #expect(resolved.location == .local)
     #expect(resolved.directory == paths.directory.appendingPathComponent("screenshots", isDirectory: true))
     #expect(paths.screenshotKeyService.hasPrefix("dev.moinsen.secretariat.screenshots.test."))
+}
+
+@Test func staleEditsSwappedFilesAndMovesAreHandled() throws {
+    let root = try temporaryFolder(); defer { try? FileManager.default.removeItem(at: root) }
+    let keyring = InMemoryScreenshotKeyring()
+    let shots = library(keyring, in: root.appendingPathComponent("cloud"))
+    let shot = try shots.add(image: Data("one".utf8), format: "png", title: "A", note: "first")
+    // Another Mac edited first: the stale edit is refused, nothing is overwritten.
+    let other = try shots.update(shot.id, title: "A", note: "from the other Mac", basedOn: shot.changed)
+    #expect(throws: ScreenshotError.changedElsewhere) { try shots.update(shot.id, title: "A", note: "stale", basedOn: shot.changed) }
+    #expect(try shots.list().screenshots.first?.note == "from the other Mac")
+    #expect(other.changed > shot.changed)
+    // Files are bound to their id and kind: a meta copied under another id doesn't open.
+    let second = try shots.add(image: Data("two".utf8), format: "png", title: "B", note: "")
+    let dir = shots.directory
+    try FileManager.default.removeItem(at: dir.appendingPathComponent("\(second.id.uuidString).meta"))
+    try FileManager.default.copyItem(at: dir.appendingPathComponent("\(shot.id.uuidString).meta"),
+                                     to: dir.appendingPathComponent("\(second.id.uuidString).meta"))
+    let listing = try shots.list()
+    #expect(listing.screenshots.map(\.id) == [shot.id])
+    #expect(listing.unreadable == 1)
+    #expect(try shots.verify() == (readable: 1, failed: 0))
+    // Screenshots saved locally while iCloud was off move into the container.
+    let local = library(keyring, in: root.appendingPathComponent("local"))
+    let offline = try local.add(image: Data("offline".utf8), format: "png", title: "offline", note: "")
+    shots.adopt(local.directory)
+    #expect(try shots.image(offline.id) == Data("offline".utf8))
+    #expect(try local.list().screenshots.isEmpty)
 }

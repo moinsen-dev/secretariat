@@ -64,7 +64,7 @@
 | R024 | Profile ohne festen Ordner (`--dir '*'`) laufen im aktuellen Ordner (Werkzeug-Tokens); `profile which` findet das Profil eines Ordners; ein Sitzungsstart-Hinweis nennt Agenten Profil oder .env-Geheimnisse; `bulk_import.py` übernimmt viele .env-Dateien nach einer Prüfliste; eine frische Claude-Sitzung nutzt Secretariat ohne Hinweis im Auftrag |
 | R025 | Der Eintrags-Dialog führt nach Art: Art wählen, Anbieter, beschriftete Pflicht- und Kannfelder je Art; Ablage ergibt sich (moinsen/<anbieter>[/<zusatz>]); Herkunft, Ablauf, eigene Ablage und weitere Felder unter „Erweitert“; „In allen Projekten nutzbar“ ordnet die Felder dem Profil werkzeuge zu |
 | R026 | Kopierte Zugangsdaten landen per Kurzbefehl oder Knopf mit Zeitstempel im Eingang, die Zwischenablage wird geleert; kein Programm erhält den Wert, bis er in einen Eintrag umgewandelt ist; das Umwandeln übernimmt den (beim Erfassen an den Rändern getrimmten) Wert und entfernt die Erfassung nur, wenn er im neuen Eintrag liegt |
-| R027 | Screenshots mit Notiz: Bild aus der Zwischenablage, einer Datei oder per Ablegen speichern, Notiz ergänzen und ändern, Vorschau, Export und Löschen in der App; Bild und Notiz liegen mit AES-GCM verschlüsselt im privaten iCloud-Drive-Container der App, der Schlüssel nur im synchronisierten Schlüsselbund von Secretariat; kein Programm, keine CLI-Ausgabe und kein Agent erhält Bild oder Notiz; ohne iCloud bleibt alles verschlüsselt lokal und die App sagt das |
+| R027 | Screenshots mit Notiz: Bild aus der Zwischenablage, einer Datei oder per Ablegen speichern, Notiz ergänzen und ändern, Vorschau, Export und Löschen mit Rückfrage in der App; auf der Platte liegen Bild und Notiz nur als AES-GCM-Dateien (`SCR1`, an ID und Art gebunden) mit zufälligen Namen im privaten iCloud-Drive-Container, der Schlüssel nur im synchronisierten Schlüsselbund unter Secretariats Zugriffsgruppe; kein Programm, keine CLI-Ausgabe (nur Anzahlen) und kein Agent erhält Bild oder Notiz – herausgegeben werden sie nur durch eine ausdrückliche Nutzeraktion (Kopieren als vertraulich mit Leeren nach 60 s, Export, Ziehen); eine Bearbeitung überschreibt keine neuere Änderung eines anderen Macs; ohne iCloud bleibt alles verschlüsselt lokal, zieht später in den Container um, und die App sagt das |
 
 ## Phases
 
@@ -138,7 +138,7 @@
 | T019 | P14 | UC14 | R020,R024 | Profil `*` und `profile which` mit Tests (32/32); 1.1.0 auf allen vier Macs; Profil werkzeuge läuft im aktuellen Ordner mit Datei; Prüfliste 296 Werte/20 Kennungen/144 Profile ohne Werte; frische Claude-Sitzung ohne und mit Hinweis grün, kein Wert in der Ausgabe | build,unit,macos | normal | T018 | Sources/SecretariatCore/Models.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/Commands.swift,Sources/SecretariatCore/AgentIntegration.swift,Sources/SecretariatCore/Launcher.swift,Sources/SecretariatCore/ProjectInstructions.swift,Tests/SecretariatCoreTests/CoreTests.swift,Tests/SecretariatCoreTests/CommandTests.swift,script/bulk_import.py,script/e2e_session.py,script/cleanup_test_items.swift,script/build_cleanup_test_items.sh,Resources/Info.plist |
 | T020 | P15 | UC15 | R020,R024,R025 | Arten mit beschrifteten Feldern im Kern; geführter Dialog (Screenshot geprüft); globale Zuordnung über werkzeuge; Nutzereintrag moinsen → moinsen/deepseek repariert und global; 1.2.0 auf allen Macs | build,unit,macos | normal | T019 | Sources/SecretariatCore/Models.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Editors.swift,Sources/Secretariat/Views.swift,Sources/SecretariatCore/Launcher.swift,Resources/Info.plist |
 | T021 | P16 | UC16 | R020,R025,R026 | Erfassungsfenster speichert künstlichen Wert im Test-Tresor und leert die Zwischenablage; Eingang zeigt die Erfassung; Umwandeln legt Eintrag an und entfernt die Erfassung nur, wenn ihr Wert im Eintrag liegt, sonst bleibt sie im Eingang; run liefert den (getrimmten) Wert byte-genau; kein Programm erhält die Erfassung vor dem Umwandeln (Unit-Test); Unit-Tests grün | build,unit,macos | normal | T020 | Sources/SecretariatCore/Capture.swift,Sources/SecretariatCore/Models.swift,Sources/Secretariat/CapturePanel.swift,Sources/Secretariat/Views.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Entry.swift,Sources/Secretariat/Editors.swift,Package.swift,Package.resolved,Tests/SecretariatCoreTests/CaptureTests.swift,script/build.sh |
-| T022 | P17 | UC17 | R027 | Kern verschlüsselt Bild und Notiz (Schlüssel-ID im Kopf, mehrere Schlüssel lesbar, Größenlimit, iCloud-Platzhalter), Unit-Tests ohne Klartext auf der Platte; App: Abschnitt Screenshots mit Hinzufügen aus Zwischenablage/Datei/Ablegen, Vorschau, Notiz bearbeiten, Export, Löschen; Test-Tresor-Ablauf im Paket; iCloud-Container im Profil, Datei auf zweitem Mac lesbar | build,unit,macos | normal | T021 | Sources/SecretariatCore/Screenshots.swift,Sources/SecretariatCore/Storage.swift,Sources/Secretariat/ScreenshotsView.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Views.swift,Resources/Secretariat.entitlements,Resources/Secretariat.provisionprofile,Tests/SecretariatCoreTests/ScreenshotTests.swift |
+| T022 | P17 | UC17 | R027 | Kern verschlüsselt Bild und Notiz (Schlüssel-ID im Kopf, mehrere Schlüssel lesbar, Größenlimit, iCloud-Platzhalter), Unit-Tests ohne Klartext auf der Platte; App: Abschnitt Screenshots mit Hinzufügen aus Zwischenablage/Datei/Ablegen, Vorschau, Notiz bearbeiten, Export, Löschen; Test-Tresor-Ablauf im Paket; iCloud-Container im Profil; auf einem zweiten Mac Anzahl und entschlüsselbare Bilder per `screenshots` (nur Zahlen) bestätigt; Löschen synchronisiert; veraltete Bearbeitung abgewiesen (Unit-Test) | build,unit,macos | normal | T021 | Sources/SecretariatCore/Screenshots.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/Commands.swift,Sources/SecretariatCore/Launcher.swift,Sources/Secretariat/ScreenshotsView.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Views.swift,Sources/Secretariat/Entry.swift,Resources/Secretariat.entitlements,Resources/Secretariat.provisionprofile,Tests/SecretariatCoreTests/ScreenshotTests.swift |
 
 ## Modules
 
@@ -146,12 +146,12 @@
 | --- | --- | --- |
 | auth | NO | OS-Schlüsselbund statt eigener Konten oder Sitzungen; Zugriffsschutz in T002/T004 |
 | remote | NO | Vollständig lokal |
-| sync | YES | Schlüsselwerte und -namen über iCloud-Schlüsselbund (Apple), Profile bewusst lokal je Mac; T014 |
+| sync | YES | Schlüsselwerte und -namen über iCloud-Schlüsselbund (Apple), Profile bewusst lokal je Mac; T014. Screenshots verschlüsselt über den iCloud-Drive-Container der App, Schlüssel im iCloud-Schlüsselbund; T022 |
 | ai | NO | Keine Modelle oder Agentenfunktionen |
 | payments | NO | Keine Käufe |
 | sensors | NO | Keine Sensoren |
 | notify | NO | Kein Autostart, Hintergrunddienst oder Mitteilungen |
-| files | YES | Benutzer wählt Projektordner, Abbruch und fehlenden Ordner prüfen |
+| files | YES | Benutzer wählt Projektordner, Abbruch und fehlenden Ordner prüfen; Screenshots aus Datei, Zwischenablage oder Ablegen, Export über Sicherungsdialog (T022) |
 
 ## Checklist
 
@@ -207,11 +207,14 @@
 |---|---|---|---|
 | Keychain | Vom Nutzer eingetragene Schlüssel; ab 0.3 synchronisierbar über iCloud-Schlüsselbund desselben Apple-Accounts | Data-Protection-Schlüsselbund mit `keychain-access-groups` und `com.apple.application-identifier`, Developer-ID-Provisioning-Profil eingebettet; bei gesperrter oder verweigerter Ablage verständlicher Fehler | T002,T004,T013,T014 |
 | Dateizugriff | Gewählter Projektordner und app-eigene Metadaten | Nativer Ordnerdialog über fileImporter, bewusst lokale nicht sandboxed Entwicklungs-App; keine TCC-weiten Zusatzrechte | T003,T005 |
+| iCloud Drive | Verschlüsselte Screenshots und Notizen (nur Chiffrat) im privaten Container `iCloud.dev.moinsen.secretariat`, nicht im Finder freigegeben | `com.apple.developer.icloud-container-identifiers`, `ubiquity-container-identifiers`, `icloud-services = CloudDocuments`, Umgebung Production; Developer-ID-Profil „Secretariat Developer ID iCloud“ | T022 |
 | Prozessstart | Expliziter Terminalbefehl im Profilordner | Normaler Nutzerprozess, keine privilegierten Helfer | T002,T004 |
 
 Für lokale Fertigstellung sind keine neuen Anbieter-Konten, Kosten oder externen Freigaben nötig. Weitergabe außerhalb dieses Macs verlangt gesonderte Signatur-/Notarisierungsprüfung.
 
 ## Datenintegrität
+
+Screenshots: Dateien werden koordiniert (NSFileCoordinator) und atomar geschrieben; das Bild vor der Beschreibung, Löschen in umgekehrter Reihenfolge. Eine Änderung nennt den bearbeiteten Stand; hat ein anderer Mac inzwischen geändert, wird nichts überschrieben. iCloud-Konfliktversionen werden zugunsten der aktuellen aufgelöst. AES-GCM bindet jede Datei an ID und Art, vertauschte oder manipulierte Dateien gelten als unlesbar statt falsch angezeigt zu werden.
 
 Metadaten werden unter exklusiver Schreibsperre atomar ersetzt. UI-Mutationen vergleichen die geladene Revision; veraltete Formulare müssen neu geladen werden. Beschädigte oder unbekannte Konfiguration wird erhalten und als Fehler angezeigt. Installation und Entfernung überprüfen App-Identität und Zielverweis; fremde Dateien bleiben erhalten. T003, T004 und T006 prüfen diese Fälle.
 

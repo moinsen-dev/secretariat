@@ -195,12 +195,16 @@ public enum Commands {
 
         case ("screenshots", _):
             // Counts only: titles, notes and images never leave the app.
-            struct Out: Encodable { let schemaVersion = 2; let ok = true; let location: String; let screenshots: Int; let pending: Int; let unreadable: Int }
+            struct Out: Encodable {
+                let schemaVersion = 2; let ok = true; let location: String; let screenshots: Int; let imagesReadable: Int; let pending: Int; let unreadable: Int
+            }
             let library = ScreenshotLibrary.resolve(paths: vault.configuration.paths)
             let listing = try library.list()
+            let images = try library.verify()
             let location = library.location == .iCloud ? "icloud" : "local"
-            return (0, try json(Out(location: location, screenshots: listing.screenshots.count, pending: listing.pending, unreadable: listing.unreadable)),
-                    "\(listing.screenshots.count) screenshots (\(location)), \(listing.pending) downloading, \(listing.unreadable) unreadable")
+            return (0, try json(Out(location: location, screenshots: listing.screenshots.count, imagesReadable: images.readable,
+                                    pending: listing.pending, unreadable: listing.unreadable + images.failed)),
+                    "\(listing.screenshots.count) screenshots (\(location)), \(images.readable) images readable, \(listing.pending) downloading, \(listing.unreadable + images.failed) unreadable")
 
         case ("template", _):
             let a = try Arguments(all.dropFirst(2), values: ["--title", "--symbol", "--explanation", "--label", "--kind", "--prompt", "--env"],
