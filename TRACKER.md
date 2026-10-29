@@ -5,28 +5,28 @@
 | ID | Status | Evidence | Reason |
 |---|---|---|---|
 | T001 | ERLEDIGT | E019 | Betroffene Bestandsnachweise beim Abschluss von 0.2 abgleichen und erneuern |
-| T002 | ERLEDIGT | E786,E787,E788 | Regression 1.10 auf 03de498 |
-| T003 | ERLEDIGT | E789,E790 | Regression 1.10 auf 03de498 |
+| T002 | ERLEDIGT | E840,E841,E842 | Regression nach T023 auf 4f322af |
+| T003 | ERLEDIGT | E843,E844 | Regression nach T023 auf 4f322af |
 | T004 | ERLEDIGT | E791 | Regression 1.10 auf 03de498 |
-| T005 | ERLEDIGT | E792 | Regression 1.10 auf 03de498 |
-| T006 | ERLEDIGT | E793,E794 | Regression 1.10 auf 03de498 |
-| T007 | ERLEDIGT | E795,E796 | Regression 1.10 auf 03de498 |
-| T008 | ERLEDIGT | E797,E798 | Regression 1.10 auf 03de498 |
-| T009 | ERLEDIGT | E799 | Regression 1.10 auf 03de498 |
-| T010 | ERLEDIGT | E800,E801,E802,E803 | Regression 1.10 auf 03de498 |
+| T005 | ERLEDIGT | E845 | Regression nach T023 auf 4f322af |
+| T006 | ERLEDIGT | E846,E847 | Regression nach T023 auf 4f322af |
+| T007 | ERLEDIGT | E848,E849 | Regression nach T023 auf 4f322af |
+| T008 | ERLEDIGT | E850,E851 | Regression nach T023 auf 4f322af |
+| T009 | ERLEDIGT | E852 | Regression nach T023 auf 4f322af |
+| T010 | ERLEDIGT | E853,E854,E855,E856 | Regression nach T023 auf 4f322af |
 | T011 | ERLEDIGT | E804,E805 | Regression 1.10 auf 03de498 |
 | T013 | ERLEDIGT | E808,E809 | Regression 1.10 auf 03de498 |
-| T014 | ERLEDIGT | E810,E811,E812 | Regression 1.10 auf 03de498 |
+| T014 | ERLEDIGT | E857,E858,E859 | Regression nach T023 auf 4f322af |
 | T015 | ERLEDIGT | E813,E814 | Regression 1.10 auf 03de498 |
 | T012 | ERLEDIGT | E806,E807 | Regression 1.10 auf 03de498 |
 | T016 | ERLEDIGT | E815,E816,E817 | Regression 1.10 auf 03de498 |
 | T017 | ERLEDIGT | E818,E819,E820 | Regression 1.10 auf 03de498 |
-| T018 | ERLEDIGT | E821,E822,E823,E824 | Regression 1.10 auf 03de498 |
+| T018 | ERLEDIGT | E860,E861,E862,E863 | Regression nach T023 auf 4f322af |
 | T019 | ERLEDIGT | E825,E826,E827 | Regression 1.10 auf 03de498 |
-| T020 | ERLEDIGT | E828,E829,E830 | Regression 1.10 auf 03de498 |
-| T021 | ERLEDIGT | E831,E832,E833 | Regression 1.10 auf 03de498 |
-| T022 | ERLEDIGT | E834,E835,E836 | Verschlüsselt, über iCloud, verdeckt bis Show; geprüft auf 03de498 |
-| T023 | IN_ARBEIT | - | Eintrag aus Screenshot, lokale Erkennung |
+| T020 | ERLEDIGT | E864,E865,E866 | Regression nach T023 auf 4f322af |
+| T021 | ERLEDIGT | E867,E868,E869 | Regression nach T023 auf 4f322af |
+| T022 | ERLEDIGT | E870,E871,E872 | Regression nach T023 auf 4f322af |
+| T023 | ERLEDIGT | E837,E838,E839 | Lokal aus Screenshot vorausgefüllt, 3 GUI-Läufe, geprüft auf 4f322af |
 
 ## Evidence
 
@@ -868,6 +868,42 @@
 | E834 | T022 | build | build | normal | 2026-10-29T16:10:37+00:00 | 03de498 | e4e98847c69755f10b713c12 | docs/t022-evidence.md | PASS |
 | E835 | T022 | unit | unit | normal | 2026-10-29T16:10:38+00:00 | 03de498 | e4e98847c69755f10b713c12 | docs/t022-evidence.md | PASS |
 | E836 | T022 | macos | ui | normal | 2026-10-29T16:10:38+00:00 | 03de498 | e4e98847c69755f10b713c12 | docs/t022-evidence.md | PASS |
+| E837 | T023 | build | build | normal | 2026-10-29T17:23:46+00:00 | 4f322af | 657b3695b2372ea734bc95c3 | docs/t023-evidence.md | PASS |
+| E838 | T023 | unit | unit | normal | 2026-10-29T17:23:46+00:00 | 4f322af | 657b3695b2372ea734bc95c3 | docs/t023-evidence.md | PASS |
+| E839 | T023 | macos | ui | normal | 2026-10-29T17:23:46+00:00 | 4f322af | 657b3695b2372ea734bc95c3 | docs/t023-evidence.md | PASS |
+| E840 | T002 | build | build | normal | 2026-10-29T17:24:36+00:00 | 4f322af | 82f1447d34f69a70ca3c609d | docs/regression-t023.md | PASS |
+| E841 | T002 | unit | unit | normal | 2026-10-29T17:24:36+00:00 | 4f322af | 82f1447d34f69a70ca3c609d | docs/regression-t023.md | PASS |
+| E842 | T002 | macos | ui | normal | 2026-10-29T17:24:36+00:00 | 4f322af | 82f1447d34f69a70ca3c609d | docs/regression-t023.md | PASS |
+| E843 | T003 | macos | ui | normal | 2026-10-29T17:24:37+00:00 | 4f322af | 11501574024a5016900d4192 | docs/regression-t023.md | PASS |
+| E844 | T003 | unit | unit | normal | 2026-10-29T17:24:37+00:00 | 4f322af | 11501574024a5016900d4192 | docs/regression-t023.md | PASS |
+| E845 | T005 | macos | ui | normal | 2026-10-29T17:24:37+00:00 | 4f322af | 3a16a15a3553d1638794773b | docs/regression-t023.md | PASS |
+| E846 | T006 | inspection | inspection | normal | 2026-10-29T17:24:37+00:00 | 4f322af | 7e34374a75c299378beac49a | docs/regression-t023.md | PASS |
+| E847 | T006 | macos | ui | normal | 2026-10-29T17:24:38+00:00 | 4f322af | 7e34374a75c299378beac49a | docs/regression-t023.md | PASS |
+| E848 | T007 | build | build | normal | 2026-10-29T17:24:38+00:00 | 4f322af | b4a5791d1e0679367b5ac3c6 | docs/regression-t023.md | PASS |
+| E849 | T007 | unit | unit | normal | 2026-10-29T17:24:38+00:00 | 4f322af | b4a5791d1e0679367b5ac3c6 | docs/regression-t023.md | PASS |
+| E850 | T008 | unit | unit | normal | 2026-10-29T17:24:38+00:00 | 4f322af | f8191045abb01c68b71ff002 | docs/regression-t023.md | PASS |
+| E851 | T008 | macos | ui | normal | 2026-10-29T17:24:39+00:00 | 4f322af | f8191045abb01c68b71ff002 | docs/regression-t023.md | PASS |
+| E852 | T009 | inspection | inspection | normal | 2026-10-29T17:24:39+00:00 | 4f322af | 9033e14a0c3e3359c1a3c5a9 | docs/regression-t023.md | PASS |
+| E853 | T010 | build | build | normal | 2026-10-29T17:24:39+00:00 | 4f322af | 045dc2c3bdc582376f7dc110 | docs/regression-t023.md | PASS |
+| E854 | T010 | unit | unit | normal | 2026-10-29T17:24:40+00:00 | 4f322af | 045dc2c3bdc582376f7dc110 | docs/regression-t023.md | PASS |
+| E855 | T010 | macos | ui | normal | 2026-10-29T17:24:40+00:00 | 4f322af | 045dc2c3bdc582376f7dc110 | docs/regression-t023.md | PASS |
+| E856 | T010 | inspection | inspection | normal | 2026-10-29T17:24:40+00:00 | 4f322af | 045dc2c3bdc582376f7dc110 | docs/regression-t023.md | PASS |
+| E857 | T014 | build | build | normal | 2026-10-29T17:24:40+00:00 | 4f322af | 70baae4e269ba9ce7b918bc4 | docs/regression-t023.md | PASS |
+| E858 | T014 | unit | unit | normal | 2026-10-29T17:24:40+00:00 | 4f322af | 70baae4e269ba9ce7b918bc4 | docs/regression-t023.md | PASS |
+| E859 | T014 | macos | ui | normal | 2026-10-29T17:24:41+00:00 | 4f322af | 70baae4e269ba9ce7b918bc4 | docs/regression-t023.md | PASS |
+| E860 | T018 | build | build | normal | 2026-10-29T17:24:41+00:00 | 4f322af | 3a6bb825e1fd058cb99575cf | docs/regression-t023.md | PASS |
+| E861 | T018 | unit | unit | normal | 2026-10-29T17:24:41+00:00 | 4f322af | 3a6bb825e1fd058cb99575cf | docs/regression-t023.md | PASS |
+| E862 | T018 | macos | ui | normal | 2026-10-29T17:24:41+00:00 | 4f322af | 3a6bb825e1fd058cb99575cf | docs/regression-t023.md | PASS |
+| E863 | T018 | inspection | inspection | normal | 2026-10-29T17:24:41+00:00 | 4f322af | 3a6bb825e1fd058cb99575cf | docs/regression-t023.md | PASS |
+| E864 | T020 | build | build | normal | 2026-10-29T17:24:42+00:00 | 4f322af | 9494e17dc713213b96c39839 | docs/regression-t023.md | PASS |
+| E865 | T020 | unit | unit | normal | 2026-10-29T17:24:42+00:00 | 4f322af | 9494e17dc713213b96c39839 | docs/regression-t023.md | PASS |
+| E866 | T020 | macos | ui | normal | 2026-10-29T17:24:42+00:00 | 4f322af | 9494e17dc713213b96c39839 | docs/regression-t023.md | PASS |
+| E867 | T021 | build | build | normal | 2026-10-29T17:24:43+00:00 | 4f322af | 0adf0444aec972b8b6daf95f | docs/regression-t023.md | PASS |
+| E868 | T021 | unit | unit | normal | 2026-10-29T17:24:43+00:00 | 4f322af | 0adf0444aec972b8b6daf95f | docs/regression-t023.md | PASS |
+| E869 | T021 | macos | ui | normal | 2026-10-29T17:24:43+00:00 | 4f322af | 0adf0444aec972b8b6daf95f | docs/regression-t023.md | PASS |
+| E870 | T022 | build | build | normal | 2026-10-29T17:24:43+00:00 | 4f322af | 4400e5a792acb6c945d99e1a | docs/regression-t023.md | PASS |
+| E871 | T022 | unit | unit | normal | 2026-10-29T17:24:43+00:00 | 4f322af | 4400e5a792acb6c945d99e1a | docs/regression-t023.md | PASS |
+| E872 | T022 | macos | ui | normal | 2026-10-29T17:24:44+00:00 | 4f322af | 4400e5a792acb6c945d99e1a | docs/regression-t023.md | PASS |
 
 ## Reviews
 
@@ -1191,6 +1227,25 @@
 | RV316 | UC16 | self | PASS | 017e6aa101bf4da1cace872e | docs/regression-1.10.md |
 | RV317 | PLAN | self | PASS | 40f050569b2a5aa760ae4bec | docs/review-uc17.md |
 | RV318 | UC17 | self | PASS | 1e10532a437855816b1bb38a | docs/t022-evidence.md |
+| RV319 | PLAN | independent | PASS | 79190cb2424a35c20a76fecc | docs/review-plan-uc18.md |
+| RV320 | UC18 | independent | PASS | 055d025281b63c3da1f5493d | docs/review-uc18.md |
+| RV321 | UC01 | self | PASS | aaf097d26715c8cd60c4c946 | docs/regression-t023.md |
+| RV322 | UC02 | self | PASS | 68e943b89f8030cf8fbd8f1b | docs/regression-t023.md |
+| RV323 | UC03 | self | PASS | 47d60e030b9ac9a8e462ca29 | docs/regression-t023.md |
+| RV324 | UC04 | self | PASS | b606e089e0c21c0d10c785f8 | docs/regression-t023.md |
+| RV325 | UC05 | self | PASS | 9533139dca68cf022f67e9f2 | docs/regression-t023.md |
+| RV326 | UC06 | self | PASS | 20193c85befc9c9f939d99bb | docs/regression-t023.md |
+| RV327 | UC07 | self | PASS | fb5758d04beb2b5e03211596 | docs/regression-t023.md |
+| RV328 | UC08 | self | PASS | c24079232bc92d62d218faae | docs/regression-t023.md |
+| RV329 | UC09 | self | PASS | 669b977d6c2c05268f3e84c6 | docs/regression-t023.md |
+| RV330 | UC10 | self | PASS | 3b1301f93d17123d7507538a | docs/regression-t023.md |
+| RV331 | UC11 | self | PASS | ef8ba209c4bd02aeb8e0e4e0 | docs/regression-t023.md |
+| RV332 | UC12 | self | PASS | 4f5e339e669738e47bb323c7 | docs/regression-t023.md |
+| RV333 | UC13 | self | PASS | 9bb330cb6e84f07404437706 | docs/regression-t023.md |
+| RV334 | UC14 | self | PASS | d57a8af9596d48d9cfe3f1c7 | docs/regression-t023.md |
+| RV335 | UC15 | self | PASS | 174faf5018cd0eadcd07613b | docs/regression-t023.md |
+| RV336 | UC16 | self | PASS | 5661020c6391b6b0e36e17d2 | docs/regression-t023.md |
+| RV337 | UC17 | self | PASS | 8729fc555a4d3afbdc3575dd | docs/regression-t023.md |
 
 ## Releases
 
