@@ -22,3 +22,14 @@ Urteil: **REWORK** (kleine Nachschärfungen, keine Grundsatzprobleme)
 
 ## Empfehlung
 Accept von T023 um Befunde 1, 2, 3, 4 und 7 ergänzen (je ein Halbsatz), AI-002 um Befund 5, dann PASS.
+
+## Nachprüfung
+
+Urteil: **PASS** (PLAN.md Zeilen R028, UC18, T023, AI-001..003 erneut gelesen)
+
+Eingearbeitet und prüfbar: `.accurate`/`usesLanguageCorrection=false` mit Test O/0, l/1, Bindestrich/Unterstrich (Befund 2); Leerraum-/Zeilenumbruch-Regel und verworfene Arten (3); `#if canImport`/`#available(macOS 26)`, Hinweistext, Fallback-Schalter `SECRETARIAT_NO_LOCAL_MODEL=1`, Hinweis dass das echte Modell nur im GUI-Lauf belegt wird (1, 7); Datenschutz: keine Temp-Datei, Fehlertexte, kein print/Logger/NSLog, Sitzung je Klick (4); Prompt-Injection in AI-002 (5); mehrere Kandidaten (6); keine neuen Entitlements (9).
+
+Kleine Hinweise, nicht blockierend:
+1. „Erfassungs-Art“ in T023 ist nicht erklärt; beim Bauen klarstellen (vermutlich die Capture-Vorlage).
+2. Die Ersetzungsregel „vertippter Schlüssel wird durch das erkannte Wort mit gleichem Anfang ersetzt“ im Unit-Test mit einem konkreten Fall festnageln (Modell ändert ein Zeichen).
+3. Die Umgebungsvariable muss beim GUI-Lauf in den App-Start gelangen (Launcher/`open --env` o. Ä.); beim Nachweis den Startweg nennen.

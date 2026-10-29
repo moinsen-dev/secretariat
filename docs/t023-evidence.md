@@ -1,6 +1,6 @@
 # T023 – Eintrag aus Screenshot (Nachweis)
 
-Stand: Funktion in 4f322af, Korrekturen nach Kritik und GUI-Lauf im Folgecommit (siehe `git log`), signiertes `dist/Secretariat.app` aus `script/build.sh`, macOS 27.0.1, Apple Intelligence verfügbar, 2026-10-29.
+Stand: Funktion samt Korrekturen nach Kritik und GUI-Lauf in 4f322af, signiertes `dist/Secretariat.app` aus `script/build.sh`, macOS 27.0.1, Apple Intelligence verfügbar, 2026-10-29.
 
 ## Aufbau
 
@@ -19,7 +19,7 @@ Stand: Funktion in 4f322af, Korrekturen nach Kritik und GUI-Lauf im Folgecommit 
 | Echtes Modell, Unit-Test (`SECRETARIAT_MODEL_TEST=1`) | api, anthropic, Schlüssel exakt | grün, 6,2 s |
 | GUI Lauf A, Test-Tresor, mit Modell | vorausgefüllt | Künstlicher Screenshot „Anthropic Console … Name: pulse-readonly … sk-ant-api-Xq7_zR4-fakeKEY9tesT8Zz“ über die Zwischenablage gespeichert, „Create Item …“ geklickt: Dialog mit „Read on this Mac with Apple’s on-device model“, Art API key, Anbieter anthropic, Projekt pulse-readonly, Schlüssel gefüllt (`docs/t023/model-dialog.jpg`). **Ein Zeichen falsch:** Vision liest in SF Mono das große K als kleines k, bei jeder Skalierung (0,5× bis 3×). Der Dialog warnt und markiert k/K; abgebrochen |
 | GUI Lauf B, mit Modell | korrekt vorausgefüllt, `run` liefert Wert | Zweiter künstlicher Screenshot mit `sk-ant-api-Hq7_dR4-demoBEY9teaT8Nm` (vorher per Vision-Skript bei allen Skalierungen exakt gelesen): Dialog wie oben (`docs/t023/model-run-b.jpg`), gespeichert als `moinsen/anthropic/pulse-readonly`, Quelle „Screenshot · 2026-10-29 18:19“; `run` mit gebundenem Feld → `SAME` (byte-genau) |
-| GUI Lauf C, `SECRETARIAT_NO_LOCAL_MODEL=1` | als Texterkennung beschriftet | Hinweis „Read on this Mac with text recognition only (local model turned off): kind and provider are guessed from the key’s prefix“, Art API key, Anbieter anthropic, kein Projekt, Schlüssel gefüllt (`docs/t023/text-only-run-c.jpg`); gespeichert als `moinsen/anthropic`; `run` → `SAME` |
+| GUI Lauf C, App gestartet mit `SECRETARIAT_HOME=<test> SECRETARIAT_NO_LOCAL_MODEL=1 dist/Secretariat.app/Contents/MacOS/Secretariat` (Läufe A/B ohne die zweite Variable) | als Texterkennung beschriftet | Hinweis „Read on this Mac with text recognition only (local model turned off): kind and provider are guessed from the key’s prefix“, Art API key, Anbieter anthropic, kein Projekt, Schlüssel gefüllt (`docs/t023/text-only-run-c.jpg`); gespeichert als `moinsen/anthropic`; `run` → `SAME` |
 | Verdecken | beim App-Wechsel | Nach Bildschirmsperre war „Show read values“ wieder aus |
 | Klartext | nirgends | `log show --last 25m --info --debug` (3,0 Mio. Zeilen, alle drei Läufe und Modelltests): 0 Treffer für beide Fake-Schlüssel. `items`, `item show`, `screenshots`, App-Ausgabe: 0 Treffer. Test-Tresor-Ordner: kein Klartext. Neuer Code ohne `print`/`Logger`/`NSLog`. Fehlertexte nennen nur den Grund, nie erkannten Text |
 | Aufräumen | | Testeinträge per `CleanupTestItems` entfernt (3), Zwischenablage gesichert und wiederhergestellt (`cmp` gleich) |

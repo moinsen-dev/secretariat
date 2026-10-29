@@ -27,3 +27,30 @@ Urteil: **REWORK** (Erdung an zwei Stellen zu locker, sonst solide)
 
 ## Empfehlung
 Befunde 1 und 2 beheben und testen (je wenige Zeilen in `ground`), 6 absichern (`itemEditor == nil`). Danach PASS möglich. 3–5 und 7 als bewusste Grenzen im Tracker vermerken oder gleich mitnehmen.
+
+## Nachprüfung
+
+Datum: 2026-10-29 · Stand: 4f322af (Code), ba0b615 plus Arbeitskopie (Nachweis `docs/t023-evidence.md`) · Prüfer: unabhängig, nur lesend
+
+Urteil: **PASS** (Restpunkte sind Grenzen oder Hinweise, kein Mangel)
+
+`xcrun swift test`: 70/70 grün. Ein erster Lauf scheiterte einmal in `InstructionTests` mit `setup_busy`: Eine Sperre, vermutlich durch einen parallelen Lauf, nicht durch T023. Die Wiederholung war grün.
+
+Erledigt:
+- Befund 1: `groundSecret` (ScreenshotReading.swift, `ground`) verlangt ein ganzes Wort oder über einen Zeilenumbruch verbundene Wörter. Ein abgeschnittener Wert wird zum einzigen längeren Wort, bei mehreren Treffern wird er verworfen. Getestet.
+- Befund 2: Anbieter-Stamm und Label nur als ganzes Wort ab 3 Zeichen (`namesWord`). Getestet mit `pi`/`rapid` und `key`/`monkey`.
+- Befund 3: Identifier nur als ganzes Wort, Groß-/Kleinschreibung beachtet, ab 2 Zeichen. Getestet mit `ample` gegen `example.com`.
+- Befund 4: Der Präfix-Schlüssel geht nur in die von den Präfixen gewählte Art. Getestet mit `login`.
+- Befund 5: Ein mehrdeutiger Tippfehler-Ersatz wird verworfen. Getestet.
+- Befund 6: Vor dem Öffnen gilt die Prüfung `itemEditor == nil && selectedScreenshot == shot.id`.
+- Befund 7: Beim Vorlagenwechsel bleiben gleichnamige Werte erhalten, der Schlüssel wandert nur in ein `.secret`-Feld und nie in ein persönliches Passwort.
+- Befund 9: Ein Präfix-Treffer braucht eine Ziffer.
+- Zusätzlich korrekt: Vision läuft auf einer Dispatch-Queue (Begründung durch `sample` belegt) mit CPU-Rückfall (`setComputeDevice` ab macOS 14, passt zu `.v14`). Verwechselbare Zeichen werden markiert und lassen sich korrigieren.
+- Nachweis: drei GUI-Läufe (mit Modell, mit Modell gespeichert plus `run` → SAME, ohne Modell gespeichert plus `run` → SAME), `log show` ohne Treffer, Aufräumen belegt. Der k/K-OCR-Fehler ist ehrlich dokumentiert.
+
+Offen:
+N1. **Grenze – Modell schlägt Präfix beim Geheimnis.** Gibt das Modell für `api_key` irgendein ganzes Wort mit mindestens 8 Zeichen an (z. B. `pulse-readonly`), gilt es als geerdet. Der echte Präfix-Schlüssel wird dann nicht eingesetzt, weil das Feld schon belegt ist (`ground`, Schleife über `fallback.fields`). Der Fehler ist im Dialog sichtbar, aber vermeidbar. Vorschlag: Für Geheimnisfelder `isKeyLike` oder ein bekanntes Präfix verlangen, oder den Präfix-Schlüssel bei gleicher Art vorziehen.
+N2. **Hinweis – exakter Treffer gegen längeres Wort.** `groundSecret` bevorzugt das einzige *längere* Wort, auch wenn der Wert selbst als ganzes Wort im Text steht (zwei Schlüssel, von denen einer der Anfang des anderen ist). Das ist selten. Ein exakter Treffer sollte zuerst gewinnen.
+N3. **Hinweis – stilles Verwerfen.** Ist inzwischen ein anderer Dialog offen oder ein anderer Screenshot gewählt, endet das Lesen ohne Rückmeldung (ScreenshotsView.swift, `createItem`). Eine kurze Meldung wäre freundlicher.
+N4. **Hinweis – Warnung als Routine.** Die erweiterte Liste der verwechselbaren Zeichen löst die Warnung bei fast jedem Schlüssel aus. Das ist im Nachweis benannt. Die Markierung einzelner Zeichen trägt die eigentliche Information.
+N5. **Hinweis – offen aus der ersten Runde:** Befund 8 (ausgeblendete `api`-Vorlage, irreführende Meldung) ist unverändert. Ebenso unverändert: Die Abbildung der Verfügbarkeit auf Hinweistexte ist nur im Code geprüft, das steht im Nachweis. Die Korrektur über das Korrekturfeld ist nicht per GUI getippt, auch das steht im Nachweis.
