@@ -125,7 +125,10 @@ public struct Template: Codable, Equatable, Identifiable, Sendable {
         Template(id: "server", title: "Server", symbol: "server.rack", explanation: "Address and user of a machine.",
                  fields: [FieldSpec("host", "Host or IP", .identifier, required: true), FieldSpec("user", "User", .identifier)]),
         Template(id: "note", title: "Note", symbol: "note.text", explanation: "Free text, only for you.",
-                 fields: [FieldSpec("notes", "Note", .personal, required: true)])
+                 fields: [FieldSpec("notes", "Note", .personal, required: true)]),
+        Template(id: "capture", title: "Clipboard capture", symbol: "doc.on.clipboard",
+                 explanation: "Something you copied, kept with date and time. Turn it into a proper item later; until then no program gets it.",
+                 fields: [FieldSpec("value", "Copied value", .personal, required: true)])
     ]
 }
 

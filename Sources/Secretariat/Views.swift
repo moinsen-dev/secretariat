@@ -1,58 +1,38 @@
 import SwiftUI
 import SecretariatCore
 
+/// Three columns like Notes and Reminders: lists on the left, the items of the chosen list in the middle, the item on the right.
 struct MainView: View {
     @Bindable var model: AppModel
     @State private var deletingProfile: Profile?
     @State private var deletingTarget: String?
     @State private var deletingTemplate: Template?
-    @State private var selectedTemplate: String?
     @State private var search = ""
+    @AppStorage("sidebar.accounts") private var accountsOpen = true
+    @AppStorage("sidebar.projects") private var projectsOpen = true
 
     var body: some View {
         NavigationSplitView {
-            List(selection: $model.selection) {
-                Label("All Items", systemImage: "key.horizontal").tag("items")
-                Label("Targets", systemImage: "arrow.up.forward.app").tag("targets")
-                Label("Templates", systemImage: "square.grid.2x2").tag("templates")
-                Section("Project Profiles") {
-                    ForEach(filteredProfiles) { profile in
-                        Label(profile.name, systemImage: "folder").tag(profile.id.uuidString)
-                    }
-                }
-            }
-            .navigationSplitViewColumnWidth(min: 190, ideal: 225)
-            .safeAreaInset(edge: .bottom) {
-                Button { model.profileEditor = ProfileDraft(revision: model.configuration.revision) } label: {
-                    Label("New Profile", systemImage: "plus")
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }.buttonStyle(.borderless).padding()
-            }
+            sidebar.navigationSplitViewColumnWidth(min: 210, ideal: 240, max: 320)
+        } content: {
+            content.navigationSplitViewColumnWidth(min: 280, ideal: 330, max: 480)
         } detail: {
-            Group {
-                if model.loadFailed {
-                    ContentUnavailableView {
-                        Label("Couldn't load data", systemImage: "exclamationmark.triangle")
-                    } description: {
-                        Text("Your existing data is kept. Please check the configuration and reload.")
-                    } actions: { Button("Reload") { model.reload() } }.padding(28)
-                } else if let profile = model.currentProfile { profileDetail(profile).padding(28) }
-                else if model.selection == "targets" { targetsView.padding(28) }
-                else if model.selection == "templates" { templatesView.padding(28) }
-                else { itemLibrary }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-            .background(Color(nsColor: .textBackgroundColor))
+            detail
         }
-        .navigationTitle("Secretariat")
-        // One search for everything: items (path, field, identifier, kind), profiles (name, folder, variables), targets. ⌘F focuses it.
-        .searchable(text: $search, placement: .toolbar, prompt: Text("Search items, profiles, targets"))
+        // One search across all items, profiles and targets. ⌘F focuses it.
+        .searchable(text: $search, placement: .sidebar, prompt: Text("Search"))
         .onChange(of: model.selection) { _, selection in
             model.copied = false
             if selection == "targets" { model.refreshTargets() }
+            if let id = model.selectedItem, !visibleItems.contains(where: { $0.id == id }) { model.selectedItem = nil }
         }
         .toolbar {
-            ToolbarItem { Button { model.reload() } label: { Label("Refresh", systemImage: "arrow.clockwise") } }
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button { CaptureController.shared.show() } label: { Label("Capture Clipboard", systemImage: "doc.on.clipboard") }
+                    .help("Save what you copied to the Inbox (⌃⌥⌘V from any app)")
+                Button { model.itemEditor = model.newItemDraft() } label: { Label("New Item", systemImage: "square.and.pencil") }
+                    .help("New item (⌘N)")
+            }
             if let badge = licenseBadge {
                 ToolbarItem { Button { model.showLicense = true } label: { Text(badge) }.help("Secretariat license") }
             }
@@ -99,18 +79,65 @@ struct MainView: View {
         SwiftUI.Binding(get: { value }, set: { if !$0 { clear() } })
     }
 
-    // MARK: Items
+    // MARK: Sidebar
+
+    private var inbox: [ItemMeta] { model.items.filter(Capture.isCapture) }
+    private var stored: [ItemMeta] { model.items.filter { !Capture.isCapture($0) } }
+    private var expiring: [ItemMeta] { stored.filter { (daysUntil($0.expires) ?? .max) <= 30 } }
+    private var guarded: [ItemMeta] { stored.filter(\.needsApproval) }
+    private var accounts: [(name: String, count: Int)] {
+        Dictionary(grouping: stored, by: \.group).map { ($0.key, $0.value.count) }.sorted { $0.name < $1.name }
+    }
+
+    private var sidebar: some View {
+        List(selection: $model.selection) {
+            Section {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                    SmartTile(title: "Inbox", symbol: "tray.fill", color: .blue, count: inbox.count, selected: model.selection == "inbox") { model.selection = "inbox" }
+                    SmartTile(title: "All", symbol: "key.horizontal.fill", color: .gray, count: stored.count, selected: model.selection == "items") { model.selection = "items" }
+                    SmartTile(title: "Expiring", symbol: "clock.fill", color: .orange, count: expiring.count, selected: model.selection == "expiring") { model.selection = "expiring" }
+                    SmartTile(title: "Touch ID", symbol: "touchid", color: .pink, count: guarded.count, selected: model.selection == "approval") { model.selection = "approval" }
+                }
+                .padding(.vertical, 4)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                .selectionDisabled()
+            }
+            Section("Projects", isExpanded: $projectsOpen) {
+                ForEach(filteredProfiles) { profile in
+                    Label(profile.name, systemImage: "folder.fill").badge(profile.bindings.count).tag(profile.id.uuidString)
+                        .contextMenu {
+                            Button("Edit …") { model.profileEditor = ProfileDraft(profile: profile, revision: model.configuration.revision) }
+                            Button("Delete …", role: .destructive) { deletingProfile = profile }
+                        }
+                }
+            }
+            Section("Accounts", isExpanded: $accountsOpen) {
+                ForEach(accounts, id: \.name) { account in
+                    Label(account.name, systemImage: "building.2").badge(account.count).tag("group:" + account.name)
+                }
+            }
+            Section("Library") {
+                Label("Targets", systemImage: "arrow.up.forward.app").tag("targets")
+                Label("Templates", systemImage: "square.grid.2x2").tag("templates")
+            }
+        }
+        .listStyle(.sidebar)
+        .safeAreaInset(edge: .bottom) {
+            Button { model.profileEditor = ProfileDraft(revision: model.configuration.revision) } label: {
+                Label("New Project", systemImage: "plus.circle").frame(maxWidth: .infinity, alignment: .leading)
+            }.buttonStyle(.borderless).padding(12)
+        }
+    }
+
+    // MARK: Middle column
 
     private var query: String { search.trimmingCharacters(in: .whitespaces).lowercased() }
-    private var filteredItems: [ItemMeta] {
-        guard !query.isEmpty else { return model.items }
-        return model.items.filter { item in
-            item.path.lowercased().contains(query) || model.template(item.kind).title.lowercased().contains(query)
-                || item.source.lowercased().contains(query) || item.fields.contains {
-                    $0.name.lowercased().contains(query) || ($0.value?.lowercased().contains(query) ?? false)
-                        || (model.template(item.kind).spec($0.name)?.label.lowercased().contains(query) ?? false)
-                }
-        }
+    private func matches(_ item: ItemMeta) -> Bool {
+        item.path.lowercased().contains(query) || model.template(item.kind).title.lowercased().contains(query)
+            || item.source.lowercased().contains(query) || item.fields.contains {
+                $0.name.lowercased().contains(query) || ($0.value?.lowercased().contains(query) ?? false)
+                    || (model.template(item.kind).spec($0.name)?.label.lowercased().contains(query) ?? false)
+            }
     }
     private var filteredProfiles: [Profile] {
         let profiles = model.configuration.profiles.sorted { $0.name < $1.name }
@@ -122,252 +149,458 @@ struct MainView: View {
         }
     }
 
-    private var itemLibrary: some View {
-        HSplitView {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Your Items").font(.largeTitle.bold())
-                        Text("Store it once. Use it on all your Macs and in your projects.").foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Button("Add Item", systemImage: "plus") { model.itemEditor = model.newItemDraft() }
-                        .buttonStyle(.borderedProminent)
-                }
-                if model.items.isEmpty {
-                    ContentUnavailableView {
-                        Label("Everything in one place", systemImage: "key.horizontal.fill")
-                    } description: {
-                        Text("Add your first credential. Values live in the keychain and sync through iCloud.")
-                    } actions: {
-                        Button("Add First Item") { model.itemEditor = model.newItemDraft() }
-                    }.frame(maxHeight: .infinity)
-                } else {
-                    if !query.isEmpty {
-                        Text("\(filteredItems.count) of \(model.items.count) items · \(filteredProfiles.count) profiles match")
-                            .font(.caption).foregroundStyle(.secondary)
-                    }
-                    List(selection: $model.selectedItem) {
-                        ForEach(Dictionary(grouping: filteredItems, by: \.group).sorted { $0.key < $1.key }, id: \.key) { group, items in
-                            Section(group) {
-                                ForEach(items.sorted { $0.path < $1.path }) { item in itemRow(item).tag(item.id) }
-                            }
-                        }
-                    }
-                    .listStyle(.inset)
-                    // Double-click edits; right-click offers edit and delete; the Delete key deletes.
-                    .contextMenu(forSelectionType: UUID.self) { ids in
-                        if let item = ids.first.flatMap(model.item) {
-                            Button("Edit …") { model.edit(item) }
-                            Button("Delete …", role: .destructive) { model.pendingDelete = item }
-                        }
-                    } primaryAction: { ids in
-                        if let item = ids.first.flatMap(model.item) { model.edit(item) }
-                    }
-                    .onDeleteCommand { if let item = model.currentItem { model.pendingDelete = item } }
-                    .overlay { if filteredItems.isEmpty { ContentUnavailableView.search(text: search) } }
-                }
-                Label("Values stay in the macOS keychain.", systemImage: "lock.shield")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-            .padding(28)
-            .frame(minWidth: 380, idealWidth: 460, maxHeight: .infinity, alignment: .topLeading)
-            Group {
-                if let item = model.currentItem { ItemDetail(model: model, item: item, delete: { model.pendingDelete = item }).id(item.id) }
-                else {
-                    ContentUnavailableView("No Item Selected", systemImage: "sidebar.right",
-                                           description: Text("Select an item on the left to see its fields."))
-                }
-            }.frame(minWidth: 340, maxWidth: .infinity, maxHeight: .infinity)
+    /// The items the middle column shows for the current list (search runs across everything).
+    private var visibleItems: [ItemMeta] {
+        if !query.isEmpty { return model.items.filter(matches) }
+        switch model.selection {
+        case "inbox": return inbox.sorted { (Capture.capturedAt($0) ?? "") > (Capture.capturedAt($1) ?? "") }
+        case "expiring": return expiring.sorted { ($0.expires ?? "") < ($1.expires ?? "") }
+        case "approval": return guarded
+        case let s where s.hasPrefix("group:"): return stored.filter { $0.group == s.dropFirst(6) }
+        default: return stored
+        }
+    }
+    private var listTitle: String {
+        if !query.isEmpty { return "Search" }
+        switch model.selection {
+        case "inbox": return "Inbox"
+        case "expiring": return "Expiring"
+        case "approval": return "Touch ID"
+        case let s where s.hasPrefix("group:"): return String(s.dropFirst(6))
+        default: return "All Items"
         }
     }
 
-    private func itemRow(_ item: ItemMeta) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: model.template(item.kind).symbol).foregroundStyle(.tint).frame(width: 22)
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 5) {
-                    Text(item.path).font(.headline)
-                    if item.needsApproval { Image(systemName: "touchid").foregroundStyle(.orange).help("Needs Touch ID before a program uses it") }
+    @ViewBuilder private var content: some View {
+        if model.loadFailed {
+            ContentUnavailableView {
+                Label("Couldn't load data", systemImage: "exclamationmark.triangle")
+            } description: {
+                Text("Your existing data is kept. Please check the configuration and reload.")
+            } actions: { Button("Reload") { model.reload() } }
+        } else if let profile = model.currentProfile, query.isEmpty {
+            profileList(profile)
+        } else if model.selection == "targets" && query.isEmpty {
+            targetsList
+        } else if model.selection == "templates" && query.isEmpty {
+            templatesList
+        } else {
+            itemList
+        }
+    }
+
+    private var itemList: some View {
+        let items = visibleItems
+        let sectioned = model.selection == "items" || !query.isEmpty
+        return List(selection: $model.selectedItem) {
+            if sectioned {
+                ForEach(Dictionary(grouping: items, by: \.group).sorted { $0.key < $1.key }, id: \.key) { group, members in
+                    Section(group) {
+                        ForEach(members.sorted { $0.path < $1.path }) { item in ItemRow(model: model, item: item, showGroup: false).tag(item.id) }
+                    }
                 }
-                Text(item.fields.map(\.name).joined(separator: ", ")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+            } else {
+                ForEach(items) { item in
+                    ItemRow(model: model, item: item, showGroup: !model.selection.hasPrefix("group:")).tag(item.id)
+                }
             }
-            Spacer(minLength: 8)
-            ExpiryBadge(date: item.expires)
-        }.padding(.vertical, 4)
+        }
+        .listStyle(.inset)
+        .navigationTitle(listTitle)
+        .navigationSubtitle(items.count == 1 ? "1 item" : "\(items.count) items")
+        .contextMenu(forSelectionType: UUID.self) { ids in
+            if let item = ids.first.flatMap(model.item) {
+                if Capture.isCapture(item) { Button("Turn into Item …") { model.file(item) } }
+                else { Button("Edit …") { model.edit(item) } }
+                Button("Delete …", role: .destructive) { model.pendingDelete = item }
+            }
+        } primaryAction: { ids in
+            if let item = ids.first.flatMap(model.item) { Capture.isCapture(item) ? model.file(item) : model.edit(item) }
+        }
+        .onDeleteCommand { if let item = model.currentItem { model.pendingDelete = item } }
+        .overlay { if items.isEmpty { emptyList } }
+    }
+
+    @ViewBuilder private var emptyList: some View {
+        if !query.isEmpty { ContentUnavailableView.search(text: search) }
+        else if model.selection == "inbox" {
+            ContentUnavailableView {
+                Label("Inbox Is Empty", systemImage: "tray")
+            } description: {
+                Text("Copy a credential in any app and press ⌃⌥⌘V. It lands here with date and time, and the clipboard is cleared.")
+            } actions: { Button("Capture Clipboard") { CaptureController.shared.show() } }
+        } else if model.items.isEmpty {
+            ContentUnavailableView {
+                Label("Everything in One Place", systemImage: "key.horizontal.fill")
+            } description: {
+                Text("Add your first credential. Values live in the keychain and sync through iCloud.")
+            } actions: { Button("New Item") { model.itemEditor = model.newItemDraft() } }
+        } else {
+            ContentUnavailableView("Nothing Here", systemImage: "checkmark.circle", description: Text("No item in this list right now."))
+        }
+    }
+
+    // MARK: Projects
+
+    private func profileList(_ profile: Profile) -> some View {
+        List(selection: $model.selectedItem) {
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label(profile.directory.replacingOccurrences(of: NSHomeDirectory(), with: "~"), systemImage: "folder")
+                        .foregroundStyle(.secondary).textSelection(.enabled)
+                    Text(profile.command.isEmpty ? "No start command yet" : profile.command)
+                        .font(.system(.callout, design: .monospaced)).foregroundStyle(profile.command.isEmpty ? .tertiary : .primary)
+                        .textSelection(.enabled).lineLimit(2)
+                    HStack {
+                        Button(model.copied ? "Copied" : "Copy Command", systemImage: model.copied ? "checkmark" : "terminal") { model.copyLaunch(profile) }
+                            .disabled(profile.command.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        Button("Coding Agents …", systemImage: "sparkles") { model.openAgentSetup(profile) }
+                    }.controlSize(.small)
+                }.padding(.vertical, 6).selectionDisabled()
+            }
+            Section("Values") {
+                if profile.bindings.isEmpty {
+                    Text("No values bound yet. Use Edit to add them.").foregroundStyle(.secondary).selectionDisabled()
+                }
+                ForEach(profile.bindings) { binding in
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(binding.variable).font(.system(.body, design: .monospaced).weight(.semibold))
+                        Text(model.label(binding)).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+                    }.padding(.vertical, 3).tag(binding.itemID)
+                }
+            }
+        }
+        .listStyle(.inset)
+        .navigationTitle(profile.name)
+        .navigationSubtitle(profile.bindings.count == 1 ? "1 value" : "\(profile.bindings.count) values")
+        .toolbar {
+            ToolbarItem {
+                Menu {
+                    Button("Edit Project …") { model.profileEditor = ProfileDraft(profile: profile, revision: model.configuration.revision) }
+                    Divider()
+                    Button("Delete Project …", role: .destructive) { deletingProfile = profile }
+                } label: { Label("Project", systemImage: "ellipsis.circle") }
+            }
+        }
     }
 
     // MARK: Targets
 
-    private var targetsView: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Targets").font(.largeTitle.bold())
-                    Text("Places outside your Macs that hold copies of values.").foregroundStyle(.secondary)
-                }
-                Label("You push from Terminal and create targets with the CLI (secretariat target add …).", systemImage: "terminal")
-                    .font(.callout).foregroundStyle(.secondary)
-                if let targets = model.targetReport?.targets.filter({ query.isEmpty || $0.name.lowercased().contains(query)
-                        || $0.destination.lowercased().contains(query) || $0.variables.contains { $0.variable.lowercased().contains(query) || $0.reference.lowercased().contains(query) } }),
-                   !targets.isEmpty {
-                    ForEach(targets, id: \.name) { target in targetCard(target) }
-                } else {
-                    ContentUnavailableView("No Targets Yet", systemImage: "arrow.up.forward.app",
-                                           description: Text("Create a target in Terminal, for example for a Cloudflare Worker or an .env file on a server."))
-                }
+    private var targets: [Targets.TargetStatus] { model.targetReport?.targets ?? [] }
+
+    private var targetsList: some View {
+        List(selection: $model.selectedTarget) {
+            ForEach(targets, id: \.name) { target in
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(target.name).font(.headline)
+                    Text(target.destination).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+                }.padding(.vertical, 3).tag(target.name)
+            }
+        }
+        .listStyle(.inset)
+        .navigationTitle("Targets")
+        .navigationSubtitle("Places outside your Macs that hold copies")
+        .overlay {
+            if targets.isEmpty {
+                ContentUnavailableView("No Targets Yet", systemImage: "arrow.up.forward.app",
+                                       description: Text("Create a target in Terminal with secretariat target add …, for example for a Cloudflare Worker or an .env file on a server."))
             }
         }
     }
 
-    private func targetCard(_ target: Targets.TargetStatus) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(target.name).font(.title3.bold())
-                    Text(target.destination).font(.system(.caption, design: .monospaced)).foregroundStyle(.secondary).textSelection(.enabled)
-                    if let pushedAt = target.pushedAt { Text("Last pushed: \(pushedAt)").font(.caption).foregroundStyle(.secondary) }
-                }
-                Spacer()
-                Button("Copy Command", systemImage: "doc.on.doc") { model.copyText("secretariat push \(shellQuote(target.name))") }
-                Button { deletingTarget = target.name } label: { Image(systemName: "trash") }
-                    .accessibilityLabel("Delete target \(target.name)")
+    private func targetDetail(_ target: Targets.TargetStatus) -> some View {
+        Form {
+            Section {
+                DetailHeader(symbol: "arrow.up.forward.app", color: .teal, title: target.name, subtitle: target.destination)
             }
-            if target.variables.isEmpty {
-                Text("No variable is mapped to this target yet.").foregroundStyle(.secondary)
-            } else {
-                Grid(alignment: .leading, horizontalSpacing: 20, verticalSpacing: 8) {
-                    ForEach(target.variables, id: \.variable) { variable in
-                        GridRow {
-                            Text(variable.variable).font(.system(.body, design: .monospaced))
-                            Text(variable.reference).foregroundStyle(.secondary)
-                            StatusBadge(status: variable.status)
-                        }
+            Section("Variables") {
+                if target.variables.isEmpty { Text("No variable is mapped to this target yet.").foregroundStyle(.secondary) }
+                ForEach(target.variables, id: \.variable) { variable in
+                    LabeledContent {
+                        StatusBadge(status: variable.status)
+                    } label: {
+                        Text(variable.variable).font(.system(.body, design: .monospaced))
+                        Text(variable.reference)
                     }
                 }
             }
+            Section {
+                LabeledContent("Last pushed", value: target.pushedAt ?? "Never")
+                LabeledContent("Push from Terminal") {
+                    Button("Copy Command", systemImage: "doc.on.doc") { model.copyText("secretariat push \(shellQuote(target.name))") }
+                }
+            }
         }
-        .padding(16).frame(maxWidth: .infinity, alignment: .leading)
-        .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 12))
+        .formStyle(.grouped)
+        .toolbar {
+            ToolbarItem { Button(role: .destructive) { deletingTarget = target.name } label: { Label("Delete", systemImage: "trash") } }
+        }
     }
 
     // MARK: Templates
 
-    private var filteredTemplates: [Template] {
-        guard !query.isEmpty else { return model.catalog.all }
-        return model.catalog.all.filter { $0.id.contains(query) || $0.title.lowercased().contains(query) }
-    }
-
-    private var templatesView: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Templates").font(.largeTitle.bold())
-                    Text("What each kind of item asks for. Changes sync to all your Macs.").foregroundStyle(.secondary)
-                }
-                Spacer()
-                Button("New Template", systemImage: "plus") { model.templateEditor = TemplateDraft(template: Template(id: "", title: ""), isNew: true) }
-                    .buttonStyle(.borderedProminent)
-            }
-            List(selection: $selectedTemplate) {
-                ForEach(filteredTemplates) { template in templateRow(template).tag(template.id) }
-            }
-            .listStyle(.inset)
-            .contextMenu(forSelectionType: String.self) { ids in
-                if let template = ids.first.map(model.template) {
-                    Button("Edit …") { model.templateEditor = TemplateDraft(template: template, isNew: false) }
-                    if model.isOverridden(template) { Button("Reset to Default") { model.resetTemplate(template) } }
-                    Button("Delete …", role: .destructive) { deletingTemplate = template }
-                }
-            } primaryAction: { ids in
-                if let template = ids.first.map(model.template) { model.templateEditor = TemplateDraft(template: template, isNew: false) }
-            }
-            .overlay { if filteredTemplates.isEmpty && !query.isEmpty { ContentUnavailableView.search(text: search) } }
-            if !model.hiddenBuiltins.isEmpty {
-                HStack(spacing: 8) {
-                    Text("Hidden built-ins:").foregroundStyle(.secondary)
-                    ForEach(model.hiddenBuiltins) { template in
-                        Text(template.title).foregroundStyle(.secondary)
-                        Button("Restore") { model.resetTemplate(template) }.controlSize(.small)
-                    }
-                }.font(.callout)
-            }
-        }
-    }
-
-    private func templateRow(_ template: Template) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: template.symbol).foregroundStyle(.tint).frame(width: 22)
-            VStack(alignment: .leading, spacing: 3) {
-                HStack(spacing: 6) {
-                    Text(template.title).font(.headline)
-                    if template.isBuiltin { TagBadge(title: model.isOverridden(template) ? "built-in, changed" : "built-in") }
-                    if template.identity { TagBadge(title: "identity") }
-                }
-                Text("\(template.id) · \(template.fields.count) \(template.fields.count == 1 ? "field" : "fields")")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-            Spacer(minLength: 8)
-            if model.isOverridden(template) { Button("Reset to Default") { model.resetTemplate(template) }.buttonStyle(.borderless) }
-            Button("Edit") { model.templateEditor = TemplateDraft(template: template, isNew: false) }
-            Button { deletingTemplate = template } label: { Image(systemName: "trash") }
-                .buttonStyle(.borderless).accessibilityLabel("Delete template \(template.title)")
-        }.padding(.vertical, 4)
-    }
-
-    // MARK: Profiles
-
-    private func profileDetail(_ profile: Profile) -> some View {
-        ScrollView {
-        VStack(alignment: .leading, spacing: 22) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(profile.name).font(.largeTitle.bold())
-                    Label(profile.directory.replacingOccurrences(of: NSHomeDirectory(), with: "~"), systemImage: "folder")
-                        .foregroundStyle(.secondary).textSelection(.enabled)
-                }
-                Spacer()
-                Button("Edit") { model.profileEditor = ProfileDraft(profile: profile, revision: model.configuration.revision) }
-            }
-            Divider()
-            Text("Values for this project").font(.headline)
-            if profile.bindings.isEmpty {
-                Text("No fields are bound to this profile yet.").foregroundStyle(.secondary)
-            } else {
-                Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 12) {
-                    ForEach(profile.bindings) { binding in
-                        GridRow {
-                            Text(binding.variable).font(.system(.body, design: .monospaced)).textSelection(.enabled)
-                            Image(systemName: "arrow.left").foregroundStyle(.secondary)
-                            Text(model.label(binding)).textSelection(.enabled)
+    private var templatesList: some View {
+        List(selection: $model.selectedTemplate) {
+            Section {
+                ForEach(model.catalog.all) { template in
+                    Label {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(template.title).font(.headline)
+                            Text(template.fields.count == 1 ? "1 field" : "\(template.fields.count) fields").font(.subheadline).foregroundStyle(.secondary)
                         }
+                    } icon: { Image(systemName: template.symbol).foregroundStyle(.tint) }
+                    .padding(.vertical, 3).tag(template.id)
+                }
+            }
+            if !model.hiddenBuiltins.isEmpty {
+                Section("Hidden") {
+                    ForEach(model.hiddenBuiltins) { template in
+                        HStack {
+                            Label(template.title, systemImage: template.symbol).foregroundStyle(.secondary)
+                            Spacer()
+                            Button("Restore") { model.resetTemplate(template) }.controlSize(.small)
+                        }.selectionDisabled()
                     }
-                }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
-                    .background(.quaternary.opacity(0.35), in: RoundedRectangle(cornerRadius: 12))
+                }
             }
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Start in Terminal").font(.headline)
-                Text(profile.command.isEmpty ? "Add a start command under Edit." : profile.command)
-                    .font(.system(.body, design: .monospaced)).textSelection(.enabled)
-                Button(model.copied ? "Command Copied" : "Copy Terminal Command", systemImage: model.copied ? "checkmark" : "terminal") {
-                    model.copyLaunch(profile)
-                }.buttonStyle(.borderedProminent).disabled(profile.command.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                Text("Paste the command into Terminal. The program receives the bound values at launch.")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Use with coding agents").font(.headline)
-                Text("Prepare project instructions for Codex, Claude Code and OpenCode.")
-                    .foregroundStyle(.secondary)
-                Button("Set Up Coding Agent", systemImage: "terminal.fill") { model.openAgentSetup(profile) }
-            }
-            Spacer()
-            Button("Delete Profile", role: .destructive) { deletingProfile = profile }.buttonStyle(.borderless)
         }
+        .listStyle(.inset)
+        .navigationTitle("Templates")
+        .navigationSubtitle("What each kind of item asks for")
+        .toolbar {
+            ToolbarItem {
+                Button { model.templateEditor = TemplateDraft(template: Template(id: "", title: ""), isNew: true) } label: {
+                    Label("New Template", systemImage: "plus")
+                }
+            }
+        }
+    }
+
+    private func templateDetail(_ template: Template) -> some View {
+        Form {
+            Section {
+                DetailHeader(symbol: template.symbol, color: .accentColor, title: template.title,
+                             subtitle: template.explanation.isEmpty ? template.id : template.explanation)
+                if template.isBuiltin { LabeledContent("Built-in", value: model.isOverridden(template) ? "Changed by you" : "Unchanged") }
+                if template.identity { LabeledContent("Identity", value: "Every agent session knows these values") }
+            }
+            Section("Fields") {
+                ForEach(template.fields, id: \.name) { spec in
+                    LabeledContent {
+                        Text([spec.kind.title, spec.required ? "required" : nil, spec.envSuffix.map { "→ _\($0)" }].compactMap { $0 }.joined(separator: " · "))
+                            .foregroundStyle(.secondary)
+                    } label: {
+                        Text(spec.label)
+                        Text(spec.name).font(.system(.caption, design: .monospaced))
+                    }
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .toolbar {
+            ToolbarItemGroup {
+                if model.isOverridden(template) { Button("Reset to Default") { model.resetTemplate(template) } }
+                Button("Edit") { model.templateEditor = TemplateDraft(template: template, isNew: false) }
+                Button(role: .destructive) { deletingTemplate = template } label: { Label(template.isBuiltin ? "Hide" : "Delete", systemImage: "trash") }
+            }
+        }
+    }
+
+    // MARK: Detail column
+
+    @ViewBuilder private var detail: some View {
+        if model.selection == "targets" && query.isEmpty {
+            if let target = targets.first(where: { $0.name == model.selectedTarget }) { targetDetail(target) }
+            else { ContentUnavailableView("No Target Selected", systemImage: "arrow.up.forward.app") }
+        } else if model.selection == "templates" && query.isEmpty {
+            if let id = model.selectedTemplate, model.catalog.isKnown(id) { templateDetail(model.template(id)) }
+            else { ContentUnavailableView("No Template Selected", systemImage: "square.grid.2x2") }
+        } else if let item = model.currentItem {
+            ItemDetail(model: model, item: item, delete: { model.pendingDelete = item }).id(item.id)
+        } else {
+            ContentUnavailableView("No Item Selected", systemImage: "key.horizontal", description: Text("Select an item to see its fields."))
         }
     }
 }
 
+/// Reminders-style smart list: colored icon, count, title.
+struct SmartTile: View {
+    let title: String
+    let symbol: String
+    let color: Color
+    let count: Int
+    let selected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .top) {
+                    Image(systemName: symbol).font(.system(size: 13, weight: .semibold)).foregroundStyle(selected ? color : .white)
+                        .frame(width: 26, height: 26).background(selected ? AnyShapeStyle(.white) : AnyShapeStyle(color.gradient), in: Circle())
+                    Spacer()
+                    Text("\(count)").font(.title2.bold()).monospacedDigit()
+                }
+                Text(title).font(.callout.weight(.semibold)).foregroundStyle(selected ? .white : .secondary)
+            }
+            .padding(9)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .foregroundStyle(selected ? .white : .primary)
+            .background(selected ? AnyShapeStyle(color.gradient) : AnyShapeStyle(.quaternary.opacity(0.6)), in: RoundedRectangle(cornerRadius: 10))
+            .contentShape(RoundedRectangle(cornerRadius: 10))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(title), \(count)")
+    }
+}
+
+/// Notes-style row: bold title, then date and kind.
+struct ItemRow: View {
+    let model: AppModel
+    let item: ItemMeta
+    let showGroup: Bool
+
+    private var title: String {
+        if Capture.isCapture(item) {
+            let name = Capture.name(of: item).replacingOccurrences(of: "-", with: " ")
+            return name.isEmpty ? "Untitled capture" : name
+        }
+        let rest = item.path.dropFirst(item.group.count).drop { $0 == "/" }
+        return rest.isEmpty ? String(item.path.split(separator: "/").last ?? "") : String(rest)
+    }
+    private var date: String? {
+        if Capture.isCapture(item) { return Capture.capturedAt(item).flatMap(captureDate) }
+        return item.rotated.flatMap(shortDate)
+    }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: model.template(item.kind).symbol).foregroundStyle(.tint).frame(width: 20)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.headline).lineLimit(1)
+                HStack(spacing: 6) {
+                    if let date { Text(date).foregroundStyle(.primary.opacity(0.75)) }
+                    Text(showGroup && !Capture.isCapture(item) ? item.group : model.template(item.kind).title).foregroundStyle(.secondary)
+                }.font(.subheadline).lineLimit(1)
+            }
+            Spacer(minLength: 6)
+            if item.needsApproval { Image(systemName: "touchid").foregroundStyle(.pink).help("Needs Touch ID before a program uses it") }
+            ExpiryBadge(date: item.expires)
+        }.padding(.vertical, 3)
+    }
+}
+
+private func shortDate(_ day: String) -> String? {
+    let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd"
+    return f.date(from: day)?.formatted(date: .numeric, time: .omitted)
+}
+private func captureDate(_ stamp: String) -> String? {
+    let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd HH:mm"
+    return f.date(from: stamp)?.formatted(date: .abbreviated, time: .shortened)
+}
+
+/// Large icon and title at the top of a detail form.
+struct DetailHeader: View {
+    let symbol: String
+    let color: Color
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: symbol).font(.title2).foregroundStyle(.white)
+                .frame(width: 44, height: 44).background(color.gradient, in: RoundedRectangle(cornerRadius: 10))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title).font(.title2.bold()).textSelection(.enabled).lineLimit(2)
+                Text(subtitle).foregroundStyle(.secondary).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+            }
+        }.padding(.vertical, 4)
+    }
+}
+
+struct ItemDetail: View {
+    let model: AppModel
+    let item: ItemMeta
+    let delete: () -> Void
+    @State private var revealed: [String: String] = [:]
+    @State private var copiedField: String?
+
+    private var template: Template { model.template(item.kind) }
+
+    var body: some View {
+        Form {
+            Section {
+                DetailHeader(symbol: template.symbol, color: Capture.isCapture(item) ? .blue : .accentColor, title: item.path,
+                             subtitle: template.title)
+            }
+            if Capture.isCapture(item) {
+                Section {
+                    Text("Captured from the clipboard. Give it a provider and project to use it; until then no program gets it.")
+                        .foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    Button("Turn into Item …", systemImage: "arrow.right.doc.on.clipboard") { model.file(item) }
+                        .buttonStyle(.borderedProminent)
+                }
+            }
+            Section("Fields") {
+                ForEach(item.fields) { field in fieldRow(field) }
+            }
+            Section("Details") {
+                if !item.source.isEmpty { LabeledContent("Source") { Text(item.source).textSelection(.enabled) } }
+                if let expires = item.expires {
+                    LabeledContent("Expires") { HStack { Text(expires); ExpiryBadge(date: expires) } }
+                }
+                if let rotated = item.rotated { LabeledContent("Last changed", value: rotated) }
+                let usages = model.usages(of: item.id)
+                LabeledContent("Used in", value: usages.isEmpty ? "Nowhere yet" : usages.joined(separator: ", "))
+                LabeledContent("Touch ID", value: item.needsApproval ? "Required before a program uses it" : "Not required")
+            }
+        }
+        .formStyle(.grouped)
+        .toolbar {
+            ToolbarItemGroup {
+                if !Capture.isCapture(item) { Button("Edit") { model.edit(item) } }
+                Button(role: .destructive, action: delete) { Label("Delete", systemImage: "trash") }
+            }
+        }
+    }
+
+    private func fieldRow(_ field: ItemField) -> some View {
+        LabeledContent {
+            HStack(spacing: 8) {
+                switch field.kind {
+                case .identifier:
+                    Text(field.value ?? "").textSelection(.enabled).lineLimit(2)
+                    copyButton(field) { field.value }
+                case .secret, .personal:
+                    Text(revealed[field.name] ?? "••••••••").font(.system(.body, design: .monospaced))
+                        .foregroundStyle(revealed[field.name] == nil ? .tertiary : .primary).textSelection(.enabled).lineLimit(3)
+                    Button {
+                        if revealed[field.name] == nil { revealed[field.name] = model.secretValue(item, field) }
+                        else { revealed[field.name] = nil }
+                    } label: { Image(systemName: revealed[field.name] == nil ? "eye" : "eye.slash") }
+                        .buttonStyle(.borderless).help(revealed[field.name] == nil ? "Show" : "Hide")
+                    copyButton(field, secret: true) { model.secretValue(item, field) }
+                case .file:
+                    Label(field.fileName ?? "File", systemImage: "doc").lineLimit(1)
+                    Button("Export …") { model.exportFile(item, field) }
+                }
+            }
+        } label: {
+            Text(template.spec(field.name)?.label ?? field.name)
+            Text("\(field.name) · \(field.kind.title)")
+        }
+    }
+
+    private func copyButton(_ field: ItemField, secret: Bool = false, value: @escaping () -> String?) -> some View {
+        Button {
+            guard let text = value() else { return }
+            if secret { model.copySecret(text) } else { model.copyText(text) }
+            copiedField = field.name
+        } label: { Image(systemName: copiedField == field.name ? "checkmark" : "doc.on.doc") }
+            .buttonStyle(.borderless)
+            .help(secret ? "Copy (the clipboard is cleared after 60 seconds)" : "Copy")
+    }
+}
 extension MainView {
     /// Visible during the trial and after it; gone once licensed. Nothing is ever blocked.
     var licenseBadge: String? {
@@ -427,90 +660,6 @@ struct LicenseView: View {
     }
 }
 
-struct ItemDetail: View {
-    let model: AppModel
-    let item: ItemMeta
-    let delete: () -> Void
-    @State private var revealed: [String: String] = [:]
-    @State private var copiedField: String?
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                HStack(alignment: .top) {
-                    Image(systemName: model.template(item.kind).symbol).font(.title).foregroundStyle(.tint)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(item.path).font(.title2.bold()).textSelection(.enabled)
-                        Text(model.template(item.kind).title + (item.needsApproval ? " · needs Touch ID for programs" : "")).foregroundStyle(.secondary)
-                    }
-                    Spacer()
-                    Button("Edit") { model.edit(item) }
-                    Button(role: .destructive, action: delete) { Label("Delete", systemImage: "trash") }
-                }
-                Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 6) {
-                    if !item.source.isEmpty { info("Source", item.source) }
-                    if let expires = item.expires {
-                        GridRow {
-                            Text("Expires").foregroundStyle(.secondary)
-                            HStack { Text(expires); ExpiryBadge(date: expires) }
-                        }
-                    }
-                    if let rotated = item.rotated { info("Last changed", rotated) }
-                    let usages = model.usages(of: item.id)
-                    info("Used in", usages.isEmpty ? "Nowhere yet" : usages.joined(separator: ", "))
-                }.font(.callout)
-                Divider()
-                Text("Fields").font(.headline)
-                VStack(spacing: 0) {
-                    ForEach(item.fields) { field in
-                        fieldRow(field).padding(.vertical, 10)
-                        Divider()
-                    }
-                }
-            }.padding(28)
-        }
-    }
-
-    private func info(_ title: String, _ value: String) -> some View {
-        GridRow { Text(title).foregroundStyle(.secondary); Text(value).textSelection(.enabled) }
-    }
-
-    private func fieldRow(_ field: ItemField) -> some View {
-        HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(model.template(item.kind).spec(field.name)?.label ?? field.name)
-                Text("\(field.name) · \(field.kind.title)").font(.caption).foregroundStyle(.secondary)
-            }.frame(width: 150, alignment: .leading)
-            switch field.kind {
-            case .identifier:
-                Text(field.value ?? "").textSelection(.enabled).lineLimit(2)
-                Spacer(minLength: 8)
-                copyButton(field) { field.value }
-            case .secret, .personal:
-                Text(revealed[field.name] ?? "••••••").font(.system(.body, design: .monospaced))
-                    .foregroundStyle(revealed[field.name] == nil ? .tertiary : .primary).textSelection(.enabled).lineLimit(3)
-                Spacer(minLength: 8)
-                Button(revealed[field.name] == nil ? "Show" : "Hide") {
-                    if revealed[field.name] == nil { revealed[field.name] = model.secretValue(item, field) }
-                    else { revealed[field.name] = nil }
-                }
-                copyButton(field, secret: true) { model.secretValue(item, field) }
-            case .file:
-                Label(field.fileName ?? "File", systemImage: "doc").lineLimit(1)
-                Spacer(minLength: 8)
-                Button("Export …") { model.exportFile(item, field) }
-            }
-        }
-    }
-
-    private func copyButton(_ field: ItemField, secret: Bool = false, value: @escaping () -> String?) -> some View {
-        Button(copiedField == field.name ? "Copied" : "Copy") {
-            guard let text = value() else { return }
-            if secret { model.copySecret(text) } else { model.copyText(text) }
-            copiedField = field.name
-        }.help(secret ? "The clipboard is cleared after 60 seconds." : "")
-    }
-}
 
 struct ExpiryBadge: View {
     let date: String?

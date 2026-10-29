@@ -24,6 +24,8 @@ mkdir -p "$stage/Contents/MacOS" "$stage/Contents/Resources"
 cp "$(xcrun swift build --show-bin-path)/Secretariat" "$stage/Contents/MacOS/Secretariat"
 cp Resources/Info.plist "$stage/Contents/Info.plist"
 cp Assets/AppIcon.icns "$stage/Contents/Resources/AppIcon.icns"
+# SwiftPM resource bundles (KeyboardShortcuts' strings); Bundle.module finds them in Contents/Resources.
+for bundle in "$(xcrun swift build --show-bin-path)"/*.bundle; do /usr/bin/ditto "$bundle" "$stage/Contents/Resources/$(basename "$bundle")"; done
 # Sparkle (updates): the framework goes next to the executable; the XPC services are for sandboxed apps only.
 mkdir -p "$stage/Contents/Frameworks"
 /usr/bin/ditto "$(xcrun swift build --show-bin-path)/Sparkle.framework" "$stage/Contents/Frameworks/Sparkle.framework"

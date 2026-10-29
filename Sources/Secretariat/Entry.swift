@@ -19,15 +19,20 @@ enum Entry {
 }
 
 struct SecretariatApp: App {
-    @State private var model = AppModel()
+    @State private var model: AppModel
     private let updates = Updates()
+    init() {
+        let model = AppModel()
+        _model = State(initialValue: model)
+        CaptureController.shared.install(model)
+    }
     var body: some Scene {
         WindowGroup("Secretariat") {
             MainView(model: model)
-                .frame(minWidth: 760, minHeight: 500)
+                .frame(minWidth: 900, minHeight: 520)
                 .onAppear { NSApplication.shared.activate(ignoringOtherApps: true) }
         }
-        .defaultSize(width: 990, height: 650)
+        .defaultSize(width: 1180, height: 720)
         .commands {
             CommandGroup(after: .appInfo) {
                 Button("Check for Updates …") { updates.check() }.disabled(!updates.available)
@@ -36,9 +41,12 @@ struct SecretariatApp: App {
             CommandGroup(replacing: .newItem) {
                 Button("New Item …") { model.itemEditor = model.newItemDraft() }.keyboardShortcut("n")
                 Button("New Project Profile …") { model.profileEditor = ProfileDraft(revision: model.configuration.revision) }.keyboardShortcut("n", modifiers: [.command, .shift])
+                Button("Capture Clipboard …") { CaptureController.shared.show() }
+                Divider()
                 Button("New Template …") { model.templateEditor = TemplateDraft(template: Template(id: "", title: ""), isNew: true) }
                     .keyboardShortcut("n", modifiers: [.command, .option])
             }
         }
+        Settings { SettingsView() }
     }
 }

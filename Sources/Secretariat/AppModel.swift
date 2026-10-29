@@ -34,6 +34,8 @@ struct ItemDraft: Identifiable {
     /// Agent Guard: programs need Touch ID before they get this item's values.
     var approval = false
     var revision = 0
+    /// Clipboard capture this item is filed from; it leaves the inbox once the item is saved.
+    var replaces: UUID?
 
     init(template: Template, revision: Int) {
         self.template = template
@@ -158,6 +160,8 @@ final class AppModel {
     var targetReport: Targets.Report?
     var selection = "items"
     var selectedItem: UUID?
+    var selectedTarget: String?
+    var selectedTemplate: String?
     var errorMessage: String?
     var loadFailed = false
     var itemEditor: ItemDraft?
@@ -249,6 +253,7 @@ final class AppModel {
             }
             try vault.save(meta, secrets: secrets)
             savedID = meta.id
+            if let capture = draft.replaces { try vault.delete(id: capture) }
             if draft.everywhere { try makeAvailableEverywhere(draft, meta: meta, vault: vault) }
         }
         if saved { selectedItem = savedID }
@@ -279,6 +284,30 @@ final class AppModel {
             }
             return value
         } catch { errorMessage = error.localizedDescription; return nil }
+    }
+    /// Stores copied text in the inbox and shows it. Returns an error message instead of raising the alert (the capture panel shows it).
+    func capture(_ value: String, name: String) -> String? {
+        do {
+            let meta = try Capture.save(value, name: name, vault: Vault(paths: paths))
+            reload(); selection = "inbox"; selectedItem = meta.id
+            return nil
+        } catch { return error.localizedDescription }
+    }
+    /// Opens the item editor prefilled with a capture's value; saving removes the capture from the inbox.
+    func file(_ capture: ItemMeta) {
+        guard let field = capture.field("value"), let value = secretValue(capture, field) else { return }
+        var draft = newItemDraft()
+        // "cloudflare-pulse-readonly" → provider cloudflare, project pulse-readonly; otherwise guess from the key's prefix.
+        let words = Capture.name(of: capture).split(separator: "-").map(String.init)
+        if let first = words.first, ItemEditor.providers.contains(first) {
+            draft.provider = first; draft.label = words.dropFirst().joined(separator: "-")
+        } else {
+            draft.provider = Capture.provider(for: value) ?? words.joined(separator: "-")
+        }
+        if let index = draft.fields.firstIndex(where: { draft.template.spec($0.name)?.kind.isSecret == true }) { draft.fields[index].value = value }
+        draft.source = capture.source
+        draft.replaces = capture.id
+        itemEditor = draft
     }
     /// Copies a secret and clears the clipboard after 60 s, unless something else was copied meanwhile.
     func copySecret(_ value: String) {

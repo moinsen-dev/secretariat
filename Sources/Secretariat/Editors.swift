@@ -153,7 +153,7 @@ struct ItemEditor: View {
         VStack(alignment: .leading, spacing: 8) {
             Text("What are you storing?").font(.headline)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
-                ForEach(model.catalog.all) { template in
+                ForEach(model.catalog.all.filter { $0.id != Capture.kind }) { template in
                     Button { draft.template = template } label: {
                         VStack(spacing: 4) {
                             Image(systemName: template.symbol).font(.title3)
