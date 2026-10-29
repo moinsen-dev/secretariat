@@ -64,6 +64,7 @@
 | R024 | Profile ohne festen Ordner (`--dir '*'`) laufen im aktuellen Ordner (Werkzeug-Tokens); `profile which` findet das Profil eines Ordners; ein Sitzungsstart-Hinweis nennt Agenten Profil oder .env-Geheimnisse; `bulk_import.py` übernimmt viele .env-Dateien nach einer Prüfliste; eine frische Claude-Sitzung nutzt Secretariat ohne Hinweis im Auftrag |
 | R025 | Der Eintrags-Dialog führt nach Art: Art wählen, Anbieter, beschriftete Pflicht- und Kannfelder je Art; Ablage ergibt sich (moinsen/<anbieter>[/<zusatz>]); Herkunft, Ablauf, eigene Ablage und weitere Felder unter „Erweitert“; „In allen Projekten nutzbar“ ordnet die Felder dem Profil werkzeuge zu |
 | R026 | Kopierte Zugangsdaten landen per Kurzbefehl oder Knopf mit Zeitstempel im Eingang, die Zwischenablage wird geleert; kein Programm erhält den Wert, bis er in einen Eintrag umgewandelt ist; das Umwandeln übernimmt den (beim Erfassen an den Rändern getrimmten) Wert und entfernt die Erfassung nur, wenn er im neuen Eintrag liegt |
+| R027 | Screenshots mit Notiz: Bild aus der Zwischenablage, einer Datei oder per Ablegen speichern, Notiz ergänzen und ändern, Vorschau, Export und Löschen in der App; Bild und Notiz liegen mit AES-GCM verschlüsselt im privaten iCloud-Drive-Container der App, der Schlüssel nur im synchronisierten Schlüsselbund von Secretariat; kein Programm, keine CLI-Ausgabe und kein Agent erhält Bild oder Notiz; ohne iCloud bleibt alles verschlüsselt lokal und die App sagt das |
 
 ## Phases
 
@@ -86,6 +87,7 @@
 | P14 | 14 | Effizienz: Sitzungshinweis, Werkzeug-Profil, Massenübernahme, End-to-End | P13 |
 | P15 | 15 | Verständlicher Eintrags-Dialog und globale Schlüssel | P14 |
 | P16 | 16 | Zwischenablage-Eingang und neues Hauptfenster | P15 |
+| P17 | 17 | Verschlüsselte Screenshots mit Notiz über iCloud | P16 |
 
 ## UseCases
 
@@ -108,6 +110,7 @@
 | UC14 | P14 | Frische Agenten-Sitzung in einem Projekt führt Tests mit Secretariat aus, ohne dass der Nutzer es erwähnt; Werkzeug-Tokens funktionieren in jedem Ordner | R020,R024 | required |
 | UC15 | P15 | Nutzer legt einen API-Schlüssel ohne Vorwissen an und macht ihn überall nutzbar | R020,R024,R025 | required |
 | UC16 | P16 | Nutzer erfasst einen kopierten Schlüssel, findet ihn im Eingang und macht daraus einen Eintrag, den ein Programm per run erhält | R020,R025,R026 | required |
+| UC17 | P17 | Nutzer legt einen Screenshot mit Notiz ab, findet ihn auf einem zweiten Mac wieder und sieht, dass nur Secretariat ihn lesen kann | R027 | required |
 
 ## Tasks
 
@@ -135,6 +138,7 @@
 | T019 | P14 | UC14 | R020,R024 | Profil `*` und `profile which` mit Tests (32/32); 1.1.0 auf allen vier Macs; Profil werkzeuge läuft im aktuellen Ordner mit Datei; Prüfliste 296 Werte/20 Kennungen/144 Profile ohne Werte; frische Claude-Sitzung ohne und mit Hinweis grün, kein Wert in der Ausgabe | build,unit,macos | normal | T018 | Sources/SecretariatCore/Models.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/Commands.swift,Sources/SecretariatCore/AgentIntegration.swift,Sources/SecretariatCore/Launcher.swift,Sources/SecretariatCore/ProjectInstructions.swift,Tests/SecretariatCoreTests/CoreTests.swift,Tests/SecretariatCoreTests/CommandTests.swift,script/bulk_import.py,script/e2e_session.py,script/cleanup_test_items.swift,script/build_cleanup_test_items.sh,Resources/Info.plist |
 | T020 | P15 | UC15 | R020,R024,R025 | Arten mit beschrifteten Feldern im Kern; geführter Dialog (Screenshot geprüft); globale Zuordnung über werkzeuge; Nutzereintrag moinsen → moinsen/deepseek repariert und global; 1.2.0 auf allen Macs | build,unit,macos | normal | T019 | Sources/SecretariatCore/Models.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Editors.swift,Sources/Secretariat/Views.swift,Sources/SecretariatCore/Launcher.swift,Resources/Info.plist |
 | T021 | P16 | UC16 | R020,R025,R026 | Erfassungsfenster speichert künstlichen Wert im Test-Tresor und leert die Zwischenablage; Eingang zeigt die Erfassung; Umwandeln legt Eintrag an und entfernt die Erfassung nur, wenn ihr Wert im Eintrag liegt, sonst bleibt sie im Eingang; run liefert den (getrimmten) Wert byte-genau; kein Programm erhält die Erfassung vor dem Umwandeln (Unit-Test); Unit-Tests grün | build,unit,macos | normal | T020 | Sources/SecretariatCore/Capture.swift,Sources/SecretariatCore/Models.swift,Sources/Secretariat/CapturePanel.swift,Sources/Secretariat/Views.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Entry.swift,Sources/Secretariat/Editors.swift,Package.swift,Package.resolved,Tests/SecretariatCoreTests/CaptureTests.swift,script/build.sh |
+| T022 | P17 | UC17 | R027 | Kern verschlüsselt Bild und Notiz (Schlüssel-ID im Kopf, mehrere Schlüssel lesbar, Größenlimit, iCloud-Platzhalter), Unit-Tests ohne Klartext auf der Platte; App: Abschnitt Screenshots mit Hinzufügen aus Zwischenablage/Datei/Ablegen, Vorschau, Notiz bearbeiten, Export, Löschen; Test-Tresor-Ablauf im Paket; iCloud-Container im Profil, Datei auf zweitem Mac lesbar | build,unit,macos | normal | T021 | Sources/SecretariatCore/Screenshots.swift,Sources/SecretariatCore/Storage.swift,Sources/Secretariat/ScreenshotsView.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Views.swift,Resources/Secretariat.entitlements,Resources/Secretariat.provisionprofile,Tests/SecretariatCoreTests/ScreenshotTests.swift |
 
 ## Modules
 

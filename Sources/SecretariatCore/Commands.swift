@@ -184,6 +184,15 @@ public enum Commands {
             try vault.delete(id: try vault.item(path: a.positional[0]).id)
             return try done("Item removed: \(a.positional[0])")
 
+        case ("screenshots", "clear"):
+            // Screenshots are the user's alone; the CLI never reads them and only clears test homes.
+            let paths = vault.configuration.paths
+            guard !paths.isDefault, ProcessInfo.processInfo.environment["SECRETARIAT_HOME"] != nil else {
+                throw AgentError("app_only", "Screenshots are only shown and deleted in the Secretariat app.")
+            }
+            try ScreenshotLibrary.resolve(paths: paths).removeEverything()
+            return try done("Screenshots of this test home removed")
+
         case ("template", _):
             let a = try Arguments(all.dropFirst(2), values: ["--title", "--symbol", "--explanation", "--label", "--kind", "--prompt", "--env"],
                                   flags: ["--identity", "--no-identity", "--required"], usage: usage)

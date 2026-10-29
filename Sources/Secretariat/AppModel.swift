@@ -171,8 +171,26 @@ final class AppModel {
     var agentSetup: AgentSetupDraft?
     var license: Licensing.State = .licensed(email: "")
     var showLicense = false
+    /// Resolved off the main thread at launch (asking for the iCloud container can block); nil until then.
+    var screenshotLibrary: ScreenshotLibrary?
+    var screenshots: [Screenshot] = []
+    var screenshotsPending = 0
+    var screenshotsUnreadable = 0
+    var selectedScreenshot: UUID?
+    var screenshotDraft: ScreenshotDraft?
+    /// Screenshot waiting for the delete confirmation.
+    var pendingScreenshotDelete: Screenshot?
+    var thumbnails: [UUID: NSImage] = [:]
 
-    init() { reload() }
+    init() {
+        reload()
+        let paths = paths
+        Task {
+            let library = await Task.detached { ScreenshotLibrary.resolve(paths: paths) }.value
+            screenshotLibrary = library
+            reloadScreenshots()
+        }
+    }
     func template(_ id: String) -> Template { catalog.template(id) }
     /// Built-ins removed by the user (hidden on every Mac, restorable).
     var hiddenBuiltins: [Template] { catalog.stored.filter { $0.hidden && $0.isBuiltin } }
@@ -210,6 +228,7 @@ final class AppModel {
         catch { items = []; errorMessage = error.localizedDescription }
         if selection == "targets" { refreshTargets() }
         license = Vault(paths: paths).licensing.state()
+        reloadScreenshots()
     }
     func activateLicense(_ text: String) throws {
         try Vault(paths: paths).licensing.activate(text)

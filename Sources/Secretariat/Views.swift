@@ -42,6 +42,7 @@ struct MainView: View {
         .sheet(item: $model.agentSetup) { draft in AgentSetupView(model: model, draft: draft) }
         .sheet(item: $model.profileEditor) { draft in ProfileEditor(model: model, draft: draft) }
         .sheet(item: $model.templateEditor) { draft in TemplateEditor(model: model, draft: draft) }
+        .sheet(item: $model.screenshotDraft) { draft in ScreenshotComposer(model: model, draft: draft) }
         .alert("That didn't work", isPresented: flag(model.errorMessage != nil) { model.errorMessage = nil }) {
             Button("OK", role: .cancel) { model.errorMessage = nil }
         } message: { Text(model.errorMessage ?? "") }
@@ -51,6 +52,12 @@ struct MainView: View {
                 if let item = model.pendingDelete { model.deleteItem(item) }; model.pendingDelete = nil
             }
         } message: { Text("‘\(model.pendingDelete?.path ?? "")’ will be removed from all your Macs. Items that are in use stay protected.") }
+        .alert("Delete screenshot?", isPresented: flag(model.pendingScreenshotDelete != nil) { model.pendingScreenshotDelete = nil }) {
+            Button("Cancel", role: .cancel) { model.pendingScreenshotDelete = nil }
+            Button("Delete", role: .destructive) {
+                if let shot = model.pendingScreenshotDelete { model.deleteScreenshot(shot) }; model.pendingScreenshotDelete = nil
+            }
+        } message: { Text("‘\(model.pendingScreenshotDelete?.title ?? "")’ and its note will be removed from all your Macs.") }
         .alert("Delete profile?", isPresented: flag(deletingProfile != nil) { deletingProfile = nil }) {
             Button("Cancel", role: .cancel) { deletingProfile = nil }
             Button("Delete", role: .destructive) {
@@ -119,6 +126,7 @@ struct MainView: View {
             Section("Library") {
                 Label("Targets", systemImage: "arrow.up.forward.app").tag("targets")
                 Label("Templates", systemImage: "square.grid.2x2").tag("templates")
+                Label("Screenshots", systemImage: "photo.on.rectangle").badge(model.screenshots.count).tag("screenshots")
             }
         }
         .listStyle(.sidebar)
@@ -178,6 +186,9 @@ struct MainView: View {
             } description: {
                 Text("Your existing data is kept. Please check the configuration and reload.")
             } actions: { Button("Reload") { model.reload() } }
+        } else if model.selection == "screenshots" {
+            // Searching here filters the screenshots by title and note.
+            ScreenshotList(model: model, query: query)
         } else if let profile = model.currentProfile, query.isEmpty {
             profileList(profile)
         } else if model.selection == "targets" && query.isEmpty {
@@ -409,7 +420,13 @@ struct MainView: View {
     // MARK: Detail column
 
     @ViewBuilder private var detail: some View {
-        if model.selection == "targets" && query.isEmpty {
+        if model.selection == "screenshots" {
+            if let shot = model.screenshots.first(where: { $0.id == model.selectedScreenshot }) {
+                ScreenshotDetail(model: model, shot: shot).id(shot.id)
+            } else {
+                ContentUnavailableView("No Screenshot Selected", systemImage: "photo.on.rectangle", description: Text("Select a screenshot to see it with its note."))
+            }
+        } else if model.selection == "targets" && query.isEmpty {
             if let target = targets.first(where: { $0.name == model.selectedTarget }) { targetDetail(target) }
             else { ContentUnavailableView("No Target Selected", systemImage: "arrow.up.forward.app") }
         } else if model.selection == "templates" && query.isEmpty {

@@ -17,6 +17,7 @@ public struct AppPaths: Sendable {
     }
     public var templateService: String { itemService.replacingOccurrences(of: ".items.", with: ".templates.") }
     public var licenseService: String { itemService.replacingOccurrences(of: ".items.", with: ".license.") }
+    public var screenshotKeyService: String { itemService.replacingOccurrences(of: ".items.", with: ".screenshots.") }
     public var isDefault: Bool { directory == AppPaths.defaultDirectory }
     static func canonical(_ path: String) -> String {
         for root in ["/tmp/", "/var/", "/etc/"] where path.hasPrefix("/private" + root) { return String(path.dropFirst(8)) }

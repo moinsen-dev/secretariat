@@ -25,6 +25,7 @@
 | T019 | ERLEDIGT | E726,E727,E728 | Regression 1.10 auf 0350543 (Release 1.10.1) |
 | T020 | ERLEDIGT | E729,E730,E731 | Regression 1.10 auf 0350543 (Release 1.10.1) |
 | T021 | ERLEDIGT | E732,E733,E734 | Release 1.10.1 (0350543) |
+| T022 | IN_ARBEIT | - | - |
 
 ## Evidence
 

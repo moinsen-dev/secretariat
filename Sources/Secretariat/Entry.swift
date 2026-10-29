@@ -44,6 +44,8 @@ struct SecretariatApp: App {
                 Button("New Item …") { model.itemEditor = model.newItemDraft() }.keyboardShortcut("n")
                 Button("New Project Profile …") { model.profileEditor = ProfileDraft(revision: model.configuration.revision) }.keyboardShortcut("n", modifiers: [.command, .shift])
                 Button("Capture Clipboard …") { CaptureController.shared.show() }
+                Button("New Screenshot from Clipboard …") { model.screenshotFromClipboard() }
+                Button("Import Screenshot …") { model.chooseScreenshotFile() }
                 Divider()
                 Button("New Template …") { model.templateEditor = TemplateDraft(template: Template(id: "", title: ""), isNew: true) }
                     .keyboardShortcut("n", modifiers: [.command, .option])
