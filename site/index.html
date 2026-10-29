@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Secretariat — keys for your coding agents, on your Mac</title>
-<meta name="description" content="Secretariat keeps your API keys in the iCloud keychain. Your coding agents run your tools with them, but the values stay out of their context, logs and commits. No server, no account, no subscription.">
+<title>Secretariat — capture, keep and use your keys on the Mac</title>
+<meta name="description" content="Secretariat captures API keys from the clipboard or a screenshot, keeps them in your iCloud keychain, and lets your coding agents run your tools with them without ever reading them. Screenshots are read by on-device AI only. No server, no account, no subscription.">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b6e69'/%3E%3Ccircle cx='16' cy='13' r='4.5' fill='white'/%3E%3Cpath d='M13.6 15.5h4.8l1.4 9h-7.6z' fill='white'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
@@ -19,6 +19,7 @@
       Secretariat
     </a>
     <nav class="nav" aria-label="Main">
+      <a href="#capture">Capture</a>
       <a href="#how">How it works</a>
       <a href="#guard">Agent Guard</a>
       <a href="#compare">Compare</a>
@@ -36,7 +37,7 @@
     <div>
       <p class="eyebrow">For macOS 14 and later</p>
       <h1>Your coding agents use your keys. They don't get to read them.</h1>
-      <p class="lead">Secretariat keeps your credentials once, in your iCloud keychain. Agents start your tools through it: the program gets the values, the agent sees <code>[masked]</code>. No server, no account, no subscription.</p>
+      <p class="lead">Grab a key from the clipboard with one shortcut, or let Secretariat read it off a screenshot, on your Mac. It lives in your iCloud keychain. Agents start your tools through it: the program gets the values, the agent sees <code>[masked]</code>. No server, no account, no subscription.</p>
       <div class="cta-row">
         <a class="btn" href="Secretariat-latest.zip">Download free trial</a>
         <a class="btn secondary" href="#pricing">Buy for 39 €</a>
@@ -90,17 +91,50 @@ changes contain secret values:
   </div>
 </section>
 
+<!-- Capture -->
+<section id="capture">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Capture</p>
+      <h2>A new key is on screen. Two seconds later it's safe.</h2>
+      <p class="lead">Keys appear in a dashboard once, in a setup wizard, in a chat. Secretariat catches them where they show up, so they never land in a notes file or a stray <code>.env</code> first.</p>
+    </div>
+    <div class="cards">
+      <article class="card">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg></div>
+        <h3>Clipboard inbox</h3>
+        <p>Copy a key, press <kbd>⌃⌥⌘V</kbd>. It goes to the Inbox with date and time, and the clipboard is cleared. No program gets it until you turn it into an item; the provider is guessed from the key's prefix.</p>
+      </article>
+      <article class="card">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-8 8"/><path d="M15 3.5l1.5 1.5 3-3" /></svg></div>
+        <h3>Encrypted screenshots <span class="tag">New</span></h3>
+        <p>Recovery codes, a setup page, a QR code: paste the screenshot with <kbd>⌘V</kbd> and add a note. Image and note are sealed with AES-GCM, synced through your private iCloud Drive container, and stay blurred until you click Show. No CLI or agent can open them.</p>
+      </article>
+      <article class="card">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 10h8M8 14h5"/></svg></div>
+        <h3>From screenshot to item, on-device <span class="tag">New</span></h3>
+        <p>“Create Item …” reads the screenshot with Apple's text recognition and Apple Intelligence on your Mac, picks kind, provider and fields, and opens the item ready to check. Nothing leaves your Mac. Every value must appear in the screenshot, and look-alike characters are marked for you to compare.</p>
+      </article>
+    </div>
+    <figure class="shot small">
+      <img src="img/item-from-screenshot.png" width="552" height="500" alt="The Add Item dialog after reading a demo screenshot: a note says it was read on this Mac with Apple's on-device model, a warning asks to compare look-alike characters, and kind API key, provider anthropic, project pulse-readonly and the hidden key are filled in." loading="lazy">
+      <figcaption>A demo console screenshot, read on the Mac and turned into a prefilled item to check and save.</figcaption>
+    </figure>
+    <p class="note">Reading a screenshot with Apple Intelligence needs macOS 26 and a Mac that supports it. Without it, Secretariat uses text recognition and known key prefixes, and says so in the dialog.</p>
+  </div>
+</section>
+
 <!-- How it works -->
 <section id="how">
   <div class="wrap">
     <div class="section-head">
       <p class="eyebrow">How it works</p>
-      <h2>Store once. Bind per project. Run through Secretariat.</h2>
+      <h2>Keep it once. Bind per project. Run through Secretariat.</h2>
     </div>
     <ol class="steps">
       <li>
-        <h3>Store it once</h3>
-        <p>Add items in the app, or import an existing <code>.env</code> without reading it. A whole folder tree can be imported at once, with a review list before anything is saved. Your Macs sync through iCloud keychain.</p>
+        <h3>Keep it once</h3>
+        <p>Capture it, add it in the guided item dialog, or import an existing <code>.env</code> without reading it. A whole folder tree can be imported at once, with a review list before anything is saved. Your Macs sync through iCloud keychain.</p>
 <pre class="cmd">secretariat import .env \
   STRIPE_SECRET_KEY \
   OPENAI_API_KEY \
@@ -123,8 +157,8 @@ secretariat profile bind \
       </li>
     </ol>
     <figure class="shot">
-      <img src="img/app-items.png" width="1561" height="953" alt="The Secretariat app window: a sidebar with All Items, Targets, Templates and a project profile, and a list of demo items such as acme/stripe/api and acme/postgres/db with their field names. No values are shown." loading="lazy">
-      <figcaption>The app with demo data. Items are listed by path and field name; values stay in the keychain.</figcaption>
+      <img src="img/app-main.png" width="1180" height="720" alt="The Secretariat main window with demo data: a sidebar with Inbox, All, Expiring and Touch ID, a list of items such as acme/stripe/api and acme/postgres/db, and the database item open with host, port, user and database shown and the password hidden." loading="lazy">
+      <figcaption>The app with demo data. Identifiers are readable; the password stays hidden until you ask, and programs get it only through <code>secretariat run</code>.</figcaption>
     </figure>
   </div>
 </section>
@@ -216,6 +250,18 @@ secretariat profile bind \
       <div class="feature">
         <h3>Bulk import</h3>
         <p>Import every <code>.env</code> in a folder tree, review the list, and retire the plain files.</p>
+      </div>
+      <div class="feature">
+        <h3>Guided item dialog</h3>
+        <p>Pick what you're storing, and it asks for the right fields with plain labels. One switch makes a key available to every tool you run.</p>
+      </div>
+      <div class="feature">
+        <h3>Expiry at a glance</h3>
+        <p>Give an item an expiry date and it shows up under Expiring 30 days before it stops working, next to the Inbox and your Touch ID items.</p>
+      </div>
+      <div class="feature">
+        <h3>Updates in the app</h3>
+        <p>Secretariat checks for new versions itself and installs them signed. No App Store, no manual downloads.</p>
       </div>
       <div class="feature">
         <h3>Native and notarized</h3>
@@ -316,6 +362,8 @@ secretariat profile bind \
       <div class="launch">Launch price: 29 € for the first four weeks</div>
       <ul class="checklist">
         <li>Mac app and <code>secretariat</code> CLI</li>
+        <li>Clipboard inbox and encrypted screenshots with notes</li>
+        <li>Items from screenshots, read on your Mac by Apple Intelligence</li>
         <li>Agent Guard: masking, Touch ID per item, commit guard, Claude Code hook</li>
         <li>Leak sweep through all repositories and their history</li>
         <li>.env import and cleanup across all projects</li>
@@ -345,6 +393,10 @@ secretariat profile bind \
       <details>
         <summary>Where are my keys, and what leaves my Mac?</summary>
         <div><p>Values live in your iCloud keychain. Syncing between your Macs is Apple's iCloud keychain, under your Apple Account. Secretariat itself has no server and sends no data anywhere: no telemetry, no account.</p></div>
+      </details>
+      <details>
+        <summary>Does reading a screenshot send it anywhere?</summary>
+        <div><p>No. Text recognition (Apple's Vision framework) and the language model (Apple Intelligence, on-device) both run on your Mac. Secretariat uses no cloud model and no network for it. Recognized text and suggested values stay in memory until you save the item, and nothing is logged.</p></div>
       </details>
       <details>
         <summary>What happens if I stop paying?</summary>
