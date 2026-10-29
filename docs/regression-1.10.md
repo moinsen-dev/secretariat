@@ -1,4 +1,4 @@
-# Regression 1.10 (Build 051679f, erneut auf 30cbcd5 und auf dem installierten Release 1.10.1 (0350543, nur Versionsnummer und Installer-Fix dazu): unit 57/57, CLI 24/24; auf 30cbcd5 außerdem unit 57/57, CLI 24/24, Zwischenablage-Ablauf in der GUI grün; signiertes `dist/Secretariat.app` 1.10.0, 2026-10-29)
+# Regression 1.10 (Build 051679f; erneut auf b13b2e6 nach Einbau der Screenshots: unit 62/62, CLI 24/24, Zwischenablage-Ablauf und Item-/Projekt-Abläufe unverändert, siehe auch `docs/t022-evidence.md`; erneut auf 30cbcd5 und auf dem installierten Release 1.10.1 (0350543, nur Versionsnummer und Installer-Fix dazu): unit 57/57, CLI 24/24; auf 30cbcd5 außerdem unit 57/57, CLI 24/24, Zwischenablage-Ablauf in der GUI grün; signiertes `dist/Secretariat.app` 1.10.0, 2026-10-29)
 
 Anlass: Commits a56bad3 (Eintrags-Dialog) und 3e5ce0a (Zwischenablage-Eingang, Hauptfenster in drei Spalten) ändern Quellen fast aller Aufgaben. Alle älteren Aufgaben neu geprüft. Alle Läufe in isolierten Test-Tresoren (`SECRETARIAT_HOME`, Schlüsselbund-Dienst `…items.test.<hash>`) mit künstlichen Werten; echter Tresor unberührt.
 
