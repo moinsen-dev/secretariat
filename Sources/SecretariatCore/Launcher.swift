@@ -167,6 +167,7 @@ public enum CommandLineInterface {
     Overview
       secretariat mcp                                 MCP server (stdio) for Claude Desktop, Cursor & co.
       secretariat status [--days N] [--json]          overview: counts, expiring items, Touch ID items, targets, recent log
+      secretariat screenshots [--json]                how many encrypted screenshots this Mac can open (counts only)
       secretariat registry export · scan [FOLDER] [--json] · log [--lines N] · --version
 
     License (14 days to try everything; nothing is ever blocked)
