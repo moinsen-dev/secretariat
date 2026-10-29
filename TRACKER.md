@@ -918,6 +918,9 @@
 | E885 | T022 | build | build | normal | 2026-10-29T16:21:44+00:00 | 681b9bb | 4bd6cbfb8391b0aa71dfc300 | docs/t022-evidence.md | PASS |
 | E886 | T022 | unit | unit | normal | 2026-10-29T16:21:44+00:00 | 681b9bb | 4bd6cbfb8391b0aa71dfc300 | docs/t022-evidence.md | PASS |
 | E887 | T022 | macos | ui | normal | 2026-10-29T16:21:44+00:00 | 681b9bb | 4bd6cbfb8391b0aa71dfc300 | docs/t022-evidence.md | PASS |
+| E888 | T023 | build | build | normal | 2026-10-29T17:34:18+00:00 | 4f322af | 657b3695b2372ea734bc95c3 | docs/t023-evidence.md | PASS |
+| E889 | T023 | unit | unit | normal | 2026-10-29T17:34:19+00:00 | 4f322af | 657b3695b2372ea734bc95c3 | docs/t023-evidence.md | PASS |
+| E890 | T023 | macos | ui | normal | 2026-10-29T17:34:19+00:00 | 4f322af | 657b3695b2372ea734bc95c3 | docs/t023-evidence.md | PASS |
 
 ## Reviews
 
@@ -1260,6 +1263,8 @@
 | RV335 | PLAN | self | PASS | 40f050569b2a5aa760ae4bec | docs/review-uc17.md |
 | RV336 | UC05 | self | PASS | 817d7c1f4dbd446a0a25b313 | docs/release-1.11.0.md |
 | RV337 | UC07 | self | PASS | 793bedef0eab0b91434a26ad | docs/release-1.11.0.md |
+| RV338 | PLAN | independent | PASS | 79190cb2424a35c20a76fecc | docs/review-plan-uc18.md |
+| RV339 | UC18 | independent | PASS | 055d025281b63c3da1f5493d | docs/review-uc18.md |
 
 ## Releases
 
