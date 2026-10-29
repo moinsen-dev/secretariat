@@ -288,7 +288,8 @@ struct ScreenshotDetail: View {
         .onDisappear(perform: save)
     }
 
-    private var edited: Bool { base.map { title != $0.title || note != $0.note } ?? false }
+    // The library trims the title, so trailing spaces alone are no edit.
+    private var edited: Bool { base.map { title.trimmingCharacters(in: .whitespacesAndNewlines) != $0.title || note != $0.note } ?? false }
     private func adopt(_ version: Screenshot) { base = version; title = version.title; note = version.note }
     private func save() {
         guard edited, let base else { return }

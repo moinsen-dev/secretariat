@@ -130,3 +130,28 @@ Geprüft: Diff 3fab938 (Screenshots.swift, ScreenshotsView.swift, Views.swift, C
 1. N-K1 beheben und im Test-Tresor per GUI belegen: Notiz ändern, „Save Note“, Auswahl wechseln, kein Fehlerdialog, Notiz bleibt.
 2. Tracker T022 auf den tatsächlichen Stand setzen und den Nachweis mit Evidence/Fingerprint eintragen (`workflow.py evidence`/`task`); `docs/t022-evidence.md` committen.
 3. Empfohlen, nicht blockierend: Konflikte nur in der App mit Schreib-Koordination auflösen (N-K2); `verify` hinter einen Schalter legen (N-K3).
+
+---
+
+# Zweite Nachprüfung (Commit cc2d566, 2026-10-29)
+
+Geprüft: Diff cc2d566 (`ScreenshotsView.swift`, `Views.swift`) und `docs/t022-evidence.md` Abschnitt „Zweite Nachprüfung“.
+
+## Urteil
+
+| Umfang | Urteil |
+|---|---|
+| 1. PLAN | **PASS** (Auflage bleibt: Tracker T022 mit Evidence nachziehen) |
+| 2. UC17 | **PASS** |
+
+## N-K1: behoben
+
+- `Views.swift:425` setzt wieder `.id(shot.id)`. Die Ansicht wird beim Speichern nicht mehr neu aufgebaut, also läuft kein `onDisappear` einer veralteten Instanz.
+- `ScreenshotDetail` merkt sich in `@State base` den zuletzt geladenen oder gespeicherten Stand. `save()` speichert nur bei echter Bearbeitung (`edited`) und mit `basedOn: base.changed`. Nach Erfolg wird `base` auf den gespeicherten Stand gesetzt.
+- `onChange(of: shot.changed)` übernimmt neuere Stände, solange nicht bearbeitet wird. Bei laufender Bearbeitung und neuerer Fassung von einem anderen Mac weist das Speichern sie ab (`changedElsewhere`) und übernimmt die aktuelle Fassung. Das entspricht R027 („überschreibt keine neuere Änderung“). Der getippte Text geht dabei mit Hinweis verloren; das ist bewusst so geregelt.
+- Belegt per GUI im Test-Tresor: zweimal speichern, dann ungespeichert die Auswahl wechseln. Keine Fehlermeldung, der Text ist vollständig erhalten.
+
+## Restbefunde (nicht blockierend)
+
+- **R1 (klein):** Endet der Titel mit Leerzeichen, schneidet `update` sie ab (`Screenshots.swift`, `trimmingCharacters`). Dann bleibt `edited` wahr, „Save Note“ bleibt aktiv, und beim Verlassen wird erneut geschrieben. Das ist harmlos (`basedOn` passt), ergibt aber unnötige iCloud-Schreibvorgänge. Abhilfe: beim Vergleich ebenfalls trimmen.
+- Aus der Nachprüfung weiter offen und als Grenze akzeptiert: Konfliktauflösung in lesender Koordination und im CLI (N-K2), `screenshots` entschlüsselt alle Bilder (N-K3), Dataless-Dateien unter macOS 14+ (N-K4), ungespeicherte Notiz beim Beenden der App (U10), Universal Clipboard trotz Concealed-Typ, Export und Ablegen nicht ausgeführt.
