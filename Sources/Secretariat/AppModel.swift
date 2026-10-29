@@ -253,11 +253,21 @@ final class AppModel {
             }
             try vault.save(meta, secrets: secrets)
             savedID = meta.id
-            if let capture = draft.replaces { try vault.delete(id: capture) }
             if draft.everywhere { try makeAvailableEverywhere(draft, meta: meta, vault: vault) }
+            if let capture = draft.replaces { removeCapture(capture, filedIn: secrets, vault: vault) }
         }
         if saved { selectedItem = savedID }
         return saved
+    }
+    /// The capture leaves the inbox only once its value is in the new item; otherwise it stays and the user is told.
+    private func removeCapture(_ id: UUID, filedIn secrets: [String: String], vault: Vault) {
+        do {
+            guard let captured = try vault.personalValue(itemID: id, field: "value"), secrets.values.contains(captured) else {
+                errorMessage = "The item was saved without the captured value, so the capture stays in the Inbox."
+                return
+            }
+            try vault.delete(id: id)
+        } catch { errorMessage = "The item was saved, but the capture could not be removed from the Inbox: \(error.localizedDescription)" }
     }
     /// Binds the item's usable fields into the profile "werkzeuge" (runs in any folder): OPENAI_API_KEY etc.
     private func makeAvailableEverywhere(_ draft: ItemDraft, meta: ItemMeta, vault: Vault) throws {

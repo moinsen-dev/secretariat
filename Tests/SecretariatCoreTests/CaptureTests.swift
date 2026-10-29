@@ -29,3 +29,10 @@ import Testing
     #expect(Capture.provider(for: "ghp_x") == "github")
     #expect(Capture.provider(for: "nothing") == nil)
 }
+
+@Test func noProgramGetsACaptureBeforeItIsFiled() throws {
+    let fixture = try AgentFixture(); defer { fixture.cleanup() }
+    let capture = try Capture.save("sk-ant-abc123secret", name: "", vault: fixture.vault)
+    #expect(throws: AgentError.self) { try fixture.vault.value(itemID: capture.id, field: "value") }
+    #expect(try fixture.vault.personalValue(itemID: capture.id, field: "value") == "sk-ant-abc123secret")
+}
