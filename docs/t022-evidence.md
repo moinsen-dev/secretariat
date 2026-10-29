@@ -40,6 +40,12 @@ Erneut geprüft (Build mit diesen Änderungen, 2026-10-29 ~16:25):
 
 Ursache: Die Detailansicht wurde bei jeder Änderung neu aufgebaut, und das Speichern beim Verlassen der alten Ansicht lief gegen den veralteten Stand. Behoben: Die Ansicht merkt sich ihren zuletzt geladenen oder gespeicherten Stand, speichert darauf und übernimmt neuere Stände nur ohne laufende Bearbeitung. Test-Tresor: Notiz „eins“ → „ eins zwei“ speichern → „ drei“ speichern → „ vier“ ohne Speichern, zu Targets gewechselt: keine Meldung; zurück: „eins zwei drei vier“. 62/62 Tests.
 
+## Verdecken wie geheime Felder (Uli, 2026-10-29)
+
+Screenshots enthalten oft selbst Zugangsdaten. Jetzt: Im Detail und im Anlegen-Dialog liegt das Bild unter Unschärfe plus Material mit „Show Screenshot“; die Notiz ist ausgeblendet („Hidden …“) und nur aufgedeckt bearbeitbar; „Show/Hide“ (⌘Y); Ziehen gibt nur aufgedeckt das Bild heraus; die Liste zeigt statt der Notiz nur das Datum und ein Vorschaubild aus 8 Pixeln Breite (blockig, nichts lesbar). Wechsel des Screenshots oder Verlassen der App verdeckt wieder.
+
+Test-Tresor (Build mit diesen Änderungen): Anlegen-Dialog verdeckt; gespeichert mit Notiz „whsec_GEHEIM_TEST“ → Detail verdeckt, Notiz „Hidden …“, Liste „29. Okt. 2026, 17:09“ ohne Notiz; „Show“ → Bild und Notiz sichtbar; zu Targets und zurück → wieder verdeckt. Verdecken beim Verlassen der App nicht ausgelöst (Hintergrundsteuerung aktiviert die App nie). 62/62 Tests.
+
 ## Grenzen
 
 - Ablegen einer Bilddatei und „Choose File …“ (Dateidialog) nicht über die Hintergrundsteuerung ausgelöst; der Weg über die Zwischenablage nutzt dieselbe Speicherung.

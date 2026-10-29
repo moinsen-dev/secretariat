@@ -98,7 +98,7 @@ extension AppModel {
         guard thumbnails[shot.id] == nil, let library = screenshotLibrary else { return }
         let id = shot.id
         let data = await Task.detached { try? library.image(id) }.value
-        if let data, let image = NSImage(data: data) { thumbnails[id] = image.thumbnail(maxSide: 96) }
+        if let data, let image = NSImage(data: data) { thumbnails[id] = image.thumbnail(maxSide: 8) }
     }
 
     func exportScreenshot(_ shot: Screenshot) {
@@ -164,13 +164,15 @@ struct ScreenshotList: View {
             ForEach(shots) { shot in
                 HStack(spacing: 10) {
                     Group {
-                        if let thumbnail = model.thumbnails[shot.id] { Image(nsImage: thumbnail).resizable().scaledToFill() }
+                        // 8 px wide, drawn blocky: shows which screenshot it is by its colors, nothing readable.
+                        if let thumbnail = model.thumbnails[shot.id] { Image(nsImage: thumbnail).interpolation(.none).resizable().scaledToFill() }
                         else { Image(systemName: "photo").foregroundStyle(.secondary) }
                     }
                     .frame(width: 48, height: 36).clipShape(RoundedRectangle(cornerRadius: 4))
                     VStack(alignment: .leading, spacing: 2) {
                         Text(shot.title.isEmpty ? "Screenshot" : shot.title).lineLimit(1)
-                        Text(shot.note.isEmpty ? shot.created.formatted(date: .abbreviated, time: .shortened) : shot.note)
+                        // The note may hold a credential: the list shows only when it was taken.
+                        Text(shot.created.formatted(date: .abbreviated, time: .shortened))
                             .font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
@@ -246,6 +248,8 @@ struct ScreenshotDetail: View {
     @State private var base: Screenshot?
     @State private var image: NSImage?
     @State private var imageError: String?
+    /// Image and note stay covered until the user asks, like secret fields; leaving the screenshot or the app covers them again.
+    @State private var revealed = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -255,19 +259,25 @@ struct ScreenshotDetail: View {
                 .font(.caption).foregroundStyle(.secondary)
             Group {
                 if let image {
-                    Image(nsImage: image).resizable().scaledToFit()
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(Color(nsColor: .controlBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 6))
-                        .onDrag { NSItemProvider(object: image) }
+                    ConcealedImage(image: image, revealed: $revealed)
+                        .onDrag { revealed ? NSItemProvider(object: image) : NSItemProvider() }
                 } else if let imageError {
                     ContentUnavailableView(imageError, systemImage: "icloud.and.arrow.down").frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else { ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity) }
             }
             Text("Note").font(.headline)
-            TextEditor(text: $note).font(.body).frame(minHeight: 80, maxHeight: 160)
-                .scrollContentBackground(.hidden).padding(6)
-                .background(Color(nsColor: .textBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 6))
+            if revealed {
+                TextEditor(text: $note).font(.body).frame(minHeight: 80, maxHeight: 160)
+                    .scrollContentBackground(.hidden).padding(6)
+                    .background(Color(nsColor: .textBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 6))
+            } else {
+                Text(note.isEmpty ? "No note" : "Hidden. Show the screenshot to read or edit the note.")
+                    .foregroundStyle(.secondary).frame(maxWidth: .infinity, minHeight: 60, alignment: .topLeading).padding(6)
+                    .background(Color(nsColor: .textBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 6))
+            }
             HStack {
+                Button(revealed ? "Hide" : "Show", systemImage: revealed ? "eye.slash" : "eye") { revealed.toggle() }
+                    .keyboardShortcut("y")
                 Button("Save Note", action: save).keyboardShortcut("s").disabled(!edited)
                 Spacer()
                 Button("Copy Image") { model.copyScreenshot(shot) }
@@ -286,6 +296,7 @@ struct ScreenshotDetail: View {
             }
         }
         .onDisappear(perform: save)
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in revealed = false }
     }
 
     // The library trims the title, so trailing spaces alone are no edit.
@@ -303,14 +314,14 @@ struct ScreenshotDetail: View {
 struct ScreenshotComposer: View {
     let model: AppModel
     @State var draft: ScreenshotDraft
+    @State private var revealed = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("New Screenshot").font(.title2.weight(.semibold))
             if let image = NSImage(data: draft.image) {
-                Image(nsImage: image).resizable().scaledToFit().frame(maxWidth: .infinity, maxHeight: 320)
-                    .background(Color(nsColor: .controlBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 6))
+                ConcealedImage(image: image, revealed: $revealed).frame(maxHeight: 320)
             }
             TextField("Title, e.g. Stripe webhook secret", text: $draft.title)
             Text("Note").font(.headline)
@@ -325,5 +336,28 @@ struct ScreenshotComposer: View {
             }
         }
         .padding(20).frame(width: 560)
+    }
+}
+
+/// A screenshot covered like a secret field: blurred under a material until the user clicks Show.
+/// Covered, the pixels are not readable on screen, in screen sharing or in a screenshot of the window.
+struct ConcealedImage: View {
+    let image: NSImage
+    @SwiftUI.Binding var revealed: Bool
+
+    var body: some View {
+        Image(nsImage: image).resizable().scaledToFit()
+            .blur(radius: revealed ? 0 : 40, opaque: true)
+            .overlay {
+                if !revealed {
+                    ZStack {
+                        Rectangle().fill(.ultraThickMaterial)
+                        Button("Show Screenshot", systemImage: "eye") { revealed = true }.controlSize(.large)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color(nsColor: .controlBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 6))
+            .accessibilityLabel(revealed ? "Screenshot" : "Screenshot, hidden")
     }
 }
