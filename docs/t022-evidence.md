@@ -36,9 +36,13 @@ Erneut geprüft (Build mit diesen Änderungen, 2026-10-29 ~16:25):
 | Leeren und Löschen | „Copy Image“, nach 62 s keine Typen mehr in der Zwischenablage; Löschen mit Rückfrage → M4 und Mini `0 screenshots`; Testordner auf dem Mini in den Papierkorb, Zwischenablage wiederhergestellt |
 | Regression | `script/regression_cli.sh` 24/24 |
 
+## Zweite Nachprüfung (Kritik: Save Note meldete fälschlich „changed on another Mac“)
+
+Ursache: Die Detailansicht wurde bei jeder Änderung neu aufgebaut, und das Speichern beim Verlassen der alten Ansicht lief gegen den veralteten Stand. Behoben: Die Ansicht merkt sich ihren zuletzt geladenen oder gespeicherten Stand, speichert darauf und übernimmt neuere Stände nur ohne laufende Bearbeitung. Test-Tresor: Notiz „eins“ → „ eins zwei“ speichern → „ drei“ speichern → „ vier“ ohne Speichern, zu Targets gewechselt: keine Meldung; zurück: „eins zwei drei vier“. 62/62 Tests.
+
 ## Grenzen
 
 - Ablegen einer Bilddatei und „Choose File …“ (Dateidialog) nicht über die Hintergrundsteuerung ausgelöst; der Weg über die Zwischenablage nutzt dieselbe Speicherung.
-- Export und „Copy Image“ nicht ausgelöst.
+- Export (Sicherungsdialog) nicht ausgelöst; „Copy Image“ siehe Nachprüfung.
 - iCloud Drive muss auf dem Mac eingeschaltet sein; sonst zeigt die App „Only on this Mac“.
 - Die Installation auf M1/Mini/M5 erfolgt erst mit dem nächsten Release.

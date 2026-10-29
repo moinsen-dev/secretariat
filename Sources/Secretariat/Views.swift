@@ -422,7 +422,7 @@ struct MainView: View {
     @ViewBuilder private var detail: some View {
         if model.selection == "screenshots" {
             if let shot = model.screenshots.first(where: { $0.id == model.selectedScreenshot }) {
-                ScreenshotDetail(model: model, shot: shot).id("\(shot.id)-\(shot.changed.timeIntervalSince1970)")
+                ScreenshotDetail(model: model, shot: shot).id(shot.id)
             } else {
                 ContentUnavailableView("No Screenshot Selected", systemImage: "photo.on.rectangle", description: Text("Select a screenshot to see it with its note."))
             }

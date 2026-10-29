@@ -65,11 +65,13 @@ extension AppModel {
         } catch { errorMessage = error.localizedDescription; return false }
     }
 
-    func updateScreenshot(_ shot: Screenshot, title: String, note: String) {
-        guard let library = screenshotLibrary, title != shot.title || note != shot.note else { return }
-        do { _ = try library.update(shot.id, title: title, note: note, basedOn: shot.changed) }
-        catch { errorMessage = error.localizedDescription }
-        reloadScreenshots()
+    /// Saves title and note on top of `shot`, the version the user edited. Returns the stored version,
+    /// or nil when nothing was saved (the alert says why, e.g. another Mac changed it meanwhile).
+    @discardableResult func updateScreenshot(_ shot: Screenshot, title: String, note: String) -> Screenshot? {
+        guard let library = screenshotLibrary else { return nil }
+        defer { reloadScreenshots() }
+        do { return try library.update(shot.id, title: title, note: note, basedOn: shot.changed) }
+        catch { errorMessage = error.localizedDescription; return nil }
     }
 
     func deleteScreenshot(_ shot: Screenshot) {
@@ -240,6 +242,8 @@ struct ScreenshotDetail: View {
     let shot: Screenshot
     @State private var title = ""
     @State private var note = ""
+    /// The version the fields were loaded from or last saved as; edits are saved on top of it.
+    @State private var base: Screenshot?
     @State private var image: NSImage?
     @State private var imageError: String?
 
@@ -264,7 +268,7 @@ struct ScreenshotDetail: View {
                 .scrollContentBackground(.hidden).padding(6)
                 .background(Color(nsColor: .textBackgroundColor)).clipShape(RoundedRectangle(cornerRadius: 6))
             HStack {
-                Button("Save Note", action: save).keyboardShortcut("s").disabled(title == shot.title && note == shot.note)
+                Button("Save Note", action: save).keyboardShortcut("s").disabled(!edited)
                 Spacer()
                 Button("Copy Image") { model.copyScreenshot(shot) }
                 Button("Export …") { model.exportScreenshot(shot) }
@@ -272,7 +276,9 @@ struct ScreenshotDetail: View {
             }
         }
         .padding(20)
-        .onAppear { title = shot.title; note = shot.note }
+        .onAppear { adopt(shot) }
+        // Another Mac (or a reload) brought a newer version: take it unless the user is in the middle of an edit.
+        .onChange(of: shot.changed) { _, _ in if !edited { adopt(shot) } }
         .task {
             switch await model.loadImage(shot) {
             case .success(let loaded): image = loaded
@@ -282,7 +288,13 @@ struct ScreenshotDetail: View {
         .onDisappear(perform: save)
     }
 
-    private func save() { model.updateScreenshot(shot, title: title, note: note) }
+    private var edited: Bool { base.map { title != $0.title || note != $0.note } ?? false }
+    private func adopt(_ version: Screenshot) { base = version; title = version.title; note = version.note }
+    private func save() {
+        guard edited, let base else { return }
+        if let stored = model.updateScreenshot(base, title: title, note: note) { self.base = stored }
+        else if let current = model.screenshots.first(where: { $0.id == base.id }) { adopt(current) }
+    }
 }
 
 // MARK: - New screenshot
