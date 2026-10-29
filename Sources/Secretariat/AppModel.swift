@@ -36,6 +36,8 @@ struct ItemDraft: Identifiable {
     var revision = 0
     /// Clipboard capture this item is filed from; it leaves the inbox once the item is saved.
     var replaces: UUID?
+    /// Prefilled from a screenshot read on this Mac: how it was read, shown above the form until saved.
+    var readNote: String?
 
     init(template: Template, revision: Int) {
         self.template = template
@@ -180,6 +182,8 @@ final class AppModel {
     var screenshotDraft: ScreenshotDraft?
     /// Screenshot waiting for the delete confirmation.
     var pendingScreenshotDelete: Screenshot?
+    /// Screenshot being read for "Create Item …".
+    var readingScreenshot: UUID?
     var thumbnails: [UUID: NSImage] = [:]
 
     init() {

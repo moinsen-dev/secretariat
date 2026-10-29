@@ -110,6 +110,38 @@ extension AppModel {
         catch { errorMessage = error.localizedDescription }
     }
 
+    /// Reads the screenshot on this Mac (text recognition, Apple's on-device model if there is one) and opens
+    /// the item editor prefilled; the user checks and saves. Text and values stay in memory.
+    func createItem(from shot: Screenshot) async {
+        guard let library = screenshotLibrary, readingScreenshot == nil else { return }
+        readingScreenshot = shot.id
+        defer { readingScreenshot = nil }
+        let id = shot.id, catalog = catalog
+        let result = await Task.detached { () -> Result<ScreenshotReading.Suggestion, Error> in
+            do { return .success(try await ScreenshotReading.read(try library.image(id), catalog: catalog)) }
+            catch { return .failure(error) }
+        }.value
+        switch result {
+        case .failure(let error): errorMessage = error.localizedDescription
+        case .success(let suggestion):
+            // Meanwhile the user opened another item or moved on: don't replace what they are doing.
+            guard itemEditor == nil, selectedScreenshot == shot.id else { return }
+            var draft = ItemDraft(template: template(suggestion.template), revision: configuration.revision)
+            if draft.template.identity { draft.provider = suggestion.provider.isEmpty ? draft.provider : suggestion.provider }
+            else { draft.provider = suggestion.provider; draft.label = suggestion.label }
+            for (name, value) in suggestion.fields {
+                if let index = draft.fields.firstIndex(where: { $0.name == name }) { draft.fields[index].value = value }
+            }
+            let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.dateFormat = "yyyy-MM-dd HH:mm"
+            draft.source = "Screenshot · \(f.string(from: shot.created))"
+            draft.readNote = switch suggestion.method {
+            case .localModel: "Read on this Mac with Apple’s on-device model. Nothing left your Mac. Check every field before saving."
+            case .textOnly(let reason): "Read on this Mac with text recognition only (\(reason)): kind and provider are guessed from the key’s prefix. Check every field before saving."
+            }
+            itemEditor = draft
+        }
+    }
+
     /// Copies the image marked as concealed (clipboard managers skip it) and clears it after 60 s,
     /// unless something else was copied meanwhile, like copied secrets.
     func copyScreenshot(_ shot: Screenshot) {
@@ -280,6 +312,10 @@ struct ScreenshotDetail: View {
                     .keyboardShortcut("y")
                 Button("Save Note", action: save).keyboardShortcut("s").disabled(!edited)
                 Spacer()
+                if model.readingScreenshot == shot.id { ProgressView().controlSize(.small) }
+                Button("Create Item …", systemImage: "text.viewfinder") { Task { await model.createItem(from: shot) } }
+                    .disabled(image == nil || model.readingScreenshot != nil)
+                    .help("Reads the screenshot on this Mac only and opens a new item to check and save")
                 Button("Copy Image") { model.copyScreenshot(shot) }
                 Button("Export …") { model.exportScreenshot(shot) }
                 Button("Delete …", role: .destructive) { model.pendingScreenshotDelete = shot }

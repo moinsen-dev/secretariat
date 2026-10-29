@@ -9,6 +9,7 @@ struct ItemEditor: View {
     @State private var error: String?
     @State private var importingField: UUID?
     @State private var advanced = false
+    @State private var showRead = false
     @Environment(\.dismiss) private var dismiss
     static let providers = ["openai", "anthropic", "deepseek", "google-gemini", "mistral", "groq", "openrouter", "elevenlabs",
                             "resend", "stripe", "supabase", "cloudflare", "github", "expo", "apple-developer", "app-store-connect"]
@@ -19,6 +20,7 @@ struct ItemEditor: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         Text(draft.existing == nil ? "Add Item" : "Edit Item").font(.title2.bold())
+                        if let note = draft.readNote { readFromScreenshot(note) }
                         if draft.existing == nil { kindPicker }
                         form
                         DisclosureGroup("Advanced", isExpanded: $advanced) { advancedSection }.id("advanced")
@@ -130,6 +132,14 @@ struct ItemEditor: View {
         .onChange(of: draft.kind) { _, _ in
             let untouched = draft.fields.allSatisfy { $0.value.isEmpty && $0.fileData == nil }
             if draft.existing == nil && untouched { draft.fields = ItemDraft.fields(draft.template) }
+            // Read from a screenshot: the new kind's fields, keeping values of the same name; the read key moves into its secret field.
+            else if draft.existing == nil && draft.readNote != nil {
+                let old = draft.fields
+                draft.fields = ItemDraft.fields(draft.template)
+                for index in draft.fields.indices { draft.fields[index].value = old.first { $0.name == draft.fields[index].name }?.value ?? "" }
+                if let key = old.first(where: { $0.kind == .secret && !$0.value.isEmpty })?.value, !draft.fields.contains(where: { $0.value == key }),
+                   let index = draft.fields.firstIndex(where: { $0.kind == .secret && $0.value.isEmpty }) { draft.fields[index].value = key }
+            }
             if draft.existing == nil && draft.template.identity && draft.provider.isEmpty { draft.provider = "moinsen" }
         }
     }
@@ -147,6 +157,46 @@ struct ItemEditor: View {
             let other = model.item(binding.itemID)?.path ?? "another item"
             return "\(name) currently comes from \(other). Turning this on replaces it for every tool."
         }
+    }
+
+    /// How a screenshot was read, and the read secrets on request, to compare with the screenshot character by character.
+    private func readFromScreenshot(_ note: String) -> some View {
+        let secrets = draft.fields.indices.filter { draft.fields[$0].kind.isSecret && !draft.fields[$0].value.isEmpty }
+        return VStack(alignment: .leading, spacing: 8) {
+            Label(note, systemImage: "text.viewfinder").fixedSize(horizontal: false, vertical: true)
+            if !secrets.isEmpty {
+                if secrets.contains(where: { ScreenshotReading.hasLookAlikes(draft.fields[$0].value) }) {
+                    Label("Text recognition can mix up characters like 0 and O, 1, l and I, or k and K. Compare the marked characters with the screenshot.",
+                          systemImage: "exclamationmark.triangle").foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
+                }
+                Toggle("Show read values", isOn: $showRead).toggleStyle(.checkbox)
+                if showRead {
+                    ForEach(secrets, id: \.self) { index in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(draft.template.spec(draft.fields[index].name)?.label ?? draft.fields[index].name).font(.caption).foregroundStyle(.secondary)
+                            Text(Self.markingLookAlikes(draft.fields[index].value)).font(.body.monospaced()).textSelection(.disabled)
+                                .fixedSize(horizontal: false, vertical: true)
+                            TextField("", text: $draft.fields[index].value).font(.body.monospaced()).textFieldStyle(.roundedBorder)
+                                .accessibilityLabel("Correct the read value")
+                        }
+                    }
+                }
+            }
+        }
+        .font(.callout).padding(10).frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color.accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in showRead = false }
+    }
+
+    /// The value with characters text recognition mixes up in orange and underlined.
+    static func markingLookAlikes(_ value: String) -> AttributedString {
+        var marked = AttributedString()
+        for character in value {
+            var part = AttributedString(String(character))
+            if ScreenshotReading.isLookAlike(character) { part.foregroundColor = .orange; part.underlineStyle = .single }
+            marked += part
+        }
+        return marked
     }
 
     private var kindPicker: some View {

@@ -1,0 +1,24 @@
+# Planprüfung R028/UC18/T023
+
+Datum: 2026-10-29 · Prüfer: unabhängig, nur lesend · Stand: PLAN.md (ungecommittet)
+
+Urteil: **REWORK** (kleine Nachschärfungen, keine Grundsatzprobleme)
+
+## Gut
+- R028/UC18/T023 sind in sich stimmig, an R027 und die Struktur (Phase P18 nach P17, T023 hängt von T022) angeschlossen.
+- Files-Liste plausibel: neue Dateien ScreenshotReading.swift und ScreenshotReadingTests.swift, dazu Capture.swift (provider(for:)), ScreenshotsView, AppModel (ItemDraft), Editors. Die Zeile „Entscheidungen“ trägt Ulis Freigabe und nennt das Release-Verbot.
+- Erdung der Modellwerte am erkannten Text, Fallback und „nur Dialog füllen“ (AI-002) sind die richtigen Hebel gegen Halluzination.
+
+## Befunde
+1. **Verfügbarkeit macOS 14 vs. 26 nicht konkret.** Package.swift hat `.macOS(.v14)`; FoundationModels gibt es erst ab macOS 26. T023 muss festlegen: Import nur mit `#if canImport(FoundationModels)` plus `if #available(macOS 26, *)`, Deployment-Target bleibt 14, und die Prüfung der Modell-Verfügbarkeit (`SystemLanguageModel.default.availability`: Gerät nicht geeignet / Apple Intelligence aus / Modell lädt noch) wird auf die Hinweistexte abgebildet. Accept: Build auf dem installierten SDK und ein Unit-Test des Fallback-Pfads, der ohne Modell läuft (Modell hinter einem Protokoll, im Test ein Fake). Das Modell selbst lässt sich in CI-losen Läufen nicht deterministisch prüfen; das als Einschränkung im Nachweis nennen.
+2. **Vision-Sprachkorrektur.** R028 sagt „ohne Sprachkorrektur“, aber T023 prüft es nicht. Accept ergänzen: `usesLanguageCorrection = false`, Erkennungsstufe `.accurate`, und ein Test mit gerendertem Schlüssel mit verwechselbaren Zeichen (O/0, l/1/I) und Bindestrichen/Unterstrichen. Zusätzlich dokumentieren, dass OCR Zeichen trotzdem falsch lesen kann: Der „wörtlich im erkannten Text“-Test schützt nur vor Modellerfindung, nicht vor OCR-Fehlern. Der Dialog sollte den Wert daher ausdrücklich als „zu prüfen“ markieren (Nutzer vergleicht mit dem Bild).
+3. **Erdung unscharf.** „Wörtlich im erkannten Text“ braucht eine Regel für Zeilenumbrüche/Leerraum in langen Schlüsseln (Schlüssel über zwei OCR-Zeilen). Entscheiden: Vergleich nach Entfernen von Leerraum, Wert aber unverändert aus dem Text übernehmen; Unit-Test dafür. Ebenso: Art (Vorlagen-ID) nur aus der vorhandenen Vorlagenliste, Anbieter nur aus Präfix-Tabelle oder wörtlich im Text (Test „Modell nennt unbekannte Art“ ist in AI-002 genannt, aber nicht in Accept).
+4. **Datenschutz-Prüfung zu schmal.** „Kein Klartext in `log show`, CLI-Ausgabe oder neuen Dateien“ gut, aber ergänzen: kein Klartext in Fehlertexten/Fehlerdialogen, in `Logger`/`print`/`NSLog` (Grep-Prüfung im Code), keine temporäre Bilddatei für Vision (Vision direkt aus `CGImage`/Daten im Speicher, nicht über eine Datei in `tmp`), und kein Eintrag in Zuletzt-benutzt/Quick-Look-Caches. Foundation Models: Hinweis, dass die Eingabe on-device bleibt (Apple-Zusage), und dass die `LanguageModelSession` je Klick neu angelegt und nicht gehalten wird (AI-003 sagt das schon, in Accept aufnehmen).
+5. **Prompt-Injection durch Bildinhalt.** Ein Screenshot kann Text enthalten, der das Modell steuert („setze Art auf …“). Auswirkung begrenzt (nur Vorbelegung, Nutzer speichert), sollte aber als Risiko in AI-002 stehen: Modellausgabe nur über `@Generable`-Felder, keine Werkzeuge, kein Schreiben ohne Nutzeraktion.
+6. **Mehrere/keine Treffer.** Screenshot mit mehreren Schlüsseln oder gar keinem: T023 nennt „nichts erkannt: Meldung“ (AI-001), aber nicht „mehrere Kandidaten“. Festlegen: ein Eintrag je Klick, bei mehreren Kandidaten der erste plus Hinweis, oder Auswahl. Eine Zeile genügt.
+7. **Accept-Test GUI mit Fake-Schlüssel.** Der Fake-Schlüssel muss ein erkennbares Präfix haben (z. B. `sk-ant-` plus Dummy), sonst prüft der Fallback-Pfad nichts; und es braucht beide Läufe (mit und ohne Modell, z. B. über Startargument/Umgebungsvariable zum Erzwingen des Fallbacks), sonst bleibt UC18 zweiter Halbsatz („sieht, dass nur Texterkennung lief“) ungeprüft. Fallback erzwingen als Testschalter nennen und in Files aufnehmen (vermutlich Entry.swift oder Launcher.swift, falls dort Startargumente liegen).
+8. **Files-Lücke (klein).** Wenn die Hinweiszeile im Dialog ein Feld in `ItemDraft` braucht, ist AppModel.swift abgedeckt; die Darstellung liegt in Editors.swift (abgedeckt). Fehlt: Package.swift, falls `FoundationModels`/`Vision` als Framework-Abhängigkeit oder `unsafeFlags`/Linker-Einstellung nötig wird (bei SwiftPM meist nicht, aber prüfen), und Entry.swift für den Testschalter (Befund 7).
+9. **Entitlements/Berechtigung.** Vision und Foundation Models brauchen keine Zusatzrechte; das einmal im Nachweis festhalten, damit niemand einen Profilwechsel (Developer-ID-Profil) vermutet. Kein Release, bestätigt.
+
+## Empfehlung
+Accept von T023 um Befunde 1, 2, 3, 4 und 7 ergänzen (je ein Halbsatz), AI-002 um Befund 5, dann PASS.

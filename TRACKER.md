@@ -26,6 +26,7 @@
 | T020 | ERLEDIGT | E828,E829,E830 | Regression 1.10 auf 03de498 |
 | T021 | ERLEDIGT | E831,E832,E833 | Regression 1.10 auf 03de498 |
 | T022 | ERLEDIGT | E834,E835,E836 | Verschlüsselt, über iCloud, verdeckt bis Show; geprüft auf 03de498 |
+| T023 | IN_ARBEIT | - | Eintrag aus Screenshot, lokale Erkennung |
 
 ## Evidence
 

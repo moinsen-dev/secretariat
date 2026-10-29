@@ -65,6 +65,7 @@
 | R025 | Der Eintrags-Dialog führt nach Art: Art wählen, Anbieter, beschriftete Pflicht- und Kannfelder je Art; Ablage ergibt sich (moinsen/<anbieter>[/<zusatz>]); Herkunft, Ablauf, eigene Ablage und weitere Felder unter „Erweitert“; „In allen Projekten nutzbar“ ordnet die Felder dem Profil werkzeuge zu |
 | R026 | Kopierte Zugangsdaten landen per Kurzbefehl oder Knopf mit Zeitstempel im Eingang, die Zwischenablage wird geleert; kein Programm erhält den Wert, bis er in einen Eintrag umgewandelt ist; das Umwandeln übernimmt den (beim Erfassen an den Rändern getrimmten) Wert und entfernt die Erfassung nur, wenn er im neuen Eintrag liegt |
 | R027 | Screenshots mit Notiz: Bild und Notiz sind wie geheime Felder verdeckt (Schleier, Notiz ausgeblendet, Liste nur mit Datum und verpixeltem Vorschaubild) und werden erst auf Klick sichtbar; Wechsel des Screenshots oder Verlassen der App verdeckt sie wieder; Bild aus der Zwischenablage, einer Datei oder per Ablegen speichern, Notiz ergänzen und ändern, Vorschau, Export und Löschen mit Rückfrage in der App; auf der Platte liegen Bild und Notiz nur als AES-GCM-Dateien (`SCR1`, an ID und Art gebunden) mit zufälligen Namen im privaten iCloud-Drive-Container, der Schlüssel nur im synchronisierten Schlüsselbund unter Secretariats Zugriffsgruppe; kein Programm, keine CLI-Ausgabe (nur Anzahlen) und kein Agent erhält Bild oder Notiz – herausgegeben werden sie nur durch eine ausdrückliche Nutzeraktion (Kopieren als vertraulich mit Leeren nach 60 s, Export, Ziehen); eine Bearbeitung überschreibt keine neuere Änderung eines anderen Macs; ohne iCloud bleibt alles verschlüsselt lokal, zieht später in den Container um, und die App sagt das |
+| R028 | Eintrag aus Screenshot: In der Detailansicht eines Screenshots liest „Create Item …“ das entschlüsselte Bild ausschließlich auf diesem Mac aus (Vision-Texterkennung ohne Sprachkorrektur, Zuordnung zu Art, Anbieter und Feldern mit Apple Foundation Models on-device über eine `@Generable`-Struktur; kein Netzwerk, kein Cloud-Modell) und öffnet den Eintrags-Dialog vorausgefüllt; jeder vom Modell genannte Wert muss wörtlich im erkannten Text stehen, sonst wird er verworfen; der Dialog sagt, wie gelesen wurde, und der Nutzer prüft und speichert selbst; ohne verfügbares lokales Modell nur Texterkennung plus Präfix-Heuristik, so beschriftet; erkannter Text, Vorschlag und Werte landen nie in Protokollen, CLI-Ausgabe oder Dateien |
 
 ## Phases
 
@@ -88,6 +89,7 @@
 | P15 | 15 | Verständlicher Eintrags-Dialog und globale Schlüssel | P14 |
 | P16 | 16 | Zwischenablage-Eingang und neues Hauptfenster | P15 |
 | P17 | 17 | Verschlüsselte Screenshots mit Notiz über iCloud | P16 |
+| P18 | 18 | Eintrag aus Screenshot mit lokaler Erkennung | P17 |
 
 ## UseCases
 
@@ -111,6 +113,7 @@
 | UC15 | P15 | Nutzer legt einen API-Schlüssel ohne Vorwissen an und macht ihn überall nutzbar | R020,R024,R025 | required |
 | UC16 | P16 | Nutzer erfasst einen kopierten Schlüssel, findet ihn im Eingang und macht daraus einen Eintrag, den ein Programm per run erhält | R020,R025,R026 | required |
 | UC17 | P17 | Nutzer legt einen Screenshot mit Notiz ab, findet ihn auf einem zweiten Mac wieder und sieht, dass nur Secretariat ihn lesen kann | R027 | required |
+| UC18 | P18 | Nutzer öffnet einen Screenshot mit einem API-Schlüssel, lässt ihn auf dem Mac auslesen, findet Art, Anbieter und Schlüssel im Eintrags-Dialog vorausgefüllt und speichert nach Prüfung; ohne lokales Modell sieht er, dass nur die Texterkennung lief | R028 | required |
 
 ## Tasks
 
@@ -139,6 +142,7 @@
 | T020 | P15 | UC15 | R020,R024,R025 | Arten mit beschrifteten Feldern im Kern; geführter Dialog (Screenshot geprüft); globale Zuordnung über werkzeuge; Nutzereintrag moinsen → moinsen/deepseek repariert und global; 1.2.0 auf allen Macs | build,unit,macos | normal | T019 | Sources/SecretariatCore/Models.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Editors.swift,Sources/Secretariat/Views.swift,Sources/SecretariatCore/Launcher.swift,Resources/Info.plist |
 | T021 | P16 | UC16 | R020,R025,R026 | Erfassungsfenster speichert künstlichen Wert im Test-Tresor und leert die Zwischenablage; Eingang zeigt die Erfassung; Umwandeln legt Eintrag an und entfernt die Erfassung nur, wenn ihr Wert im Eintrag liegt, sonst bleibt sie im Eingang; run liefert den (getrimmten) Wert byte-genau; kein Programm erhält die Erfassung vor dem Umwandeln (Unit-Test); Unit-Tests grün | build,unit,macos | normal | T020 | Sources/SecretariatCore/Capture.swift,Sources/SecretariatCore/Models.swift,Sources/Secretariat/CapturePanel.swift,Sources/Secretariat/Views.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Entry.swift,Sources/Secretariat/Editors.swift,Package.swift,Package.resolved,Tests/SecretariatCoreTests/CaptureTests.swift,script/build.sh |
 | T022 | P17 | UC17 | R027 | Kern verschlüsselt Bild und Notiz (Schlüssel-ID im Kopf, mehrere Schlüssel lesbar, Größenlimit, iCloud-Platzhalter), Unit-Tests ohne Klartext auf der Platte; App: Abschnitt Screenshots, Bild und Notiz verdeckt bis „Show“, mit Hinzufügen aus Zwischenablage/Datei/Ablegen, Vorschau, Notiz bearbeiten, Export, Löschen; Test-Tresor-Ablauf im Paket; iCloud-Container im Profil; auf einem zweiten Mac Anzahl und entschlüsselbare Bilder per `screenshots` (nur Zahlen) bestätigt; Löschen synchronisiert; veraltete Bearbeitung abgewiesen (Unit-Test) | build,unit,macos | normal | T021 | Sources/SecretariatCore/Screenshots.swift,Sources/SecretariatCore/Storage.swift,Sources/SecretariatCore/Commands.swift,Sources/SecretariatCore/Launcher.swift,Sources/Secretariat/ScreenshotsView.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Views.swift,Sources/Secretariat/Entry.swift,Resources/Secretariat.entitlements,Resources/Secretariat.provisionprofile,Tests/SecretariatCoreTests/ScreenshotTests.swift |
+| T023 | P18 | UC18 | R028 | Kern: Texterkennung im Speicher (keine temporäre Datei) mit `.accurate` und `usesLanguageCorrection=false`, Test an einem künstlich gerenderten Bild mit O/0, l/1, Bindestrich und Unterstrich; Zuordnung: unbekannte oder Erfassungs-Art wird verworfen, nur Felder der Vorlage, Wert muss wörtlich oder ohne Leerraum/Zeilenumbruch im Text stehen (vertippter Schlüssel wird durch das erkannte Wort mit gleichem Anfang ersetzt, sonst verworfen), Anbieter und Projektname nur, wenn der Text sie nennt, ein Schlüsselpräfix geht dem Modell vor; bei mehreren Kandidaten gewinnt der erste mit bekanntem Präfix, sonst der längste schlüsselartige; Modell nur hinter `#if canImport(FoundationModels)` und `#available(macOS 26)`, Verfügbarkeit wird in einen Hinweistext übersetzt, `SECRETARIAT_NO_LOCAL_MODEL=1` erzwingt den Weg ohne Modell; Unit-Tests für alle Regeln (echtes Modell ist nicht deterministisch und wird nur im GUI-Lauf belegt); App: „Create Item …“ in der Screenshot-Detailansicht, eine neue Modellsitzung je Klick, öffnet den vorausgefüllten Eintrags-Dialog mit Hinweis auf die Leseart und „prüfen“-Kurzvorschau der Geheimnisse; im Test-Tresor wird ein künstlicher Screenshot mit `sk-ant-`-Fake-Schlüssel per GUI mit und ohne Modell zum korrekt vorausgefüllten Eintrag; kein Klartext des Schlüssels in `log show`, CLI-Ausgabe, Fehlertexten oder neuen Dateien, kein `print`/`Logger`/`NSLog` im neuen Code; keine neuen Entitlements | build,unit,macos | normal | T022 | Sources/SecretariatCore/ScreenshotReading.swift,Sources/SecretariatCore/Capture.swift,Sources/Secretariat/ScreenshotsView.swift,Sources/Secretariat/AppModel.swift,Sources/Secretariat/Editors.swift,Tests/SecretariatCoreTests/ScreenshotReadingTests.swift |
 
 ## Modules
 
@@ -147,7 +151,7 @@
 | auth | NO | OS-Schlüsselbund statt eigener Konten oder Sitzungen; Zugriffsschutz in T002/T004 |
 | remote | NO | Vollständig lokal |
 | sync | YES | Schlüsselwerte und -namen über iCloud-Schlüsselbund (Apple), Profile bewusst lokal je Mac; T014. Screenshots verschlüsselt über den iCloud-Drive-Container der App, Schlüssel im iCloud-Schlüsselbund; T022 |
-| ai | NO | Keine Modelle oder Agentenfunktionen |
+| ai | YES | Nur lokal: Vision-Texterkennung und Apple Foundation Models on-device für „Eintrag aus Screenshot“; kein Netzwerk, kein Cloud-Modell, Vorschlag wird vom Nutzer geprüft; T023 |
 | payments | NO | Keine Käufe |
 | sensors | NO | Keine Sensoren |
 | notify | NO | Kein Autostart, Hintergrunddienst oder Mitteilungen |
@@ -190,10 +194,13 @@
 | FILES-002 | Fehlerhafter Import oder unterbrochener Export | YES | T004 | Im begrenzten lokalen Produktumfang prüfen |
 | SYNC-001 | Lokaler Stand und verzögerte Übertragung | YES | T014 | Schlüssel offline auf einem Mac speichern, später verbinden; Wert und Name erscheinen auf dem zweiten Mac genau einmal |
 | SYNC-002 | Konflikt, Wiederholung und Mehrfachzustellung | YES | T014 | Gleicher Name auf zwei Macs, erneute Übernahme lokaler Schlüssel und Löschen eines synchronisierten Schlüssels führen zu definiertem Ergebnis |
+| AI-001 | Verfügbarkeit, Unsicherheit und brauchbarer Fallback | YES | T023 | Ohne Apple Intelligence: Texterkennung plus Präfix-Heuristik, im Dialog so beschriftet; nichts erkannt: verständliche Meldung, kein leerer Dialog |
+| AI-002 | Ausgabeprüfung und Autorität der Anwendung | YES | T023 | Modellwerte werden am erkannten Text geerdet, unbekannte Arten verworfen; der Vorschlag öffnet nur den Dialog, gespeichert wird erst durch den Nutzer. Text im Screenshot kann das Modell anweisen (Prompt-Injection): Wirkung begrenzt, weil es nur `@Generable`-Felder ohne Werkzeuge füllt, jeder Wert im Text stehen muss und der Nutzer speichert |
+| AI-003 | Datenumfang und Ressourcenbedarf | YES | T023 | Nur on-device (Vision, Foundation Models), kein Netzwerk; Text und Werte nur im Speicher, keine Protokolle; eine Modellsitzung je Klick |
 
 ## Entscheidungen
 
-- Später (nicht Teil von 1.11): Aus einem Screenshot direkt einen Eintrag anlegen lassen, Erkennung ausschließlich lokal auf dem Mac (Vision-Texterkennung, Apple Foundation Models on-device), kein Cloud-Modell, Vorschlag im Eintrags-Dialog, den der Nutzer prüft und speichert (Uli, 2026-10-29).
+- Aus einem Screenshot direkt einen Eintrag anlegen lassen, Erkennung ausschließlich lokal auf dem Mac (Vision-Texterkennung, Apple Foundation Models on-device), kein Cloud-Modell, Vorschlag im Eintrags-Dialog, den der Nutzer prüft und speichert (Uli, 2026-10-29). Umgesetzt als P18/T023 nach 1.11; Foundation Models nur ab macOS 26 mit Apple Intelligence, sonst Texterkennung plus Präfix-Heuristik. Release erst auf Ulis ausdrückliches Ja.
 - Altprojekt wurde vollständig nach `_archive/Secretariat-legacy-2026-10-22_16-08-57` verschoben. Der alte Workspace-Pfad verweist auf diesen frischen Projektordner.
 - SwiftPM, macOS 14+, native SwiftUI-Oberfläche, ein App-Executable mit CLI-Modus. Bestehende Developer-ID-Signatur lokal, keine Notarisierung oder Store-Veröffentlichung beauftragt.
 - CLI ersetzt sich nach erfolgreicher Vorbereitung per exec durch den Zielprozess. Dadurch bleiben Terminal-I/O, Prozessgruppe und Signalverhalten erhalten; es gibt keinen dauerhaften Launcherprozess.
