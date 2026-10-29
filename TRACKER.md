@@ -5,25 +5,26 @@
 | ID | Status | Evidence | Reason |
 |---|---|---|---|
 | T001 | ERLEDIGT | E019 | Betroffene Bestandsnachweise beim Abschluss von 0.2 abgleichen und erneuern |
-| T002 | ERLEDIGT | E548,E549,E550 | Signiertes 0.2-Paket normal geöffnet; künstlicher Schlüsselwert via GUI und CLI-Prozess geprüft, Verweigerungsfall und Unit-/Buildchecks bestanden |
-| T003 | ERLEDIGT | E506,E507 | Schlüssel und Profil im aktuellen GUI angelegt, geändert und gelöscht; In-use-Schutz, Bindung, Neustart und Unitvalidierung geprüft |
-| T004 | ERLEDIGT | E551 | Aktueller Paketdurchlauf mit acht Prozesschecks und Unitprüfungen; Fehler vor Kindstart, Signal, I/O und Datenintegrität geprüft |
-| T005 | ERLEDIGT | E552 | Aktueller GUI-Neustart, schmaler Leerzustand, kopierter Aufruf und vorhandenes DailyInspirations-Projekt mit künstlichem Wert: Expo HTTP 200; Testdaten entfernt |
-| T006 | ERLEDIGT | E553,E554 | 0.2-Bundle entfernt und erneut installiert, Signatur/Hash/Symlink geprüft und neu installierte GUI geöffnet; Datenpfade unberührt |
-| T007 | ERLEDIGT | E555,E556 | Versionierte CLI-Auskunft, Fehlercodes und dialogfreie Profilprüfung mit aktuellem Paket und Unitprüfungen bestanden |
-| T008 | ERLEDIGT | E557,E558 | Projektanweisungen in normaler GUI mit Vorschau, Abbruch, Einrichten, Idempotenz, Neustart und Konfliktschutz geprüft |
-| T009 | ERLEDIGT | E559 | Codex und Claude Code mit Receipt; OpenCode real versucht, ECONNRESET ohne Receipt als Grenze dokumentiert; künstliche Fixtures bereinigt |
-| T010 | ERLEDIGT | E560,E561,E562,E563 | 0.2-App signiert lokal installiert, neue GUI und alte Kernabläufe samt Realprojekt geprüft; Testdaten entfernt, kein Autostart |
-| T011 | ERLEDIGT | E564,E565 | - |
-| T013 | ERLEDIGT | E568,E569 | App-ID + Developer-ID-Provisioning-Profil mit keychain-access-groups fehlt; Uli: asc auth login (Key T5YN77H557) oder Anlage im Developer-Portal |
-| T014 | ERLEDIGT | E570,E571,E572 | - |
-| T015 | ERLEDIGT | E573,E574 | - |
-| T012 | ERLEDIGT | E566,E567 | - |
-| T016 | ERLEDIGT | E575,E576,E577 | - |
-| T017 | ERLEDIGT | E578,E579,E580 | - |
-| T018 | ERLEDIGT | E581,E582,E583,E584 | - |
-| T019 | ERLEDIGT | E585,E586,E587 | - |
-| T020 | ERLEDIGT | E588,E589,E590 | - |
+| T002 | ERLEDIGT | E639,E640,E641 | Regression 1.10 auf 30cbcd5 |
+| T003 | ERLEDIGT | E642,E643 | Regression 1.10 auf 30cbcd5 |
+| T004 | ERLEDIGT | E644 | Regression 1.10 auf 30cbcd5 |
+| T005 | ERLEDIGT | E645 | Regression 1.10 auf 30cbcd5 |
+| T006 | ERLEDIGT | E646,E647 | Regression 1.10 auf 30cbcd5 |
+| T007 | ERLEDIGT | E648,E649 | Regression 1.10 auf 30cbcd5 |
+| T008 | ERLEDIGT | E650,E651 | Regression 1.10 auf 30cbcd5 |
+| T009 | ERLEDIGT | E652 | Regression 1.10 auf 30cbcd5 |
+| T010 | ERLEDIGT | E653,E654,E655,E656 | Regression 1.10 auf 30cbcd5 |
+| T011 | ERLEDIGT | E657,E658 | Regression 1.10 auf 30cbcd5 |
+| T013 | ERLEDIGT | E661,E662 | Regression 1.10 auf 30cbcd5 |
+| T014 | ERLEDIGT | E663,E664,E665 | Regression 1.10 auf 30cbcd5 |
+| T015 | ERLEDIGT | E666,E667 | Regression 1.10 auf 30cbcd5 |
+| T012 | ERLEDIGT | E659,E660 | Regression 1.10 auf 30cbcd5 |
+| T016 | ERLEDIGT | E668,E669,E670 | Regression 1.10 auf 30cbcd5 |
+| T017 | ERLEDIGT | E671,E672,E673 | Regression 1.10 auf 30cbcd5 |
+| T018 | ERLEDIGT | E674,E675,E676,E677 | Regression 1.10 auf 30cbcd5 |
+| T019 | ERLEDIGT | E678,E679,E680 | Regression 1.10 auf 30cbcd5 |
+| T020 | ERLEDIGT | E681,E682,E683 | Regression 1.10 auf 30cbcd5 |
+| T021 | ERLEDIGT | E684,E685,E686 | Zwischenablage-Eingang end-to-end im Paket, unabhängige Kritik PASS nach Fix 30cbcd5 |
 
 ## Evidence
 
@@ -619,6 +620,102 @@
 | E588 | T020 | build | build | normal | 2026-10-28T09:29:51+00:00 | 9faa20d | 942126797e8f58dfb8c51d82 | docs/t020-evidence.md | PASS |
 | E589 | T020 | macos | ui | normal | 2026-10-28T09:29:51+00:00 | 9faa20d | 942126797e8f58dfb8c51d82 | docs/t020-evidence.md | PASS |
 | E590 | T020 | unit | unit | normal | 2026-10-28T09:29:51+00:00 | 9faa20d | 942126797e8f58dfb8c51d82 | docs/t020-evidence.md | PASS |
+| E591 | T002 | build | build | normal | 2026-10-29T14:17:21+00:00 | 051679f | a596350c52600a88d27e8020 | docs/regression-1.10.md | PASS |
+| E592 | T002 | unit | unit | normal | 2026-10-29T14:17:21+00:00 | 051679f | a596350c52600a88d27e8020 | docs/regression-1.10.md | PASS |
+| E593 | T002 | macos | ui | normal | 2026-10-29T14:17:22+00:00 | 051679f | a596350c52600a88d27e8020 | docs/regression-1.10.md | PASS |
+| E594 | T003 | macos | ui | normal | 2026-10-29T14:17:22+00:00 | 051679f | 6567f43b562ef131d84c6778 | docs/regression-1.10.md | PASS |
+| E595 | T003 | unit | unit | normal | 2026-10-29T14:17:22+00:00 | 051679f | 6567f43b562ef131d84c6778 | docs/regression-1.10.md | PASS |
+| E596 | T004 | unit | unit | normal | 2026-10-29T14:17:22+00:00 | 051679f | 1e77346dbe46f648ccc281e0 | docs/regression-1.10.md | PASS |
+| E597 | T005 | macos | ui | normal | 2026-10-29T14:17:22+00:00 | 051679f | 5936338457950f0b4bff9cac | docs/regression-1.10.md | PASS |
+| E598 | T006 | inspection | inspection | normal | 2026-10-29T14:17:22+00:00 | 051679f | 1bb90a0aafb34c2c1edc450c | docs/regression-1.10.md | PASS |
+| E599 | T006 | macos | ui | normal | 2026-10-29T14:17:22+00:00 | 051679f | 1bb90a0aafb34c2c1edc450c | docs/regression-1.10.md | PASS |
+| E600 | T007 | build | build | normal | 2026-10-29T14:17:22+00:00 | 051679f | 77758ec18d5966211d9852b3 | docs/regression-1.10.md | PASS |
+| E601 | T007 | unit | unit | normal | 2026-10-29T14:17:22+00:00 | 051679f | 77758ec18d5966211d9852b3 | docs/regression-1.10.md | PASS |
+| E602 | T008 | unit | unit | normal | 2026-10-29T14:17:23+00:00 | 051679f | 4c89ba1000c54ad80725ba63 | docs/regression-1.10.md | PASS |
+| E603 | T008 | macos | ui | normal | 2026-10-29T14:17:23+00:00 | 051679f | 4c89ba1000c54ad80725ba63 | docs/regression-1.10.md | PASS |
+| E604 | T009 | inspection | inspection | normal | 2026-10-29T14:17:23+00:00 | 051679f | 6781c961807dd6d898696664 | docs/regression-1.10.md | PASS |
+| E605 | T010 | build | build | normal | 2026-10-29T14:17:23+00:00 | 051679f | 6a360a746678f986f5ed8ab1 | docs/regression-1.10.md | PASS |
+| E606 | T010 | unit | unit | normal | 2026-10-29T14:17:23+00:00 | 051679f | 6a360a746678f986f5ed8ab1 | docs/regression-1.10.md | PASS |
+| E607 | T010 | macos | ui | normal | 2026-10-29T14:17:23+00:00 | 051679f | 6a360a746678f986f5ed8ab1 | docs/regression-1.10.md | PASS |
+| E608 | T010 | inspection | inspection | normal | 2026-10-29T14:17:23+00:00 | 051679f | 6a360a746678f986f5ed8ab1 | docs/regression-1.10.md | PASS |
+| E609 | T011 | build | build | normal | 2026-10-29T14:17:23+00:00 | 051679f | 6669c1b0759b03180d1b9d85 | docs/regression-1.10.md | PASS |
+| E610 | T011 | unit | unit | normal | 2026-10-29T14:17:23+00:00 | 051679f | 6669c1b0759b03180d1b9d85 | docs/regression-1.10.md | PASS |
+| E611 | T012 | macos | ui | normal | 2026-10-29T14:17:24+00:00 | 051679f | 1ddbe64aa6b7b57562e0cec6 | docs/regression-1.10.md | PASS |
+| E612 | T012 | inspection | inspection | normal | 2026-10-29T14:17:24+00:00 | 051679f | 1ddbe64aa6b7b57562e0cec6 | docs/regression-1.10.md | PASS |
+| E613 | T013 | build | build | normal | 2026-10-29T14:17:24+00:00 | 051679f | dca511559c1377bbcd098eb4 | docs/regression-1.10.md | PASS |
+| E614 | T013 | inspection | inspection | normal | 2026-10-29T14:17:24+00:00 | 051679f | dca511559c1377bbcd098eb4 | docs/regression-1.10.md | PASS |
+| E615 | T014 | build | build | normal | 2026-10-29T14:17:24+00:00 | 051679f | 6eb097e4f31895ecc86ecdbb | docs/regression-1.10.md | PASS |
+| E616 | T014 | unit | unit | normal | 2026-10-29T14:17:24+00:00 | 051679f | 6eb097e4f31895ecc86ecdbb | docs/regression-1.10.md | PASS |
+| E617 | T014 | macos | ui | normal | 2026-10-29T14:17:24+00:00 | 051679f | 6eb097e4f31895ecc86ecdbb | docs/regression-1.10.md | PASS |
+| E618 | T015 | macos | ui | normal | 2026-10-29T14:17:24+00:00 | 051679f | a7dfe5e5ae9160a752643417 | docs/regression-1.10.md | PASS |
+| E619 | T015 | inspection | inspection | normal | 2026-10-29T14:17:24+00:00 | 051679f | a7dfe5e5ae9160a752643417 | docs/regression-1.10.md | PASS |
+| E620 | T016 | build | build | normal | 2026-10-29T14:17:25+00:00 | 051679f | 7ccbabe7f4c09e6f467b1e31 | docs/regression-1.10.md | PASS |
+| E621 | T016 | unit | unit | normal | 2026-10-29T14:17:25+00:00 | 051679f | 7ccbabe7f4c09e6f467b1e31 | docs/regression-1.10.md | PASS |
+| E622 | T016 | macos | ui | normal | 2026-10-29T14:17:25+00:00 | 051679f | 7ccbabe7f4c09e6f467b1e31 | docs/regression-1.10.md | PASS |
+| E623 | T017 | build | build | normal | 2026-10-29T14:17:25+00:00 | 051679f | 7245f7218bce87bedcbf32a4 | docs/regression-1.10.md | PASS |
+| E624 | T017 | unit | unit | normal | 2026-10-29T14:17:25+00:00 | 051679f | 7245f7218bce87bedcbf32a4 | docs/regression-1.10.md | PASS |
+| E625 | T017 | macos | ui | normal | 2026-10-29T14:17:25+00:00 | 051679f | 7245f7218bce87bedcbf32a4 | docs/regression-1.10.md | PASS |
+| E626 | T018 | build | build | normal | 2026-10-29T14:17:25+00:00 | 051679f | 11ad19ab5461f42814bb3396 | docs/regression-1.10.md | PASS |
+| E627 | T018 | unit | unit | normal | 2026-10-29T14:17:25+00:00 | 051679f | 11ad19ab5461f42814bb3396 | docs/regression-1.10.md | PASS |
+| E628 | T018 | macos | ui | normal | 2026-10-29T14:17:25+00:00 | 051679f | 11ad19ab5461f42814bb3396 | docs/regression-1.10.md | PASS |
+| E629 | T018 | inspection | inspection | normal | 2026-10-29T14:17:26+00:00 | 051679f | 11ad19ab5461f42814bb3396 | docs/regression-1.10.md | PASS |
+| E630 | T019 | build | build | normal | 2026-10-29T14:17:26+00:00 | 051679f | 6170ee2c5e4eec7201c0a876 | docs/regression-1.10.md | PASS |
+| E631 | T019 | unit | unit | normal | 2026-10-29T14:17:26+00:00 | 051679f | 6170ee2c5e4eec7201c0a876 | docs/regression-1.10.md | PASS |
+| E632 | T019 | macos | ui | normal | 2026-10-29T14:17:26+00:00 | 051679f | 6170ee2c5e4eec7201c0a876 | docs/regression-1.10.md | PASS |
+| E633 | T020 | build | build | normal | 2026-10-29T14:17:26+00:00 | 051679f | 9f57d8f3e9f7ed539b7f319c | docs/regression-1.10.md | PASS |
+| E634 | T020 | unit | unit | normal | 2026-10-29T14:17:26+00:00 | 051679f | 9f57d8f3e9f7ed539b7f319c | docs/regression-1.10.md | PASS |
+| E635 | T020 | macos | ui | normal | 2026-10-29T14:17:26+00:00 | 051679f | 9f57d8f3e9f7ed539b7f319c | docs/regression-1.10.md | PASS |
+| E636 | T021 | build | build | normal | 2026-10-29T14:17:26+00:00 | 051679f | 61f84def416ee0b88148b1e4 | docs/t021-evidence.md | PASS |
+| E637 | T021 | unit | unit | normal | 2026-10-29T14:17:26+00:00 | 051679f | 61f84def416ee0b88148b1e4 | docs/t021-evidence.md | PASS |
+| E638 | T021 | macos | ui | normal | 2026-10-29T14:17:27+00:00 | 051679f | 61f84def416ee0b88148b1e4 | docs/t021-evidence.md | PASS |
+| E639 | T002 | build | build | normal | 2026-10-29T14:24:44+00:00 | 30cbcd5 | d27fa3d231d0c8f154b46042 | docs/regression-1.10.md | PASS |
+| E640 | T002 | unit | unit | normal | 2026-10-29T14:24:44+00:00 | 30cbcd5 | d27fa3d231d0c8f154b46042 | docs/regression-1.10.md | PASS |
+| E641 | T002 | macos | ui | normal | 2026-10-29T14:24:44+00:00 | 30cbcd5 | d27fa3d231d0c8f154b46042 | docs/regression-1.10.md | PASS |
+| E642 | T003 | macos | ui | normal | 2026-10-29T14:24:44+00:00 | 30cbcd5 | d05aa10fed2e9208c6f8afad | docs/regression-1.10.md | PASS |
+| E643 | T003 | unit | unit | normal | 2026-10-29T14:24:44+00:00 | 30cbcd5 | d05aa10fed2e9208c6f8afad | docs/regression-1.10.md | PASS |
+| E644 | T004 | unit | unit | normal | 2026-10-29T14:24:44+00:00 | 30cbcd5 | 1e77346dbe46f648ccc281e0 | docs/regression-1.10.md | PASS |
+| E645 | T005 | macos | ui | normal | 2026-10-29T14:24:44+00:00 | 30cbcd5 | 53c5698c45f257197bc801cb | docs/regression-1.10.md | PASS |
+| E646 | T006 | inspection | inspection | normal | 2026-10-29T14:24:45+00:00 | 30cbcd5 | cdbf421ba80e06dde2049d34 | docs/regression-1.10.md | PASS |
+| E647 | T006 | macos | ui | normal | 2026-10-29T14:24:45+00:00 | 30cbcd5 | cdbf421ba80e06dde2049d34 | docs/regression-1.10.md | PASS |
+| E648 | T007 | build | build | normal | 2026-10-29T14:24:45+00:00 | 30cbcd5 | 9fd5d38c5abe38fd10dde9cc | docs/regression-1.10.md | PASS |
+| E649 | T007 | unit | unit | normal | 2026-10-29T14:24:45+00:00 | 30cbcd5 | 9fd5d38c5abe38fd10dde9cc | docs/regression-1.10.md | PASS |
+| E650 | T008 | unit | unit | normal | 2026-10-29T14:24:45+00:00 | 30cbcd5 | de5b89de0e4e82ef61f0defb | docs/regression-1.10.md | PASS |
+| E651 | T008 | macos | ui | normal | 2026-10-29T14:24:45+00:00 | 30cbcd5 | de5b89de0e4e82ef61f0defb | docs/regression-1.10.md | PASS |
+| E652 | T009 | inspection | inspection | normal | 2026-10-29T14:24:45+00:00 | 30cbcd5 | 9bdcccb73f1c7b356cdf54a6 | docs/regression-1.10.md | PASS |
+| E653 | T010 | build | build | normal | 2026-10-29T14:24:45+00:00 | 30cbcd5 | fde35c76d848ccb0389121d3 | docs/regression-1.10.md | PASS |
+| E654 | T010 | unit | unit | normal | 2026-10-29T14:24:46+00:00 | 30cbcd5 | fde35c76d848ccb0389121d3 | docs/regression-1.10.md | PASS |
+| E655 | T010 | macos | ui | normal | 2026-10-29T14:24:46+00:00 | 30cbcd5 | fde35c76d848ccb0389121d3 | docs/regression-1.10.md | PASS |
+| E656 | T010 | inspection | inspection | normal | 2026-10-29T14:24:46+00:00 | 30cbcd5 | fde35c76d848ccb0389121d3 | docs/regression-1.10.md | PASS |
+| E657 | T011 | build | build | normal | 2026-10-29T14:24:46+00:00 | 30cbcd5 | 6669c1b0759b03180d1b9d85 | docs/regression-1.10.md | PASS |
+| E658 | T011 | unit | unit | normal | 2026-10-29T14:24:46+00:00 | 30cbcd5 | 6669c1b0759b03180d1b9d85 | docs/regression-1.10.md | PASS |
+| E659 | T012 | macos | ui | normal | 2026-10-29T14:24:46+00:00 | 30cbcd5 | 1ddbe64aa6b7b57562e0cec6 | docs/regression-1.10.md | PASS |
+| E660 | T012 | inspection | inspection | normal | 2026-10-29T14:24:46+00:00 | 30cbcd5 | 1ddbe64aa6b7b57562e0cec6 | docs/regression-1.10.md | PASS |
+| E661 | T013 | build | build | normal | 2026-10-29T14:24:46+00:00 | 30cbcd5 | dca511559c1377bbcd098eb4 | docs/regression-1.10.md | PASS |
+| E662 | T013 | inspection | inspection | normal | 2026-10-29T14:24:46+00:00 | 30cbcd5 | dca511559c1377bbcd098eb4 | docs/regression-1.10.md | PASS |
+| E663 | T014 | build | build | normal | 2026-10-29T14:24:47+00:00 | 30cbcd5 | 7d0e0ee090ae2ca797cd7e7c | docs/regression-1.10.md | PASS |
+| E664 | T014 | unit | unit | normal | 2026-10-29T14:24:47+00:00 | 30cbcd5 | 7d0e0ee090ae2ca797cd7e7c | docs/regression-1.10.md | PASS |
+| E665 | T014 | macos | ui | normal | 2026-10-29T14:24:47+00:00 | 30cbcd5 | 7d0e0ee090ae2ca797cd7e7c | docs/regression-1.10.md | PASS |
+| E666 | T015 | macos | ui | normal | 2026-10-29T14:24:47+00:00 | 30cbcd5 | a7dfe5e5ae9160a752643417 | docs/regression-1.10.md | PASS |
+| E667 | T015 | inspection | inspection | normal | 2026-10-29T14:24:47+00:00 | 30cbcd5 | a7dfe5e5ae9160a752643417 | docs/regression-1.10.md | PASS |
+| E668 | T016 | build | build | normal | 2026-10-29T14:24:47+00:00 | 30cbcd5 | 7ccbabe7f4c09e6f467b1e31 | docs/regression-1.10.md | PASS |
+| E669 | T016 | unit | unit | normal | 2026-10-29T14:24:47+00:00 | 30cbcd5 | 7ccbabe7f4c09e6f467b1e31 | docs/regression-1.10.md | PASS |
+| E670 | T016 | macos | ui | normal | 2026-10-29T14:24:47+00:00 | 30cbcd5 | 7ccbabe7f4c09e6f467b1e31 | docs/regression-1.10.md | PASS |
+| E671 | T017 | build | build | normal | 2026-10-29T14:24:48+00:00 | 30cbcd5 | 7245f7218bce87bedcbf32a4 | docs/regression-1.10.md | PASS |
+| E672 | T017 | unit | unit | normal | 2026-10-29T14:24:48+00:00 | 30cbcd5 | 7245f7218bce87bedcbf32a4 | docs/regression-1.10.md | PASS |
+| E673 | T017 | macos | ui | normal | 2026-10-29T14:24:48+00:00 | 30cbcd5 | 7245f7218bce87bedcbf32a4 | docs/regression-1.10.md | PASS |
+| E674 | T018 | build | build | normal | 2026-10-29T14:24:48+00:00 | 30cbcd5 | 21c3fd159ee587d4be2c9d5e | docs/regression-1.10.md | PASS |
+| E675 | T018 | unit | unit | normal | 2026-10-29T14:24:48+00:00 | 30cbcd5 | 21c3fd159ee587d4be2c9d5e | docs/regression-1.10.md | PASS |
+| E676 | T018 | macos | ui | normal | 2026-10-29T14:24:48+00:00 | 30cbcd5 | 21c3fd159ee587d4be2c9d5e | docs/regression-1.10.md | PASS |
+| E677 | T018 | inspection | inspection | normal | 2026-10-29T14:24:48+00:00 | 30cbcd5 | 21c3fd159ee587d4be2c9d5e | docs/regression-1.10.md | PASS |
+| E678 | T019 | build | build | normal | 2026-10-29T14:24:48+00:00 | 30cbcd5 | 6170ee2c5e4eec7201c0a876 | docs/regression-1.10.md | PASS |
+| E679 | T019 | unit | unit | normal | 2026-10-29T14:24:48+00:00 | 30cbcd5 | 6170ee2c5e4eec7201c0a876 | docs/regression-1.10.md | PASS |
+| E680 | T019 | macos | ui | normal | 2026-10-29T14:24:49+00:00 | 30cbcd5 | 6170ee2c5e4eec7201c0a876 | docs/regression-1.10.md | PASS |
+| E681 | T020 | build | build | normal | 2026-10-29T14:24:49+00:00 | 30cbcd5 | 9fdffdbbe7b58f4dde1c763e | docs/regression-1.10.md | PASS |
+| E682 | T020 | unit | unit | normal | 2026-10-29T14:24:49+00:00 | 30cbcd5 | 9fdffdbbe7b58f4dde1c763e | docs/regression-1.10.md | PASS |
+| E683 | T020 | macos | ui | normal | 2026-10-29T14:24:49+00:00 | 30cbcd5 | 9fdffdbbe7b58f4dde1c763e | docs/regression-1.10.md | PASS |
+| E684 | T021 | build | build | normal | 2026-10-29T14:24:49+00:00 | 30cbcd5 | fb1a313d24af0e912fa70309 | docs/t021-evidence.md | PASS |
+| E685 | T021 | unit | unit | normal | 2026-10-29T14:24:49+00:00 | 30cbcd5 | fb1a313d24af0e912fa70309 | docs/t021-evidence.md | PASS |
+| E686 | T021 | macos | ui | normal | 2026-10-29T14:24:49+00:00 | 30cbcd5 | fb1a313d24af0e912fa70309 | docs/t021-evidence.md | PASS |
 
 ## Reviews
 
@@ -861,6 +958,36 @@
 | RV235 | UC15 | self | PASS | f0da0ca77657755cbbbd1ec2 | docs/t020-evidence.md |
 | RV236 | UC05 | self | PASS | 67501ed54162ffc2e1c682a2 | docs/regression-1.0.md |
 | RV237 | UC07 | self | PASS | 70f74b47013b84523d7d3f55 | docs/regression-1.0.md |
+| RV238 | UC02 | self | PASS | bb5a00d0b01ed0e9bfd405ad | docs/regression-1.10.md |
+| RV239 | UC03 | self | PASS | 4a042c569adf244687697a6b | docs/regression-1.10.md |
+| RV240 | UC04 | self | PASS | 398987aa26b47dfaa030fb4c | docs/regression-1.10.md |
+| RV241 | UC05 | self | PASS | b9833b0a0518bc294dc83b91 | docs/regression-1.10.md |
+| RV242 | UC06 | self | PASS | 3ec0f3a664867b0615a9458b | docs/regression-1.10.md |
+| RV243 | UC07 | self | PASS | e2e67f41c3014e69e4043dac | docs/regression-1.10.md |
+| RV244 | UC08 | self | PASS | f63e1db0bac41d422124b9e0 | docs/regression-1.10.md |
+| RV245 | UC09 | self | PASS | db10e385e9463917f00dc399 | docs/regression-1.10.md |
+| RV246 | UC10 | self | PASS | 297d51b40066a98e63c58a4d | docs/regression-1.10.md |
+| RV247 | UC11 | self | PASS | 72c07adf2df82a82bd42250e | docs/regression-1.10.md |
+| RV248 | UC12 | self | PASS | f3a5f46582be37f628109202 | docs/regression-1.10.md |
+| RV249 | UC13 | self | PASS | 20eaff742b16a9a5e09ad61c | docs/regression-1.10.md |
+| RV250 | UC14 | self | PASS | ea27a9374052a6830e48606a | docs/regression-1.10.md |
+| RV251 | UC15 | self | PASS | 178e6298bff73f6e3a02b61e | docs/regression-1.10.md |
+| RV252 | UC02 | self | PASS | 77a76d0decb53d7a660a54f3 | docs/regression-1.10.md |
+| RV253 | UC03 | self | PASS | d21c2ab62ef8e1f9f5049328 | docs/regression-1.10.md |
+| RV254 | UC04 | self | PASS | b30bd02c485dadad3d39f912 | docs/regression-1.10.md |
+| RV255 | UC05 | self | PASS | acc42f79de026e146e283d0f | docs/regression-1.10.md |
+| RV256 | UC06 | self | PASS | e1abd45e2428b04f8188682f | docs/regression-1.10.md |
+| RV257 | UC07 | self | PASS | 14b632a5b4cfd61e1ab9d3e5 | docs/regression-1.10.md |
+| RV258 | UC08 | self | PASS | 28b5cf55dcffa837f03b6f9b | docs/regression-1.10.md |
+| RV259 | UC09 | self | PASS | 1cc39332ddc0fd16ee0904cd | docs/regression-1.10.md |
+| RV260 | UC10 | self | PASS | 6ecb89966cff060ef513a2f7 | docs/regression-1.10.md |
+| RV261 | UC11 | self | PASS | 0ea7fe0af321b02679bbebbb | docs/regression-1.10.md |
+| RV262 | UC12 | self | PASS | 3359d1f7bf88b62fddd58a49 | docs/regression-1.10.md |
+| RV263 | UC13 | self | PASS | 79fc35b0ac58b3c7dbefd95a | docs/regression-1.10.md |
+| RV264 | UC14 | self | PASS | f50d04982b883c236381cd54 | docs/regression-1.10.md |
+| RV265 | UC15 | self | PASS | fe486ae57c003a83443c94da | docs/regression-1.10.md |
+| RV266 | PLAN | independent | PASS | 0a8be4f6c1d52a86924aa89f | docs/review-uc16.md |
+| RV267 | UC16 | independent | PASS | a92c85176560ebab7864208c | docs/review-uc16.md |
 
 ## Releases
 

@@ -3,13 +3,13 @@
 ## State
 
 - schema: app-workflow/1
-- status: COMPLETE
-- phase: -
-- use_case: -
-- task: -
-- next: Ziel nachweislich abgeschlossen.
-- updated: 2026-10-28T09:29:52+00:00
-- plan_sha256: 3530d80379375bf208331e1751893315fe3c50ae1b326687026aeaabec66382e
-- tracker_sha256: bc8d95b7fb503e81c5e02c96614302ac3993b6f7cf45aafd7c95cb1aa56fd8fe
+- status: ACTIVE
+- phase: P16
+- use_case: UC16
+- task: T021
+- next: Ulis Go für Release 1.10.1: Version anheben, release.sh, lokal installieren und D001 mit normalem Start belegen, Site-Deploy, Mesh-Auslieferung; vorher globalen Kurzbefehl ⌃⌥⌘V einmal von Hand auslösen
+- updated: 2026-10-29T14:25:10+00:00
+- plan_sha256: e5286be0e893a3952510577b8d0bcf118cdada9b546dd4d2857cbc0657ba13fe
+- tracker_sha256: b6939a50abc4cba6d50b802c88f5e55fc50c3e71f8def0baf03ef8343e787267
 
 Einstieg: `AGENTS.md`. Verbindliche Aufgabenstatus und Nachweise: `TRACKER.md`. Diese Zusammenfassung mit dem Werkzeug aus Plan und Tracker aktualisieren.
