@@ -70,12 +70,32 @@ struct ItemDraft: Identifiable {
         let p = Self.slug(provider), l = Self.slug(label)
         return p.isEmpty ? "" : "moinsen/\(p)" + (l.isEmpty ? "" : "/\(l)")
     }
-    /// Variable prefix for "everywhere": OPENAI from moinsen/openai.
-    var envPrefix: String { Self.slug(provider).uppercased().replacingOccurrences(of: #"[^A-Z0-9]+"#, with: "_", options: .regularExpression) }
+    /// Variable prefix for "everywhere": OPENAI from moinsen/openai, CLOUDFLARE_PULSE_READONLY from moinsen/cloudflare/pulse-readonly.
+    /// A project key gets its own name, so it never takes over the main key's variable.
+    var envPrefix: String {
+        [provider, label].map { Self.slug($0).uppercased().replacingOccurrences(of: #"[^A-Z0-9]+"#, with: "_", options: .regularExpression) }
+            .filter { !$0.isEmpty }.joined(separator: "_")
+    }
+    /// The variable a field gets in the profile "werkzeuge"; the API key may carry its own name in `env_var`.
+    func variable(_ spec: FieldSpec) -> String? {
+        guard let suffix = spec.envSuffix else { return nil }
+        if spec.name == "api_key", let custom = field("env_var")?.value.trimmingCharacters(in: .whitespaces), !custom.isEmpty { return custom }
+        return "\(envPrefix)_\(suffix)"
+    }
+    /// A whole location was typed into the provider field (moinsen/cloudflare/pulse-readonly).
+    var providerIsPath: Bool { !customPath && !template.identity && provider.contains("/") }
+    /// Splits a typed location into provider and project; anything outside moinsen/<provider>/<project> becomes a custom location.
+    mutating func splitProvider() {
+        var parts = provider.split(separator: "/").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+        if parts.first == "moinsen" { parts.removeFirst() }
+        if parts.count <= 2 { provider = parts.first ?? ""; label = parts.count == 2 ? parts[1] : label }
+        else { typedPath = provider.trimmingCharacters(in: .whitespaces); customPath = true }
+    }
     func field(_ name: String) -> FieldDraft? { fields.first { $0.name == name } }
     /// Required fields of the template that are still empty (stored values count as filled).
     var missing: [String] {
-        (path.isEmpty ? [customPath ? "Location" : (template.identity ? "Organisation" : "Provider or account")] : []) + template.fields.filter(\.required).filter { spec in
+        (path.isEmpty ? [customPath ? "Location" : (template.identity ? "Organisation" : "Provider or account")] : [])
+            + (providerIsPath ? ["Provider without “/”"] : []) + template.fields.filter(\.required).filter { spec in
             guard let f = field(spec.name) else { return true }
             return f.value.isEmpty && f.fileData == nil && f.storedName == nil
         }.map(\.label)
@@ -239,9 +259,7 @@ final class AppModel {
         let config = try ConfigurationStore(paths: paths).load()
         var profile = config.profiles.first { $0.name == "werkzeuge" } ?? Profile(name: "werkzeuge", directory: Profile.anywhere)
         for field in meta.fields where field.kind.isUsable {
-            guard let suffix = draft.template.spec(field.name)?.envSuffix else { continue }
-            var variable = "\(draft.envPrefix)_\(suffix)"
-            if field.name == "api_key", let custom = meta.field("env_var")?.value, !custom.isEmpty { variable = custom }
+            guard let variable = draft.template.spec(field.name).flatMap(draft.variable) else { continue }
             profile.bindings.removeAll { $0.variable == variable }
             profile.bindings.append(SecretariatCore.Binding(variable: variable, itemID: meta.id, field: field.name))
         }

@@ -14,52 +14,26 @@ struct ItemEditor: View {
                             "resend", "stripe", "supabase", "cloudflare", "github", "expo", "apple-developer", "app-store-connect"]
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(draft.existing == nil ? "Add Item" : "Edit Item").font(.title2.bold())
-            if draft.existing == nil { kindPicker }
-            Form {
-                if !draft.customPath && draft.template.identity {
-                    TextField("Organisation", text: $draft.provider, prompt: Text("moinsen (default), or e.g. private"))
-                } else if !draft.customPath {
-                    LabeledContent("Provider or account") {
-                        HStack {
-                            TextField("", text: $draft.provider, prompt: Text("e.g. openai, deepseek, cloudflare"))
-                            Menu { ForEach(Self.providers, id: \.self) { p in Button(p) { draft.provider = p } } } label: { Image(systemName: "chevron.down") }
-                                .menuStyle(.borderlessButton).fixedSize().accessibilityLabel("Choose provider")
-                        }
-                    }
-                    TextField("Suffix (optional)", text: $draft.label, prompt: Text("empty = main key, otherwise e.g. a project name"))
+        VStack(spacing: 0) {
+            ScrollViewReader { scroller in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text(draft.existing == nil ? "Add Item" : "Edit Item").font(.title2.bold())
+                        if draft.existing == nil { kindPicker }
+                        form
+                        DisclosureGroup("Advanced", isExpanded: $advanced) { advancedSection }.id("advanced")
+                        Text(draft.existing == nil
+                             ? "Identifiers are readable. Only programs get secrets and files; “Only for me” stays in the app."
+                             : "If you leave a secret field empty, its current value is kept.")
+                            .font(.callout).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        if let error { Text(error).foregroundStyle(.red).font(.callout).fixedSize(horizontal: false, vertical: true) }
+                    }.padding(28).frame(maxWidth: .infinity, alignment: .leading)
                 }
-                ForEach(draft.template.fields, id: \.name) { spec in
-                    if let index = draft.fields.firstIndex(where: { $0.name == spec.name }) {
-                        LabeledContent(spec.label + (spec.required ? " *" : "")) { valueControl($draft.fields[index], prompt: spec.prompt) }
-                    }
-                }
-                if draft.template.fields.contains(where: { $0.envSuffix != nil }) && !draft.customPath {
-                    Toggle(isOn: $draft.everywhere) {
-                        Text("Available in all projects and tools")
-                        Text(everywhereHint).font(.caption).foregroundStyle(.secondary)
-                    }
-                }
-            }.textFieldStyle(.roundedBorder)
-            .onChange(of: draft.kind) { _, _ in
-                let untouched = draft.fields.allSatisfy { $0.value.isEmpty && $0.fileData == nil }
-                if draft.existing == nil && untouched { draft.fields = ItemDraft.fields(draft.template) }
-                if draft.existing == nil && draft.template.identity && draft.provider.isEmpty { draft.provider = "moinsen" }
-            }
-            .onChange(of: draft.provider) { _, _ in
-                if draft.kind == "api", let i = draft.fields.firstIndex(where: { $0.name == "env_var" }) {
-                    draft.fields[i].value = draft.envPrefix.isEmpty ? "" : "\(draft.envPrefix)_API_KEY"
+                .onChange(of: advanced) { _, open in
+                    if open { withAnimation { scroller.scrollTo("advanced", anchor: .top) } }
                 }
             }
-            Text(draft.path.isEmpty ? "Location: –" : "Location: \(draft.path)")
-                .font(.system(.caption, design: .monospaced)).foregroundStyle(.secondary).textSelection(.enabled)
-            DisclosureGroup("Advanced", isExpanded: $advanced) { advancedSection }
-            Text(draft.existing == nil
-                 ? "Identifiers are readable. Only programs get secrets and files; “Only for me” stays in the app."
-                 : "If you leave a secret field empty, its current value is kept.")
-                .font(.callout).foregroundStyle(.secondary)
-            if let error { Text(error).foregroundStyle(.red).font(.callout) }
+            Divider()
             HStack {
                 if let existing = draft.existing {
                     Button("Delete …", role: .destructive) { dismiss(); model.pendingDelete = existing }
@@ -72,8 +46,11 @@ struct ItemEditor: View {
                     else { error = model.errorMessage; model.errorMessage = nil }
                 }.keyboardShortcut(.defaultAction)
                     .disabled(!draft.missing.isEmpty || draft.fields.isEmpty)
-            }
-        }.padding(28).frame(width: 640)
+            }.padding(.horizontal, 28).padding(.vertical, 14)
+        }
+        // Resizable sheet: text wraps instead of being cut off, and the window can be dragged larger.
+        .frame(minWidth: 600, idealWidth: 700, maxWidth: .infinity, minHeight: 460, idealHeight: 720, maxHeight: .infinity)
+        .background(ResizableSheet())
         .fileImporter(isPresented: SwiftUI.Binding(get: { importingField != nil }, set: { if !$0 { importingField = nil } }),
                       allowedContentTypes: [.item], allowsMultipleSelection: false) { result in
             guard let id = importingField, let index = draft.fields.firstIndex(where: { $0.id == id }) else { return }
@@ -90,12 +67,86 @@ struct ItemEditor: View {
         }
     }
 
-    private var everywhereHint: String {
-        let names = draft.template.fields.compactMap { spec in spec.envSuffix.map { _ in spec } }.map { spec in
-            spec.name == "api_key" ? (draft.field("env_var")?.value.isEmpty == false ? draft.field("env_var")!.value : "\(draft.envPrefix)_API_KEY")
-                                   : "\(draft.envPrefix)_\(spec.envSuffix!)"
+    /// A label column and a content column; unlike a Form, long texts wrap inside the sheet's width.
+    private func row<Content: View>(_ label: String, @ViewBuilder _ content: () -> Content) -> some View {
+        GridRow(alignment: .firstTextBaseline) {
+            Text(label).gridColumnAlignment(.trailing)
+            content().frame(maxWidth: .infinity, alignment: .leading)
         }
-        return "As \(names.joined(separator: ", ")) in the tools profile “werkzeuge” – `secretariat run werkzeuge -- …` in any folder."
+    }
+
+    private var form: some View {
+        Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 10) {
+            if !draft.customPath && draft.template.identity {
+                row("Organisation") { TextField("", text: $draft.provider, prompt: Text("moinsen (default), or e.g. private")) }
+            } else if !draft.customPath {
+                row("Provider or account") {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            TextField("", text: $draft.provider, prompt: Text("e.g. openai, deepseek, cloudflare"))
+                            Menu { ForEach(Self.providers, id: \.self) { p in Button(p) { draft.provider = p } } } label: { Image(systemName: "chevron.down") }
+                                .menuStyle(.borderlessButton).fixedSize().accessibilityLabel("Choose provider")
+                        }
+                        if draft.providerIsPath {
+                            HStack(alignment: .firstTextBaseline) {
+                                Label("This looks like a whole location. Provider and project are separate fields.", systemImage: "exclamationmark.triangle.fill")
+                                    .font(.caption).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
+                                Spacer(minLength: 4)
+                                Button("Split") { draft.splitProvider(); if draft.customPath { advanced = true } }.controlSize(.small)
+                            }
+                        }
+                    }
+                }
+                row("Project or purpose") {
+                    VStack(alignment: .leading, spacing: 4) {
+                        TextField("", text: $draft.label, prompt: Text("optional, e.g. pulse-readonly"))
+                        Text("Leave empty for the account’s main key. Use it when you keep several keys for one provider, one per project or purpose.")
+                            .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            row("Saved as") {
+                Text(draft.path.isEmpty ? "–" : draft.path)
+                    .font(.system(.title3, design: .monospaced).weight(.semibold))
+                    .foregroundStyle(draft.path.isEmpty ? .secondary : .primary)
+                    .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
+                    .accessibilityLabel("Saved as \(draft.path)")
+            }.padding(.vertical, 4)
+            ForEach(draft.template.fields, id: \.name) { spec in
+                if spec.name != "env_var", let index = draft.fields.firstIndex(where: { $0.name == spec.name }) {
+                    row(spec.label + (spec.required ? " *" : "")) { valueControl($draft.fields[index], prompt: spec.prompt) }
+                }
+            }
+            if draft.template.fields.contains(where: { $0.envSuffix != nil }) && !draft.customPath {
+                row("") { Toggle(isOn: $draft.everywhere) {
+                    Text("Give to all tools (profile “werkzeuge”)")
+                    Text(everywhereHint).font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    ForEach(everywhereConflicts, id: \.self) { conflict in
+                        Text(conflict).font(.caption).foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
+                    }
+                } }
+            }
+        }.textFieldStyle(.roundedBorder)
+        .onChange(of: draft.kind) { _, _ in
+            let untouched = draft.fields.allSatisfy { $0.value.isEmpty && $0.fileData == nil }
+            if draft.existing == nil && untouched { draft.fields = ItemDraft.fields(draft.template) }
+            if draft.existing == nil && draft.template.identity && draft.provider.isEmpty { draft.provider = "moinsen" }
+        }
+    }
+
+    private var everywhereVariables: [String] { draft.template.fields.compactMap(draft.variable) }
+    private var everywhereHint: String {
+        let names = everywhereVariables.isEmpty ? "–" : everywhereVariables.joined(separator: ", ")
+        return "Every command started with `secretariat run werkzeuge -- …` (e.g. wrangler, gh, eas) gets this as \(names), in any folder. Off: only project profiles you bind it to get it."
+    }
+    /// Variables that the profile "werkzeuge" already gives to another item; saving would replace them.
+    private var everywhereConflicts: [String] {
+        guard let werkzeuge = model.configuration.profiles.first(where: { $0.name == "werkzeuge" }) else { return [] }
+        return everywhereVariables.compactMap { name in
+            guard let binding = werkzeuge.bindings.first(where: { $0.variable == name }), binding.itemID != draft.existing?.id else { return nil }
+            let other = model.item(binding.itemID)?.path ?? "another item"
+            return "\(name) currently comes from \(other). Turning this on replaces it for every tool."
+        }
     }
 
     private var kindPicker: some View {
@@ -119,20 +170,41 @@ struct ItemEditor: View {
 
     @ViewBuilder private var advancedSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Toggle("Set location yourself", isOn: SwiftUI.Binding(get: { draft.customPath }, set: { on in
-                if on { draft.typedPath = draft.path }
-                draft.customPath = on
-            }))
-            if draft.customPath {
-                TextField("Location", text: $draft.typedPath, prompt: Text("moinsen/account/name")).textFieldStyle(.roundedBorder)
-            }
-            Toggle(isOn: $draft.approval) {
-                Text("Ask with Touch ID before a program uses this item")
-                Text("Agent Guard: run, push and inject wait for your confirmation. Agents can turn this on, only you can turn it off.")
-                    .font(.caption).foregroundStyle(.secondary)
-            }
-            TextField("Source", text: $draft.source, prompt: Text("Where does the value come from? e.g. platform.openai.com")).textFieldStyle(.roundedBorder)
-            TextField("Expires", text: $draft.expires, prompt: Text("YYYY-MM-DD, optional")).textFieldStyle(.roundedBorder)
+            Grid(alignment: .leading, horizontalSpacing: 10, verticalSpacing: 10) {
+                if let index = draft.fields.firstIndex(where: { $0.name == "env_var" }), draft.template.spec("env_var") != nil {
+                    row("Variable name") {
+                        VStack(alignment: .leading, spacing: 4) {
+                            TextField("", text: $draft.fields[index].value,
+                                      prompt: Text(draft.envPrefix.isEmpty ? "default: <PROVIDER>_API_KEY" : "default: \(draft.envPrefix)_API_KEY"))
+                            Text("Only used with “Give to all tools”. Leave empty for the default. Set it when a tool expects a fixed name, but never reuse a name a tool already uses for something else: CLOUDFLARE_API_TOKEN, for example, overrides wrangler’s own login.")
+                                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+                row("Expires") {
+                    TextField("", text: $draft.expires, prompt: Text("YYYY-MM-DD, optional"))
+                }
+                row("Source") {
+                    TextField("", text: $draft.source, prompt: Text("Where does the value come from? e.g. platform.openai.com"))
+                }
+                row("") { Toggle(isOn: SwiftUI.Binding(get: { draft.customPath }, set: { on in
+                    if on { draft.typedPath = draft.path }
+                    draft.customPath = on
+                })) {
+                    Text("Set location yourself")
+                    Text("For locations outside moinsen/<provider>/<project>.").font(.caption).foregroundStyle(.secondary)
+                } }
+                if draft.customPath {
+                    row("Location") {
+                        TextField("", text: $draft.typedPath, prompt: Text("moinsen/account/name"))
+                    }
+                }
+                row("") { Toggle(isOn: $draft.approval) {
+                    Text("Ask with Touch ID before a program uses this item")
+                    Text("Agent Guard: run, push and inject wait for your confirmation. Agents can turn this on, only you can turn it off.")
+                        .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                } }
+            }.textFieldStyle(.roundedBorder)
             Text("More fields").font(.subheadline.bold())
             ForEach($draft.fields) { $field in
                 if draft.template.spec(field.name) == nil {
@@ -166,6 +238,16 @@ struct ItemEditor: View {
             }.frame(maxWidth: .infinity)
         }
     }
+}
+
+/// SwiftUI sheets on macOS 14 have a fixed size; this lets the sheet window be dragged larger.
+private struct ResizableSheet: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView {
+        let view = NSView()
+        DispatchQueue.main.async { view.window?.styleMask.insert(.resizable) }
+        return view
+    }
+    func updateNSView(_ nsView: NSView, context: Context) {}
 }
 
 struct ProfileEditor: View {
@@ -315,7 +397,7 @@ struct TemplateEditor: View {
                 }.padding(.vertical, 2)
             }.frame(minHeight: 80, maxHeight: 280)
             Button("Add Field", systemImage: "plus") { draft.fields.append(FieldSpecDraft(spec: FieldSpec("", "", .identifier))) }
-            Text("Env suffix: with “Available in all projects and tools” the field becomes <PROVIDER>_<suffix>, e.g. API_KEY.")
+            Text("Env suffix: with “Give to all tools” the field becomes <PROVIDER>[_<PROJECT>]_<suffix>, e.g. OPENAI_API_KEY.")
                 .font(.caption).foregroundStyle(.secondary)
             if let error { Text(error).foregroundStyle(.red).font(.callout) }
             HStack {
