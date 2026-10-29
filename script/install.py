@@ -58,7 +58,7 @@ if args.action == 'install':
     args.bin_dir.mkdir(parents=True, exist_ok=True)
     stage = Path(tempfile.mkdtemp(prefix='.secretariat-install-', dir=args.app_dir))
     try:
-        shutil.copytree(source, stage / 'Secretariat.app')
+        shutil.copytree(source, stage / 'Secretariat.app', symlinks=True)  # keep Sparkle.framework's Versions links, or the signature breaks
         subprocess.run(['codesign', '--verify', '--strict', str(stage / 'Secretariat.app')], check=True)
         stop_app()
         if bundle.exists():
