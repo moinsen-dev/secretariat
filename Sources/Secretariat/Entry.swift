@@ -31,6 +31,8 @@ struct SecretariatApp: App {
             MainView(model: model)
                 .frame(minWidth: 900, minHeight: 520)
                 .onAppear { NSApplication.shared.activate(ignoringOtherApps: true) }
+                // Profiles and items change from the CLI, agents and other Macs; pick that up when the user comes back.
+                .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in model.reload() }
         }
         .defaultSize(width: 1180, height: 720)
         .commands {
@@ -45,6 +47,10 @@ struct SecretariatApp: App {
                 Divider()
                 Button("New Template …") { model.templateEditor = TemplateDraft(template: Template(id: "", title: ""), isNew: true) }
                     .keyboardShortcut("n", modifiers: [.command, .option])
+            }
+            CommandGroup(before: .toolbar) {
+                Button("Reload") { model.reload() }.keyboardShortcut("r")
+                Divider()
             }
         }
         Settings { SettingsView() }
