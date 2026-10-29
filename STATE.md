@@ -7,9 +7,9 @@
 - phase: P17
 - use_case: UC17
 - task: T022
-- next: Ulis Go für Release 1.11.0 (Screenshots): Version anheben, release.sh, lokal installieren und D001 belegen, Site-Deploy, mesh deliver; danach Release-Kritik UC05/UC07 und state --complete
-- updated: 2026-10-29T15:30:50+00:00
-- plan_sha256: a0a28b4d8606614ebf8bb75abe58a77f395b384c05a8847adde6989c0a9aa187
-- tracker_sha256: 5fa66d840fc69029fbde282b3784f354ede7ac174305df56378bc4c31be8a49b
+- next: Ulis Go für Release 1.11.0 (verdeckte, verschlüsselte Screenshots über iCloud): Version anheben, release.sh, lokal installieren und belegen, Site-Deploy, mesh deliver
+- updated: 2026-10-29T16:10:51+00:00
+- plan_sha256: b5ef02272e27e1ce8ce4d421b23235eb699fd7bf6e29bdd475a5627b5bd85f1a
+- tracker_sha256: 780c0b2b9651d086e3b0f464845683719f80ffb1076a5d4fbbcdfdded19de027
 
 Einstieg: `AGENTS.md`. Verbindliche Aufgabenstatus und Nachweise: `TRACKER.md`. Diese Zusammenfassung mit dem Werkzeug aus Plan und Tracker aktualisieren.
