@@ -1,4 +1,4 @@
-# Regression nach T023 (Build 4f322af, 2026-10-29)
+# Regression nach T023 (Build 4f322af; erneut auf 5663ea0 = Release 1.12.0 nach Merge von `main` 1.11.0 und Versionsanhebung: unit 70/70, CLI 24/24 gegen das notarisierte Paket, installiert und auf M1/Mini verteilt, siehe `docs/release-1.12.0.md`; 2026-10-29)
 
 Anlass: T023 („Eintrag aus Screenshot“) ändert `AppModel.swift`, `Editors.swift` und `ScreenshotsView.swift`, die in den `Files` fast aller älteren Aufgaben stehen. `git diff --stat 36c775b 4f322af -- Sources`: nur diese drei Dateien (+90 Zeilen, nur Ergänzungen) und die neue `ScreenshotReading.swift`. Die Ergänzungen greifen nur bei einem Entwurf aus einem Screenshot (`readNote`) und beim neuen Knopf „Create Item …“; bestehende Abläufe ändern sich nicht.
 
