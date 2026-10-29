@@ -25,7 +25,7 @@
 | T019 | ERLEDIGT | E726,E727,E728 | Regression 1.10 auf 0350543 (Release 1.10.1) |
 | T020 | ERLEDIGT | E729,E730,E731 | Regression 1.10 auf 0350543 (Release 1.10.1) |
 | T021 | ERLEDIGT | E732,E733,E734 | Release 1.10.1 (0350543) |
-| T022 | IN_ARBEIT | - | - |
+| T022 | BLOCKIERT | - | Kern, App und Test-Tresor-Ablauf fertig (cc0ef1a); iCloud-Container iCloud.dev.moinsen.secretariat und Zuordnung zur App-ID brauchen Ulis Developer-Portal-Login (2FA) |
 
 ## Evidence
 
