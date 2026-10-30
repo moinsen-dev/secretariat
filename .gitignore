@@ -5,3 +5,4 @@ dist/
 *.xcuserstate
 __pycache__/
 .wrangler/
+.claude/worktrees/

@@ -5,7 +5,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
 app="$ROOT/.artifacts/CleanupTestItems.app"
 rm -rf "$app"; mkdir -p "$app/Contents/MacOS"
-swiftc -parse-as-library -O "$ROOT/script/cleanup_test_items.swift" -o "$app/Contents/MacOS/cleanup-test-items"
+xcrun swiftc -parse-as-library -O "$ROOT/script/cleanup_test_items.swift" -o "$app/Contents/MacOS/cleanup-test-items"
 cat > "$app/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
