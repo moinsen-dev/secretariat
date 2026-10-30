@@ -978,6 +978,9 @@
 | E942 | T025 | build | build | normal | 2026-10-30T17:43:59+00:00 | 08ddbe7 | 50ff1cc25dfbfcf2f62e00ea | docs/t025-evidence.md | PASS |
 | E943 | T025 | unit | unit | normal | 2026-10-30T17:43:59+00:00 | 08ddbe7 | 50ff1cc25dfbfcf2f62e00ea | docs/t025-evidence.md | PASS |
 | E944 | T025 | macos | ui | normal | 2026-10-30T17:43:59+00:00 | 08ddbe7 | 50ff1cc25dfbfcf2f62e00ea | docs/t025-evidence.md | PASS |
+| E945 | T024 | build | build | normal | 2026-10-30T17:57:32+00:00 | 2c7836d | c116baa0758e982ce4937c7c | docs/t024-evidence.md | PASS |
+| E946 | T024 | unit | unit | normal | 2026-10-30T17:57:32+00:00 | 2c7836d | c116baa0758e982ce4937c7c | docs/t024-evidence.md | PASS |
+| E947 | T024 | macos | ui | normal | 2026-10-30T17:57:33+00:00 | 2c7836d | c116baa0758e982ce4937c7c | docs/t024-evidence.md | PASS |
 
 ## Reviews
 
@@ -1357,6 +1360,8 @@
 | RV372 | UC16 | self | PASS | 6267534ab76ca4498181b531 | docs/regression-t023.md |
 | RV373 | UC17 | self | PASS | bfbde5d4cdd731e4ef84143c | docs/regression-t023.md |
 | RV374 | UC18 | independent | PASS | d27612e8c7afa98e288d9a31 | docs/review-uc18.md |
+| RV375 | UC20 | independent | PASS | 5cab60a94ad5b5d2a3c1149f | docs/review-uc20.md |
+| RV376 | PLAN | independent | PASS | 38ede5b692d30b48d450b69c | docs/review-plan-uc19.md |
 
 ## Releases
 
