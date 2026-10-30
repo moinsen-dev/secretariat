@@ -184,6 +184,10 @@ final class AppModel {
     var pendingScreenshotDelete: Screenshot?
     /// Screenshot being read for "Create Item …".
     var readingScreenshot: UUID?
+    /// This Mac's history (audit.log), loaded when the History view is shown.
+    var history: [HistoryEntry] = []
+    var historyPeriod = HistoryPeriod.week
+    var historyVia: String?
     var thumbnails: [UUID: NSImage] = [:]
 
     init() {
@@ -233,6 +237,7 @@ final class AppModel {
         if selection == "targets" { refreshTargets() }
         license = Vault(paths: paths).licensing.state()
         reloadScreenshots()
+        if selection == "history" { loadHistory() }
     }
     func activateLicense(_ text: String) throws {
         try Vault(paths: paths).licensing.activate(text)
@@ -310,11 +315,13 @@ final class AppModel {
     func deleteItem(_ item: ItemMeta) {
         if perform({ try vault.delete(id: item.id) }) { selectedItem = nil }
     }
-    func secretValue(_ item: ItemMeta, _ field: ItemField) -> String? {
+    /// A stored value for the user; `purpose` (show, copy, export, file) goes into the history, the value never does.
+    func secretValue(_ item: ItemMeta, _ field: ItemField, for purpose: String) -> String? {
         do {
             guard let value = try vault.personalValue(itemID: item.id, field: field.name) else {
                 throw SecretariatError("No value is stored yet for \(item.path)/\(field.name).")
             }
+            vault.audit.record("read", ["field": "\(item.path)/\(field.name)", "purpose": purpose])
             return value
         } catch { errorMessage = error.localizedDescription; return nil }
     }
@@ -328,7 +335,7 @@ final class AppModel {
     }
     /// Opens the item editor prefilled with a capture's value; saving removes the capture from the inbox.
     func file(_ capture: ItemMeta) {
-        guard let field = capture.field("value"), let value = secretValue(capture, field) else { return }
+        guard let field = capture.field("value"), let value = secretValue(capture, field, for: "file") else { return }
         var draft = newItemDraft()
         // "cloudflare-pulse-readonly" → provider cloudflare, project pulse-readonly; otherwise guess from the key's prefix.
         let words = Capture.name(of: capture).split(separator: "-").map(String.init)
@@ -357,7 +364,7 @@ final class AppModel {
         NSPasteboard.general.setString(text, forType: .string)
     }
     func exportFile(_ item: ItemMeta, _ field: ItemField) {
-        guard let value = secretValue(item, field) else { return }
+        guard let value = secretValue(item, field, for: "export") else { return }
         guard let data = Data(base64Encoded: value) else { errorMessage = "The stored file is damaged."; return }
         let panel = NSSavePanel()
         panel.nameFieldStringValue = field.fileName ?? field.name

@@ -282,6 +282,8 @@ public struct Configuration: Codable, Equatable, Sendable {
     public var targets: [Target] = []
     /// Random per Mac; salts target fingerprints.
     public var salt = UUID().uuidString
+    /// History entries older than this many days are deleted automatically; nil keeps them (the default).
+    public var historyRetentionDays: Int?
     public init() {}
 
     static let namePattern = #"^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$"#

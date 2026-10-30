@@ -323,6 +323,7 @@ public enum Commands {
             guard field.kind == .identifier, let value = field.value else {
                 throw AgentError("secret_field", "\(a.positional[0]) is a field of kind '\(field.kind.title)' – Secretariat doesn't print its value. Programs get it through run.")
             }
+            vault.audit.record("get", ["field": a.positional[0]])
             struct Value: Encodable { let schemaVersion = 2; let ok = true; let reference: String; let value: String }
             return (0, try json(Value(reference: a.positional[0], value: value)), value)
 
@@ -634,6 +635,30 @@ public enum Commands {
                         "license: \(license)",
                         "targets: \(targets.isEmpty ? "none" : targets.map { "\($0.name)\($0.stale.isEmpty && $0.never.isEmpty && $0.missing.isEmpty ? " ok" : " stale \($0.stale.count) never \($0.never.count) missing \($0.missing.count)")" }.joined(separator: ", "))"]
             return (0, try json(out), text.joined(separator: "\n"))
+
+        case ("history", _):
+            let a = try Arguments(all.dropFirst(), values: ["--period", "--via", "--lines"], usage: usage)
+            // Read only: automatic deletion is switched in the app, so an agent can't turn it on to wipe its traces.
+            guard a.positional.isEmpty else { throw AgentError("invalid_arguments", "Usage: secretariat history [--period …] [--via …]. Automatic deletion is switched in the app.") }
+            guard let period = HistoryPeriod(rawValue: a.option("--period") ?? "week") else {
+                throw AgentError("invalid_arguments", "--period is one of day, week, month, quarter, year")
+            }
+            let selected = History.select(vault.audit.entries(), period, via: a.option("--via"))
+            let retention = (try? vault.configuration.load())?.historyRetentionDays
+            struct Count: Encodable { let via: String; let count: Int }
+            struct Line: Encodable { let at: String; let via: String; let action: String; let summary: String }
+            struct Out: Encodable { let schemaVersion = 1; let ok = true; let period: String; let total: Int; let origins: [Count]
+                                    let autoDeleteDays: Int?; let entries: [Line] }
+            let iso = ISO8601DateFormatter()
+            let lines = selected.prefix(a.option("--lines").flatMap(Int.init) ?? 20)
+            let out = Out(period: period.rawValue, total: selected.count, origins: History.origins(selected).map { Count(via: $0.via, count: $0.count) },
+                          autoDeleteDays: retention, entries: lines.map { Line(at: iso.string(from: $0.at), via: $0.via, action: $0.action, summary: $0.summary) })
+            let local = DateFormatter(); local.dateFormat = "yyyy-MM-dd HH:mm"
+            let text = (["\(selected.count) entries in the last \(period.title.lowercased()) on this Mac"
+                         + (selected.isEmpty ? "" : ": " + out.origins.map { "\(Origin.title($0.via)) \($0.count)" }.joined(separator: ", ")),
+                         "automatic deletion: \(retention.map { "after \($0) days" } ?? "off") (change it in the app)"]
+                        + lines.map { "\(local.string(from: $0.at))  \(Origin.title($0.via)): \($0.summary)" }).joined(separator: "\n")
+            return (0, try json(out), text)
 
         case ("log", _):
             let a = try Arguments(all.dropFirst(), values: ["--lines"], usage: usage)

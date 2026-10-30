@@ -169,6 +169,8 @@ public enum CommandLineInterface {
       secretariat status [--days N] [--json]          overview: counts, expiring items, Touch ID items, targets, recent log
       secretariat screenshots [--json]                how many encrypted screenshots this Mac can open (counts only)
       secretariat registry export · scan [FOLDER] [--json] · log [--lines N] · --version
+      secretariat history [--period day|week|month|quarter|year] [--via ORIGIN] [--lines N] [--json]
+                                                     who used what on this Mac: app, terminal, script, MCP client or agent
 
     License (14 days to try everything; nothing is ever blocked)
       secretariat license [--json] · license activate [FILE|-] · license remove
@@ -179,6 +181,8 @@ public enum CommandLineInterface {
 
     public static func run(_ arguments: [String], vault: Vault? = nil) throws -> Int32 {
         let vault = vault ?? Vault(paths: AppPaths())
+        // The retention set in the app applies on every call, also when the app isn't running.
+        vault.pruneHistory()
         switch arguments.first {
         case "--help", "-h", "help", nil: print(help); return 0
         case "--version": print("Secretariat \(version)"); return 0

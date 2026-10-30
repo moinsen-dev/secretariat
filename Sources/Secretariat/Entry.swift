@@ -13,6 +13,7 @@ enum Entry {
                 exit(1)
             }
         }
+        Origin.set(Origin.app)
         NSApplication.shared.setActivationPolicy(.regular)
         SecretariatApp.main()
     }

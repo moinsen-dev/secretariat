@@ -63,6 +63,7 @@ public enum McpServer {
     ]
 
     public static func serve(service: AgentService, executable: String) {
+        Origin.set(Origin.mcp)
         while let line = readLine(strippingNewline: true) {
             guard let data = line.data(using: .utf8), let message = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { continue }
             guard let id = message["id"] else { continue }   // notifications need no answer
@@ -71,6 +72,7 @@ public enum McpServer {
             var response: [String: Any] = ["jsonrpc": "2.0", "id": id]
             switch method {
             case "initialize":
+                Origin.set(Origin.mcp(client: (params["clientInfo"] as? [String: Any])?["name"] as? String))
                 response["result"] = ["protocolVersion": (params["protocolVersion"] as? String) ?? "2025-06-18",
                                       "capabilities": ["tools": [:]],
                                       "serverInfo": ["name": "secretariat", "version": CommandLineInterface.version],

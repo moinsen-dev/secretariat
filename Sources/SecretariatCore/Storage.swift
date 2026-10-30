@@ -101,27 +101,67 @@ extension Configuration {
     }
 }
 
-/// Append-only record of what used which value — names only, never values.
+/// Record of who used what, on this Mac — names only, never values. Appending and pruning share one lock file,
+/// so an entry written while old ones are removed is never lost.
 public struct AuditLog: Sendable {
     public let url: URL?
-    public init(url: URL?) { self.url = url }
-    public func record(_ action: String, _ details: [String: String] = [:]) {
+    /// Fixed origin for tests; otherwise each entry takes `Origin.current`.
+    public let origin: String?
+    public init(url: URL?, origin: String? = nil) { self.url = url; self.origin = origin }
+
+    public func record(_ action: String, _ details: [String: String] = [:], at date: Date = Date()) {
         guard let url else { return }
-        var entry = details; entry["at"] = ISO8601DateFormatter().string(from: Date()); entry["action"] = action
+        var entry = details
+        entry["at"] = ISO8601DateFormatter().string(from: date); entry["action"] = action; entry["via"] = origin ?? Origin.current
         guard var line = try? JSONSerialization.data(withJSONObject: entry, options: [.sortedKeys]) else { return }
         line.append(0x0A)
-        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true,
-                                                 attributes: [.posixPermissions: 0o700])
-        if !FileManager.default.fileExists(atPath: url.path) {
-            FileManager.default.createFile(atPath: url.path, contents: nil, attributes: [.posixPermissions: 0o600])
+        try? locked {
+            let descriptor = open(url.path, O_WRONLY | O_APPEND | O_CREAT | O_NOFOLLOW, 0o600)
+            guard descriptor >= 0 else { return }
+            defer { close(descriptor) }
+            _ = line.withUnsafeBytes { write(descriptor, $0.baseAddress, $0.count) }
         }
-        guard let handle = try? FileHandle(forWritingTo: url) else { return }
-        defer { try? handle.close() }
-        _ = try? handle.seekToEnd(); try? handle.write(contentsOf: line)
     }
     public func tail(_ count: Int) -> [String] {
         guard let url, let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
         return Array(text.split(separator: "\n").suffix(count).map(String.init))
+    }
+    /// Every readable entry; reading never changes the file.
+    public func entries() -> [HistoryEntry] {
+        guard let url, let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
+        return History.parse(text)
+    }
+    /// Removes entries older than `cutoff`; unreadable lines are kept. Returns how many went.
+    @discardableResult public func prune(olderThan cutoff: Date) throws -> Int {
+        guard let url else { return 0 }
+        var removed = 0
+        try locked {
+            guard let text = try? String(contentsOf: url, encoding: .utf8) else { return }
+            var kept: [Substring] = []
+            for line in text.split(separator: "\n") {
+                let at = (try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any])?["at"] as? String
+                if let date = at.flatMap(History.date), date < cutoff { removed += 1 } else { kept.append(line) }
+            }
+            guard removed > 0 else { return }
+            let temporary = url.deletingLastPathComponent().appendingPathComponent(".audit-\(UUID().uuidString).tmp")
+            defer { try? FileManager.default.removeItem(at: temporary) }
+            let data = Data((kept.joined(separator: "\n") + (kept.isEmpty ? "" : "\n")).utf8)
+            guard FileManager.default.createFile(atPath: temporary.path, contents: data, attributes: [.posixPermissions: 0o600]),
+                  rename(temporary.path, url.path) == 0 else { throw SecretariatError("The history could not be shortened. It is unchanged.") }
+        }
+        return removed
+    }
+
+    private func locked(_ body: () throws -> Void) throws {
+        guard let url else { return }
+        try? FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true,
+                                                 attributes: [.posixPermissions: 0o700])
+        let descriptor = open(url.deletingLastPathComponent().appendingPathComponent("audit.lock").path, O_CREAT | O_RDWR | O_NOFOLLOW, 0o600)
+        guard descriptor >= 0 else { return }
+        defer { close(descriptor) }
+        guard flock(descriptor, LOCK_EX) == 0 else { return }
+        defer { _ = flock(descriptor, LOCK_UN) }
+        try body()
     }
 }
 
@@ -340,6 +380,19 @@ public struct Vault {
     }
     public func deleteProfile(id: UUID) throws {
         try configuration.update(expectedRevision: expectedRevision) { $0.profiles.removeAll { $0.id == id } }
+    }
+    /// Automatic deletion of history entries older than `days` (nil keeps everything). The app is the only caller.
+    public func setHistoryRetention(days: Int?) throws {
+        try configuration.update(expectedRevision: expectedRevision) { $0.historyRetentionDays = days }
+        audit.record("history.retention", days.map { ["days": String($0)] } ?? [:])
+        pruneHistory()
+    }
+    /// Applies the retention setting; run on every CLI call and when the app loads.
+    @discardableResult public func pruneHistory(now: Date = Date()) -> Int {
+        guard let days = (try? configuration.load())?.historyRetentionDays, days > 0,
+              let removed = try? audit.prune(olderThan: now.addingTimeInterval(-Double(days) * 86_400)), removed > 0 else { return 0 }
+        audit.record("history.pruned", ["entries": String(removed), "days": String(days)])
+        return removed
     }
     public func saveTarget(_ target: Target) throws {
         try configuration.update(expectedRevision: expectedRevision) { config in

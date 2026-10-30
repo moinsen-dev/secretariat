@@ -27,6 +27,7 @@
 | T021 | ERLEDIGT | E936,E937,E938 | Regression auf Release 1.12.0 (5663ea0) |
 | T022 | ERLEDIGT | E939,E940,E941 | Regression auf Release 1.12.0 (5663ea0) |
 | T023 | ERLEDIGT | E888,E889,E890 | Lokal aus Screenshot vorausgefüllt, 3 GUI-Läufe; released als 1.12.0 |
+| T024 | IN_ARBEIT | - | Verlauf mit Herkunft |
 
 ## Evidence
 

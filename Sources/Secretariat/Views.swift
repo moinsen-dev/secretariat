@@ -127,6 +127,7 @@ struct MainView: View {
                 Label("Targets", systemImage: "arrow.up.forward.app").tag("targets")
                 Label("Templates", systemImage: "square.grid.2x2").tag("templates")
                 Label("Screenshots", systemImage: "photo.on.rectangle").badge(model.screenshots.count).tag("screenshots")
+                Label("History", systemImage: "clock.arrow.circlepath").tag("history")
             }
         }
         .listStyle(.sidebar)
@@ -186,6 +187,8 @@ struct MainView: View {
             } description: {
                 Text("Your existing data is kept. Please check the configuration and reload.")
             } actions: { Button("Reload") { model.reload() } }
+        } else if model.selection == "history" {
+            HistorySummary(model: model)
         } else if model.selection == "screenshots" {
             // Searching here filters the screenshots by title and note.
             ScreenshotList(model: model, query: query)
@@ -420,7 +423,9 @@ struct MainView: View {
     // MARK: Detail column
 
     @ViewBuilder private var detail: some View {
-        if model.selection == "screenshots" {
+        if model.selection == "history" {
+            HistoryList(model: model)
+        } else if model.selection == "screenshots" {
             if let shot = model.screenshots.first(where: { $0.id == model.selectedScreenshot }) {
                 ScreenshotDetail(model: model, shot: shot).id(shot.id)
             } else {
@@ -592,11 +597,11 @@ struct ItemDetail: View {
                     Text(revealed[field.name] ?? "••••••••").font(.system(.body, design: .monospaced))
                         .foregroundStyle(revealed[field.name] == nil ? .tertiary : .primary).textSelection(.enabled).lineLimit(3)
                     Button {
-                        if revealed[field.name] == nil { revealed[field.name] = model.secretValue(item, field) }
+                        if revealed[field.name] == nil { revealed[field.name] = model.secretValue(item, field, for: "show") }
                         else { revealed[field.name] = nil }
                     } label: { Image(systemName: revealed[field.name] == nil ? "eye" : "eye.slash") }
                         .buttonStyle(.borderless).help(revealed[field.name] == nil ? "Show" : "Hide")
-                    copyButton(field, secret: true) { model.secretValue(item, field) }
+                    copyButton(field, secret: true) { model.secretValue(item, field, for: "copy") }
                 case .file:
                     Label(field.fileName ?? "File", systemImage: "doc").lineLimit(1)
                     Button("Export …") { model.exportFile(item, field) }
