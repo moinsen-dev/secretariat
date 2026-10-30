@@ -1597,6 +1597,8 @@
 | RV464 | UC20 | self | PASS | a0676329b1cfb99a40a6da5b | docs/regression-1.13.1.md |
 | RV465 | UC05 | self | PASS | e2cba7dafc1ab594ba21ac5c | docs/release-1.13.1.md |
 | RV466 | UC07 | self | PASS | 1a7812c597fc3f70097b32c8 | docs/release-1.13.1.md |
+| RV467 | UC05 | self | PASS | c402703becefd7ffb4670dc2 | docs/release-1.13.1.md |
+| RV468 | UC07 | self | PASS | 01a870553ab709ac5bbd49e2 | docs/release-1.13.1.md |
 
 ## Releases
 
@@ -1621,5 +1623,6 @@
 | L017 | D001 | LOCAL | 681b9bb | /Users/udi/Applications/Secretariat.app | E844,E845,E851,E852,E853,E854 |
 | L018 | D001 | LOCAL | 5663ea0 | /Users/udi/Applications/Secretariat.app | E898,E899,E905,E906,E907,E908 |
 | L019 | D001 | LOCAL | 1ce097f | /Users/udi/Applications/Secretariat.app | E961,E962,E968,E969,E970,E971 |
+| L020 | D001 | LOCAL | e1ad159 | /Users/udi/Applications/Secretariat.app | E1033,E1034,E1040,E1041,E1042,E1043 |
 
 Status, Beleg und Kritik sind unterschiedliche Angaben. `Evidence` in der Aufgabenzeile referenziert die für ihren Abschluss maßgeblichen Beleg-IDs. Ältere Belege dürfen als Historie bleiben. Bei Reviews ist die letzte Zeile je Scope maßgeblich.
