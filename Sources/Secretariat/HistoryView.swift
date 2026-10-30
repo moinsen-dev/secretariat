@@ -55,7 +55,14 @@ struct HistorySummary: View {
                         .foregroundStyle(.secondary)
                 }
 
-                Color.clear.frame(height: 150)
+                Chart(History.buckets(shown, model.historyPeriod)) { bucket in
+                    BarMark(x: .value("Time", bucket.start, unit: model.historyPeriod.bucket), y: .value("Accesses", bucket.count))
+                        .foregroundStyle(by: .value("Origin", Origin.title(bucket.via)))
+                }
+                .chartXScale(domain: model.historyPeriod.start(now: Date())...Date())
+                .chartLegend(position: .bottom, alignment: .leading)
+                .frame(height: 170)
+                .accessibilityLabel("Accesses over the last \(model.historyPeriod.title.lowercased()), by origin")
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Origin").font(.headline)
@@ -87,7 +94,7 @@ struct HistorySummary: View {
                 Toggle("Delete entries older than 30 days", isOn: SwiftUI.Binding(
                     get: { model.configuration.historyRetentionDays != nil }, set: { model.setHistoryRetention($0) }))
                 Text("Only this Mac's history. The origin is what the calling program reports; an agent can hide it. Names only, never values.")
-                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.caption).foregroundStyle(.secondary)
             }
             .padding(10).frame(maxWidth: .infinity, alignment: .leading).background(.bar)
         }
@@ -128,3 +135,4 @@ struct HistoryList: View {
         }
     }
 }
+

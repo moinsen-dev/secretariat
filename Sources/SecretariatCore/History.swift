@@ -118,39 +118,46 @@ public enum HistoryPeriod: String, CaseIterable, Identifiable, Sendable {
 
 public enum History {
     /// Parses audit.log lines; lines without an origin come from before 1.13 and count as "earlier", unreadable ones are skipped.
-    /// One JSON pass over all lines keeps a year of heavy use (200,000 lines) well under two seconds.
+    /// One JSON pass over the whole file keeps a year of heavy use (200,000 lines) well under two seconds; a damaged
+    /// line makes it fall back to reading line by line.
     public static func parse(_ text: String) -> [HistoryEntry] {
-        let lines = text.split(separator: "\n", omittingEmptySubsequences: true)
+        let body = text.trimmingCharacters(in: .whitespacesAndNewlines)
         let objects: [Any?]
-        if let all = try? JSONSerialization.jsonObject(with: Data(("[" + lines.joined(separator: ",") + "]").utf8)) as? [Any] {
+        if body.isEmpty {
+            objects = []
+        } else if let all = try? JSONSerialization.jsonObject(with: Data(("[" + body.replacingOccurrences(of: "\n", with: ",") + "]").utf8)) as? [Any] {
             objects = all
         } else {
-            objects = lines.map { try? JSONSerialization.jsonObject(with: Data($0.utf8)) }
+            objects = text.split(separator: "\n", omittingEmptySubsequences: true).map { try? JSONSerialization.jsonObject(with: Data($0.utf8)) }
         }
-        return objects.enumerated().compactMap { index, object in
-            guard let object = object as? [String: Any], let action = object["action"] as? String,
-                  let at = (object["at"] as? String).flatMap(date) else { return nil }
-            var details: [String: String] = [:]
-            for (key, value) in object where !["action", "at", "via"].contains(key) { details[key] = value as? String ?? "\(value)" }
-            return HistoryEntry(id: index, at: at, action: action, via: object["via"] as? String ?? Origin.earlier, details: details)
+        var entries: [HistoryEntry] = []
+        entries.reserveCapacity(objects.count)
+        for (index, object) in objects.enumerated() {
+            guard var details = object as? [String: Any], let action = details.removeValue(forKey: "action") as? String,
+                  let at = (details.removeValue(forKey: "at") as? String).flatMap(date) else { continue }
+            let via = details.removeValue(forKey: "via") as? String ?? Origin.earlier
+            entries.append(HistoryEntry(id: index, at: at, action: action, via: via,
+                                        details: details.mapValues { $0 as? String ?? "\($0)" }))
         }
+        return entries
     }
 
     /// "2026-10-29T17:40:01Z" without a formatter (the formatter dominated parsing); other forms fall back to it.
     static func date(_ text: String) -> Date? {
-        let u = Array(text.utf8)
-        guard u.count == 20, u[4] == 45, u[7] == 45, u[10] == 84, u[13] == 58, u[16] == 58, u[19] == 90 else {
-            return ISO8601DateFormatter().date(from: text)
+        var text = text
+        let parsed: Date?? = text.withUTF8 { u -> Date?? in
+            guard u.count == 20, u[4] == 45, u[7] == 45, u[10] == 84, u[13] == 58, u[16] == 58, u[19] == 90 else { return .none }
+            func number(_ from: Int, _ to: Int) -> Int32? {
+                var n: Int32 = 0
+                for i in from..<to { let c = u[i]; guard c >= 48, c <= 57 else { return nil }; n = n * 10 + Int32(c - 48) }
+                return n
+            }
+            guard let year = number(0, 4), let month = number(5, 7), let day = number(8, 10),
+                  let hour = number(11, 13), let minute = number(14, 16), let second = number(17, 19) else { return .some(nil) }
+            var t = tm(); t.tm_year = year - 1900; t.tm_mon = month - 1; t.tm_mday = day; t.tm_hour = hour; t.tm_min = minute; t.tm_sec = second
+            return .some(Date(timeIntervalSince1970: TimeInterval(timegm(&t))))
         }
-        func number(_ range: Range<Int>) -> Int32? {
-            var n: Int32 = 0
-            for c in u[range] { guard c >= 48, c <= 57 else { return nil }; n = n * 10 + Int32(c - 48) }
-            return n
-        }
-        guard let year = number(0..<4), let month = number(5..<7), let day = number(8..<10),
-              let hour = number(11..<13), let minute = number(14..<16), let second = number(17..<19) else { return nil }
-        var t = tm(); t.tm_year = year - 1900; t.tm_mon = month - 1; t.tm_mday = day; t.tm_hour = hour; t.tm_min = minute; t.tm_sec = second
-        return Date(timeIntervalSince1970: TimeInterval(timegm(&t)))
+        return parsed ?? ISO8601DateFormatter().date(from: text)
     }
 
     /// Entries of a period, newest first, optionally of one origin.
