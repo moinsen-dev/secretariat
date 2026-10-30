@@ -7,9 +7,9 @@
 - phase: P21
 - use_case: UC21
 - task: T026
-- next: 1.13.0 lokal installiert und notarisiert; MCP-Tokens umgestellt. Wartet auf Uli: Sicherung im echten Tresor einrichten, Wiederherstellen + Schlüssel prüfen in der App, iCloud-Datei auslagern/öffnen; Go für Push, Website-Deploy, mesh deliver
-- updated: 2026-10-30T18:35:53+00:00
-- plan_sha256: c6e2ef9d2801f49b44eac62eff80a305dba40794d44e17c38f4992a49f294c8a
-- tracker_sha256: aa026c94424660883da16467434e6421f702aebd8d7fb84626cb055a43a4cabc
+- next: 1.13.1 (Needs a Value) im Release. Wartet auf Uli: Sicherung im echten Tresor einrichten, Wiederherstellen + Schlüssel prüfen in der App, iCloud-Datei auslagern/öffnen
+- updated: 2026-10-30T20:32:33+00:00
+- plan_sha256: e3180757baf656e936ff54765faa323eb26729fb6596bb7758bbb000db890c53
+- tracker_sha256: 2ed1bef7a26a0c2569689f09455df9e174d2c2cd8d231d6616713fe79ee0d7dd
 
 Einstieg: `AGENTS.md`. Verbindliche Aufgabenstatus und Nachweise: `TRACKER.md`. Diese Zusammenfassung mit dem Werkzeug aus Plan und Tracker aktualisieren.
