@@ -246,6 +246,10 @@ import Testing
     let file = f.root.appendingPathComponent("token.txt"); FileManager.default.createFile(atPath: file.path, contents: nil)
     let handle = try FileHandle(forWritingTo: file); defer { try? handle.close() }
     #expect(CommandLineInterface.headerRefusal(stdout: handle.fileDescriptor, environment: [:]) != nil)
+    // Node (Claude Code) hands its children a socket pair as stdout.
+    var pair: [Int32] = [0, 0]
+    #expect(socketpair(AF_UNIX, SOCK_STREAM, 0, &pair) == 0); defer { close(pair[0]); close(pair[1]) }
+    #expect(CommandLineInterface.headerRefusal(stdout: pair[0], environment: [:]) == nil)
     // The MCP tool run_command marks its children, so a header call there would be refused.
     let (run, _) = McpServer.call("run_command", ["profile": "agent-test", "command": ["/bin/sh", "-c", "echo marked=$SECRETARIAT_MCP_CHILD"]], service: f.service, executable: "/tmp/s")
     #expect(run.contains("marked=1"))

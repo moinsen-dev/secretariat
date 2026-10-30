@@ -6,7 +6,7 @@ Stand: Korrekturen nach Kritik (Commit siehe Tracker), erster Lauf auf 08ddbe7, 
 
 | Schritt | Erwartung | Beobachtung |
 |---|---|---|
-| `xcrun swift test`, 4× hintereinander | grün | 71/71 viermal. Neu: `headerPrintsOneJsonHeaderForTheMcpClient` (Bearer- und `--name`-Ausgabe, Persönlich-Feld → `personal_field`, Header-Name mit CR/LF → `invalid_arguments`, unbekanntes Feld, fehlendes Argument, Protokoll mit `header` ohne Wert, Touch-ID-Eintrag verweigert → `approval_denied`); Agenten-Wache verweigert `secretariat header … --bearer` und `~/bin/secretariat header a/b \| cat` |
+| `xcrun swift test`, 4× hintereinander | grün | 71/71 viermal (nach den Korrekturen 72/72, mit Socket-Test 73/73). Neu: `headerPrintsOneJsonHeaderForTheMcpClient` (Bearer- und `--name`-Ausgabe, Persönlich-Feld → `personal_field`, Header-Name mit CR/LF → `invalid_arguments`, unbekanntes Feld, fehlendes Argument, Protokoll mit `header` ohne Wert, Touch-ID-Eintrag verweigert → `approval_denied`); Agenten-Wache verweigert `secretariat header … --bearer` und `~/bin/secretariat header a/b \| cat` |
 | Wackelnder Test | stabil | `setupPreservesExistingBytesAndIsIdempotent` schlug vorher in etwa jedem dritten Lauf mit `setup_busy` fehl: Kindprozesse anderer Tests erbten den gesperrten Ordner-Deskriptor. Mit `O_CLOEXEC` 4 von 4 Läufen grün |
 | UC20 (1): `dist/…/Secretariat header moinsen/tinideas/mcp/token --bearer` in eine Pipe zu einem Formprüfer | ein Schlüssel `Authorization`, Wert beginnt mit `Bearer tid_` | `shape ok: ['Authorization'] True 54`; der Wert selbst wurde nie ausgegeben |
 | UC20 (2): derselbe Aufruf mit Terminal als stdout (`script -q /dev/null …`) und mit `> datei` | Abbruch ohne Wert | Terminal: „… not for a terminal …“; Datei: Exit 1, Datei enthält nur den Hinweis, `grep -c tid_` → 0 |
@@ -26,6 +26,7 @@ Unabhängige Kritik (REWORK) fand fünf Punkte, alle behoben und erneut gelaufen
 
 ## Grenzen
 
+- Im MCP-Werkzeug `run_command` bestimmt der Agent die ganze argv und kann `SECRETARIAT_MCP_CHILD` absichtlich entfernen (`env -u …`). Die Markierung fängt versehentliche Aufrufe, keine Absicht. Startet `run_command` seinerseits Claude Code, schlägt dessen headersHelper fehl (sicher: keine Ausgabe).
 - Ein Agent kann den Namen absichtlich verschleiern (Anführungszeichen, Variable); die Wache ist ein Gurt gegen versehentliche Aufrufe, keine Sicherheitsgrenze.
 - Die Wache greift nur bei Agenten mit installiertem Claude-Code-Hook (`secretariat guard claude install`). Ein Programm, das Secretariat ohne Hook direkt in eine Pipe aufruft, bekommt den Wert, genau wie mit `run --no-mask`. Das ist dieselbe Grenze wie bisher, nicht neu.
 - Die Umstellung des bestehenden TinIdeas-Eintrags von `~/bin/mcp-bearer` auf `secretariat header` folgt nach der Installation von 1.13.0; bis dahin ist `~/bin/secretariat` noch 1.12.0.
