@@ -27,8 +27,10 @@ public protocol LicenseStore {
 public struct SyncedLicenseStore: LicenseStore {
     public let service: String
     public let accessGroup: String?
-    public init(service: String, accessGroup: String? = SyncedItemStore.accessGroup) {
-        self.service = service; self.accessGroup = accessGroup
+    /// Shown in Keychain Access; the same small synced store also keeps the backup public key.
+    public let label: String
+    public init(service: String, accessGroup: String? = SyncedItemStore.accessGroup, label: String = "Secretariat license") {
+        self.service = service; self.accessGroup = accessGroup; self.label = label
     }
     private func query(_ key: String) -> [String: Any] {
         var query: [String: Any] = [
@@ -50,7 +52,7 @@ public struct SyncedLicenseStore: LicenseStore {
     }
     public func write(_ key: String, _ data: Data) throws {
         var query = query(key)
-        let attributes: [String: Any] = [kSecValueData as String: data, kSecAttrLabel as String: "Secretariat license · \(key)"]
+        let attributes: [String: Any] = [kSecValueData as String: data, kSecAttrLabel as String: "\(label) · \(key)"]
         var status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
         if status == errSecItemNotFound {
             query.merge(attributes) { _, new in new }

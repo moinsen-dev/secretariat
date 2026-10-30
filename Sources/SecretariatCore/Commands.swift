@@ -655,6 +655,21 @@ public enum Commands {
                         "targets: \(targets.isEmpty ? "none" : targets.map { "\($0.name)\($0.stale.isEmpty && $0.never.isEmpty && $0.missing.isEmpty ? " ok" : " stale \($0.stale.count) never \($0.never.count) missing \($0.missing.count)")" }.joined(separator: ", "))"]
             return (0, try json(out), text.joined(separator: "\n"))
 
+        case ("backup", "status"):
+            _ = try Arguments(all.dropFirst(2), usage: usage)
+            let status = Backup.status(vault: vault)
+            struct Out: Encodable { let schemaVersion = 2; let ok = true; let backup: Backup.Status }
+            let text = status.configured
+                ? "Backup on (key \(status.key ?? "?")), \(status.location == "icloud" ? "in iCloud Drive" : "on this Mac only"): "
+                    + "\(status.files.count) files, newest \(status.files.first ?? "none")"
+                : "Backup isn't set up. Set it up in the Secretariat app (Library → Backup)."
+            return (0, try json(Out(backup: status)), text)
+        case ("backup", "now"):
+            _ = try Arguments(all.dropFirst(2), usage: usage)
+            let url = try Backup.write(vault: vault)
+            return try done("Backup written: \(url.lastPathComponent)")
+        case ("backup", _):
+            throw AgentError("invalid_arguments", "Usage: secretariat backup status|now [--json]. Setting up and restoring happen in the app.")
         case ("history", _):
             let a = try Arguments(all.dropFirst(), values: ["--period", "--via", "--lines"], usage: usage)
             // Read only: automatic deletion is switched in the app, so an agent can't turn it on to wipe its traces.

@@ -171,6 +171,8 @@ public enum CommandLineInterface {
       secretariat status [--days N] [--json]          overview: counts, expiring items, Touch ID items, targets, recent log
       secretariat screenshots [--json]                how many encrypted screenshots this Mac can open (counts only)
       secretariat registry export · scan [FOLDER] [--json] · log [--lines N] · --version
+      secretariat backup status [--json]              automatic encrypted backup: key id, where, newest files (set up in the app)
+      secretariat backup now [--json]                 back up right away (sealed to the backup key; only the recovery key opens it)
       secretariat history [--period day|week|month|quarter|year] [--via ORIGIN] [--lines N] [--json]
                                                      who used what on this Mac: app, terminal, script, MCP client or agent
 
@@ -235,6 +237,8 @@ public enum CommandLineInterface {
         default:
             let executable = Bundle.main.executableURL?.path ?? URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL.path
             let code = try Commands.execute(arguments, service: AgentService(vault: vault), executable: executable)
+            // Once a day from the CLI too, for Macs where the app rarely runs; never in the header helper's path.
+            if !["header", "backup", "guard"].contains(arguments.first ?? "") { Backup.automatic(vault: vault, onlyDaily: true) }
             // The trial reminder goes to people at a terminal only; agents, pipes and values stay untouched.
             if isatty(STDERR_FILENO) == 1, isatty(STDOUT_FILENO) == 1, !arguments.contains("--json"),
                !["get", "inject", "license"].contains(arguments.first ?? ""), let reminder = Licensing.reminder(vault.licensing.state()) {
