@@ -189,6 +189,8 @@ final class AppModel {
     var backupStatus: Backup.Status?
     var backingUp = false
     var backupAgain = false
+    /// Stored values that are .env comments or template placeholders (names only), for "Needs a Value".
+    var valueProblems: [Placeholder.Problem] = []
     var backupSetup: BackupSetupDraft?
     var showRestore = false
     var history: [HistoryEntry] = []
@@ -246,6 +248,18 @@ final class AppModel {
         // The retention set in History applies on every start and return to the app, off the main thread.
         if selection == "history" { loadHistory() } else { let paths = paths; Task.detached { Vault(paths: paths).pruneHistory() } }
         backUpAutomatically()
+        refreshValueProblems()
+    }
+    /// Reads the stored values off the main thread and keeps only the names of those that aren't real values.
+    func refreshValueProblems() {
+        let paths = paths
+        Task {
+            let problems = await Task.detached { Placeholder.scan(Vault(paths: paths)) }.value
+            if problems != valueProblems { valueProblems = problems }
+        }
+    }
+    func valueProblem(_ item: ItemMeta, _ field: ItemField) -> String? {
+        valueProblems.first { $0.reference == "\(item.path)/\(field.name)" }?.reason
     }
     func activateLicense(_ text: String) throws {
         try Vault(paths: paths).licensing.activate(text)

@@ -94,6 +94,10 @@ struct MainView: View {
     private var stored: [ItemMeta] { model.items.filter { !Capture.isCapture($0) } }
     private var expiring: [ItemMeta] { stored.filter { (daysUntil($0.expires) ?? .max) <= 30 } }
     private var guarded: [ItemMeta] { stored.filter(\.needsApproval) }
+    private var needingValues: [ItemMeta] {
+        let paths = Set(model.valueProblems.map { $0.reference.split(separator: "/").dropLast().joined(separator: "/") })
+        return stored.filter { paths.contains($0.path) }
+    }
     private var accounts: [(name: String, count: Int)] {
         Dictionary(grouping: stored, by: \.group).map { ($0.key, $0.value.count) }.sorted { $0.name < $1.name }
     }
@@ -130,6 +134,10 @@ struct MainView: View {
                 Label("Templates", systemImage: "square.grid.2x2").tag("templates")
                 Label("Screenshots", systemImage: "photo.on.rectangle").badge(model.screenshots.count).tag("screenshots")
                 Label("History", systemImage: "clock.arrow.circlepath").tag("history")
+                if !needingValues.isEmpty {
+                    Label("Needs a Value", systemImage: "exclamationmark.triangle").badge(needingValues.count).tag("placeholders")
+                        .help("Items whose stored value is a .env comment or a template placeholder, not a real key")
+                }
                 Label("Backup", systemImage: "externaldrive.badge.icloud")
                     .badge(model.backupStatus?.configured == false ? Text("Off") : nil).tag("backup")
             }
@@ -169,6 +177,7 @@ struct MainView: View {
         case "inbox": return inbox.sorted { (Capture.capturedAt($0) ?? "") > (Capture.capturedAt($1) ?? "") }
         case "expiring": return expiring.sorted { ($0.expires ?? "") < ($1.expires ?? "") }
         case "approval": return guarded
+        case "placeholders": return needingValues
         case let s where s.hasPrefix("group:"): return stored.filter { $0.group == s.dropFirst(6) }
         default: return stored
         }
@@ -179,6 +188,7 @@ struct MainView: View {
         case "inbox": return "Inbox"
         case "expiring": return "Expiring"
         case "approval": return "Touch ID"
+        case "placeholders": return "Needs a Value"
         case let s where s.hasPrefix("group:"): return String(s.dropFirst(6))
         default: return "All Items"
         }
@@ -572,7 +582,13 @@ struct ItemDetail: View {
                 }
             }
             Section("Fields") {
-                ForEach(item.fields) { field in fieldRow(field) }
+                ForEach(item.fields) { field in
+                    fieldRow(field)
+                    if let problem = model.valueProblem(item, field) {
+                        Label("The stored value \(problem). Enter the real key with Edit, or remove the field.", systemImage: "exclamationmark.triangle.fill")
+                            .font(.callout).foregroundStyle(.orange)
+                    }
+                }
             }
             Section("Details") {
                 if !item.source.isEmpty { LabeledContent("Source") { Text(item.source).textSelection(.enabled) } }
