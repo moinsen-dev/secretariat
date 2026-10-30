@@ -116,7 +116,7 @@ struct BackupSummary: View {
                     VStack(alignment: .leading, spacing: 6) {
                         row("Last backup", status.last.map { $0.formatted(date: .abbreviated, time: .shortened) } ?? "none yet")
                         row("Where", status.location == "icloud" ? "iCloud Drive (Secretariat)" : "This Mac only")
-                        row("Kept", "\(status.files.count) files · newest 30 per Mac")
+                        row("Kept", "\(status.files.count) \(status.files.count == 1 ? "file" : "files") · newest 30 per Mac")
                         row("Recovery key", status.key ?? "?")
                     }
                     if status.location != "icloud" {

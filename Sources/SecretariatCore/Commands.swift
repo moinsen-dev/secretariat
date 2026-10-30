@@ -661,7 +661,7 @@ public enum Commands {
             struct Out: Encodable { let schemaVersion = 2; let ok = true; let backup: Backup.Status }
             let text = (status.configured
                 ? "Backup on (key \(status.key ?? "?")), \(status.location == "icloud" ? "in iCloud Drive" : "on this Mac only"): "
-                    + "\(status.files.count) files, last from this Mac \(status.last.map { ISO8601DateFormatter().string(from: $0) } ?? "none")"
+                    + "\(status.files.count) \(status.files.count == 1 ? "file" : "files"), last from this Mac \(status.last.map { ISO8601DateFormatter().string(from: $0) } ?? "none")"
                 : "Backup isn't set up. Set it up in the Secretariat app (Library → Backup).")
                 + (status.problem.map { "\nWarning: \($0)" } ?? "")
             return (0, try json(Out(backup: status)), text)
