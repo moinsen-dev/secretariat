@@ -60,15 +60,30 @@ public struct BackupMac: Equatable, Sendable {
     public var label: String { "\(name)-\(id)" }
     public init(name: String, id: String) { self.name = name; self.id = id }
 
+    /// The id lives in this Mac's keychain only (not synced, not moved by Migration Assistant), so a migrated Mac
+    /// gets its own; builds without keychain access (tests) keep it in a file instead.
     public static func current(paths: AppPaths) -> BackupMac {
+        let name = slug((SCDynamicStoreCopyComputerName(nil, nil) as String?) ?? "mac")
+        let valid = { (id: String?) -> String? in id.flatMap { $0.range(of: "^[0-9a-f]{8}$", options: .regularExpression) != nil ? $0 : nil } }
+        var query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: paths.backupKeyService + ".mac",
+            kSecAttrAccount as String: "id", kSecUseDataProtectionKeychain as String: true, kSecAttrSynchronizable as String: false,
+            kSecAttrAccessGroup as String: SyncedItemStore.accessGroup,
+        ]
+        var lookup = query; lookup[kSecReturnData as String] = true
+        var result: CFTypeRef?
+        if SecItemCopyMatching(lookup as CFDictionary, &result) == errSecSuccess,
+           let id = valid((result as? Data).map { String(decoding: $0, as: UTF8.self) }) { return BackupMac(name: name, id: id) }
+        let fresh = (0..<4).map { _ in String(format: "%02x", UInt8.random(in: 0...255)) }.joined()
+        query[kSecValueData as String] = Data(fresh.utf8)
+        query[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        query[kSecAttrLabel as String] = "Secretariat backup · this Mac"
+        if SecItemAdd(query as CFDictionary, nil) == errSecSuccess { return BackupMac(name: name, id: fresh) }
         let file = paths.directory.appendingPathComponent("backup-mac-id")
-        var id = (try? String(contentsOf: file, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if id.range(of: "^[0-9a-f]{8}$", options: .regularExpression) == nil {
-            id = (0..<4).map { _ in String(format: "%02x", UInt8.random(in: 0...255)) }.joined()
-            try? FileManager.default.createDirectory(at: paths.directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
-            FileManager.default.createFile(atPath: file.path, contents: Data(id.utf8), attributes: [.posixPermissions: 0o600])
-        }
-        return BackupMac(name: slug((SCDynamicStoreCopyComputerName(nil, nil) as String?) ?? "mac"), id: id)
+        if let id = valid((try? String(contentsOf: file, encoding: .utf8))?.trimmingCharacters(in: .whitespacesAndNewlines)) { return BackupMac(name: name, id: id) }
+        try? FileManager.default.createDirectory(at: paths.directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        FileManager.default.createFile(atPath: file.path, contents: Data(fresh.utf8), attributes: [.posixPermissions: 0o600])
+        return BackupMac(name: name, id: fresh)
     }
     static func slug(_ text: String) -> String {
         let slug = text.lowercased().folding(options: .diacriticInsensitive, locale: nil)
@@ -116,6 +131,8 @@ public enum Backup {
         public var day: String
         public var mac: String
         public var macID: String
+        /// The backup key it is sealed to, so old-key backups can be found without downloading them.
+        public var key: String
         /// iCloud keeps only a placeholder on this Mac; it is downloaded when opened.
         public var inCloudOnly: Bool
     }
@@ -163,7 +180,8 @@ public enum Backup {
         return (paths.directory.appendingPathComponent("backups", isDirectory: true), "local")
     }
 
-    /// "2026-10-30-ulis-macbook-pro-3fa9c2d1.secretariat-backup", also as iCloud placeholder ".<name>.icloud". Newest first.
+    /// "2026-10-30-ulis-macbook-pro-3fa9c2d1-2c44d59b3c3f.secretariat-backup" (day, Mac, Mac id, key id), also as
+    /// iCloud placeholder ".<name>.icloud". Newest first.
     public static func files(in directory: URL) -> [File] {
         let names = (try? FileManager.default.contentsOfDirectory(atPath: directory.path)) ?? []
         var files: [String: File] = [:]
@@ -177,12 +195,8 @@ public enum Backup {
     }
     static func parse(_ name: String, inCloudOnly: Bool) -> File? {
         let stem = String(name.dropLast(suffix.count))
-        guard stem.count > 20, stem.dropFirst(10).first == "-", let dash = stem.lastIndex(of: "-") else { return nil }
-        let day = String(stem.prefix(10)), id = String(stem[stem.index(after: dash)...])
-        let mac = String(stem[stem.index(stem.startIndex, offsetBy: 11)..<dash])
-        guard day.range(of: #"^\d{4}-\d{2}-\d{2}$"#, options: .regularExpression) != nil,
-              id.range(of: "^[0-9a-f]{8}$", options: .regularExpression) != nil, !mac.isEmpty else { return nil }
-        return File(name: name, day: day, mac: mac, macID: id, inCloudOnly: inCloudOnly)
+        guard let match = stem.wholeMatch(of: /(\d{4}-\d{2}-\d{2})-(.+)-([0-9a-f]{8})-([0-9a-f]{12})/) else { return nil }
+        return File(name: name, day: String(match.1), mac: String(match.2), macID: String(match.3), key: String(match.4), inCloudOnly: inCloudOnly)
     }
 
     public static func status(vault: Vault, now: Date = Date()) -> Status {
@@ -219,13 +233,28 @@ public enum Backup {
         let paths = vault.configuration.paths
         let mac = mac ?? BackupMac.current(paths: paths)
         guard publicKey(vault: vault) != nil else { throw notSetUp() }
-        do {
-            let payload = try payload(vault: vault)
-            return try seal(payload, encoded: try encoder.encode(payload), vault: vault, now: now, mac: mac)
-        } catch {
-            try? state(vault: vault).update { $0.error = error.localizedDescription }
-            throw error
+        return try locked(vault) {
+            do {
+                let payload = try payload(vault: vault)
+                return try seal(payload, encoded: try encoder.encode(payload), vault: vault, now: now, mac: mac)
+            } catch {
+                try? state(vault: vault).update { $0.error = error.localizedDescription }
+                throw error
+            }
         }
+    }
+
+    /// App and CLI back up under one lock, from reading the vault to recording the state, so an older read can't
+    /// be written last or marked as the current one.
+    static func locked<T>(_ vault: Vault, _ body: () throws -> T) throws -> T {
+        let directory = vault.configuration.paths.directory
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        let descriptor = Darwin.open(directory.appendingPathComponent("backup.lock").path, O_CREAT | O_RDWR | O_NOFOLLOW | O_CLOEXEC, 0o600)
+        guard descriptor >= 0 else { throw SecretariatError("The backup lock can't be opened.") }
+        defer { close(descriptor) }
+        guard flock(descriptor, LOCK_EX) == 0 else { throw SecretariatError("Another backup is running.") }
+        defer { _ = flock(descriptor, LOCK_UN) }
+        return try body()
     }
 
     static func seal(_ payload: Payload, encoded: Data, vault: Vault, now: Date, mac: BackupMac) throws -> URL {
@@ -240,7 +269,7 @@ public enum Backup {
         var file = headerData; file.append(0x0A); file.append(sealed.base64EncodedData()); file.append(0x0A)
 
         let day = ISO8601DateFormatter.string(from: now, timeZone: .current, formatOptions: [.withFullDate])
-        let url = directory.appendingPathComponent("\(day)-\(mac.label)\(suffix)")
+        let url = directory.appendingPathComponent("\(day)-\(mac.label)-\(header.key)\(suffix)")
         // Staged outside the iCloud container, then moved in under file coordination.
         let temporary = paths.directory.appendingPathComponent(".backup-\(UUID().uuidString).tmp")
         defer { try? FileManager.default.removeItem(at: temporary) }
@@ -248,12 +277,19 @@ public enum Backup {
             throw SecretariatError("The backup could not be staged in \(paths.directory.path).")
         }
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
+        // Today's file may exist only as iCloud placeholder; moving next to it would make iCloud keep both.
+        let placeholder = directory.appendingPathComponent(".\(url.lastPathComponent).icloud")
+        if FileManager.default.fileExists(atPath: placeholder.path) { try? FileManager.default.removeItem(at: placeholder) }
         try coordinate(writing: url, options: .forReplacing) { target in
             if FileManager.default.fileExists(atPath: target.path) {
                 _ = try FileManager.default.replaceItemAt(target, withItemAt: temporary)
             } else {
                 try FileManager.default.moveItem(at: temporary, to: target)
             }
+        }
+        // One file per Mac and day: an earlier one of today sealed to another key goes; then the newest 30 stay.
+        for other in files(in: directory) where other.macID == mac.id && other.day == day && other.name != url.lastPathComponent {
+            try? coordinate(writing: directory.appendingPathComponent(other.name), options: .forDeleting) { try FileManager.default.removeItem(at: $0) }
         }
         for old in files(in: directory).filter({ $0.macID == mac.id }).dropFirst(kept) {
             try? coordinate(writing: directory.appendingPathComponent(old.name), options: .forDeleting) { try FileManager.default.removeItem(at: $0) }
@@ -269,27 +305,30 @@ public enum Backup {
     @discardableResult public static func automatic(vault: Vault, now: Date = Date(), onlyDaily: Bool = false, mac: BackupMac? = nil) -> URL? {
         guard publicKey(vault: vault) != nil else { return nil }
         let store = state(vault: vault)
-        let last = try? store.read()
-        let today = (last?.at).map { Calendar.current.isDate($0, inSameDayAs: now) } ?? false
-        if today && onlyDaily { return nil }
-        do {
-            let payload = try payload(vault: vault)
-            let encoded = try encoder.encode(payload)
-            if today, let fingerprint = try? store.fingerprint(encoded), fingerprint == last?.fingerprint { return nil }
-            return try seal(payload, encoded: encoded, vault: vault, now: now, mac: mac ?? BackupMac.current(paths: vault.configuration.paths))
-        } catch {
-            try? store.update { $0.error = error.localizedDescription }
-            return nil
-        }
+        if onlyDaily, let at = (try? store.read())?.at, Calendar.current.isDate(at, inSameDayAs: now) { return nil }
+        let mac = mac ?? BackupMac.current(paths: vault.configuration.paths)
+        return try? locked(vault) { () -> URL? in
+            let last = try? store.read()
+            let today = (last?.at).map { Calendar.current.isDate($0, inSameDayAs: now) } ?? false
+            if today && onlyDaily { return nil }
+            do {
+                let payload = try payload(vault: vault)
+                let encoded = try encoder.encode(payload)
+                if today, let fingerprint = try? store.fingerprint(encoded), fingerprint == last?.fingerprint { return nil }
+                return try seal(payload, encoded: encoded, vault: vault, now: now, mac: mac)
+            } catch {
+                try? store.update { $0.error = error.localizedDescription }
+                return nil
+            }
+        } ?? nil
     }
 
     /// After a suspected leak: removes every backup not sealed to the current key. Returns how many went.
     @discardableResult public static func removeBackups(notSealedTo key: String, vault: Vault) -> Int {
         let (directory, _) = directory(paths: vault.configuration.paths)
         var removed = 0
-        for file in files(in: directory) {
+        for file in files(in: directory) where file.key != key {
             let url = directory.appendingPathComponent(file.name)
-            guard let header = try? header(of: url), header.key != key else { continue }
             if (try? coordinate(writing: url, options: .forDeleting) { try FileManager.default.removeItem(at: $0) }) != nil { removed += 1 }
         }
         vault.audit.record("backup.removed", ["files": String(removed)])
@@ -355,7 +394,7 @@ public enum Backup {
         let present = try vault.list()
         for stored in payload.items where !present.contains(where: { $0.id == stored.meta.id }) {
             if present.contains(where: { $0.path.lowercased() == stored.meta.path.lowercased() }) { result.skipped.append(stored.meta.path); continue }
-            do { try vault.items.save(stored.meta, secrets: stored.secrets); result.items += 1 }
+            do { try stored.meta.validate(); try vault.items.save(stored.meta, secrets: stored.secrets); result.items += 1 }
             catch { result.failed.append("\(stored.meta.path): \(error.localizedDescription)") }
         }
         do {

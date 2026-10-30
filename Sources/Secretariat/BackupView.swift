@@ -15,8 +15,9 @@ struct BackupSetupDraft: Identifiable {
 
 extension AppModel {
     /// Backs up when set up and something changed (or none today yet), off the main thread; then refreshes the status.
+    /// A reload during a running backup isn't dropped: it runs once more afterwards.
     func backUpAutomatically() {
-        guard !backingUp else { return }
+        guard !backingUp else { backupAgain = true; return }
         backingUp = true
         let paths = paths
         Task {
@@ -27,6 +28,7 @@ extension AppModel {
             }.value
             backupStatus = status
             backingUp = false
+            if backupAgain { backupAgain = false; backUpAutomatically() }
         }
     }
 
@@ -49,11 +51,25 @@ extension AppModel {
     /// Saves the public key of a confirmed recovery key and makes the first backup right away; after a suspected
     /// leak it can also remove the backups sealed to the old key.
     func finishBackupSetup(_ draft: BackupSetupDraft, removeOld: Bool = false) {
-        var newKey = ""
-        if perform({ _ = try Backup.setUp(vault: vault, recoveryKey: draft.recoveryKey); newKey = Backup.status(vault: vault).key ?? "" }) {
-            backupSetup = nil
-            if removeOld { let paths = paths; Task.detached { Backup.removeBackups(notSealedTo: newKey, vault: Vault(paths: paths)) } }
-            backUpNow()
+        guard perform({ _ = try Backup.setUp(vault: vault, recoveryKey: draft.recoveryKey) }) else { return }
+        backupSetup = nil
+        backingUp = true
+        let paths = paths
+        Task {
+            // The first backup with the new key comes first; old-key backups go only once it exists.
+            let result = await Task.detached { () -> Result<Backup.Status, Error> in
+                let vault = Vault(paths: paths)
+                return Result {
+                    try Backup.write(vault: vault)
+                    if removeOld, let key = Backup.status(vault: vault).key { Backup.removeBackups(notSealedTo: key, vault: vault) }
+                    return Backup.status(vault: vault)
+                }
+            }.value
+            backingUp = false
+            switch result {
+            case .success(let status): backupStatus = status
+            case .failure(let error): errorMessage = "The first backup with the new key failed, so no old backup was removed. \(error.localizedDescription)"
+            }
         }
     }
 

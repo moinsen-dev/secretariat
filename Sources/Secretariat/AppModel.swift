@@ -188,6 +188,7 @@ final class AppModel {
     /// Backup state for the Backup view; refreshed after each automatic backup.
     var backupStatus: Backup.Status?
     var backingUp = false
+    var backupAgain = false
     var backupSetup: BackupSetupDraft?
     var showRestore = false
     var history: [HistoryEntry] = []

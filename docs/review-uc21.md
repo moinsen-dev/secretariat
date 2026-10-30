@@ -1,0 +1,6 @@
+# Kritik UC21 / T026 (automatische verschlüsselte Sicherung)
+
+Unabhängiger Kritiker (Subagent, frischer Kontext), 2026-10-30.
+
+- Runde 1 auf c82589d: PLAN **REWORK**, KERN **REWORK**. Hoch: Aufbewahrung über Namensende (fremde Macs betroffen, gleichnamige Macs überschreiben sich), iCloud-Platzhalter und fehlende Dateikoordination, stille Schlüsselbund-Lesefehler. Mittel: Fingerprint verpasst Änderungen, Pfadvergleich/Teilfehler beim Wiederherstellen, stilles Aufhören ohne Warnung. Niedrig: Host.current(), gefälschte Sicherung ohne Vorschau. Plan: Bestätigung des Schlüssels zu schwach, Schlüssel nach Wiederherstellen übernehmen, neue Schlüssel/alte löschen, Klarstellungen. Alles umgesetzt (e816552).
+- Runde 2 auf c7230ef: PLAN **PASS** (Nachbesserung: „Nur für mich“ und Screenshot zurück in UC21, erledigt). UC21 **REWORK**: Löschen alter Sicherungen vor der neuen, Herunterladen beim Löschen, Wettlauf App/CLI, Platzhalter der Tagesdatei, Mac-Kennung beim Umzug, fehlende Prüfung beim Wiederherstellen – alle behoben (siehe Nachweis). Offen und nur mit Uli möglich: Wiederherstellen und „Schlüssel prüfen“ in der App (verdeckte Eingabe, das Prüfwerkzeug tippt dort nicht), Notfallblatt sichern, echte iCloud-Ablage mit dem echten Tresor (den echten Wiederherstellungsschlüssel darf nur Uli sehen).

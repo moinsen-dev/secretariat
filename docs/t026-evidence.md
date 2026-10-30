@@ -1,6 +1,6 @@
 # T026 – Automatische verschlüsselte Sicherung (Nachweis)
 
-Stand: e816552 (nach der ersten Kritikrunde), signiertes `dist/Secretariat.app` aus `script/build.sh`, App gestartet mit `SECRETARIAT_HOME=/private/tmp/claude-501/backup-test2/home` (Test-Tresor, Sicherungen lokal), macOS 27.0, 2026-10-30. Alle Werte künstlich.
+Stand: GUI-Lauf auf e816552 (nach der ersten Kritikrunde), Korrekturen der zweiten Runde danach (Commit siehe Tracker) mit Unit-Tests und CLI-Lauf, signiertes `dist/Secretariat.app` aus `script/build.sh`, App gestartet mit `SECRETARIAT_HOME=/private/tmp/claude-501/backup-test2/home` (Test-Tresor, Sicherungen lokal), macOS 27.0, 2026-10-30. Alle Werte künstlich.
 
 ## Aufbau
 
@@ -22,7 +22,17 @@ Stand: e816552 (nach der ersten Kritikrunde), signiertes `dist/Secretariat.app` 
 | (4) Öffnen der echten Datei mit dem in der App angezeigten Schlüssel | Inhalt vollständig | Probe (nicht eingecheckt): Kopf `udi-m4 / 9494fa9e / 1 / 2c44d59b3c3f`, geänderter Wert byte-genau gleich, Zertifikat da, Profil `demo`, Ziel `demo-target`, Vorlage `demo-kind`; anderer Schlüssel → `AgentError` |
 | Unit-Tests `xcrun swift test` | grün | 93/93 (dreimal). Darin: Schlüssel lesbar, Tippfehler/fehlendes Zeichen/Unsinn abgelehnt; versiegelte Datei ohne Klartext, 0600; falscher Schlüssel `backup_wrong_key`; geänderter Kopf oder Inhalt `backup_damaged`; je Mac-Kennung 30 Dateien auch bei ähnlichen und gleichen Mac-Namen, iCloud-Platzhalter mitgezählt; automatisch nur bei Änderung, auch wenn sich nur ein Wert ändert; Warnungen (nicht gesichert, älter als 2 Tage, letzter Versuch gescheitert); gesperrter Schlüsselbund bricht ab und lässt die gute Datei stehen; Wiederherstellen mit Vorschau, nur Fehlendes, Datum bleibt, Pfad in anderer Schreibweise übersprungen, Rest kommt zurück; Schlüssel prüfen; Sicherungen mit altem Schlüssel löschen; CLI ohne Schlüssel |
 
-## Nicht in der App durchgespielt
+## Zweite Kritikrunde (auf c7230ef): Korrekturen
+
+- Neuer Schlüssel mit „alte löschen“: erst die neue Sicherung synchron, gelöscht wird nur nach Erfolg; sonst Fehlermeldung, nichts gelöscht.
+- Schlüssel-Kennung steht im Dateinamen (`<Tag>-<Mac>-<Mac-Kennung>-<Schlüssel-Kennung>.secretariat-backup`), Löschen alter Sicherungen lädt nichts herunter. Eine frühere Tagesdatei desselben Macs mit anderem Schlüssel wird ersetzt.
+- App und CLI sichern unter einer Sperre (`backup.lock`) vom Lesen des Tresors bis zum Zustand; ein Neuladen während einer laufenden Sicherung läuft danach noch einmal statt verworfen zu werden. Test: vier parallele Sicherungen ergeben eine lesbare Tagesdatei.
+- Heutige Datei nur als iCloud-Platzhalter: Platzhalter wird vor dem Schreiben entfernt (keine Konfliktkopie).
+- Mac-Kennung im nicht synchronisierten Schlüsselbund dieses Macs (Migrationsassistent nimmt sie nicht mit); ohne Schlüsselbundzugriff (Tests) in einer Datei. CLI-Lauf mit dem neuen Paket: `Backup written: 2026-10-30-udi-m4-db56685c-2c44d59b3c3f.secretariat-backup`.
+- Wiederherstellen prüft jeden Eintrag vor dem Speichern (`validate`).
+- Unit-Tests 94/94 (dreimal), CLI-Regression 24/24.
+
+## Nicht in der App durchgespielt (braucht Uli)
 
 - **„Schlüssel prüfen“ und „Wiederherstellen …“**: beide nehmen den Schlüssel in einem verdeckten Feld entgegen; dort tippt das Prüfwerkzeug aus Sicherheitsgründen nicht. Die Logik dahinter (`Backup.matches`, `Backup.open`, `Backup.additions`, `Backup.restore`) ist per Unit-Test und an der echten Datei belegt; der Klickweg in der App braucht einen Menschen.
 - **Notfallblatt sichern** (Sicherungsdialog von macOS) nicht geklickt.

@@ -74,10 +74,13 @@ private let alpha = BackupMac(name: "alpha", id: "0000000a")
     #expect(files.filter { $0.macID == twin.id }.count == 1)
     #expect(files.filter { $0.mac == "pro" }.count == 31)
     // An iCloud placeholder counts like the file it stands for.
-    let placeholder = backups(f).appendingPathComponent(".2020-01-01-pro-000000b1.secretariat-backup.icloud")
+    let placeholder = backups(f).appendingPathComponent(".2020-01-01-pro-000000b1-0123456789ab.secretariat-backup.icloud")
     FileManager.default.createFile(atPath: placeholder.path, contents: Data())
     #expect(Backup.files(in: backups(f)).contains { $0.day == "2020-01-01" && $0.inCloudOnly })
     #expect(Backup.parse("2026-10-30-x.secretariat-backup", inCloudOnly: false) == nil)
+    #expect(Backup.parse("2026-10-30-macbook-pro-3fa9c2d1-2c44d59b3c3f.secretariat-backup", inCloudOnly: false)
+            == Backup.File(name: "2026-10-30-macbook-pro-3fa9c2d1-2c44d59b3c3f.secretariat-backup", day: "2026-10-30", mac: "macbook-pro",
+                           macID: "3fa9c2d1", key: "2c44d59b3c3f", inCloudOnly: false))
 }
 
 @Test func automaticBacksUpOnChangeAndOncePerDay() throws {
@@ -193,4 +196,19 @@ private let alpha = BackupMac(name: "alpha", id: "0000000a")
     #expect(Backup.files(in: backups(f)).count == 2)
     #expect(Backup.removeBackups(notSealedTo: Backup.status(vault: f.vault).key!, vault: f.vault) == 1)
     #expect(Backup.files(in: backups(f)).count == 1)
+}
+
+@Test func aNewKeyTheSameDayReplacesTodaysFileAndParallelWritesLeaveOne() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    _ = try Backup.setUp(vault: f.vault)
+    try Backup.write(vault: f.vault, mac: alpha)
+    let recovery = try Backup.setUp(vault: f.vault)
+    try Backup.write(vault: f.vault, mac: alpha)
+    var files = Backup.files(in: backups(f))
+    #expect(files.count == 1 && files.first?.key == Backup.status(vault: f.vault).key)
+    DispatchQueue.concurrentPerform(iterations: 4) { _ in _ = try? Backup.write(vault: f.vault, mac: alpha) }
+    files = Backup.files(in: backups(f))
+    #expect(files.count == 1)
+    #expect((try? Backup.open(backups(f).appendingPathComponent(files[0].name), recoveryKey: recovery)) != nil)
+    #expect(!FileManager.default.fileExists(atPath: f.vault.configuration.paths.directory.appendingPathComponent("backups/.backup").path))
 }
