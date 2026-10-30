@@ -128,6 +128,8 @@ public enum CommandLineInterface {
       secretariat item set PATH [--set FIELD=VALUE …] [--unset FIELD …] [--source TEXT] [--expires YYYY-MM-DD] [--json]
       secretariat item rename PATH NEW_PATH [--json]
       secretariat get PATH/FIELD                     value of an identifier (never secrets)
+      secretariat header PATH/FIELD [--bearer] [--name HEADER]
+                                                     headersHelper for HTTP MCP servers: {"Authorization":"Bearer …"} to a pipe, never a terminal
       secretariat field move PATH/FIELD PATH/FIELD [--replace] [--json]
       secretariat import FILE VARIABLE[=PATH/FIELD] … [--profile PROFILE] [--replace] [--json]
       secretariat import-file FILE PATH/FIELD [--replace] [--json]
@@ -174,7 +176,7 @@ public enum CommandLineInterface {
       secretariat license [--json] · license activate [FILE|-] · license remove
                                                      pbpaste | secretariat license activate
 
-    The CLI never prints secret values. Enter them via the app, import or import-file.
+    The CLI never prints secret values (one exception: header, into a pipe). Enter them via the app, import or import-file.
     """
 
     public static func run(_ arguments: [String], vault: Vault? = nil) throws -> Int32 {
@@ -189,6 +191,9 @@ public enum CommandLineInterface {
                 vault.audit.record("guard.agent", [:])
             }
             return 0
+        case "header" where isatty(STDOUT_FILENO) == 1:
+            throw SecretariatError("secretariat header prints a secret for a program (Claude Code's headersHelper), not for a terminal. "
+                + "Register it: claude mcp add-json --scope user NAME '{\"type\":\"http\",\"url\":\"…\",\"headersHelper\":\"secretariat header PATH/FIELD --bearer\"}'")
         case "mcp":
             // MCP server over stdio for agents without a shell (Claude Desktop, Cursor …).
             let executable = Bundle.main.executableURL?.path ?? URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL.path

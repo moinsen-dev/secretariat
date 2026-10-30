@@ -8,7 +8,8 @@ private func bash(_ command: String) -> String? { AgentHook.refusal(tool: "Bash"
     for risky in ["cat .env", "cat ./apps/web/.env.local", "grep OPENAI .env", "head -5 .env.production", "source .env && npm start",
                   "printenv", "env", "env | grep KEY", "cd api && printenv OPENAI_API_KEY", "docker compose config",
                   "docker-compose -f x.yml config", "security find-generic-password -s foo -w",
-                  "secretariat run web --no-mask -- env", "cat /proc/42/environ"] {
+                  "secretariat run web --no-mask -- env", "cat /proc/42/environ",
+                 "secretariat header moinsen/x/mcp/token --bearer", "~/bin/secretariat header a/b | cat"] {
         #expect(bash(risky) != nil, "should refuse: \(risky)")
     }
     for fine in ["cat .env.example", "cp .env.example .env.template", "env NODE_ENV=test npm test", "set -e; npm run build",

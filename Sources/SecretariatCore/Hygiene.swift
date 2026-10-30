@@ -199,6 +199,7 @@ public enum AgentHook {
         (#"\bdocker(-|\s+)compose\b[^|;&]*\bconfig\b"#, "prints the compose file with resolved secrets"),
         (#"\bsecurity\s+find-(generic|internet)-password\b[^|;&]*\s-[wg]\b"#, "reads a password from the keychain"),
         (#"\bsecretariat\s+run\b[^|;&]*--no-mask"#, "switches off output masking"),
+        (#"\bsecretariat\s+header\b"#, "prints a header with a secret (only Claude Code's headersHelper may call it)"),
         (#"/proc/\d+/environ|\bps\s+[^|;&]*e[wW]*\b.*\benv"#, "reads another process's environment"),
     ]
 
