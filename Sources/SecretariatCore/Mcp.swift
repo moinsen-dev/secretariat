@@ -129,6 +129,8 @@ public enum McpServer {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         process.arguments = command
+        // Marks the child as running for an MCP client: `secretariat header` refuses to print into this output.
+        environment[CommandLineInterface.mcpChildVariable] = "1"
         process.environment = environment
         process.currentDirectoryURL = URL(fileURLWithPath: launch.directory)
         let out = Pipe(), err = Pipe()

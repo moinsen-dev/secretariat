@@ -27,6 +27,7 @@
 | T021 | ERLEDIGT | E936,E937,E938 | Regression auf Release 1.12.0 (5663ea0) |
 | T022 | ERLEDIGT | E939,E940,E941 | Regression auf Release 1.12.0 (5663ea0) |
 | T023 | ERLEDIGT | E888,E889,E890 | Lokal aus Screenshot vorausgefüllt, 3 GUI-Läufe; released als 1.12.0 |
+| T025 | IN_ARBEIT | - | header gebaut, echter Lauf gegen tinideas.app grün, Kritik läuft |
 
 ## Evidence
 
@@ -973,6 +974,9 @@
 | E939 | T022 | build | build | normal | 2026-10-29T17:38:37+00:00 | 5663ea0 | 0aac353f3c4575356cb18a04 | docs/regression-t023.md | PASS |
 | E940 | T022 | unit | unit | normal | 2026-10-29T17:38:37+00:00 | 5663ea0 | 0aac353f3c4575356cb18a04 | docs/regression-t023.md | PASS |
 | E941 | T022 | macos | ui | normal | 2026-10-29T17:38:37+00:00 | 5663ea0 | 0aac353f3c4575356cb18a04 | docs/regression-t023.md | PASS |
+| E942 | T025 | build | build | normal | 2026-10-30T17:43:59+00:00 | 08ddbe7 | 50ff1cc25dfbfcf2f62e00ea | docs/t025-evidence.md | PASS |
+| E943 | T025 | unit | unit | normal | 2026-10-30T17:43:59+00:00 | 08ddbe7 | 50ff1cc25dfbfcf2f62e00ea | docs/t025-evidence.md | PASS |
+| E944 | T025 | macos | ui | normal | 2026-10-30T17:43:59+00:00 | 08ddbe7 | 50ff1cc25dfbfcf2f62e00ea | docs/t025-evidence.md | PASS |
 
 ## Reviews
 

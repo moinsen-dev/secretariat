@@ -334,6 +334,7 @@ public enum Commands {
             guard a.positional.count == 1 else { throw AgentError("invalid_arguments", usage) }
             let (item, field) = try vault.resolve(try FieldReference(a.positional[0]))
             guard field.kind != .file else { throw AgentError("file_field", "\(a.positional[0]) is a file; a header needs text.") }
+            guard field.kind.isUsable else { throw AgentError("personal_field", "\(a.positional[0]) is only for you and is never passed to a program.") }
             try vault.requireApproval([item.id], for: "header \(a.positional[0])")
             let value = try vault.value(itemID: item.id, field: field.name)
             let name = a.option("--name") ?? "Authorization"

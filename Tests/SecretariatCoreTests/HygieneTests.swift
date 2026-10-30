@@ -9,7 +9,9 @@ private func bash(_ command: String) -> String? { AgentHook.refusal(tool: "Bash"
                   "printenv", "env", "env | grep KEY", "cd api && printenv OPENAI_API_KEY", "docker compose config",
                   "docker-compose -f x.yml config", "security find-generic-password -s foo -w",
                   "secretariat run web --no-mask -- env", "cat /proc/42/environ",
-                 "secretariat header moinsen/x/mcp/token --bearer", "~/bin/secretariat header a/b | cat"] {
+                 "secretariat header moinsen/x/mcp/token --bearer", "~/bin/secretariat header a/b | cat",
+                 "/Users/x/Applications/Secretariat.app/Contents/MacOS/Secretariat header a/b/c --bearer",
+                 "/Applications/Secretariat.app/Contents/MacOS/Secretariat run web --no-mask -- env"] {
         #expect(bash(risky) != nil, "should refuse: \(risky)")
     }
     for fine in ["cat .env.example", "cp .env.example .env.template", "env NODE_ENV=test npm test", "set -e; npm run build",

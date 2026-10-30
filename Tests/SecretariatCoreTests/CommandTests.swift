@@ -237,3 +237,23 @@ import Testing
     f.approver.allow = false
     #expect(f.code("header", "moinsen/test/api/secret", "--bearer") == "approval_denied")
 }
+
+@Test func headerPrintsOnlyIntoAPipeAndNeverForAnMcpClient() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    let pipe = Pipe()
+    #expect(CommandLineInterface.headerRefusal(stdout: pipe.fileHandleForWriting.fileDescriptor, environment: [:]) == nil)
+    #expect(CommandLineInterface.headerRefusal(stdout: pipe.fileHandleForWriting.fileDescriptor, environment: ["SECRETARIAT_MCP_CHILD": "1"]) != nil)
+    let file = f.root.appendingPathComponent("token.txt"); FileManager.default.createFile(atPath: file.path, contents: nil)
+    let handle = try FileHandle(forWritingTo: file); defer { try? handle.close() }
+    #expect(CommandLineInterface.headerRefusal(stdout: handle.fileDescriptor, environment: [:]) != nil)
+    // The MCP tool run_command marks its children, so a header call there would be refused.
+    let (run, _) = McpServer.call("run_command", ["profile": "agent-test", "command": ["/bin/sh", "-c", "echo marked=$SECRETARIAT_MCP_CHILD"]], service: f.service, executable: "/tmp/s")
+    #expect(run.contains("marked=1"))
+    // File fields are refused; personal fields are refused before Touch ID is asked.
+    var item = try f.vault.item(path: "moinsen/test/api")
+    item.fields.append(ItemField(name: "cert", kind: .file)); item.approval = true; try f.vault.save(item)
+    #expect(f.code("header", "moinsen/test/api/cert") == "file_field")
+    f.approver.reasons = []
+    #expect(f.code("header", "moinsen/test/api/password") == "personal_field")
+    #expect(f.approver.reasons.isEmpty)
+}

@@ -22,6 +22,7 @@
       <a href="#capture">Capture</a>
       <a href="#how">How it works</a>
       <a href="#guard">Agent Guard</a>
+      <a href="#mcp">MCP tokens</a>
       <a href="#compare">Compare</a>
       <a href="threat-model.html">Threat model</a>
       <a class="btn small" href="#pricing">Buy</a>
@@ -208,6 +209,45 @@ secretariat profile bind \
         <pre class="cmd">secretariat tidy ~/work --apply</pre>
       </article>
     </div>
+  </div>
+</section>
+
+<!-- MCP tokens -->
+<section id="mcp">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">MCP tokens</p>
+      <h2>Connect an MCP server. Nobody ever sees its token.</h2>
+      <p class="lead">Remote MCP servers want a personal bearer token, and the usual setup guide says: paste it into a command. From then on it sits in plain text in your Claude Code config and your shell history. Secretariat hands it over at every connection instead.</p>
+    </div>
+    <div class="split">
+      <article class="card no">
+        <h3>The copy-paste way</h3>
+<pre class="cmd">claude mcp add --transport http \
+  ideas https://example.app/mcp \
+  --header "Authorization: Bearer tid_…"</pre>
+        <ul>
+          <li>The token is in plain text in <code>~/.claude.json</code> and in your shell history.</li>
+          <li>Whoever pasted it has seen it, and so has any chat it passed through.</li>
+          <li>Paste the placeholder from the guide by mistake and the server just stops working.</li>
+        </ul>
+      </article>
+      <article class="card yes">
+        <h3>Through Secretariat <span class="tag">New</span></h3>
+<pre class="cmd">claude mcp add-json --scope user ideas '{
+  "type": "http",
+  "url": "https://example.app/mcp",
+  "headersHelper":
+    "secretariat header acme/ideas/token --bearer"
+}'</pre>
+        <ul>
+          <li>Claude Code asks Secretariat at every connection. Its config holds a command, not a token.</li>
+          <li>The token goes from your keychain to the MCP client, never to the model. <code>secretariat header</code> refuses a terminal, and the agent guard refuses it as an agent command.</li>
+          <li>Rotate the item and the next connection uses the new token. Registered once, it works in every project.</li>
+        </ul>
+      </article>
+    </div>
+    <p class="note">Better still, create the token where it's issued: a script on the server generates it, passes it to <code>secretariat import</code> and deletes the temporary file. You never see it, your agent never sees it, and it's never lost. That's how our own MCP tokens are set up.</p>
   </div>
 </section>
 
