@@ -25,6 +25,10 @@ Jeder Adapter braucht einen Zugang zur Verwaltung des Anbieters (Admin-Token, Ma
 - Wo läuft die Rotation, wenn kein Mac wach ist? (Heute bewusst ohne Daemon; Zeitpläne brauchen Ulis ausdrückliches Ja.)
 - Nachweis gegenüber dem Nutzer: Verlauf zeigt jede Beschaffung, Rotation und Sperre mit Herkunft.
 
+## Stand der Recherche (2026-10-30)
+
+`docs/research/2026-10-30-schluessel-per-api-anlegen-rotieren.md`: Anlegen, Begrenzen, Listen und Widerrufen per API gehen bei Cloudflare, OpenAI (nur Service-Account-Schlüssel), Supabase, Resend, Mailgun, Vercel, AWS und Google. GitHub liefert nur einstündige App-Tokens. Nicht anlegbar sind Anthropic (laut eigener FAQ: nur lesen, umbenennen, deaktivieren), Stripe, Apple, Lemon Squeezy und Hetzner; dort bleibt „Sperren“ (wo per API möglich) und der heutige Weg fürs Beschaffen. Durchstich-Empfehlung: Cloudflare, OpenAI (Service-Account-Schlüssel), Supabase. GitHubs `POST /credentials/revoke` sperrt geleakte Token ohne Bootstrap und passt zu `sweep`.
+
 ## Nächster Schritt (wenn Uli ihn will)
 
-Recherche „Schlüssel per API anlegen, rotieren, widerrufen“ je Anbieter, Ergebnis nach `docs/research/`. Danach ein erster Adapter für einen eigenen Dienst als Durchstich.
+Ein erster Adapter für einen eigenen Dienst oder Cloudflare als Durchstich: anlegen mit eng begrenzten Rechten und Ablauf, ablegen, an Ziele verteilen, prüfen, alten widerrufen.
