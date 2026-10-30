@@ -30,6 +30,7 @@
 | T024 | ERLEDIGT | E1008,E1009,E1010 | Verlauf mit Herkunft, 2 Kritikrunden (PASS); in 1.13.0 |
 | T025 | ERLEDIGT | E1011,E1012,E1013 | secretariat header, Kritik PASS, echter Lauf gegen tinideas.app; in 1.13.0 |
 | T026 | IN_ARBEIT | E1014,E1015 | Code fertig, 2 Kritikrunden; offen: Wiederherstellen/Schlüssel prüfen in der App und iCloud-Lauf mit echtem Tresor durch Uli |
+| T027 | ERLEDIGT | E1022,E1023,E1024 | Needs a Value in der App |
 
 ## Evidence
 
@@ -1056,6 +1057,9 @@
 | E1019 | T027 | build | build | normal | 2026-10-30T20:27:03+00:00 | 5d21f86 | a05d1502f7446fd20671cc82 | docs/t027-evidence.md | PASS |
 | E1020 | T027 | unit | unit | normal | 2026-10-30T20:27:03+00:00 | 5d21f86 | a05d1502f7446fd20671cc82 | docs/t027-evidence.md | PASS |
 | E1021 | T027 | macos | ui | normal | 2026-10-30T20:27:03+00:00 | 5d21f86 | a05d1502f7446fd20671cc82 | docs/t027-evidence.md | PASS |
+| E1022 | T027 | build | build | normal | 2026-10-30T20:27:13+00:00 | 8031755 | 84b6c51c4099c699c7ca43a3 | docs/t027-evidence.md | PASS |
+| E1023 | T027 | unit | unit | normal | 2026-10-30T20:27:13+00:00 | 8031755 | 84b6c51c4099c699c7ca43a3 | docs/t027-evidence.md | PASS |
+| E1024 | T027 | macos | ui | normal | 2026-10-30T20:27:13+00:00 | 8031755 | 84b6c51c4099c699c7ca43a3 | docs/t027-evidence.md | PASS |
 
 ## Reviews
 
@@ -1463,6 +1467,7 @@
 | RV400 | UC05 | self | PASS | 56f4b309cd6df1969dcb18fa | docs/release-1.13.0.md |
 | RV401 | UC07 | self | PASS | 436e318b274baf1a709835b3 | docs/release-1.13.0.md |
 | RV402 | UC13 | self | PASS | ac6fd554776bae0f94a65122 | docs/t027-evidence.md |
+| RV403 | UC13 | self | PASS | cdf716efcbd526ad239d73c9 | docs/t027-evidence.md |
 
 ## Releases
 
