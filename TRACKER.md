@@ -1053,6 +1053,9 @@
 | E1016 | T027 | build | build | normal | 2026-10-30T20:26:47+00:00 | 730a7b3 | e3c7dc6536629bb651674a07 | docs/t027-evidence.md | PASS |
 | E1017 | T027 | unit | unit | normal | 2026-10-30T20:26:47+00:00 | 730a7b3 | e3c7dc6536629bb651674a07 | docs/t027-evidence.md | PASS |
 | E1018 | T027 | macos | ui | normal | 2026-10-30T20:26:47+00:00 | 730a7b3 | e3c7dc6536629bb651674a07 | docs/t027-evidence.md | PASS |
+| E1019 | T027 | build | build | normal | 2026-10-30T20:27:03+00:00 | 5d21f86 | a05d1502f7446fd20671cc82 | docs/t027-evidence.md | PASS |
+| E1020 | T027 | unit | unit | normal | 2026-10-30T20:27:03+00:00 | 5d21f86 | a05d1502f7446fd20671cc82 | docs/t027-evidence.md | PASS |
+| E1021 | T027 | macos | ui | normal | 2026-10-30T20:27:03+00:00 | 5d21f86 | a05d1502f7446fd20671cc82 | docs/t027-evidence.md | PASS |
 
 ## Reviews
 
@@ -1459,6 +1462,7 @@
 | RV399 | UC20 | self | PASS | 10cc1b167424b53d6a10b0e9 | docs/regression-1.13.md |
 | RV400 | UC05 | self | PASS | 56f4b309cd6df1969dcb18fa | docs/release-1.13.0.md |
 | RV401 | UC07 | self | PASS | 436e318b274baf1a709835b3 | docs/release-1.13.0.md |
+| RV402 | UC13 | self | PASS | ac6fd554776bae0f94a65122 | docs/t027-evidence.md |
 
 ## Releases
 
