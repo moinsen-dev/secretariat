@@ -666,7 +666,7 @@ public enum Commands {
             let retention = (try? vault.configuration.load())?.historyRetentionDays
             struct Count: Encodable { let via: String; let count: Int }
             struct Line: Encodable { let at: String; let via: String; let action: String; let summary: String }
-            struct Out: Encodable { let schemaVersion = 1; let ok = true; let period: String; let total: Int; let origins: [Count]
+            struct Out: Encodable { let schemaVersion = 2; let ok = true; let period: String; let total: Int; let origins: [Count]
                                     let autoDeleteDays: Int?; let entries: [Line] }
             let iso = ISO8601DateFormatter()
             let lines = selected.prefix(a.option("--lines").flatMap(Int.init) ?? 20)

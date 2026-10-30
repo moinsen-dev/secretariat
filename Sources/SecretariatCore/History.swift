@@ -93,7 +93,7 @@ public struct HistoryEntry: Identifiable, Equatable, Sendable {
         case "template.save", "template.delete", "template.reset": return "Template \(details["template"] ?? "?"): \(action.split(separator: ".").last ?? "")"
         case "license.activate": return "License activated"
         case "history.retention": return "Automatic deletion \(details["days"].map { "after \($0) days" } ?? "off")"
-        case "history.pruned": return "Deleted \(details["entries"] ?? "?") entries older than \(details["days"] ?? "?") days"
+        case "history.pruned": return "Deleted \(details["entries"] == "1" ? "1 entry" : "\(details["entries"] ?? "?") entries") older than \(details["days"] ?? "?") days"
         default: return action
         }
     }

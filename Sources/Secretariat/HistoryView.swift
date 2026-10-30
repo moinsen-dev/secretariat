@@ -36,12 +36,18 @@ extension Origin.Kind {
 
 struct HistorySummary: View {
     @Bindable var model: AppModel
+    static let palette: [Color] = [.blue, .orange, .green, .pink, .purple, .teal, .yellow, .red, .brown, .indigo]
+    /// The origin list is the chart's legend: same order, same colors.
+    static func color(_ via: String, _ origins: [(via: String, count: Int)]) -> Color {
+        palette[(origins.firstIndex { $0.via == via } ?? 0) % palette.count]
+    }
 
     private var selected: [HistoryEntry] { History.select(model.history, model.historyPeriod) }
 
     var body: some View {
         let entries = selected
         let shown = model.historyVia.map { via in entries.filter { $0.via == via } } ?? entries
+        let origins = History.origins(entries)
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 Picker("Period", selection: $model.historyPeriod) {
@@ -60,18 +66,20 @@ struct HistorySummary: View {
                         .foregroundStyle(by: .value("Origin", Origin.title(bucket.via)))
                 }
                 .chartXScale(domain: model.historyPeriod.start(now: Date())...Date())
-                .chartLegend(position: .bottom, alignment: .leading)
+                .chartForegroundStyleScale(domain: origins.map { Origin.title($0.via) }, range: origins.map { Self.color($0.via, origins) })
+                .chartLegend(.hidden)
                 .frame(height: 170)
                 .accessibilityLabel("Accesses over the last \(model.historyPeriod.title.lowercased()), by origin")
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Origin").font(.headline)
                     if entries.isEmpty { Text("Nothing in this period.").foregroundStyle(.secondary) }
-                    ForEach(History.origins(entries), id: \.via) { origin in
+                    ForEach(origins, id: \.via) { origin in
                         Button {
                             model.historyVia = model.historyVia == origin.via ? nil : origin.via
                         } label: {
                             HStack {
+                                Circle().fill(Self.color(origin.via, origins)).frame(width: 8, height: 8)
                                 Label(Origin.title(origin.via), systemImage: Origin.kind(origin.via).symbol)
                                 Spacer()
                                 Text("\(origin.count)").monospacedDigit().foregroundStyle(.secondary)

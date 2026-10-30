@@ -103,3 +103,8 @@ private func line(_ action: String, _ at: Date, via: String? = nil, _ extra: [St
     let elapsed = clock.measure { #expect(History.parse(text).count == 200_000) }
     #expect(elapsed < .seconds(2))
 }
+
+@Test func prunedSummaryCountsInTheRightNumber() {
+    #expect(HistoryEntry(id: 0, at: Date(), action: "history.pruned", via: "app", details: ["entries": "1", "days": "30"]).summary == "Deleted 1 entry older than 30 days")
+    #expect(HistoryEntry(id: 0, at: Date(), action: "history.pruned", via: "app", details: ["entries": "300", "days": "30"]).summary == "Deleted 300 entries older than 30 days")
+}
