@@ -384,14 +384,52 @@ secretariat profile bind \
 
 <!-- Pricing -->
 <section id="diy">
-  <div class="wrap narrow">
+  <div class="wrap">
     <div class="section-head">
       <p class="eyebrow">Fair question</p>
       <h2>Couldn't I just vibe-code this?</h2>
+      <p class="lead">You could. With a good agent the first version takes about two days; that's how Secretariat started. What you'd build in those two days is a vault. What you'd still be missing is everything that makes you stop thinking about keys.</p>
     </div>
-    <p class="lead">Absolutely. With a good agent it takes about two days. We know, because that's how Secretariat started.</p>
-    <p>Day three is keychain access groups and provisioning profiles, so the keys actually reach your other Macs. Day four is notarization rejecting the CLI inside the bundle. Day five is reading how your agent got the keys anyway, via <code>docker compose config</code>. Around day six you notice you've built a secrets manager instead of the thing you wanted to ship.</p>
-    <p>Vibe-coding is great fun. It just tends to end up somewhere else than planned. We've already spent those days; 39 € buys them back.</p>
+
+    <div class="split">
+      <article class="card yes">
+        <h3>What changes for you</h3>
+        <ul>
+          <li>You don't paste keys anymore: not into a <code>.env</code>, a chat, a config file or a setup guide.</li>
+          <li>You don't search for keys anymore. New project, new Mac: they're there.</li>
+          <li>You don't lose keys anymore. Every Mac backs up on its own, sealed to a key only you hold.</li>
+          <li>Your agents build, test and deploy with your keys and never read one.</li>
+          <li>You can see which agent used which key, and when.</li>
+        </ul>
+      </article>
+      <article class="card no">
+        <h3>What a weekend clone usually skips</h3>
+        <ul>
+          <li>Sync to every Mac without a server: keychain access groups, a provisioning profile, notarization with the CLI inside the bundle.</li>
+          <li>The leaks nobody thinks of: <code>docker compose config</code>, <code>printenv</code>, an agent switching masking off, a key in a commit from last year.</li>
+          <li>Backups the Mac can write but not read, with a recovery key, per-Mac retention and files iCloud has moved off the disk.</li>
+          <li>Masking that holds when a value is split across two chunks of output.</li>
+          <li>Someone trying to break it before each release.</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        <h3>Tested, not hoped</h3>
+        <p>94 automated tests, a CLI regression run before every release, and an independent review that has to pass before a feature ships. The last one found that an agent could have read an MCP token through the MCP tool. Fixed before release.</p>
+      </div>
+      <div class="feature">
+        <h3>Honest about limits</h3>
+        <p>The <a href="threat-model.html">threat model</a> says what is protected and what isn't. A tool you vibe-coded yourself is one you have to trust yourself, and audit yourself.</p>
+      </div>
+      <div class="feature">
+        <h3>Keeps getting better</h3>
+        <p>Every 1.x update is included, on all your Macs. When a new agent learns a new way to read secrets, the guard learns it once, for everyone.</p>
+      </div>
+    </div>
+
+    <p class="note">We've spent those days, and the weeks after them. 39 € buys them back, so your weekend goes to the thing you actually wanted to ship.</p>
   </div>
 </section>
 
