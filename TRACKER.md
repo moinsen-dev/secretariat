@@ -984,6 +984,8 @@
 | E948 | T024 | build | build | normal | 2026-10-30T18:12:51+00:00 | 7f4bdf6 | 7fac3492470bb471e12f7f1e | docs/t024-evidence.md | PASS |
 | E949 | T024 | unit | unit | normal | 2026-10-30T18:12:51+00:00 | 7f4bdf6 | 7fac3492470bb471e12f7f1e | docs/t024-evidence.md | PASS |
 | E950 | T024 | macos | ui | normal | 2026-10-30T18:12:51+00:00 | 7f4bdf6 | 7fac3492470bb471e12f7f1e | docs/t024-evidence.md | PASS |
+| E951 | T026 | build | build | normal | 2026-10-30T18:29:35+00:00 | 978e5ad | f9ac006a220d9891a58ad239 | docs/t026-evidence.md | PASS |
+| E952 | T026 | unit | unit | normal | 2026-10-30T18:29:35+00:00 | 978e5ad | f9ac006a220d9891a58ad239 | docs/t026-evidence.md | PASS |
 
 ## Reviews
 
@@ -1366,6 +1368,7 @@
 | RV375 | UC20 | independent | PASS | 5cab60a94ad5b5d2a3c1149f | docs/review-uc20.md |
 | RV376 | PLAN | independent | PASS | 38ede5b692d30b48d450b69c | docs/review-plan-uc19.md |
 | RV377 | UC19 | independent | PASS | a26152fb6962030a7af38d7a | docs/review-uc19.md |
+| RV378 | UC21 | independent | BLOCKED | b0a21d76b9429ebefce73190 | docs/review-uc21.md |
 
 ## Releases
 
