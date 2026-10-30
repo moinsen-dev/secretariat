@@ -1050,6 +1050,9 @@
 | E1013 | T025 | macos | ui | normal | 2026-10-30T18:32:02+00:00 | dee582e | b69ee6aec6cd8da4bbee9365 | docs/t025-evidence.md | PASS |
 | E1014 | T026 | build | build | normal | 2026-10-30T18:32:02+00:00 | dee582e | d0eb0b08324adcff7761c90a | docs/t026-evidence.md | PASS |
 | E1015 | T026 | unit | unit | normal | 2026-10-30T18:32:02+00:00 | dee582e | d0eb0b08324adcff7761c90a | docs/t026-evidence.md | PASS |
+| E1016 | T027 | build | build | normal | 2026-10-30T20:26:47+00:00 | 730a7b3 | e3c7dc6536629bb651674a07 | docs/t027-evidence.md | PASS |
+| E1017 | T027 | unit | unit | normal | 2026-10-30T20:26:47+00:00 | 730a7b3 | e3c7dc6536629bb651674a07 | docs/t027-evidence.md | PASS |
+| E1018 | T027 | macos | ui | normal | 2026-10-30T20:26:47+00:00 | 730a7b3 | e3c7dc6536629bb651674a07 | docs/t027-evidence.md | PASS |
 
 ## Reviews
 
