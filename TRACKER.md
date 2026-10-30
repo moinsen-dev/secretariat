@@ -1595,6 +1595,8 @@
 | RV462 | UC18 | self | PASS | 576354aba2e6a4ba2ee5d45f | docs/regression-1.13.1.md |
 | RV463 | UC19 | self | PASS | 0f31f9c529112b38c524670f | docs/regression-1.13.1.md |
 | RV464 | UC20 | self | PASS | a0676329b1cfb99a40a6da5b | docs/regression-1.13.1.md |
+| RV465 | UC05 | self | PASS | e2cba7dafc1ab594ba21ac5c | docs/release-1.13.1.md |
+| RV466 | UC07 | self | PASS | 1a7812c597fc3f70097b32c8 | docs/release-1.13.1.md |
 
 ## Releases
 
