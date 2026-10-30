@@ -4,12 +4,12 @@
 
 - schema: app-workflow/1
 - status: ACTIVE
-- phase: P18
-- use_case: UC18
-- task: T023
-- next: GEPARKT (2026-10-30): 1.12.0 ausgeliefert und gepusht, Uli zufrieden. Angefangen, nicht fertig: Verlauf mit Herkunft (T024/UC19/R029) als WIP-Commit 0d354ff auf Branch claude/dreamy-vaughan-ea3ad3 – offener Fehler: Öffnen des Verlaufs verschiebt das Hauptfenster. Weiter: Branch fortsetzen oder verwerfen, mit Uli entscheiden. M5 bekommt 1.12.0 beim nächsten mesh deliver
-- updated: 2026-10-30T12:58:28+00:00
-- plan_sha256: 1b36a256c921a882e9db12a30d472f1ab732ab321a443c822fe0be8bd0cb6fa2
-- tracker_sha256: 567a110d5c1b73cc94c5f92dabd6564f6be5345521bf6664ade009b6c2909cca
+- phase: P21
+- use_case: UC21
+- task: T026
+- next: 1.13.0 gebaut (header, Verlauf, Sicherung). Wartet auf Uli: Sicherung im echten Tresor einrichten (Schlüssel nur er), Wiederherstellen + Schlüssel prüfen in der App, iCloud-Datei auslagern und öffnen; Go für Push, Website-Deploy, mesh deliver
+- updated: 2026-10-30T18:32:57+00:00
+- plan_sha256: c6e2ef9d2801f49b44eac62eff80a305dba40794d44e17c38f4992a49f294c8a
+- tracker_sha256: 97de63d69943e10ee0e39bdf86b5f24058ff1a2e1d49f6bb6583b6db770245aa
 
 Einstieg: `AGENTS.md`. Verbindliche Aufgabenstatus und Nachweise: `TRACKER.md`. Diese Zusammenfassung mit dem Werkzeug aus Plan und Tracker aktualisieren.
