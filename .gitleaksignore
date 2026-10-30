@@ -1,0 +1,6 @@
+# Synthetic test fixtures (fake keys built for the screenshot-reading tests), not real secrets.
+4f322af46685cf4bdb73f410a2e52289c04b0b81:Tests/SecretariatCoreTests/ScreenshotReadingTests.swift:generic-api-key:68
+4f322af46685cf4bdb73f410a2e52289c04b0b81:Tests/SecretariatCoreTests/ScreenshotReadingTests.swift:generic-api-key:139
+4f322af46685cf4bdb73f410a2e52289c04b0b81:Tests/SecretariatCoreTests/ScreenshotReadingTests.swift:stripe-access-token:136
+4f322af46685cf4bdb73f410a2e52289c04b0b81:Tests/SecretariatCoreTests/ScreenshotReadingTests.swift:stripe-access-token:141
+4f322af46685cf4bdb73f410a2e52289c04b0b81:Tests/SecretariatCoreTests/ScreenshotReadingTests.swift:stripe-access-token:160
