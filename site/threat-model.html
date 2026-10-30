@@ -79,6 +79,13 @@
     <h3>Commit guard</h3>
     <p>The git pre-commit hook compares staged changes with the values Secretariat knows and refuses the commit if one appears. It catches your real values, including ones no pattern scanner would recognize. It does not catch secrets you never stored in Secretariat, values shorter than 8 characters, or commits made with <code>git commit --no-verify</code>, which skips all hooks.</p>
 
+    <h3>Backups and the recovery key</h3>
+    <p>Backups are sealed with HPKE (Curve25519, ChaCha20-Poly1305) to a public key derived from your recovery key. The Mac keeps only that public key, so it can write backups but can't open them, and neither can anyone who gets your iCloud Drive or a backup file. Secretariat shows the recovery key once and stores it nowhere. Lose it, and no one can read your backups, including you. The file name and header show the date, the Mac and how many items there are, never item names or values.</p>
+    <p>Restoring happens only in the app, with the key typed in, and only adds what is missing; nothing that exists is overwritten. Someone who knows your public key could make a backup that looks valid, so the app lists what a restore would add before it does anything.</p>
+
+    <h3>History</h3>
+    <p>Each access is logged on this Mac with time, action, names and the origin the calling program reports: the app, a terminal, a script, an MCP client or a known agent. The origin is a label, not proof: an agent can clear its environment and show up as a terminal. Anything running as you can also edit or delete the log file.</p>
+
     <h3>Targets and rotation</h3>
     <p>Secretariat remembers where it pushed each value: Cloudflare Workers, Supabase, GitHub, Linux env files over ssh. After a rotation, <code>secretariat targets</code> lists every copy that is now stale. It knows only the copies it pushed itself, not ones you placed by hand.</p>
 
