@@ -15,3 +15,7 @@ Datum: 2026-10-30 · Urteil: **REWORK** (kleine Nachschärfung, kein Neuentwurf)
 11. UC19 ist ein einziger Satz mit vielen Schritten; als Schrittfolge mit erwarteter Beobachtung schreiben (Einträge erzeugen aus App, Terminal, Agent; Ansicht je Zeitraum prüfen; Filter; Schalter an; Alt-Eintrag (Testdatei mit 40 Tage alter Zeile) verschwindet; neuer bleibt; Schalter aus: nichts mehr gelöscht).
 
 Positiv: Entscheidung "nur in der App" und "keine Sicherheitsgrenze" sind ehrlich; "echtes Protokoll wird beim Lesen nicht verändert" ist ein guter Prüfpunkt.
+
+## Runde 2 (2026-10-30, unabhängiger Kritiker, frischer Kontext, auf 2c7836d)
+
+Urteil: **PASS**. Alle elf Punkte der ersten Runde sind im Plan abgedeckt: messbare Kriterien (Tag 31/29, zwei Prozesse, 200 000 Zeilen), Sperre auch beim Anhängen, Temp-Datei mit Umbenennen und 0600, Inhalt mit Pfaden benannt, Vorrangregel, Fälschbarkeit und Restrisiko, rollierende Zeiträume, wer das Löschen auslöst. Mitgeprüft: R030/UC20/T025 (`secretariat header`) ohne Widerspruch zum übrigen Plan. Niedrig und offen: `ProjectInstructions.swift` (geändert für die Setup-Sperre) und `Mcp.swift` (Markierung für `run_command`) stehen in keiner bzw. nicht in T025s Files-Liste; die Auswirkungen deckt der Regressionslauf ab.

@@ -160,3 +160,18 @@ private func line(_ action: String, _ at: Date, via: String? = nil, _ extra: [St
     #expect(History.lineDate(Data(#"{"action":"run","at":"2026-1"#.utf8)) == nil)
     #expect(History.lineDate(Data(#"{"action":"run"}"#.utf8)) == nil)
 }
+
+@Test func strictDatesAndMergedHalvesAndAMissingNewline() throws {
+    #expect(History.date("2026-02-31T00:00:00Z") == nil && History.date("2026-10-30T24:00:00Z") == nil && History.date("2026-10-30T10:60:00Z") == nil)
+    #expect(History.date("2024-02-29T00:00:00Z") != nil && History.date("2026-02-29T00:00:00Z") == nil)
+    // Two damaged halves that would form one valid object when joined with a comma: the block falls back to single lines.
+    let good = #"{"action":"get","at":"2026-10-30T10:00:00Z","field":"a/b/c","via":"x"}"#
+    let halves = [#"{"action":"run","at":"2026-10-30T10:00:00Z","profile":"p""#, #""via":"y"}"#]
+    #expect(History.parse(([good] + halves + [good]).joined(separator: "\n")).map(\.action) == ["get", "get"])
+    // A log that ends without a newline (crash) keeps the next entry on its own line.
+    let fixture = try AgentFixture(); defer { fixture.cleanup() }
+    let url = fixture.vault.audit.url!
+    try Data(#"{"action":"run","at":"2026-10-30T10:00:00Z","profile":"cut"#.utf8).write(to: url)
+    AuditLog(url: url, origin: "script").record("get", ["field": "a/b/c"])
+    #expect(AuditLog(url: url).entries().map(\.action) == ["get"])
+}

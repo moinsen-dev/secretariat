@@ -116,9 +116,13 @@ public struct AuditLog: Sendable {
         guard var line = try? JSONSerialization.data(withJSONObject: entry, options: [.sortedKeys]) else { return }
         line.append(0x0A)
         try? locked {
-            let descriptor = open(url.path, O_WRONLY | O_APPEND | O_CREAT | O_NOFOLLOW, 0o600)
+            let descriptor = open(url.path, O_RDWR | O_APPEND | O_CREAT | O_NOFOLLOW, 0o600)
             guard descriptor >= 0 else { return }
             defer { close(descriptor) }
+            // A crash may have left the last line without its newline; the new entry must not stick to it.
+            var last: UInt8 = 0x0A
+            let size = lseek(descriptor, 0, SEEK_END)
+            if size > 0, pread(descriptor, &last, 1, size - 1) == 1, last != 0x0A { line.insert(0x0A, at: 0) }
             _ = line.withUnsafeBytes { write(descriptor, $0.baseAddress, $0.count) }
         }
     }
@@ -131,7 +135,7 @@ public struct AuditLog: Sendable {
         guard let url, let data = try? Data(contentsOf: url) else { return [] }
         return History.parse(data)
     }
-    /// Removes entries older than `cutoff`; unreadable lines are kept. Returns how many went.
+    /// Removes lines dated before `cutoff`, readable or not; lines without a date are kept. Returns how many went.
     /// Lines are dated by a byte search, so the check on every CLI call stays cheap; the file is only rewritten when something goes.
     @discardableResult public func prune(olderThan cutoff: Date) throws -> Int {
         guard let url else { return 0 }

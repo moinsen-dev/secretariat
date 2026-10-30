@@ -191,7 +191,9 @@ public enum History {
             }
             guard let year = number(0, 4), let month = number(5, 7), let day = number(8, 10),
                   let hour = number(11, 13), let minute = number(14, 16), let second = number(17, 19) else { return .some(nil) }
-            guard (1...12).contains(month), (1...31).contains(day) else { return .some(nil) }
+            let leap = year % 4 == 0 && (year % 100 != 0 || year % 400 == 0)
+            let length: Int32 = month == 2 ? (leap ? 29 : 28) : [4, 6, 9, 11].contains(month) ? 30 : 31
+            guard (1...12).contains(month), (1...length).contains(day), hour < 24, minute < 60, second < 60 else { return .some(nil) }
             // Days since 1970 from the civil date (H. Hinnant's algorithm); timegm takes a time-zone lock on every call.
             let y = Int(month <= 2 ? year - 1 : year), era = (y >= 0 ? y : y - 399) / 400, yoe = y - era * 400
             let mp = Int(month > 2 ? month - 3 : month + 9), doy = (153 * mp + 2) / 5 + Int(day) - 1
