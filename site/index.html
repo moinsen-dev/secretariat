@@ -19,8 +19,9 @@
       Secretariat
     </a>
     <nav class="nav" aria-label="Main">
-      <a href="#capture">Capture</a>
       <a href="#how">How it works</a>
+      <a href="#diy">Build or buy</a>
+      <a href="#capture">Capture</a>
       <a href="#guard">Agent Guard</a>
       <a href="#mcp">MCP tokens</a>
       <a href="#compare">Compare</a>
@@ -36,14 +37,14 @@
 <section class="hero">
   <div class="wrap hero-grid">
     <div>
-      <p class="eyebrow">For macOS 14 and later</p>
+      <p class="eyebrow">For Mac developers who run Claude Code, Codex or OpenCode across many projects</p>
       <h1>Your coding agents use your keys. They don't get to read them.</h1>
       <p class="lead">Grab a key from the clipboard with one shortcut, or let Secretariat read it off a screenshot, on your Mac. It lives in your iCloud keychain. Agents start your tools through it: the program gets the values, the agent sees <code>[masked]</code>. No server, no account, no subscription.</p>
       <div class="cta-row">
         <a class="btn" href="Secretariat-latest.zip">Download free trial</a>
         <a class="btn secondary" href="#pricing">Buy for 39 €</a>
       </div>
-      <p class="fineprint">14 days with everything, no account. After that it keeps working and asks you to buy. Honest about its limits: <a href="threat-model.html">read the threat model</a>.</p>
+      <p class="fineprint">14 days with everything, no account. After that it keeps working and asks you to buy. Needs macOS 14 or later; reading screenshots with Apple Intelligence needs macOS 26. Honest about its limits: <a href="threat-model.html">read the threat model</a>.</p>
     </div>
     <div>
       <figure class="terminal" aria-label="Example: an agent runs a command through Secretariat and sees masked output">
@@ -92,39 +93,6 @@ changes contain secret values:
   </div>
 </section>
 
-<!-- Capture -->
-<section id="capture">
-  <div class="wrap">
-    <div class="section-head">
-      <p class="eyebrow">Capture</p>
-      <h2>A new key is on screen. Two seconds later it's safe.</h2>
-      <p class="lead">Keys appear in a dashboard once, in a setup wizard, in a chat. Secretariat catches them where they show up, so they never land in a notes file or a stray <code>.env</code> first.</p>
-    </div>
-    <div class="cards">
-      <article class="card">
-        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg></div>
-        <h3>Clipboard inbox</h3>
-        <p>Copy a key, press <kbd>⌃⌥⌘V</kbd>. It goes to the Inbox with date and time, and the clipboard is cleared. No program gets it until you turn it into an item; the provider is guessed from the key's prefix.</p>
-      </article>
-      <article class="card">
-        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-8 8"/><path d="M15 3.5l1.5 1.5 3-3" /></svg></div>
-        <h3>Encrypted screenshots <span class="tag">New</span></h3>
-        <p>Recovery codes, a setup page, a QR code: paste the screenshot with <kbd>⌘V</kbd> and add a note. Image and note are sealed with AES-GCM, synced through your private iCloud Drive container, and stay blurred until you click Show. No CLI or agent can open them.</p>
-      </article>
-      <article class="card">
-        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 10h8M8 14h5"/></svg></div>
-        <h3>From screenshot to item, on-device <span class="tag">New</span></h3>
-        <p>“Create Item …” reads the screenshot with Apple's text recognition and Apple Intelligence on your Mac, picks kind, provider and fields, and opens the item ready to check. Nothing leaves your Mac. Every value must appear in the screenshot, and look-alike characters are marked for you to compare.</p>
-      </article>
-    </div>
-    <figure class="shot small">
-      <img src="img/item-from-screenshot.png" width="552" height="500" alt="The Add Item dialog after reading a demo screenshot: a note says it was read on this Mac with Apple's on-device model, a warning asks to compare look-alike characters, and kind API key, provider anthropic, project pulse-readonly and the hidden key are filled in." loading="lazy">
-      <figcaption>A demo console screenshot, read on the Mac and turned into a prefilled item to check and save.</figcaption>
-    </figure>
-    <p class="note">Reading a screenshot with Apple Intelligence needs macOS 26 and a Mac that supports it. Without it, Secretariat uses text recognition and known key prefixes, and says so in the dialog.</p>
-  </div>
-</section>
-
 <!-- How it works -->
 <section id="how">
   <div class="wrap">
@@ -163,6 +131,92 @@ secretariat profile bind \
     </figure>
   </div>
 </section>
+
+<!-- Build or buy -->
+<section id="diy">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Build or buy</p>
+      <h2>Couldn't I just vibe-code this?</h2>
+      <p class="lead">You could. With a good agent the first version takes about two days; that's how Secretariat started. What you'd build in those two days is a vault. What you'd still be missing is everything that makes you stop thinking about keys.</p>
+    </div>
+
+    <div class="split">
+      <article class="card yes">
+        <h3>What changes for you</h3>
+        <ul>
+          <li>You don't paste keys anymore: not into a <code>.env</code>, a chat, a config file or a setup guide.</li>
+          <li>You don't search for keys anymore. New project, new Mac: they're there.</li>
+          <li>You don't lose keys anymore. Every Mac backs up on its own, sealed to a key only you hold.</li>
+          <li>Your agents build, test and deploy with your keys and never read one.</li>
+          <li>You can see which agent used which key, and when.</li>
+        </ul>
+      </article>
+      <article class="card no">
+        <h3>What a weekend clone usually skips</h3>
+        <ul>
+          <li>Sync to every Mac without a server: keychain access groups, a provisioning profile, notarization with the CLI inside the bundle.</li>
+          <li>The leaks nobody thinks of: <code>docker compose config</code>, <code>printenv</code>, an agent switching masking off, a key in a commit from last year.</li>
+          <li>Backups the Mac can write but not read, with a recovery key, per-Mac retention and files iCloud has moved off the disk.</li>
+          <li>Masking that holds when a value is split across two chunks of output.</li>
+          <li>Someone trying to break it before each release.</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="features">
+      <div class="feature">
+        <h3>Tested, not hoped</h3>
+        <p>94 automated tests and a CLI regression run before every release. Each feature also goes to a separate reviewer agent with a fresh context, whose only job is to break it; the feature ships when that review passes. The last one found that an agent could have read an MCP token through the MCP tool. Fixed before release. These are our own checks, not an outside audit.</p>
+      </div>
+      <div class="feature">
+        <h3>Honest about limits</h3>
+        <p>The <a href="threat-model.html">threat model</a> says what is protected and what isn't. A tool you vibe-coded yourself is one you have to trust yourself, and audit yourself.</p>
+      </div>
+      <div class="feature">
+        <h3>Keeps getting better</h3>
+        <p>Every 1.x update is included, on all your Macs. When a new agent learns a new way to read secrets, the guard learns it once, for everyone.</p>
+      </div>
+    </div>
+
+    <p class="note">We've spent those days, and the weeks after them. 39 € buys them back, so your weekend goes to the thing you actually wanted to ship. Secretariat is made by Ulrich Diedrichsen in Hamburg, who runs his own 150 projects on it every day.</p>
+  </div>
+</section>
+
+<!-- Capture -->
+<section id="capture">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Capture</p>
+      <h2>A new key is on screen. Two seconds later it's safe.</h2>
+      <p class="lead">Keys appear in a dashboard once, in a setup wizard, in a chat. Secretariat catches them where they show up, so they never land in a notes file or a stray <code>.env</code> first.</p>
+    </div>
+    <div class="cards">
+      <article class="card">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg></div>
+        <h3>Clipboard inbox</h3>
+        <p>Copy a key, press <kbd>⌃⌥⌘V</kbd>. It goes to the Inbox with date and time, and the clipboard is cleared. No program gets it until you turn it into an item; the provider is guessed from the key's prefix.</p>
+      </article>
+      <article class="card">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M21 16l-5-5-8 8"/><path d="M15 3.5l1.5 1.5 3-3" /></svg></div>
+        <h3>Encrypted screenshots <span class="tag">New</span></h3>
+        <p>Recovery codes, a setup page, a QR code: paste the screenshot with <kbd>⌘V</kbd> and add a note. Image and note are sealed with AES-GCM, synced through your private iCloud Drive container, and stay blurred until you click Show. No CLI or agent can open them.</p>
+      </article>
+      <article class="card">
+        <div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 10h8M8 14h5"/></svg></div>
+        <h3>From screenshot to item, on-device <span class="tag">New</span></h3>
+        <p>“Create Item …” reads the screenshot with Apple's text recognition and Apple Intelligence on your Mac, picks kind, provider and fields, and opens the item ready to check. Nothing leaves your Mac. Every value must appear in the screenshot, and look-alike characters are marked for you to compare.</p>
+      </article>
+    </div>
+    <figure class="shot small">
+      <img src="img/item-from-screenshot.png" width="552" height="500" alt="The Add Item dialog after reading a demo screenshot: a note says it was read on this Mac with Apple's on-device model, a warning asks to compare look-alike characters, and kind API key, provider anthropic, project pulse-readonly and the hidden key are filled in." loading="lazy">
+      <figcaption>A demo console screenshot, read on the Mac and turned into a prefilled item to check and save.</figcaption>
+    </figure>
+    <p class="note">Reading a screenshot with Apple Intelligence needs macOS 26 and a Mac that supports it. Without it, Secretariat uses text recognition and known key prefixes, and says so in the dialog.</p>
+  </div>
+</section>
+
+
 
 <!-- Agent Guard -->
 <section id="guard">
@@ -383,55 +437,7 @@ secretariat profile bind \
 </section>
 
 <!-- Pricing -->
-<section id="diy">
-  <div class="wrap">
-    <div class="section-head">
-      <p class="eyebrow">Fair question</p>
-      <h2>Couldn't I just vibe-code this?</h2>
-      <p class="lead">You could. With a good agent the first version takes about two days; that's how Secretariat started. What you'd build in those two days is a vault. What you'd still be missing is everything that makes you stop thinking about keys.</p>
-    </div>
 
-    <div class="split">
-      <article class="card yes">
-        <h3>What changes for you</h3>
-        <ul>
-          <li>You don't paste keys anymore: not into a <code>.env</code>, a chat, a config file or a setup guide.</li>
-          <li>You don't search for keys anymore. New project, new Mac: they're there.</li>
-          <li>You don't lose keys anymore. Every Mac backs up on its own, sealed to a key only you hold.</li>
-          <li>Your agents build, test and deploy with your keys and never read one.</li>
-          <li>You can see which agent used which key, and when.</li>
-        </ul>
-      </article>
-      <article class="card no">
-        <h3>What a weekend clone usually skips</h3>
-        <ul>
-          <li>Sync to every Mac without a server: keychain access groups, a provisioning profile, notarization with the CLI inside the bundle.</li>
-          <li>The leaks nobody thinks of: <code>docker compose config</code>, <code>printenv</code>, an agent switching masking off, a key in a commit from last year.</li>
-          <li>Backups the Mac can write but not read, with a recovery key, per-Mac retention and files iCloud has moved off the disk.</li>
-          <li>Masking that holds when a value is split across two chunks of output.</li>
-          <li>Someone trying to break it before each release.</li>
-        </ul>
-      </article>
-    </div>
-
-    <div class="features">
-      <div class="feature">
-        <h3>Tested, not hoped</h3>
-        <p>94 automated tests, a CLI regression run before every release, and an independent review that has to pass before a feature ships. The last one found that an agent could have read an MCP token through the MCP tool. Fixed before release.</p>
-      </div>
-      <div class="feature">
-        <h3>Honest about limits</h3>
-        <p>The <a href="threat-model.html">threat model</a> says what is protected and what isn't. A tool you vibe-coded yourself is one you have to trust yourself, and audit yourself.</p>
-      </div>
-      <div class="feature">
-        <h3>Keeps getting better</h3>
-        <p>Every 1.x update is included, on all your Macs. When a new agent learns a new way to read secrets, the guard learns it once, for everyone.</p>
-      </div>
-    </div>
-
-    <p class="note">We've spent those days, and the weeks after them. 39 € buys them back, so your weekend goes to the thing you actually wanted to ship.</p>
-  </div>
-</section>
 
 <section id="pricing">
   <div class="wrap pricing-grid">
@@ -456,7 +462,8 @@ secretariat profile bind \
         <li>History of every access, by app, terminal or agent</li>
         <li>.env import and cleanup across all projects</li>
         <li>Targets, rotation tracking, MCP server</li>
-        <li>All 1.x updates included, on all your Macs</li>
+        <li>One license per person, on all your Macs (it travels with your iCloud keychain)</li>
+        <li>All 1.x updates included</li>
         <li>macOS 14 or later</li>
       </ul>
       <a class="btn block" href="/buy">Buy Secretariat</a>
@@ -500,7 +507,7 @@ secretariat profile bind \
       </details>
       <details>
         <summary>Is it open source?</summary>
-        <div><p>The source is available: you can read the code on GitHub. The license is still being chosen. What you buy is the license for the signed, notarized build and its updates.</p></div>
+        <div><p>Not yet: the code lives in a private repository for now. What you buy is the license for the signed, notarized build and its updates. The <a href="threat-model.html">threat model</a> describes how each protection works.</p></div>
       </details>
       <details>
         <summary>Does it stop a malicious agent?</summary>
