@@ -5,22 +5,22 @@
     "has_uncommitted_changes" : false,
     "is_repo" : true,
     "last_commit_author" : "Ulrich Diedrichsen",
-    "last_commit_date" : "2026-10-26T18:27:56Z",
-    "last_commit_message" : "1.3.1 workflow: regression rebound, local release",
-    "local_secret_files" : 0,
+    "last_commit_date" : "2026-10-29T17:39:04Z",
+    "last_commit_message" : "Record release 1.12.0 (LOCAL, M1, Mini, site); regression rebind on 5663ea0",
+    "local_secret_files" : 5,
     "stale_days" : 0,
     "stash_count" : 0,
-    "total_commits" : 25,
+    "total_commits" : 72,
     "uncommitted_files_count" : 0,
-    "unpushed_commits" : 21
+    "unpushed_commits" : 34
   },
-  "last_scanned" : "2026-10-27T10:25:22Z",
+  "last_scanned" : "2026-10-30T09:19:12Z",
   "project_path" : "\/Users\/udi\/work\/moinsen\/ideas\/local_secrets_orchestrator",
   "pumuckl_version" : 1,
   "report" : {
-    "accent" : "#0a84ff",
-    "ai_note" : "Secretariat ist schon erstaunlich rund: Schlüsselbund, CLI und Agenten-Einrichtung greifen ineinander, nur der letzte Schritt zum verteilbaren Release fehlt noch.",
-    "ai_suggestion" : "Die Developer-ID-signierte App lokal mit notarytool notarisieren, das Ticket anheften und mit spctl auf einem sauberen Nutzerkonto prüfen.",
+    "accent" : "#3B82F6",
+    "ai_note" : "Das Projekt ist frisch aktiv, hat 72 Commits und mit Version 1.12.0 schon einen Release-Stand. Ein kurzer Blick genügt, um wieder reinzukommen.",
+    "ai_suggestion" : "Lokal prüfen, ob die App noch baut und startet, Abhängigkeiten aktualisieren und die Tests grün machen; danach die Regression aus Commit 5663ea0 (rebind) gezielt nachstellen und beheben.",
     "architecture" : [
       {
         "lbl" : "UI",
@@ -124,11 +124,11 @@
         "t" : "CLI"
       }
     ],
-    "effort_to_complete" : 25,
+    "effort_to_complete" : 40,
     "history" : [
       "Das Projekt begann als Neubau einer nativen Minimal-App, der Altstand liegt im Legacy-Archiv. Danach kamen die Agenten-Einrichtung und die nichtinteraktive Keychain-CLI, zuletzt die lokale Abnahme von Version 0.2."
     ],
-    "impact" : 68,
+    "impact" : 70,
     "last_state" : [
       {
         "meta" : "Abschlussstand in PLAN\/TRACKER aktualisiert, vor 2 Tagen",
@@ -151,13 +151,13 @@
         "wip" : false
       }
     ],
-    "overall_gem_score" : 78,
-    "progress" : 85,
+    "overall_gem_score" : 68,
+    "progress" : 80,
     "re_entry_action" : "Die signierte dist\/Secretariat.app lokal mit xcrun notarytool notarisieren, das Ticket mit stapler anheften und die Installation per spctl --assess sowie einen echten Lauf von .\/script\/install.sh prüfen.",
-    "re_entry_effort" : "~2-3 Stunden",
+    "re_entry_effort" : "~2h",
     "re_entry_why" : "Release-Reife ist die schwächste Dimension, weil die Abnahme zwar mit Developer-ID signiert, aber nicht notarisiert ist; erst damit lässt sich die App außerhalb dieses Macs ohne Gatekeeper-Warnung weitergeben.",
-    "recency" : 95,
-    "resumption_ease" : 88,
+    "recency" : 100,
+    "resumption_ease" : 75,
     "roadmap" : [
       {
         "d" : "Signierte App mit notarytool notarisieren, Ticket anheften, mit spctl prüfen",
@@ -251,7 +251,7 @@
         "t" : "Anforderungen und Nachweise pflegen"
       }
     ],
-    "vision" : "Secretariat ist eine kleine native Mac-App, die API-Schlüssel einmal im macOS-Schlüsselbund ablegt und sie projektbezogen an Startbefehle übergibt. So landen keine Geheimnisse in Konfigurationsdateien oder kopierten Aufrufen, und auch Coding-Agenten wie Codex, Claude Code und OpenCode können Projekte sauber starten."
+    "vision" : "Secretariat wird eine verlässliche Mac-App, in der API-Schlüssel sicher im Schlüsselbund bleiben und Projekte per Profil oder CLI mit einem Befehl starten."
   },
   "scan" : {
     "capability" : {
@@ -264,22 +264,23 @@
       "head" : "64e0af0"
     },
     "fast" : {
-      "at" : "2026-10-25T15:19:58Z",
-      "head" : "64e0af0"
+      "at" : "2026-10-30T09:19:12Z",
+      "head" : "a95bad9",
+      "mtime" : 1793295551.4441504
     },
     "git" : {
-      "at" : "2026-10-27T10:24:55Z",
-      "head" : "9150810",
-      "mtime" : 1793039276.7516987
+      "at" : "2026-10-30T09:18:08Z",
+      "head" : "a95bad9",
+      "mtime" : 1793295551.4441504
     }
   },
   "scoring" : {
-    "ai_note" : "Secretariat ist schon erstaunlich rund: Schlüsselbund, CLI und Agenten-Einrichtung greifen ineinander, nur der letzte Schritt zum verteilbaren Release fehlt noch.",
-    "ai_suggestion" : "Die Developer-ID-signierte App lokal mit notarytool notarisieren, das Ticket anheften und mit spctl auf einem sauberen Nutzerkonto prüfen.",
-    "effort_to_complete" : 25,
-    "impact" : 68,
-    "overall_gem_score" : 78,
-    "progress" : 85,
-    "recency" : 95
+    "ai_note" : "Das Projekt ist frisch aktiv, hat 72 Commits und mit Version 1.12.0 schon einen Release-Stand. Ein kurzer Blick genügt, um wieder reinzukommen.",
+    "ai_suggestion" : "Lokal prüfen, ob die App noch baut und startet, Abhängigkeiten aktualisieren und die Tests grün machen; danach die Regression aus Commit 5663ea0 (rebind) gezielt nachstellen und beheben.",
+    "effort_to_complete" : 40,
+    "impact" : 70,
+    "overall_gem_score" : 68,
+    "progress" : 80,
+    "recency" : 100
   }
 }
