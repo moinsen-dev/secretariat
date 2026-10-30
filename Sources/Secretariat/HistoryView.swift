@@ -4,6 +4,7 @@ import SecretariatCore
 
 extension AppModel {
     /// Applies the retention setting and reads this Mac's history off the main thread; reading never changes the file.
+    /// Switching retention only saves the setting here; the deletion itself runs in `loadHistory`, off the main thread.
     func loadHistory() {
         let paths = paths
         Task {

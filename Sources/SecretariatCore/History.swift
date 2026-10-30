@@ -21,7 +21,8 @@ public enum Origin {
         if environment["GEMINI_CLI"] == "1" { return "gemini-cli" }
         if environment["CURSOR_AGENT"] == "1" { return "cursor" }
         if environment["CLAUDECODE"] == "1" { return "claude-code" }
-        if let agent = environment["AI_AGENT"].map(slug), !agent.isEmpty { return agent }
+        // An agent can't pass itself off as the app, a person or the old entries.
+        if let agent = environment["AI_AGENT"].map(slug), !agent.isEmpty { return [app, terminal, script, earlier, mcp].contains(agent) ? "agent-\(agent)" : agent }
         return interactive ? terminal : script
     }
 
@@ -83,7 +84,7 @@ public struct HistoryEntry: Identifiable, Equatable, Sendable {
         case "item.delete": return "Deleted \(details["item"] ?? "?")"
         case "field.move": return "Moved \(details["from"] ?? "?") to \(details["to"] ?? "?")"
         case "import": return "Imported \(count("fields", "field")) from \(URL(fileURLWithPath: details["file"] ?? "?").lastPathComponent)"
-        case "inject": return "Filled \(details["out"] ?? "?") · \(count("fields", "field"))"
+        case "inject": return "Filled \(URL(fileURLWithPath: details["out"] ?? "?").lastPathComponent) · \(count("fields", "field"))"
         case "push": return "Pushed to target \(details["target"] ?? "?") · \(count("variables", "variable"))"
         case "approval": return "Asked for Touch ID: \(details["purpose"] ?? "?")"
         case "guard.blocked": return "Commit blocked in \(details["files"] ?? "?")"
@@ -118,28 +119,64 @@ public enum HistoryPeriod: String, CaseIterable, Identifiable, Sendable {
 
 public enum History {
     /// Parses audit.log lines; lines without an origin come from before 1.13 and count as "earlier", unreadable ones are skipped.
-    /// One JSON pass over the whole file keeps a year of heavy use (200,000 lines) well under two seconds; a damaged
-    /// line makes it fall back to reading line by line.
-    public static func parse(_ text: String) -> [HistoryEntry] {
-        let body = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        let objects: [Any?]
-        if body.isEmpty {
-            objects = []
-        } else if let all = try? JSONSerialization.jsonObject(with: Data(("[" + body.replacingOccurrences(of: "\n", with: ",") + "]").utf8)) as? [Any] {
-            objects = all
-        } else {
-            objects = text.split(separator: "\n", omittingEmptySubsequences: true).map { try? JSONSerialization.jsonObject(with: Data($0.utf8)) }
+    public static func parse(_ text: String) -> [HistoryEntry] { parse(Data(text.utf8)) }
+
+    /// Blocks of 5,000 lines are read in parallel, each in one JSON pass (200,000 lines well under two seconds). A block
+    /// that fails, or whose lines merged into fewer objects, is read line by line, so a damaged line costs only itself.
+    public static func parse(_ data: Data) -> [HistoryEntry] {
+        let lines = data.split(separator: 0x0A, omittingEmptySubsequences: true)
+        let size = 5_000, blocks = (lines.count + size - 1) / size
+        var results = [[HistoryEntry]](repeating: [], count: blocks)
+        results.withUnsafeMutableBufferPointer { out in
+            DispatchQueue.concurrentPerform(iterations: blocks) { block in
+                let range = block * size ..< min(lines.count, (block + 1) * size)
+                let text = String(decoding: data[lines[range.lowerBound].startIndex..<lines[range.upperBound - 1].endIndex], as: UTF8.self)
+                var objects: [Any?]
+                if let all = try? JSONSerialization.jsonObject(with: Data(("[" + text.replacingOccurrences(of: "\n", with: ",") + "]").utf8)) as? [Any],
+                   all.count == range.count {
+                    objects = all
+                } else {
+                    objects = range.map { i in
+                        (try? JSONSerialization.jsonObject(with: Data(lines[i])))
+                            ?? (try? JSONSerialization.jsonObject(with: Data(String(decoding: lines[i], as: UTF8.self).utf8)))
+                    }
+                }
+                out[block] = objects.enumerated().compactMap { entry(range.lowerBound + $0.offset, $0.element) }
+            }
         }
-        var entries: [HistoryEntry] = []
-        entries.reserveCapacity(objects.count)
-        for (index, object) in objects.enumerated() {
-            guard var details = object as? [String: Any], let action = details.removeValue(forKey: "action") as? String,
-                  let at = (details.removeValue(forKey: "at") as? String).flatMap(date) else { continue }
-            let via = details.removeValue(forKey: "via") as? String ?? Origin.earlier
-            entries.append(HistoryEntry(id: index, at: at, action: action, via: via,
-                                        details: details.mapValues { $0 as? String ?? "\($0)" }))
+        return Array(results.joined())
+    }
+
+    /// NSDictionary as JSONSerialization returns it: bridging each line to [String: Any] first doubled the time.
+    private static func entry(_ id: Int, _ object: Any?) -> HistoryEntry? {
+        guard let object = object as? NSDictionary, let action = object["action"] as? String,
+              let at = (object["at"] as? String).flatMap(date) else { return nil }
+        var details: [String: String] = [:]
+        details.reserveCapacity(object.count)
+        for (key, value) in object {
+            guard let key = key as? String, key != "action", key != "at", key != "via" else { continue }
+            details[key] = value as? String ?? "\(value)"
         }
-        return entries
+        return HistoryEntry(id: id, at: at, action: action, via: object["via"] as? String ?? Origin.earlier, details: details)
+    }
+
+    /// The time of one log line, found without parsing the JSON: the key `"at"` followed by a colon (spaces allowed) and a
+    /// string. A value "at" is followed by a comma or brace instead and skipped.
+    static func lineDate(_ line: Data) -> Date? {
+        let key = Array(#""at""#.utf8)
+        var from = line.startIndex
+        while let found = line[from...].firstRange(of: key) {
+            var i = found.upperBound
+            func skipSpaces() { while i < line.endIndex, line[i] == 0x20 || line[i] == 0x09 { i += 1 } }
+            skipSpaces()
+            if i < line.endIndex, line[i] == 0x3A {
+                i += 1; skipSpaces()
+                guard i < line.endIndex, line[i] == 0x22, line.distance(from: i, to: line.endIndex) > 20 else { return nil }
+                return date(String(decoding: line[(i + 1)..<(i + 21)], as: UTF8.self))
+            }
+            from = found.upperBound
+        }
+        return nil
     }
 
     /// "2026-10-29T17:40:01Z" without a formatter (the formatter dominated parsing); other forms fall back to it.
@@ -154,8 +191,12 @@ public enum History {
             }
             guard let year = number(0, 4), let month = number(5, 7), let day = number(8, 10),
                   let hour = number(11, 13), let minute = number(14, 16), let second = number(17, 19) else { return .some(nil) }
-            var t = tm(); t.tm_year = year - 1900; t.tm_mon = month - 1; t.tm_mday = day; t.tm_hour = hour; t.tm_min = minute; t.tm_sec = second
-            return .some(Date(timeIntervalSince1970: TimeInterval(timegm(&t))))
+            guard (1...12).contains(month), (1...31).contains(day) else { return .some(nil) }
+            // Days since 1970 from the civil date (H. Hinnant's algorithm); timegm takes a time-zone lock on every call.
+            let y = Int(month <= 2 ? year - 1 : year), era = (y >= 0 ? y : y - 399) / 400, yoe = y - era * 400
+            let mp = Int(month > 2 ? month - 3 : month + 9), doy = (153 * mp + 2) / 5 + Int(day) - 1
+            let days = era * 146_097 + yoe * 365 + yoe / 4 - yoe / 100 + doy - 719_468
+            return .some(Date(timeIntervalSince1970: TimeInterval(days * 86_400 + Int(hour) * 3_600 + Int(minute) * 60 + Int(second))))
         }
         return parsed ?? ISO8601DateFormatter().date(from: text)
     }

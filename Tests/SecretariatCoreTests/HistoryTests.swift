@@ -9,6 +9,8 @@ import Testing
     #expect(Origin.detect(["CURSOR_AGENT": "1"], interactive: false) == "cursor")
     #expect(Origin.detect(["CLAUDECODE": "1", "AI_AGENT": "claude-code_2-1-309_agent"], interactive: true) == "claude-code")
     #expect(Origin.detect(["AI_AGENT": "Hermes_0.22"], interactive: false) == "hermes")
+    #expect(Origin.detect(["AI_AGENT": "app"], interactive: false) == "agent-app")
+    #expect(Origin.detect(["AI_AGENT": "Terminal"], interactive: true) == "agent-terminal")
     #expect(Origin.detect([:], interactive: true) == "terminal")
     #expect(Origin.detect([:], interactive: false) == "script")
     #expect(Origin.mcp(client: "Claude Desktop") == "mcp:claude-desktop")
@@ -53,6 +55,7 @@ private func line(_ action: String, _ at: Date, via: String? = nil, _ extra: [St
     // Off by default: nothing goes.
     #expect(fixture.vault.pruneHistory(now: now) == 0)
     try fixture.vault.setHistoryRetention(days: 30)
+    #expect(fixture.vault.pruneHistory(now: now) == 1)
     let profiles = log.entries().compactMap { $0.details["profile"] }
     #expect(!profiles.contains("day31") && profiles.contains("day29") && profiles.contains("today"))
     // The switch and the deletion are part of the history themselves.
@@ -68,18 +71,49 @@ private func line(_ action: String, _ at: Date, via: String? = nil, _ extra: [St
     let fixture = try AgentFixture(); defer { fixture.cleanup() }
     let url = fixture.vault.audit.url!
     let old = Date().addingTimeInterval(-100 * 86_400)
-    for i in 0..<200 { AuditLog(url: url, origin: "script").record("run", ["profile": "old\(i)"], at: old) }
+    // Writers keep adding old and new lines, so every pruning pass has something to remove and rewrites the file.
+    final class Progress: @unchecked Sendable { let lock = NSLock(); var passes = 0, writersDone = 0 }
+    let progress = Progress()
     DispatchQueue.concurrentPerform(iterations: 3) { worker in
         if worker == 0 {
-            for _ in 0..<30 { _ = try? AuditLog(url: url).prune(olderThan: Date().addingTimeInterval(-86_400)) }
+            while progress.lock.withLock({ progress.writersDone < 2 }) {
+                if ((try? AuditLog(url: url).prune(olderThan: Date().addingTimeInterval(-86_400))) ?? 0) > 0 { progress.lock.withLock { progress.passes += 1 } }
+            }
         } else {
-            for i in 0..<300 { AuditLog(url: url, origin: "script").record("run", ["profile": "w\(worker)-\(i)"]) }
+            defer { progress.lock.withLock { progress.writersDone += 1 } }
+            for i in 0..<300 {
+                AuditLog(url: url, origin: "script").record("run", ["profile": "old\(worker)-\(i)"], at: old)
+                AuditLog(url: url, origin: "script").record("run", ["profile": "w\(worker)-\(i)"])
+            }
         }
     }
-    // The fixture's own item.save stays; all 200 old runs went, all 600 new ones are there.
+    try AuditLog(url: url).prune(olderThan: Date().addingTimeInterval(-86_400))
+    #expect(progress.passes > 5, "pruning rewrote the file \(progress.passes) times")
     let runs = AuditLog(url: url).entries().compactMap { $0.details["profile"] }
     #expect(runs.count == 600)
-    #expect(runs.allSatisfy { $0.hasPrefix("w") })
+    #expect(Set(runs).count == 600 && runs.allSatisfy { $0.hasPrefix("w") })
+}
+
+@Test func aDamagedLineCostsOnlyItself() throws {
+    let fixture = try AgentFixture(); defer { fixture.cleanup() }
+    let url = fixture.vault.audit.url!
+    let now = Date()
+    var data = Data((line("run", now.addingTimeInterval(-40 * 86_400), via: "script", ["profile": "old"]) + "\n").utf8)
+    data.append(Data(#"{"action":"run","at":""#.utf8)); data.append(contentsOf: [0xC3]); data.append(Data("\n".utf8))   // cut-off umlaut
+    data.append(Data((line("run", now, via: "codex", ["profile": "f\u{00FC}r"]) + "\n").utf8))
+    data.append(Data(#"{"action":"get","at":"2026-10-30T10:00:00Z","field":"a/b/c"#.utf8)); data.append(Data("\n".utf8))  // missing end
+    data.append(Data(#""via":"x"}"#.utf8)); data.append(Data("\n".utf8))
+    try data.write(to: url)
+    let entries = AuditLog(url: url).entries()
+    #expect(entries.map { $0.details["profile"] ?? "" } == ["old", "f\u{00FC}r"])
+    #expect(try AuditLog(url: url).prune(olderThan: now.addingTimeInterval(-30 * 86_400)) == 1)
+    #expect(AuditLog(url: url).entries().map { $0.details["profile"] ?? "" } == ["f\u{00FC}r"])
+    #expect(AuditLog(url: url).tail(10).count == 4)   // damaged lines stay in the file
+}
+
+@Test func injectAndImportShowOnlyTheFileName() {
+    let entry = HistoryEntry(id: 0, at: Date(), action: "inject", via: "script", details: ["out": "/Users/x/work/client-acme/.env", "fields": "a/b/c"])
+    #expect(entry.summary == "Filled .env · 1 field")
 }
 
 @Test func historyNeverHoldsValuesAndTheCliOnlyReads() throws {
@@ -98,13 +132,31 @@ private func line(_ action: String, _ at: Date, via: String? = nil, _ extra: [St
 @Test func twoHundredThousandLinesParseQuickly() {
     let now = Date()
     let sample = line("run", now, via: "claude-code", ["profile": "shop", "variables": "A,B,C"])
-    let text = Array(repeating: sample, count: 200_000).joined(separator: "\n")
+    var lines = Array(repeating: sample, count: 200_000)
+    lines[123_456] = #"{"action":"run","at":"2026-1"#   // one damaged line must not switch to a slow path
+    let text = lines.joined(separator: "\n")
     let clock = ContinuousClock()
-    let elapsed = clock.measure { #expect(History.parse(text).count == 200_000) }
+    let elapsed = clock.measure { #expect(History.parse(text).count == 199_999) }
     #expect(elapsed < .seconds(2))
 }
 
 @Test func prunedSummaryCountsInTheRightNumber() {
     #expect(HistoryEntry(id: 0, at: Date(), action: "history.pruned", via: "app", details: ["entries": "1", "days": "30"]).summary == "Deleted 1 entry older than 30 days")
     #expect(HistoryEntry(id: 0, at: Date(), action: "history.pruned", via: "app", details: ["entries": "300", "days": "30"]).summary == "Deleted 300 entries older than 30 days")
+}
+
+@Test func fastDatesMatchTheFormatter() {
+    for text in ["2026-10-30T05:35:26Z", "2024-02-29T23:59:59Z", "1999-12-31T00:00:00Z", "2026-01-01T00:00:00Z", "2100-03-01T12:00:00Z"] {
+        #expect(History.date(text) == ISO8601DateFormatter().date(from: text), "\(text)")
+    }
+    #expect(History.date("2026-13-01T00:00:00Z") == nil)
+}
+
+@Test func lineDatesAreFoundWithOrWithoutSpaces() {
+    let expected = History.date("2026-08-01T10:00:00Z")
+    #expect(History.lineDate(Data(#"{"action":"run","at":"2026-08-01T10:00:00Z","via":"x"}"#.utf8)) == expected)
+    #expect(History.lineDate(Data(#"{"action": "run", "at": "2026-08-01T10:00:00Z", "via": "x"}"#.utf8)) == expected)
+    #expect(History.lineDate(Data(#"{"field":"at","at" : "2026-08-01T10:00:00Z"}"#.utf8)) == expected)
+    #expect(History.lineDate(Data(#"{"action":"run","at":"2026-1"#.utf8)) == nil)
+    #expect(History.lineDate(Data(#"{"action":"run"}"#.utf8)) == nil)
 }

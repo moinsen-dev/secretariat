@@ -16,9 +16,23 @@ Ursache per Ausschluss am laufenden Test-Build gefunden (Schalter, die je einen 
 | (3) Filter Claude Code | nur dessen Einträge | 3 Zugriffe, drei „Run with profile acme-shop“, Untertitel „Claude Code“, „Show all origins“ hebt auf |
 | (4) Löschen nach 30 Tagen an | 40-Tage-Zeile weg aus Datei und Ansicht, neuere bleiben, Löschen im Verlauf | Liste: „Deleted 1 entry older than 30 days“ und „Automatic deletion after 30 days“ oben, 20.09. weg, 10.10. bleibt (`docs/t024/history-year-retention-on.png`, Aufnahme vor der Korrektur „1 entries“ → „1 entry“); Datei: `grep -c 2026-09-20` → 0, Rechte `-rw-------` |
 | (5) `secretariat history --period week` | dieselben Anzahlen, Schalter nicht änderbar | „13 entries in the last 7 days on this Mac: Script 4, App 3, Claude Code 3, Codex 1, MCP · Claude Desktop 1, Terminal 1 · automatic deletion: after 30 days (change it in the app)“ – entspricht der App nach Schritt 4; `--json` gleiche Zahlen; `history --retention off` → „Unknown option“; es gibt keinen CLI-Befehl für den Schalter |
-| Mehrere Prozesse | kein Eintrag verloren | 300 Zeilen vom 01.08. angehängt, dann drei parallele Shell-Schleifen mit je 25 echten CLI-Aufrufen `get` (jeder Aufruf löscht vorher nach der Einstellung): 0 alte Zeilen übrig, 75 von 75 `get`-Einträgen da, `history.pruned` mit `entries: 300` |
-| Unit-Tests `xcrun swift test` | grün | 79/79, zweimal. Darin: Herkunftserkennung (innerster Agent zuerst), alte/neue/kaputte Zeilen, Zeiträume, Löschen Tag 31 weg/Tag 29 bleibt mit 0600, paralleles Schreiben beim Löschen (Threads), nie Werte, CLI nur lesend, 200 000 Zeilen in 1,2 s (Debug; vorher 2,05–2,2 s), Einzahl/Mehrzahl |
+| Mehrere Prozesse | kein Eintrag verloren, jedes Löschen schreibt wirklich neu | Ein eigener Python-Prozess hängt mit derselben Sperre (`audit.lock`, `flock`) abwechselnd 2000 alte (01.08.) und 2000 neue Zeilen an, gleichzeitig drei Shell-Schleifen mit je 40 echten CLI-Aufrufen `get` (jeder löscht vorher nach der Einstellung). Ergebnis: 15 Löschläufe haben die Datei neu geschrieben, 2000 von 2000 neuen Zeilen da (alle verschieden), 0 alte übrig, 121 von 121 `get`-Einträgen da, Rechte `-rw-------`. Der erste Versuch fand eine Lücke: Python schreibt `"at": "…"` mit Leerzeichen, die Bytesuche erwartete `"at":"`, solche Zeilen blieben stehen. Behoben und mit Test belegt |
+| Unit-Tests `xcrun swift test` | grün | 83/83, sechsmal. Darin: Herkunftserkennung (innerster Agent zuerst, `AI_AGENT=app` wird `agent-app`), alte/neue/kaputte Zeilen, eine Zeile mit abgeschnittenem Umlaut und eine zerrissene Zeile kosten nur sich selbst (Lesen, Löschen, `tail`), Zeiträume, Löschen Tag 31 weg/Tag 29 bleibt mit 0600, Schreiben und Löschen gleichzeitig (Threads, alte und neue Zeilen, mindestens 6 echte Neuschreibungen), nie Werte, CLI nur lesend, `inject` zeigt nur den Dateinamen, schnelle Datumsrechnung gleich `ISO8601DateFormatter` (Schalttag, Jahrhundert), 200 000 Zeilen mit einer kaputten Zeile unter 2 s im vollen, parallelen Testlauf (allein gemessen 0,55 s im Debug-Build; vorher 2,05–2,9 s, Engpass war `timegm` mit Zeitzonen-Sperre) |
 | Werte im Protokoll | keine | `grep -iE 'sk_\|"value"'` im Test-Protokoll → 0 |
+
+## Kritik und Korrekturen
+
+Unabhängige Kritik auf 2c7836d: Plan **PASS**, UC19 **REWORK** mit sieben Punkten, alle behoben:
+
+1. Nebenläufigkeit war kaum belegt (nur ein Löschlauf schrieb wirklich) → Test mit fortlaufend alten und neuen Zeilen und mindestens 6 Neuschreibungen; Prozesslauf mit fremdem Schreiber (s. o.).
+2. Ein ungültiges Byte leerte den ganzen Verlauf und stoppte das Löschen → Lesen als `Data`, Zeilen einzeln dekodiert, Test mit abgeschnittenem Umlaut.
+3. Eine kaputte Zeile schaltete auf den langsamen Weg, Nachbarzeilen konnten verschmelzen → Blöcke zu 5000 Zeilen, ein Block mit Fehler oder weniger Objekten als Zeilen wird zeilenweise gelesen; Test mit kaputter Zeile in 200 000.
+4. Jeder CLI-Aufruf parste die ganze Datei unter Sperre; Einschalten in der App auf dem Hauptthread → Löschen datiert Zeilen per Bytesuche und schreibt nur, wenn etwas wegfällt; Umschalten speichert nur die Einstellung, gelöscht wird abseits des Hauptthreads.
+5. `AI_AGENT=app/terminal/script/earlier/mcp` gab sich als App oder Person aus → wird zu `agent-…`.
+6. `inject` zeigte den vollen Pfad → nur Dateiname.
+7. App löschte nur beim Öffnen von History → auch bei jedem Laden/Zurückkehren, abseits des Hauptthreads.
+
+Nebenbei: Der schon vorher gelegentlich rote Test `setupPreservesExistingBytesAndIsIdempotent` (`setup_busy`, `errno` 35, kein anderer Halter laut `lsof`) wartet eine kurz gehaltene Ordnersperre jetzt bis zu 0,5 s ab; seitdem 6 von 6 Läufen grün.
 
 ## Einschränkungen
 

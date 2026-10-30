@@ -237,7 +237,8 @@ final class AppModel {
         if selection == "targets" { refreshTargets() }
         license = Vault(paths: paths).licensing.state()
         reloadScreenshots()
-        if selection == "history" { loadHistory() }
+        // The retention set in History applies on every start and return to the app, off the main thread.
+        if selection == "history" { loadHistory() } else { let paths = paths; Task.detached { Vault(paths: paths).pruneHistory() } }
     }
     func activateLicense(_ text: String) throws {
         try Vault(paths: paths).licensing.activate(text)

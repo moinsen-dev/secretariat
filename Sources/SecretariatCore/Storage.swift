@@ -123,30 +123,31 @@ public struct AuditLog: Sendable {
         }
     }
     public func tail(_ count: Int) -> [String] {
-        guard let url, let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
-        return Array(text.split(separator: "\n").suffix(count).map(String.init))
+        guard let url, let data = try? Data(contentsOf: url) else { return [] }
+        return Array(String(decoding: data, as: UTF8.self).split(separator: "\n").suffix(count).map(String.init))
     }
-    /// Every readable entry; reading never changes the file.
+    /// Every readable entry; reading never changes the file. A damaged byte only costs its own line.
     public func entries() -> [HistoryEntry] {
-        guard let url, let text = try? String(contentsOf: url, encoding: .utf8) else { return [] }
-        return History.parse(text)
+        guard let url, let data = try? Data(contentsOf: url) else { return [] }
+        return History.parse(data)
     }
     /// Removes entries older than `cutoff`; unreadable lines are kept. Returns how many went.
+    /// Lines are dated by a byte search, so the check on every CLI call stays cheap; the file is only rewritten when something goes.
     @discardableResult public func prune(olderThan cutoff: Date) throws -> Int {
         guard let url else { return 0 }
         var removed = 0
         try locked {
-            guard let text = try? String(contentsOf: url, encoding: .utf8) else { return }
-            var kept: [Substring] = []
-            for line in text.split(separator: "\n") {
-                let at = (try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any])?["at"] as? String
-                if let date = at.flatMap(History.date), date < cutoff { removed += 1 } else { kept.append(line) }
+            guard let data = try? Data(contentsOf: url) else { return }
+            var kept: [Data.SubSequence] = []
+            for line in data.split(separator: 0x0A, omittingEmptySubsequences: true) {
+                if let date = History.lineDate(line), date < cutoff { removed += 1 } else { kept.append(line) }
             }
             guard removed > 0 else { return }
             let temporary = url.deletingLastPathComponent().appendingPathComponent(".audit-\(UUID().uuidString).tmp")
             defer { try? FileManager.default.removeItem(at: temporary) }
-            let data = Data((kept.joined(separator: "\n") + (kept.isEmpty ? "" : "\n")).utf8)
-            guard FileManager.default.createFile(atPath: temporary.path, contents: data, attributes: [.posixPermissions: 0o600]),
+            var output = Data()
+            for line in kept { output.append(contentsOf: line); output.append(0x0A) }
+            guard FileManager.default.createFile(atPath: temporary.path, contents: output, attributes: [.posixPermissions: 0o600]),
                   rename(temporary.path, url.path) == 0 else { throw SecretariatError("The history could not be shortened. It is unchanged.") }
         }
         return removed
@@ -385,7 +386,6 @@ public struct Vault {
     public func setHistoryRetention(days: Int?) throws {
         try configuration.update(expectedRevision: expectedRevision) { $0.historyRetentionDays = days }
         audit.record("history.retention", days.map { ["days": String($0)] } ?? [:])
-        pruneHistory()
     }
     /// Applies the retention setting; run on every CLI call and when the app loads.
     @discardableResult public func pruneHistory(now: Date = Date()) -> Int {

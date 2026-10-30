@@ -135,8 +135,14 @@ public enum ProjectInstructions {
     private static func openDirectory(_ directory: URL) throws -> Int32 {
         let descriptor = open(directory.path, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC)
         guard descriptor >= 0 else { throw AgentError("directory_unavailable", "The project folder is missing or not accessible.") }
-        guard flock(descriptor, LOCK_EX | LOCK_NB) == 0 else {
-            close(descriptor); throw AgentError("setup_busy", "A setup is already running for this project. Please try again.")
+        // A lock held for a moment (another setup finishing, a child process between fork and exec) is waited out briefly.
+        var attempts = 0
+        while flock(descriptor, LOCK_EX | LOCK_NB) != 0 {
+            attempts += 1
+            guard errno == EWOULDBLOCK, attempts < 20 else {
+                close(descriptor); throw AgentError("setup_busy", "A setup is already running for this project. Please try again.")
+            }
+            usleep(25_000)
         }
         return descriptor
     }
