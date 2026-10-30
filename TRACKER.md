@@ -22,7 +22,7 @@
 | T016 | ERLEDIGT | E1055,E1056,E1057 | Regression auf Release 1.13.1 (0c32a02) |
 | T017 | ERLEDIGT | E1058,E1059,E1060 | Regression auf Release 1.13.1 (0c32a02) |
 | T018 | ERLEDIGT | E1061,E1062,E1063,E1064 | Regression auf Release 1.13.1 (0c32a02) |
-| T019 | ERLEDIGT | E1065,E1066,E1067 | Regression auf Release 1.13.1 (0c32a02) |
+| T019 | ERLEDIGT | E1091,E1092,E1093 | Regression auf Release 1.13.1; Testwerkzeug beim Parken (01da7ef) |
 | T020 | ERLEDIGT | E1068,E1069,E1070 | Regression auf Release 1.13.1 (0c32a02) |
 | T021 | ERLEDIGT | E1071,E1072,E1073 | Regression auf Release 1.13.1 (0c32a02) |
 | T022 | ERLEDIGT | E1074,E1075,E1076 | Regression auf Release 1.13.1 (0c32a02) |
@@ -1126,6 +1126,9 @@
 | E1088 | T027 | build | build | normal | 2026-10-30T20:31:22+00:00 | 0c32a02 | 84b6c51c4099c699c7ca43a3 | docs/t027-evidence.md | PASS |
 | E1089 | T027 | macos | ui | normal | 2026-10-30T20:31:22+00:00 | 0c32a02 | 84b6c51c4099c699c7ca43a3 | docs/t027-evidence.md | PASS |
 | E1090 | T027 | unit | unit | normal | 2026-10-30T20:31:22+00:00 | 0c32a02 | 84b6c51c4099c699c7ca43a3 | docs/t027-evidence.md | PASS |
+| E1091 | T019 | build | build | normal | 2026-10-30T20:52:45+00:00 | 01da7ef | d662749adb8e00ad8612071b | docs/regression-1.13.1.md | PASS |
+| E1092 | T019 | macos | ui | normal | 2026-10-30T20:52:45+00:00 | 01da7ef | d662749adb8e00ad8612071b | docs/regression-1.13.1.md | PASS |
+| E1093 | T019 | unit | unit | normal | 2026-10-30T20:52:46+00:00 | 01da7ef | d662749adb8e00ad8612071b | docs/regression-1.13.1.md | PASS |
 
 ## Reviews
 
@@ -1599,6 +1602,46 @@
 | RV466 | UC07 | self | PASS | 1a7812c597fc3f70097b32c8 | docs/release-1.13.1.md |
 | RV467 | UC05 | self | PASS | c402703becefd7ffb4670dc2 | docs/release-1.13.1.md |
 | RV468 | UC07 | self | PASS | 01a870553ab709ac5bbd49e2 | docs/release-1.13.1.md |
+| RV469 | UC01 | self | PASS | d38de05328badffedc7a64f4 | docs/regression-1.13.1.md |
+| RV470 | UC02 | self | PASS | ad5f7566605a2b24e51da827 | docs/regression-1.13.1.md |
+| RV471 | UC03 | self | PASS | d42aa101e717cc99f60f9065 | docs/regression-1.13.1.md |
+| RV472 | UC04 | self | PASS | 0d89f18d8f73379921da2282 | docs/regression-1.13.1.md |
+| RV473 | UC05 | self | PASS | 998fef8d47ed69e186d7e5d6 | docs/regression-1.13.1.md |
+| RV474 | UC06 | self | PASS | 28dac39d2f1667a799ad3b47 | docs/regression-1.13.1.md |
+| RV475 | UC07 | self | PASS | 310e5a74ff08a12ef87b6d69 | docs/regression-1.13.1.md |
+| RV476 | UC08 | self | PASS | b39638608c42c71a1e842e89 | docs/regression-1.13.1.md |
+| RV477 | UC09 | self | PASS | 47d36930f8609b77ca9bf6e3 | docs/regression-1.13.1.md |
+| RV478 | UC10 | self | PASS | d9cc92703f90848c9efedf43 | docs/regression-1.13.1.md |
+| RV479 | UC11 | self | PASS | 6da1dec779922c0ccdad01e2 | docs/regression-1.13.1.md |
+| RV480 | UC12 | self | PASS | 1cd42573a59c9d7bab291959 | docs/regression-1.13.1.md |
+| RV481 | UC13 | self | PASS | 8e98987370414da160905d14 | docs/regression-1.13.1.md |
+| RV482 | UC14 | self | PASS | ccb247c4af2fdada0299db15 | docs/regression-1.13.1.md |
+| RV483 | UC15 | self | PASS | c1057206d8816a8fc47aedf3 | docs/regression-1.13.1.md |
+| RV484 | UC16 | self | PASS | ce1ee43124fbec9676fac17e | docs/regression-1.13.1.md |
+| RV485 | UC17 | self | PASS | ddab0df13d2de51859a9f30f | docs/regression-1.13.1.md |
+| RV486 | UC18 | self | PASS | add7e2728b68df9c5bc0ffe0 | docs/regression-1.13.1.md |
+| RV487 | UC19 | self | PASS | 0f31f9c529112b38c524670f | docs/regression-1.13.1.md |
+| RV488 | UC20 | self | PASS | a0676329b1cfb99a40a6da5b | docs/regression-1.13.1.md |
+| RV489 | UC01 | self | PASS | d38de05328badffedc7a64f4 | docs/regression-1.13.1.md |
+| RV490 | UC02 | self | PASS | ad5f7566605a2b24e51da827 | docs/regression-1.13.1.md |
+| RV491 | UC03 | self | PASS | d42aa101e717cc99f60f9065 | docs/regression-1.13.1.md |
+| RV492 | UC04 | self | PASS | 0d89f18d8f73379921da2282 | docs/regression-1.13.1.md |
+| RV493 | UC05 | self | PASS | 998fef8d47ed69e186d7e5d6 | docs/regression-1.13.1.md |
+| RV494 | UC06 | self | PASS | 28dac39d2f1667a799ad3b47 | docs/regression-1.13.1.md |
+| RV495 | UC07 | self | PASS | 310e5a74ff08a12ef87b6d69 | docs/regression-1.13.1.md |
+| RV496 | UC08 | self | PASS | b39638608c42c71a1e842e89 | docs/regression-1.13.1.md |
+| RV497 | UC09 | self | PASS | 47d36930f8609b77ca9bf6e3 | docs/regression-1.13.1.md |
+| RV498 | UC10 | self | PASS | d9cc92703f90848c9efedf43 | docs/regression-1.13.1.md |
+| RV499 | UC11 | self | PASS | 6da1dec779922c0ccdad01e2 | docs/regression-1.13.1.md |
+| RV500 | UC12 | self | PASS | 1cd42573a59c9d7bab291959 | docs/regression-1.13.1.md |
+| RV501 | UC13 | self | PASS | 8e98987370414da160905d14 | docs/regression-1.13.1.md |
+| RV502 | UC14 | self | PASS | f8ff29a00a4345c3d0139372 | docs/regression-1.13.1.md |
+| RV503 | UC15 | self | PASS | c1057206d8816a8fc47aedf3 | docs/regression-1.13.1.md |
+| RV504 | UC16 | self | PASS | ce1ee43124fbec9676fac17e | docs/regression-1.13.1.md |
+| RV505 | UC17 | self | PASS | ddab0df13d2de51859a9f30f | docs/regression-1.13.1.md |
+| RV506 | UC18 | self | PASS | add7e2728b68df9c5bc0ffe0 | docs/regression-1.13.1.md |
+| RV507 | UC19 | self | PASS | 0f31f9c529112b38c524670f | docs/regression-1.13.1.md |
+| RV508 | UC20 | self | PASS | a0676329b1cfb99a40a6da5b | docs/regression-1.13.1.md |
 
 ## Releases
 
