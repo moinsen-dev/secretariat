@@ -128,6 +128,8 @@ public enum CommandLineInterface {
       secretariat item set PATH [--set FIELD=VALUE …] [--unset FIELD …] [--source TEXT] [--expires YYYY-MM-DD] [--json]
       secretariat item rename PATH NEW_PATH [--json]
       secretariat get PATH/FIELD                     value of an identifier (never secrets)
+      secretariat header PATH/FIELD [--bearer] [--name HEADER]
+                                                     headersHelper for HTTP MCP servers: {"Authorization":"Bearer …"} to a pipe, never a terminal or file
       secretariat field move PATH/FIELD PATH/FIELD [--replace] [--json]
       secretariat import FILE VARIABLE[=PATH/FIELD] … [--profile PROFILE] [--replace] [--json]
       secretariat import-file FILE PATH/FIELD [--replace] [--json]
@@ -176,8 +178,26 @@ public enum CommandLineInterface {
       secretariat license [--json] · license activate [FILE|-] · license remove
                                                      pbpaste | secretariat license activate
 
-    The CLI never prints secret values. Enter them via the app, import or import-file.
+    The CLI never prints secret values (one exception: header, into a pipe). Enter them via the app, import or import-file.
     """
+
+    /// Set in children of the MCP tool run_command, whose output goes to the model.
+    static let mcpChildVariable = "SECRETARIAT_MCP_CHILD"
+
+    /// Why `header` must not print here, or nil: only into a pipe or socket (a headersHelper's stdout),
+    /// never a terminal, a file, or a command started for an MCP client.
+    static func headerRefusal(stdout descriptor: Int32, environment: [String: String]) -> String? {
+        if environment[mcpChildVariable] != nil {
+            return "secretariat header doesn't run inside an MCP tool call: its output would reach the model."
+        }
+        var info = stat()
+        let kind = fstat(descriptor, &info) == 0 ? info.st_mode & S_IFMT : 0
+        guard isatty(descriptor) == 0, kind == S_IFIFO || kind == S_IFSOCK else {
+            return "secretariat header prints a secret for a program (Claude Code's headersHelper), not for a terminal or a file. "
+                + "Register it: claude mcp add-json --scope user NAME '{\"type\":\"http\",\"url\":\"…\",\"headersHelper\":\"secretariat header PATH/FIELD --bearer\"}'"
+        }
+        return nil
+    }
 
     public static func run(_ arguments: [String], vault: Vault? = nil) throws -> Int32 {
         let vault = vault ?? Vault(paths: AppPaths())
@@ -193,6 +213,8 @@ public enum CommandLineInterface {
                 vault.audit.record("guard.agent", [:])
             }
             return 0
+        case "header" where headerRefusal(stdout: STDOUT_FILENO, environment: ProcessInfo.processInfo.environment) != nil:
+            throw SecretariatError(headerRefusal(stdout: STDOUT_FILENO, environment: ProcessInfo.processInfo.environment)!)
         case "mcp":
             // MCP server over stdio for agents without a shell (Claude Desktop, Cursor …).
             let executable = Bundle.main.executableURL?.path ?? URL(fileURLWithPath: CommandLine.arguments[0]).standardizedFileURL.path

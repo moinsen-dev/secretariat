@@ -327,6 +327,25 @@ public enum Commands {
             struct Value: Encodable { let schemaVersion = 2; let ok = true; let reference: String; let value: String }
             return (0, try json(Value(reference: a.positional[0], value: value)), value)
 
+        case ("header", _):
+            // headersHelper for HTTP MCP servers (Claude Code): the one place a secret goes to stdout, read by the
+            // MCP client, not by the model. Launcher refuses a terminal; the agent guard refuses it as a Bash call.
+            let usage = "Usage: secretariat header PATH/FIELD [--bearer] [--name HEADER]"
+            let a = try Arguments(all.dropFirst(), values: ["--name"], flags: ["--bearer"], usage: usage)
+            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", usage) }
+            let (item, field) = try vault.resolve(try FieldReference(a.positional[0]))
+            guard field.kind != .file else { throw AgentError("file_field", "\(a.positional[0]) is a file; a header needs text.") }
+            guard field.kind.isUsable else { throw AgentError("personal_field", "\(a.positional[0]) is only for you and is never passed to a program.") }
+            try vault.requireApproval([item.id], for: "header \(a.positional[0])")
+            let value = try vault.value(itemID: item.id, field: field.name)
+            let name = a.option("--name") ?? "Authorization"
+            guard !name.isEmpty, name.allSatisfy({ $0.isASCII && ($0.isLetter || $0.isNumber || $0 == "-") }) else {
+                throw AgentError("invalid_arguments", "Header name may contain letters, digits and '-' only.")
+            }
+            let line = String(decoding: try JSONSerialization.data(withJSONObject: [name: a.flags.contains("--bearer") ? "Bearer \(value)" : value]), as: UTF8.self)
+            vault.audit.record("header", ["field": a.positional[0]])
+            return (0, line, line)
+
         case ("field", "move"):
             let a = try Arguments(all.dropFirst(2), flags: ["--replace"], usage: usage)
             guard a.positional.count == 2 else { throw AgentError("invalid_arguments", "Usage: secretariat field move PATH/FIELD PATH/FIELD") }

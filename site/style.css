@@ -249,6 +249,7 @@ section + section { border-top: 1px solid var(--border); }
 .split { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 28px 0; }
 .split .card h2 { margin-top: 0; font-size: 1.2rem; }
 .split .card ul { margin: 0; padding-left: 1.2em; color: var(--muted); font-size: 0.96rem; }
+.split .card .cmd + ul { margin-top: 14px; }
 .card.yes { border-top: 3px solid var(--accent); }
 .card.no { border-top: 3px solid var(--muted); }
 

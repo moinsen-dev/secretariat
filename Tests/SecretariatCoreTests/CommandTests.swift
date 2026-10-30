@@ -217,3 +217,43 @@ import Testing
     #expect(f.code("template", "create", "company") == "template_exists")
     #expect(f.code("template", "reset", "bank-account") == "not_builtin")
 }
+
+@Test func headerPrintsOneJsonHeaderForTheMcpClient() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    let (_, bearer, _) = try Commands.dispatch(["header", "moinsen/test/api/secret", "--bearer"], service: f.service, executable: "/tmp/secretariat")
+    #expect(bearer == #"{"Authorization":"Bearer never-output-this-value"}"#)
+    let (_, plain, _) = try Commands.dispatch(["header", "moinsen/test/api/key_id", "--name", "X-Api-Key"], service: f.service, executable: "/tmp/secretariat")
+    #expect(plain == #"{"X-Api-Key":"KEY-123"}"#)
+    #expect(f.code("header", "moinsen/test/api/password") == "personal_field")
+    #expect(f.code("header", "moinsen/test/api/secret", "--name", "Bad Name\r\nX") == "invalid_arguments")
+    #expect(f.code("header", "moinsen/test/api/nope") == "field_not_found")
+    #expect(f.code("header") == "invalid_arguments")
+    // The log names the field, never the value.
+    let log = f.vault.audit.tail(5).joined(separator: "\n")
+    #expect(log.contains("\"header\"") && log.contains("secret"))
+    #expect(!log.contains("never-output"))
+    // Touch ID items ask first.
+    var item = try f.vault.item(path: "moinsen/test/api"); item.approval = true; try f.vault.save(item)
+    f.approver.allow = false
+    #expect(f.code("header", "moinsen/test/api/secret", "--bearer") == "approval_denied")
+}
+
+@Test func headerPrintsOnlyIntoAPipeAndNeverForAnMcpClient() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    let pipe = Pipe()
+    #expect(CommandLineInterface.headerRefusal(stdout: pipe.fileHandleForWriting.fileDescriptor, environment: [:]) == nil)
+    #expect(CommandLineInterface.headerRefusal(stdout: pipe.fileHandleForWriting.fileDescriptor, environment: ["SECRETARIAT_MCP_CHILD": "1"]) != nil)
+    let file = f.root.appendingPathComponent("token.txt"); FileManager.default.createFile(atPath: file.path, contents: nil)
+    let handle = try FileHandle(forWritingTo: file); defer { try? handle.close() }
+    #expect(CommandLineInterface.headerRefusal(stdout: handle.fileDescriptor, environment: [:]) != nil)
+    // The MCP tool run_command marks its children, so a header call there would be refused.
+    let (run, _) = McpServer.call("run_command", ["profile": "agent-test", "command": ["/bin/sh", "-c", "echo marked=$SECRETARIAT_MCP_CHILD"]], service: f.service, executable: "/tmp/s")
+    #expect(run.contains("marked=1"))
+    // File fields are refused; personal fields are refused before Touch ID is asked.
+    var item = try f.vault.item(path: "moinsen/test/api")
+    item.fields.append(ItemField(name: "cert", kind: .file)); item.approval = true; try f.vault.save(item)
+    #expect(f.code("header", "moinsen/test/api/cert") == "file_field")
+    f.approver.reasons = []
+    #expect(f.code("header", "moinsen/test/api/password") == "personal_field")
+    #expect(f.approver.reasons.isEmpty)
+}
