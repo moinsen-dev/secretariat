@@ -3,6 +3,7 @@ import Testing
 @testable import SecretariatCore
 
 private func backups(_ f: AgentFixture) -> URL { Backup.directory(paths: f.vault.configuration.paths).url }
+private let alpha = BackupMac(name: "alpha", id: "0000000a")
 
 @Test func recoveryKeyIsReadableAndCatchesTypos() throws {
     let key = RecoveryKey.generate()
@@ -26,14 +27,14 @@ private func backups(_ f: AgentFixture) -> URL { Backup.directory(paths: f.vault
     #expect(throws: AgentError.self) { try Backup.write(vault: f.vault) }
     let recovery = try Backup.setUp(vault: f.vault)
     try f.vault.screenshotKeys.add(id: "k1", key: Data(repeating: 7, count: 32))
-    let url = try Backup.write(vault: f.vault, mac: "test-mac")
+    let url = try Backup.write(vault: f.vault, mac: BackupMac(name: "test-mac", id: "1234abcd"))
     let raw = try String(contentsOf: url, encoding: .utf8)
     for plain in ["never-output-this-value", "personal-never-out", "moinsen/test/api", "agent-test", "TEST_API_KEY", "KEY-123"] {
         #expect(!raw.contains(plain), "\(plain) in the backup file")
     }
     #expect((try FileManager.default.attributesOfItem(atPath: url.path)[.posixPermissions] as? Int) == 0o600)
     let header = try Backup.header(of: url)
-    #expect(header.items == 1 && header.mac == "test-mac")
+    #expect(header.items == 1 && header.mac == "test-mac" && header.macID == "1234abcd")
 
     let (_, payload) = try Backup.open(url, recoveryKey: recovery)
     #expect(payload.items.first?.secrets["secret"] == "never-output-this-value")
@@ -57,30 +58,47 @@ private func backups(_ f: AgentFixture) -> URL { Backup.directory(paths: f.vault
     #expect(code { try Backup.open(url, recoveryKey: recovery) } == "backup_damaged")
 }
 
-@Test func onePerMacAndDayAndTheNewestThirtyStay() throws {
+@Test func onePerMacAndDayAndTheNewestThirtyStayEvenWithLookAlikeNames() throws {
     let f = try AgentFixture(); defer { f.cleanup() }
     _ = try Backup.setUp(vault: f.vault)
+    let pro = BackupMac(name: "pro", id: "000000b1"), macbookPro = BackupMac(name: "macbook-pro", id: "000000b2")
+    let twin = BackupMac(name: "pro", id: "000000b3")   // another Mac with the same name
     let start = Date(timeIntervalSince1970: 1_790_000_000)
-    for day in 0..<35 { try Backup.write(vault: f.vault, now: start.addingTimeInterval(Double(day) * 86_400), mac: "alpha") }
-    try Backup.write(vault: f.vault, now: start.addingTimeInterval(34 * 86_400 + 3_600), mac: "alpha")   // same day again: replaces
-    try Backup.write(vault: f.vault, now: start, mac: "beta")
+    for day in 0..<35 { try Backup.write(vault: f.vault, now: start.addingTimeInterval(Double(day) * 86_400), mac: pro) }
+    try Backup.write(vault: f.vault, now: start.addingTimeInterval(34 * 86_400 + 3_600), mac: pro)   // same day again: replaces
+    for day in 0..<3 { try Backup.write(vault: f.vault, now: start.addingTimeInterval(Double(day) * 86_400), mac: macbookPro) }
+    try Backup.write(vault: f.vault, now: start.addingTimeInterval(34 * 86_400), mac: twin)
     let files = Backup.files(in: backups(f))
-    #expect(files.filter { $0.contains("-alpha.") }.count == 30)
-    #expect(files.filter { $0.contains("-beta.") }.count == 1)
-    #expect(files.first?.hasSuffix("-alpha.secretariat-backup") == true)
+    #expect(files.filter { $0.macID == pro.id }.count == 30)
+    #expect(files.filter { $0.macID == macbookPro.id }.count == 3)
+    #expect(files.filter { $0.macID == twin.id }.count == 1)
+    #expect(files.filter { $0.mac == "pro" }.count == 31)
+    // An iCloud placeholder counts like the file it stands for.
+    let placeholder = backups(f).appendingPathComponent(".2020-01-01-pro-000000b1.secretariat-backup.icloud")
+    FileManager.default.createFile(atPath: placeholder.path, contents: Data())
+    #expect(Backup.files(in: backups(f)).contains { $0.day == "2020-01-01" && $0.inCloudOnly })
+    #expect(Backup.parse("2026-10-30-x.secretariat-backup", inCloudOnly: false) == nil)
 }
 
 @Test func automaticBacksUpOnChangeAndOncePerDay() throws {
     let f = try AgentFixture(); defer { f.cleanup() }
     #expect(Backup.automatic(vault: f.vault) == nil)   // not set up
+    #expect(Backup.status(vault: f.vault).problem == nil)
     _ = try Backup.setUp(vault: f.vault)
     let now = Date()
-    #expect(Backup.automatic(vault: f.vault, now: now) != nil)
-    #expect(Backup.automatic(vault: f.vault, now: now) == nil)   // nothing changed today
+    #expect(Backup.status(vault: f.vault).problem != nil)   // set up, nothing written yet
+    #expect(Backup.automatic(vault: f.vault, now: now, mac: alpha) != nil)
+    #expect(Backup.status(vault: f.vault, now: now).problem == nil)
+    #expect(Backup.status(vault: f.vault, now: now.addingTimeInterval(3 * 86_400)).problem?.contains("two days") == true)
+    #expect(Backup.automatic(vault: f.vault, now: now, mac: alpha) == nil)   // nothing changed today
     try f.cli("item", "set", "moinsen/test/api", "--set", "key_id=KEY-456")
-    #expect(Backup.automatic(vault: f.vault, now: now, onlyDaily: true) == nil)   // the CLI waits for the next day
-    #expect(Backup.automatic(vault: f.vault, now: now) != nil)   // the app backs up the change
-    #expect(Backup.automatic(vault: f.vault, now: now.addingTimeInterval(86_400), onlyDaily: true) != nil)
+    #expect(Backup.automatic(vault: f.vault, now: now, onlyDaily: true, mac: alpha) == nil)   // the CLI waits for the next day
+    #expect(Backup.automatic(vault: f.vault, now: now, mac: alpha) != nil)   // the app backs up the change
+    // Only a value changes (metadata, date and all else stay): still a change.
+    f.items.values[f.item.id]?["secret"] = "changed-the-same-day"
+    #expect(Backup.automatic(vault: f.vault, now: now, mac: alpha) != nil)
+    #expect(Backup.automatic(vault: f.vault, now: now, mac: alpha) == nil)
+    #expect(Backup.automatic(vault: f.vault, now: now.addingTimeInterval(86_400), onlyDaily: true, mac: alpha) != nil)
     #expect(f.vault.audit.tail(20).contains { $0.contains(#""action":"backup""#) && !$0.contains("never-output") })
 }
 
@@ -90,9 +108,11 @@ private func backups(_ f: AgentFixture) -> URL { Backup.directory(paths: f.vault
     var other = ItemMeta(path: "moinsen/other/api", kind: "api", fields: [ItemField(name: "secret", kind: .secret)])
     try f.vault.save(other, secrets: ["secret": "other-old"])
     try f.vault.screenshotKeys.add(id: "k1", key: Data(repeating: 1, count: 32))
-    let url = try Backup.write(vault: f.vault, mac: "m")
+    var dated = try f.vault.item(id: f.item.id); dated.rotated = "2026-01-15"; try f.items.save(dated, secrets: nil)
+    let url = try Backup.write(vault: f.vault, mac: alpha)
 
     // Lost: the test item, its profile and the screenshot key. Changed since: the other item. New since: a third one.
+    let before = try f.vault.item(id: f.item.id)
     try f.vault.deleteProfile(id: f.profile.id)
     try f.vault.delete(id: f.item.id)
     try f.vault.screenshotKeys.removeAll()
@@ -100,8 +120,10 @@ private func backups(_ f: AgentFixture) -> URL { Backup.directory(paths: f.vault
     try f.vault.save(ItemMeta(path: "moinsen/new/api", kind: "api", fields: [ItemField(name: "secret", kind: .secret)]), secrets: ["secret": "new"])
 
     let (_, payload) = try Backup.open(url, recoveryKey: recovery)
+    #expect(Backup.additions(payload, to: f.vault) == ["moinsen/test/api", "project agent-test", "screenshot keys"])
     let restored = try Backup.restore(payload, into: f.vault)
-    #expect(restored.items == 1 && restored.profiles == 1 && restored.screenshotKeys == 1 && restored.skipped.isEmpty)
+    #expect(restored.items == 1 && restored.profiles == 1 && restored.screenshotKeys == 1 && restored.skipped.isEmpty && restored.failed.isEmpty)
+    #expect(try f.vault.item(id: f.item.id).rotated == "2026-01-15" && before.rotated == "2026-01-15")
     #expect(try f.vault.value(itemID: f.item.id, field: "secret") == "never-output-this-value")
     #expect(try f.vault.value(itemID: other.id, field: "secret") == "other-new")
     #expect((try? f.vault.item(path: "moinsen/new/api")) != nil)
@@ -125,4 +147,50 @@ private func backups(_ f: AgentFixture) -> URL { Backup.directory(paths: f.vault
         #expect(!output.contains(recovery) && !output.contains("never-output"))
         #expect(!output.contains(Data(secret).base64EncodedString()))
     }
+}
+
+@Test func aLockedKeychainStopsTheBackupInsteadOfWritingAThinOne() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    _ = try Backup.setUp(vault: f.vault)
+    let url = try Backup.write(vault: f.vault, mac: alpha)
+    let good = try Data(contentsOf: url)
+    f.items.denied = true
+    #expect(throws: CredentialError.self) { try Backup.write(vault: f.vault, mac: alpha) }
+    #expect(Backup.automatic(vault: f.vault, mac: alpha) == nil)
+    #expect(try Data(contentsOf: url) == good)
+    #expect(Backup.status(vault: f.vault).problem?.contains("failed") == true)
+    f.items.denied = false
+    try Backup.write(vault: f.vault, mac: alpha)
+    #expect(Backup.status(vault: f.vault).problem == nil)
+}
+
+@Test func restoreSkipsLookAlikePathsAndKeepsGoingAfterAFailure() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    let recovery = try Backup.setUp(vault: f.vault)
+    let lost = ItemMeta(path: "moinsen/lost/api", kind: "api", fields: [ItemField(name: "secret", kind: .secret)])
+    try f.vault.save(lost, secrets: ["secret": "lost-value"])
+    let (_, payload) = try Backup.open(try Backup.write(vault: f.vault, mac: alpha), recoveryKey: recovery)
+    // Gone here, and another entry took the same path in other letter case; the profile was lost too.
+    try f.vault.deleteProfile(id: f.profile.id); try f.vault.delete(id: f.item.id); try f.vault.delete(id: lost.id)
+    try f.vault.save(ItemMeta(path: "Moinsen/Test/API", kind: "api", fields: [ItemField(name: "secret", kind: .secret)]), secrets: ["secret": "mine"])
+    let restored = try Backup.restore(payload, into: f.vault)
+    #expect(restored.skipped == ["moinsen/test/api"])
+    #expect(restored.items == 1 && restored.profiles == 1 && restored.failed.isEmpty)
+    #expect(try f.vault.value(itemID: lost.id, field: "secret") == "lost-value")
+    #expect(try f.vault.value(itemID: try f.vault.item(path: "Moinsen/Test/API").id, field: "secret") == "mine")
+}
+
+@Test func aTypedKeyIsCheckedWithoutOpeningABackup() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    #expect(throws: AgentError.self) { try Backup.matches(RecoveryKey.generate(), vault: f.vault) }
+    let recovery = try Backup.setUp(vault: f.vault)
+    #expect(try Backup.matches(recovery.lowercased(), vault: f.vault))
+    #expect(try !Backup.matches(RecoveryKey.generate(), vault: f.vault))
+    // A new key: backups sealed to the old one can be removed.
+    try Backup.write(vault: f.vault, now: Date().addingTimeInterval(-86_400), mac: alpha)
+    _ = try Backup.setUp(vault: f.vault)
+    try Backup.write(vault: f.vault, mac: alpha)
+    #expect(Backup.files(in: backups(f)).count == 2)
+    #expect(Backup.removeBackups(notSealedTo: Backup.status(vault: f.vault).key!, vault: f.vault) == 1)
+    #expect(Backup.files(in: backups(f)).count == 1)
 }

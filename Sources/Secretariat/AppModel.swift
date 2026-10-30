@@ -185,6 +185,11 @@ final class AppModel {
     /// Screenshot being read for "Create Item …".
     var readingScreenshot: UUID?
     /// This Mac's history (audit.log), loaded when the History view is shown.
+    /// Backup state for the Backup view; refreshed after each automatic backup.
+    var backupStatus: Backup.Status?
+    var backingUp = false
+    var backupSetup: BackupSetupDraft?
+    var showRestore = false
     var history: [HistoryEntry] = []
     var historyPeriod = HistoryPeriod.week
     var historyVia: String?
@@ -239,6 +244,7 @@ final class AppModel {
         reloadScreenshots()
         // The retention set in History applies on every start and return to the app, off the main thread.
         if selection == "history" { loadHistory() } else { let paths = paths; Task.detached { Vault(paths: paths).pruneHistory() } }
+        backUpAutomatically()
     }
     func activateLicense(_ text: String) throws {
         try Vault(paths: paths).licensing.activate(text)

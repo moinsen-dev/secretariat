@@ -43,6 +43,8 @@ struct MainView: View {
         .sheet(item: $model.profileEditor) { draft in ProfileEditor(model: model, draft: draft) }
         .sheet(item: $model.templateEditor) { draft in TemplateEditor(model: model, draft: draft) }
         .sheet(item: $model.screenshotDraft) { draft in ScreenshotComposer(model: model, draft: draft) }
+        .sheet(item: $model.backupSetup) { draft in BackupSetupView(model: model, draft: draft) }
+        .sheet(isPresented: $model.showRestore) { RestoreView(model: model) }
         .alert("That didn't work", isPresented: flag(model.errorMessage != nil) { model.errorMessage = nil }) {
             Button("OK", role: .cancel) { model.errorMessage = nil }
         } message: { Text(model.errorMessage ?? "") }
@@ -128,6 +130,8 @@ struct MainView: View {
                 Label("Templates", systemImage: "square.grid.2x2").tag("templates")
                 Label("Screenshots", systemImage: "photo.on.rectangle").badge(model.screenshots.count).tag("screenshots")
                 Label("History", systemImage: "clock.arrow.circlepath").tag("history")
+                Label("Backup", systemImage: "externaldrive.badge.icloud")
+                    .badge(model.backupStatus?.configured == false ? Text("Off") : nil).tag("backup")
             }
         }
         .listStyle(.sidebar)
@@ -189,6 +193,8 @@ struct MainView: View {
             } actions: { Button("Reload") { model.reload() } }
         } else if model.selection == "history" {
             HistorySummary(model: model)
+        } else if model.selection == "backup" {
+            BackupSummary(model: model)
         } else if model.selection == "screenshots" {
             // Searching here filters the screenshots by title and note.
             ScreenshotList(model: model, query: query)
@@ -425,6 +431,8 @@ struct MainView: View {
     @ViewBuilder private var detail: some View {
         if model.selection == "history" {
             HistoryList(model: model)
+        } else if model.selection == "backup" {
+            BackupList(model: model)
         } else if model.selection == "screenshots" {
             if let shot = model.screenshots.first(where: { $0.id == model.selectedScreenshot }) {
                 ScreenshotDetail(model: model, shot: shot).id(shot.id)
