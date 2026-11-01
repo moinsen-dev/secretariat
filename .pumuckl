@@ -2,25 +2,95 @@
   "git" : {
     "current_branch" : "main",
     "github_url" : "https:\/\/github.com\/moinsen-dev\/secretariat",
-    "has_uncommitted_changes" : false,
+    "has_uncommitted_changes" : true,
     "is_repo" : true,
     "last_commit_author" : "Ulrich Diedrichsen",
-    "last_commit_date" : "2026-10-29T17:39:04Z",
-    "last_commit_message" : "Record release 1.12.0 (LOCAL, M1, Mini, site); regression rebind on 5663ea0",
+    "last_commit_date" : "2026-10-30T22:02:28Z",
+    "last_commit_message" : "Site FAQ: source-available on GitHub under PolyForm Strict (deploy after the repo is public)",
     "local_secret_files" : 5,
-    "stale_days" : 0,
+    "stale_days" : 1,
     "stash_count" : 0,
-    "total_commits" : 72,
-    "uncommitted_files_count" : 0,
-    "unpushed_commits" : 34
+    "total_commits" : 112,
+    "uncommitted_files_count" : 1,
+    "unpushed_commits" : 0
   },
-  "last_scanned" : "2026-10-30T09:19:12Z",
+  "kreislauf" : {
+    "idea_id" : "pilot-secretariat",
+    "landing_url" : "https:\/\/secretariat.moinsen.dev\/",
+    "rounds" : [
+      {
+        "check_id" : "ZiDSeqB-mQ8naOW3",
+        "date" : "2026-10-30T21:53:00Z",
+        "insight" : "Terminal-Demo trägt; Zielgruppe nicht benannt, Kaufen statt Selbstbauen zu weit unten.",
+        "live" : true,
+        "round" : 1,
+        "scores" : {
+          "audience" : 3,
+          "clarity" : 4,
+          "next_step" : 4,
+          "trust" : 4,
+          "value" : 3
+        },
+        "source" : "feedback-cafe",
+        "url" : "https:\/\/secretariat.moinsen.dev\/"
+      },
+      {
+        "check_id" : "B3FhNu1Z6LM3WR-0",
+        "date" : "2026-10-30T21:55:00Z",
+        "insight" : "Zielgruppe im Hero und Build or buy oben wirken; Vertrauen fällt durch unbelegte Eigenaussagen.",
+        "live" : false,
+        "round" : 2,
+        "scores" : {
+          "audience" : 5,
+          "clarity" : 4,
+          "next_step" : 4,
+          "trust" : 3,
+          "value" : 4
+        },
+        "source" : "feedback-cafe",
+        "url" : "https:\/\/kreislauf-preview.secretariat-47r.pages.dev\/"
+      },
+      {
+        "check_id" : "9G3QOZSRk2NU6jvd",
+        "date" : "2026-10-30T21:58:00Z",
+        "insight" : "Drei Schritte oben, Eigenprüfung ehrlich gekennzeichnet; Vertrauen braucht Belege von außen.",
+        "live" : false,
+        "round" : 3,
+        "scores" : {
+          "audience" : 5,
+          "clarity" : 4,
+          "next_step" : 4,
+          "trust" : 3,
+          "value" : 4
+        },
+        "source" : "feedback-cafe",
+        "url" : "https:\/\/kreislauf-preview.secretariat-47r.pages.dev\/"
+      },
+      {
+        "check_id" : "QvfDvP-FMk5wA6YA",
+        "date" : "2026-10-30T22:06:00Z",
+        "insight" : "Offener Code positiv vermerkt, Vertrauen bleibt 3: echte Nutzerstimmen oder Audit nötig.",
+        "live" : true,
+        "round" : 4,
+        "scores" : {
+          "audience" : 4,
+          "clarity" : 4,
+          "next_step" : 4,
+          "trust" : 3,
+          "value" : 4
+        },
+        "source" : "feedback-cafe",
+        "url" : "https:\/\/secretariat.moinsen.dev\/"
+      }
+    ]
+  },
+  "last_scanned" : "2026-11-01T13:29:50Z",
   "project_path" : "\/Users\/udi\/work\/moinsen\/ideas\/local_secrets_orchestrator",
   "pumuckl_version" : 1,
   "report" : {
-    "accent" : "#3B82F6",
-    "ai_note" : "Das Projekt ist frisch aktiv, hat 72 Commits und mit Version 1.12.0 schon einen Release-Stand. Ein kurzer Blick genügt, um wieder reinzukommen.",
-    "ai_suggestion" : "Lokal prüfen, ob die App noch baut und startet, Abhängigkeiten aktualisieren und die Tests grün machen; danach die Regression aus Commit 5663ea0 (rebind) gezielt nachstellen und beheben.",
+    "accent" : "#2E7D6B",
+    "ai_note" : "Secretariat ist fast startklar: Quellcode, Tests, Threat Model und Release-Doku liegen vor, und der Source-Available-Schritt ist gerade abgeschlossen.",
+    "ai_suggestion" : "Lokal `xcrun swift test` ausführen und prüfen, ob das Projekt mit Xcode-Toolchain baut; danach Abhängigkeiten (Sparkle 2.9.6, KeyboardShortcuts 3.1.0) auf Aktualität prüfen.",
     "architecture" : [
       {
         "lbl" : "UI",
@@ -124,11 +194,11 @@
         "t" : "CLI"
       }
     ],
-    "effort_to_complete" : 40,
+    "effort_to_complete" : 25,
     "history" : [
       "Das Projekt begann als Neubau einer nativen Minimal-App, der Altstand liegt im Legacy-Archiv. Danach kamen die Agenten-Einrichtung und die nichtinteraktive Keychain-CLI, zuletzt die lokale Abnahme von Version 0.2."
     ],
-    "impact" : 70,
+    "impact" : 80,
     "last_state" : [
       {
         "meta" : "Abschlussstand in PLAN\/TRACKER aktualisiert, vor 2 Tagen",
@@ -151,13 +221,13 @@
         "wip" : false
       }
     ],
-    "overall_gem_score" : 68,
-    "progress" : 80,
+    "overall_gem_score" : 78,
+    "progress" : 85,
     "re_entry_action" : "Die signierte dist\/Secretariat.app lokal mit xcrun notarytool notarisieren, das Ticket mit stapler anheften und die Installation per spctl --assess sowie einen echten Lauf von .\/script\/install.sh prüfen.",
-    "re_entry_effort" : "~2h",
+    "re_entry_effort" : "~1h",
     "re_entry_why" : "Release-Reife ist die schwächste Dimension, weil die Abnahme zwar mit Developer-ID signiert, aber nicht notarisiert ist; erst damit lässt sich die App außerhalb dieses Macs ohne Gatekeeper-Warnung weitergeben.",
-    "recency" : 100,
-    "resumption_ease" : 75,
+    "recency" : 45,
+    "resumption_ease" : 70,
     "roadmap" : [
       {
         "d" : "Signierte App mit notarytool notarisieren, Ticket anheften, mit spctl prüfen",
@@ -251,7 +321,7 @@
         "t" : "Anforderungen und Nachweise pflegen"
       }
     ],
-    "vision" : "Secretariat wird eine verlässliche Mac-App, in der API-Schlüssel sicher im Schlüsselbund bleiben und Projekte per Profil oder CLI mit einem Befehl starten."
+    "vision" : "Ein vertrauenswürdiger Mac-Schlüsselhalter, der API-Keys vor KI-Agenten verbirgt und auditierbar bleibt."
   },
   "scan" : {
     "capability" : {
@@ -264,23 +334,23 @@
       "head" : "64e0af0"
     },
     "fast" : {
-      "at" : "2026-10-30T09:19:12Z",
-      "head" : "a95bad9",
-      "mtime" : 1793295551.4441504
+      "at" : "2026-10-31T10:21:15Z",
+      "head" : "4561893",
+      "mtime" : 1793397740.5200973
     },
     "git" : {
-      "at" : "2026-10-30T09:18:08Z",
-      "head" : "a95bad9",
-      "mtime" : 1793295551.4441504
+      "at" : "2026-11-01T13:29:50Z",
+      "head" : "4561893",
+      "mtime" : 1793539671.8987303
     }
   },
   "scoring" : {
-    "ai_note" : "Das Projekt ist frisch aktiv, hat 72 Commits und mit Version 1.12.0 schon einen Release-Stand. Ein kurzer Blick genügt, um wieder reinzukommen.",
-    "ai_suggestion" : "Lokal prüfen, ob die App noch baut und startet, Abhängigkeiten aktualisieren und die Tests grün machen; danach die Regression aus Commit 5663ea0 (rebind) gezielt nachstellen und beheben.",
-    "effort_to_complete" : 40,
-    "impact" : 70,
-    "overall_gem_score" : 68,
-    "progress" : 80,
-    "recency" : 100
+    "ai_note" : "Secretariat ist fast startklar: Quellcode, Tests, Threat Model und Release-Doku liegen vor, und der Source-Available-Schritt ist gerade abgeschlossen.",
+    "ai_suggestion" : "Lokal `xcrun swift test` ausführen und prüfen, ob das Projekt mit Xcode-Toolchain baut; danach Abhängigkeiten (Sparkle 2.9.6, KeyboardShortcuts 3.1.0) auf Aktualität prüfen.",
+    "effort_to_complete" : 25,
+    "impact" : 80,
+    "overall_gem_score" : 78,
+    "progress" : 85,
+    "recency" : 45
   }
 }

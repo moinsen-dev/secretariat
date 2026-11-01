@@ -197,7 +197,12 @@ public enum AgentHook {
         (#"(^|[|;&]\s*|\$\(\s*|`\s*)(env|printenv|export\s+-p|set)\s*($|[|;&>)`])"#, "prints the environment"),
         (#"\bprintenv\b"#, "prints the environment"),
         (#"\bdocker(-|\s+)compose\b[^|;&]*\bconfig\b"#, "prints the compose file with resolved secrets"),
-        (#"\bsecurity\s+find-(generic|internet)-password\b[^|;&]*\s-[wg]\b"#, "reads a password from the keychain"),
+        // security(1): global options may come first (-q, -v), flags may be clustered (-gw, -wa ACCOUNT).
+        (#"\bsecurity\b[^|;&]*\bfind-(generic|internet)-password\b[^|;&]*\s-[a-zA-Z]*[wg]"#, "reads a password from the keychain"),
+        (#"\bsecurity\b[^|;&]*\bdump-keychain\b[^|;&]*\s-[a-zA-Z]*[dr]"#, "dumps decrypted keychain contents"),
+        (#"\bsecurity\b[^|;&]*\bexport\b(?![^|;&]*\s-t\s*(certs|pubKeys)\b)"#, "exports private keys from the keychain"),
+        (#"\bsecurity\b[^|;&]*\bset-(generic|internet|key)-(password-)?partition-list\b"#, "lets programs read keychain items without asking"),
+        (#"\bsecurity(\s+-[a-zA-Z]+)*\s+-[a-zA-Z]*[ip]\b"#, "runs security commands interactively, out of sight of this guard"),
         (#"(?i)\bsecretariat\s+run\b[^|;&]*--no-mask"#, "switches off output masking"),
         (#"(?i)\bsecretariat\s+header\b"#, "prints a header with a secret (only Claude Code's headersHelper may call it)"),
         (#"/proc/\d+/environ|\bps\s+[^|;&]*e[wW]*\b.*\benv"#, "reads another process's environment"),

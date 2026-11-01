@@ -8,6 +8,11 @@ private func bash(_ command: String) -> String? { AgentHook.refusal(tool: "Bash"
     for risky in ["cat .env", "cat ./apps/web/.env.local", "grep OPENAI .env", "head -5 .env.production", "source .env && npm start",
                   "printenv", "env", "env | grep KEY", "cd api && printenv OPENAI_API_KEY", "docker compose config",
                   "docker-compose -f x.yml config", "security find-generic-password -s foo -w",
+                  "security find-generic-password -s foo -gw", "security find-generic-password -wa me -s foo",
+                  "security -q find-generic-password -s foo -w", "T=$(/usr/bin/security find-internet-password -s github.com -w)",
+                  "echo 'find-generic-password -s foo -w' | security -i", "security -p '> '", "security dump-keychain -d login.keychain",
+                  "security export -k login.keychain -t privKeys -f pkcs12 -P x -o k.p12", "security export -k login.keychain -o all.p12",
+                  "security set-generic-password-partition-list -S apple-tool:,apple: -k pw",
                   "secretariat run web --no-mask -- env", "cat /proc/42/environ",
                  "secretariat header moinsen/x/mcp/token --bearer", "~/bin/secretariat header a/b | cat",
                  "/Users/x/Applications/Secretariat.app/Contents/MacOS/Secretariat header a/b/c --bearer",
@@ -16,7 +21,10 @@ private func bash(_ command: String) -> String? { AgentHook.refusal(tool: "Bash"
     }
     for fine in ["cat .env.example", "cp .env.example .env.template", "env NODE_ENV=test npm test", "set -e; npm run build",
                  "grep -r OPENAI src", "ls -la", "secretariat run web -- npm test", "docker compose up -d", "cat README.md",
-                 "echo $HOME", "git commit -m 'env cleanup'"] {
+                 "echo $HOME", "git commit -m 'env cleanup'",
+                 "security find-generic-password -s foo", "security find-identity -v -p codesigning", "security list-keychains",
+                 "security dump-keychain", "security export -k login.keychain -t certs -o certs.pem", "security error -34018",
+                 "security find-certificate -c 'Developer ID' -p"] {
         #expect(bash(fine) == nil, "should allow: \(fine)")
     }
     #expect(AgentHook.refusal(tool: "Read", input: ["file_path": "/Users/x/work/app/.env"]) != nil)
