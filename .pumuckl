@@ -5,12 +5,12 @@
     "has_uncommitted_changes" : true,
     "is_repo" : true,
     "last_commit_author" : "Ulrich Diedrichsen",
-    "last_commit_date" : "2026-10-30T22:02:28Z",
-    "last_commit_message" : "Site FAQ: source-available on GitHub under PolyForm Strict (deploy after the repo is public)",
-    "local_secret_files" : 5,
-    "stale_days" : 1,
+    "last_commit_date" : "2026-11-01T13:56:51Z",
+    "last_commit_message" : "Agent guard: close security(1) gaps; backlog for the security interplay",
+    "local_secret_files" : 4,
+    "stale_days" : 6,
     "stash_count" : 0,
-    "total_commits" : 112,
+    "total_commits" : 113,
     "uncommitted_files_count" : 1,
     "unpushed_commits" : 0
   },
@@ -81,16 +81,32 @@
         },
         "source" : "feedback-cafe",
         "url" : "https:\/\/secretariat.moinsen.dev\/"
+      },
+      {
+        "check_id" : "JNKZHFYrF_eTicQ3",
+        "date" : "2026-11-07T11:06:19Z",
+        "insight" : "Die Sicherheitsbelege stammen nur vom Anbieter selbst, und der Launch-Preis nennt zwei unterschiedliche Fristen (vier Wochen gegen festes Datum).",
+        "live" : true,
+        "round" : 5,
+        "scores" : {
+          "audience" : 5,
+          "clarity" : 4,
+          "next_step" : 4,
+          "trust" : 4,
+          "value" : 4
+        },
+        "source" : "feedback-cafe",
+        "url" : "https:\/\/secretariat.moinsen.dev\/"
       }
     ]
   },
-  "last_scanned" : "2026-11-01T13:29:50Z",
+  "last_scanned" : "2026-11-08T01:53:28Z",
   "project_path" : "\/Users\/udi\/work\/moinsen\/ideas\/local_secrets_orchestrator",
   "pumuckl_version" : 1,
   "report" : {
     "accent" : "#2E7D6B",
-    "ai_note" : "Secretariat ist fast startklar: Quellcode, Tests, Threat Model und Release-Doku liegen vor, und der Source-Available-Schritt ist gerade abgeschlossen.",
-    "ai_suggestion" : "Lokal `xcrun swift test` ausführen und prüfen, ob das Projekt mit Xcode-Toolchain baut; danach Abhängigkeiten (Sparkle 2.9.6, KeyboardShortcuts 3.1.0) auf Aktualität prüfen.",
+    "ai_note" : "Six days away is barely a pause, and the project already has tests, evidence reports and a clear README, so picking it back up should be quick.",
+    "ai_suggestion" : "Run `xcrun swift test` locally to confirm the suite is green after the last agent-guard commit, then start on the security-interplay backlog that commit left open.",
     "architecture" : [
       {
         "lbl" : "UI",
@@ -194,11 +210,11 @@
         "t" : "CLI"
       }
     ],
-    "effort_to_complete" : 25,
+    "effort_to_complete" : 45,
     "history" : [
       "Das Projekt begann als Neubau einer nativen Minimal-App, der Altstand liegt im Legacy-Archiv. Danach kamen die Agenten-Einrichtung und die nichtinteraktive Keychain-CLI, zuletzt die lokale Abnahme von Version 0.2."
     ],
-    "impact" : 80,
+    "impact" : 75,
     "last_state" : [
       {
         "meta" : "Abschlussstand in PLAN\/TRACKER aktualisiert, vor 2 Tagen",
@@ -222,12 +238,12 @@
       }
     ],
     "overall_gem_score" : 78,
-    "progress" : 85,
+    "progress" : 80,
     "re_entry_action" : "Die signierte dist\/Secretariat.app lokal mit xcrun notarytool notarisieren, das Ticket mit stapler anheften und die Installation per spctl --assess sowie einen echten Lauf von .\/script\/install.sh prüfen.",
-    "re_entry_effort" : "~1h",
+    "re_entry_effort" : "~30m",
     "re_entry_why" : "Release-Reife ist die schwächste Dimension, weil die Abnahme zwar mit Developer-ID signiert, aber nicht notarisiert ist; erst damit lässt sich die App außerhalb dieses Macs ohne Gatekeeper-Warnung weitergeben.",
-    "recency" : 45,
-    "resumption_ease" : 70,
+    "recency" : 85,
+    "resumption_ease" : 85,
     "roadmap" : [
       {
         "d" : "Signierte App mit notarytool notarisieren, Ticket anheften, mit spctl prüfen",
@@ -321,7 +337,7 @@
         "t" : "Anforderungen und Nachweise pflegen"
       }
     ],
-    "vision" : "Ein vertrauenswürdiger Mac-Schlüsselhalter, der API-Keys vor KI-Agenten verbirgt und auditierbar bleibt."
+    "vision" : "Give developers a native Mac vault that keeps API keys away from coding agents while still letting their tools use them, with a public, auditable codebase."
   },
   "scan" : {
     "capability" : {
@@ -334,23 +350,23 @@
       "head" : "64e0af0"
     },
     "fast" : {
-      "at" : "2026-10-31T10:21:15Z",
-      "head" : "4561893",
-      "mtime" : 1793397740.5200973
+      "at" : "2026-11-08T01:53:28Z",
+      "head" : "190c091",
+      "mtime" : 1794058795.4660704
     },
     "git" : {
-      "at" : "2026-11-01T13:29:50Z",
-      "head" : "4561893",
-      "mtime" : 1793539671.8987303
+      "at" : "2026-11-08T01:52:47Z",
+      "head" : "190c091",
+      "mtime" : 1794058795.4660704
     }
   },
   "scoring" : {
-    "ai_note" : "Secretariat ist fast startklar: Quellcode, Tests, Threat Model und Release-Doku liegen vor, und der Source-Available-Schritt ist gerade abgeschlossen.",
-    "ai_suggestion" : "Lokal `xcrun swift test` ausführen und prüfen, ob das Projekt mit Xcode-Toolchain baut; danach Abhängigkeiten (Sparkle 2.9.6, KeyboardShortcuts 3.1.0) auf Aktualität prüfen.",
-    "effort_to_complete" : 25,
-    "impact" : 80,
+    "ai_note" : "Six days away is barely a pause, and the project already has tests, evidence reports and a clear README, so picking it back up should be quick.",
+    "ai_suggestion" : "Run `xcrun swift test` locally to confirm the suite is green after the last agent-guard commit, then start on the security-interplay backlog that commit left open.",
+    "effort_to_complete" : 45,
+    "impact" : 75,
     "overall_gem_score" : 78,
-    "progress" : 85,
-    "recency" : 45
+    "progress" : 80,
+    "recency" : 85
   }
 }

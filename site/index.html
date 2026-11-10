@@ -466,9 +466,12 @@ secretariat profile bind \
         <li>All 1.x updates included</li>
         <li>macOS 14 or later</li>
       </ul>
-      <a class="btn block" href="/buy">Buy Secretariat</a>
-      <p class="fineprint">Checkout opens on Lemon Squeezy; launch code <strong>LAUNCH29</strong> until 25 November 2026. VAT is calculated there. The license arrives by email and is checked offline.</p>
-      <p class="fineprint"><a href="Secretariat-latest.zip">Download the free trial</a></p>
+      <!-- Until the Lemon Squeezy store is approved there is no live checkout, and /buy (see _redirects)
+           points back at #buy, so a "Buy" button here would only jump to itself. Go-live: set
+           `/buy <live buy_now_url> 302` in _redirects, then restore here:
+           <a class="btn block" href="/buy">Buy Secretariat</a> and the checkout fineprint (launch code LAUNCH29). -->
+      <a class="btn block" href="Secretariat-latest.zip">Download the free trial</a>
+      <p class="fineprint">Buying opens in a few days: Lemon Squeezy, who sell it for us as merchant of record, are still approving the store. The trial has everything for 14 days, and nothing locks after it. Your license will arrive by email and is checked offline.</p>
     </div>
   </div>
 </section>

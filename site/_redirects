@@ -1,1 +1,3 @@
+# Not live yet: /buy lands on the price card (the app's "Buy" opens this URL too).
+# Go-live: replace the target with the live product's buy_now_url and restore the button in index.html.
 /buy /#buy 302
