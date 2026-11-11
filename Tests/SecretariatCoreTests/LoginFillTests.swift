@@ -27,16 +27,34 @@ private func login(_ path: String, url: String? = nil, user: String? = "uli@exam
     #expect(LoginFill.site("localhost") == "localhost")
 }
 
-@Test func fillableFieldPrefersPasswordAndSkipsFilesAndIdentifiers() {
+@Test func onlyAFieldNamedPasswordIsFilled() {
     #expect(LoginFill.fillableField(login("a/b")) == "password")
     let api = ItemMeta(path: "moinsen/openai", kind: "api", fields: [ItemField(name: "env_var", kind: .identifier, value: "X"),
                                                                     ItemField(name: "api_key", kind: .secret)])
-    #expect(LoginFill.fillableField(api) == "api_key")
-    let note = ItemMeta(path: "n", kind: "note", fields: [ItemField(name: "secret", kind: .secret), ItemField(name: "notes", kind: .personal)])
-    #expect(LoginFill.fillableField(note) == "notes")
-    let file = ItemMeta(path: "f", kind: "certificate", fields: [ItemField(name: "private_key", kind: .file),
-                                                                ItemField(name: "key_id", kind: .identifier, value: "K")])
-    #expect(LoginFill.fillableField(file) == nil)
+    #expect(LoginFill.fillableField(api) == nil)
+    let note = ItemMeta(path: "n", kind: "note", fields: [ItemField(name: "notes", kind: .personal)])
+    #expect(LoginFill.fillableField(note) == nil)
+    let database = ItemMeta(path: "d", kind: "database", fields: [ItemField(name: "host", kind: .identifier, value: "h"),
+                                                                 ItemField(name: "password", kind: .secret)])
+    #expect(LoginFill.fillableField(database) == "password")
+    let wrongKind = ItemMeta(path: "w", kind: "x", fields: [ItemField(name: "password", kind: .file)])
+    #expect(LoginFill.fillableField(wrongKind) == nil)
+}
+
+@Test func valuesWithControlCharactersAreNotTyped() {
+    #expect(LoginFill.isTypable("Lang-Test_Pw:ÄÖÜ-ß-€-42!x 🔑"))
+    #expect(!LoginFill.isTypable("first line\nsecond"))
+    #expect(!LoginFill.isTypable("pass\tword"))
+    #expect(!LoginFill.isTypable("bell\u{7}"))
+    #expect(!LoginFill.isTypable(""))
+}
+
+@Test func sharedHostingSubdomainsAreNotTheSameSite() {
+    #expect(LoginFill.site("evil.pages.dev") == "evil.pages.dev")
+    #expect(LoginFill.site("a.b.github.io") == "b.github.io")
+    let items = [login("moinsen/site", url: "https://moinsen.pages.dev")]
+    #expect(LoginFill.candidates(items, page: "https://evil.pages.dev/login", query: "").first?.rank == .other)
+    #expect(LoginFill.candidates(items, page: "https://moinsen.pages.dev/login", query: "").first?.rank == .sameHost)
 }
 
 @Test func pageMatchesComeFirstAndOthersStayHiddenWithoutAQuery() {

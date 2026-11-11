@@ -102,7 +102,16 @@ final class FillController {
             }
             // Read (and record in the history) only now that the value really goes into the field.
             guard let value = model.secretValue(candidate.item, field, for: "fill \(place)") else { return }
-            Keystrokes.type(value)
+            guard LoginFill.isTypable(value) else {
+                let alert = NSAlert()
+                alert.messageText = "Nothing was typed"
+                alert.informativeText = "The stored password contains a line break or another control character. Typing it could submit the form or put part of it into another field."
+                NSApplication.shared.activate(ignoringOtherApps: true)
+                alert.runModal()
+                return
+            }
+            let pid = target.processIdentifier
+            Keystrokes.type(value, to: pid) { NSWorkspace.shared.frontmostApplication?.processIdentifier == pid }
         }
     }
 }
@@ -199,8 +208,9 @@ struct FillPanelView: View {
 
     private func row(_ candidate: LoginFill.Candidate, isSelected: Bool) -> some View {
         HStack(spacing: 10) {
-            Image(systemName: candidate.rank == .other ? "key" : "checkmark.seal.fill")
-                .foregroundStyle(candidate.rank == .other ? Color.secondary : Color.teal).frame(width: 18)
+            // The seal only for the exact address stored with the item; everything else is just ordered first.
+            Image(systemName: candidate.rank == .sameHost ? "checkmark.seal.fill" : "key")
+                .foregroundStyle(candidate.rank == .sameHost ? Color.teal : Color.secondary).frame(width: 18)
             VStack(alignment: .leading, spacing: 1) {
                 Text(candidate.item.path).lineLimit(1)
                 Text([candidate.username, candidate.host].compactMap { $0 }.joined(separator: " · ").ifEmpty("field \(candidate.field)"))

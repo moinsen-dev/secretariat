@@ -37,16 +37,26 @@ public enum LoginFill {
         let labels = host.split(separator: ".").map(String.init)
         guard labels.count > 2 else { return host }
         let lastTwo = labels.suffix(2).joined(separator: ".")
-        let take = twoPartSuffixes.contains(lastTwo) ? 3 : 2
+        let take = twoPartSuffixes.contains(lastTwo) || sharedHosting.contains(lastTwo) ? 3 : 2
         return labels.suffix(take).joined(separator: ".")
     }
     private static let twoPartSuffixes: Set<String> = ["co.uk", "org.uk", "ac.uk", "com.au", "net.au", "co.nz", "co.jp", "com.br", "co.za", "com.tr", "co.at"]
+    /// Domains where strangers get their own subdomain (from the private part of the Public Suffix List): two sites there
+    /// are never "the same site". Not the whole list; an unknown shared domain only changes the order, never the seal.
+    private static let sharedHosting: Set<String> = [
+        "github.io", "gitlab.io", "pages.dev", "workers.dev", "vercel.app", "netlify.app", "herokuapp.com", "web.app",
+        "firebaseapp.com", "appspot.com", "azurewebsites.net", "cloudfront.net", "blogspot.com", "onrender.com", "fly.dev",
+        "ngrok.io", "ngrok.app", "glitch.me", "surge.sh", "deno.dev", "wixsite.com", "myshopify.com", "readthedocs.io"]
 
-    /// The field to type: `password` if it holds text, else the first text field only for the user, else the first secret.
+    /// Only a field named `password` that holds text gets typed; notes, keys and files never do.
     public static func fillableField(_ item: ItemMeta) -> String? {
-        let texts = item.fields.filter { $0.kind == .personal || $0.kind == .secret }
-        if let password = texts.first(where: { $0.name == "password" }) { return password.name }
-        return (texts.first { $0.kind == .personal } ?? texts.first)?.name
+        item.fields.first { $0.name == "password" && ($0.kind == .personal || $0.kind == .secret) }?.name
+    }
+
+    /// A value may be typed only if it has no control characters: a line break or tab would submit the form or move the
+    /// rest of the password into the next (possibly visible) field.
+    public static func isTypable(_ value: String) -> Bool {
+        !value.isEmpty && !value.unicodeScalars.contains { CharacterSet.controlCharacters.contains($0) }
     }
 
     static func username(_ item: ItemMeta) -> String? {
@@ -132,7 +142,9 @@ public enum FocusedPage {
                 let area = webArea(around: focused)
                 // Right after the app comes back to the front, Chromium may report the page itself as focused while the
                 // password field inside it still holds the focus; then the field carries AXFocused.
-                let secure = isSecure(focused) || area.map { focusedSecureField(in: $0.element) } == true
+                // The fallback applies only when the page itself is reported as focused, never when another field has the focus.
+                let pageFocused = string(focused, kAXRoleAttribute) == "AXWebArea"
+                let secure = isSecure(focused) || (pageFocused && area.map { focusedSecureField(in: $0.element) } == true)
                 if area != nil || secure || attempt == 2 { return Focus(url: area?.url, isPasswordField: secure) }
             }
             if attempt < 2 { Thread.sleep(forTimeInterval: 0.15) }
@@ -177,25 +189,29 @@ public enum FocusedPage {
     }
 }
 
-/// Types text into whatever has keyboard focus, as Unicode key events: no clipboard, independent of the keyboard layout.
+/// Types text into the app with this process id, as Unicode key events: no clipboard, independent of the keyboard layout.
+/// Stops (returns false) as soon as another app comes to the front, so no part of the value reaches it.
 public enum Keystrokes {
-    public static func type(_ text: String) {
+    @discardableResult
+    public static func type(_ text: String, to pid: pid_t, isFront: () -> Bool) -> Bool {
         let source = CGEventSource(stateID: .combinedSessionState)
         let units = Array(text.utf16)
         var start = 0
         while start < units.count {
+            guard isFront() else { return false }
             // Keep surrogate pairs together.
             var end = min(start + 16, units.count)
             if end < units.count, UTF16.isLeadSurrogate(units[end - 1]) { end -= 1 }
             var chunk = Array(units[start..<end])
             for keyDown in [true, false] {
-                guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: keyDown) else { continue }
+                guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0, keyDown: keyDown) else { return false }
                 event.flags = []
                 event.keyboardSetUnicodeString(stringLength: chunk.count, unicodeString: &chunk)
-                event.post(tap: .cghidEventTap)
+                event.postToPid(pid)
             }
             start = end
             Thread.sleep(forTimeInterval: 0.01)
         }
+        return true
     }
 }
