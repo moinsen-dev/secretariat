@@ -1,19 +1,27 @@
 {
+  "decision" : {
+    "decided_at" : "2026-11-10T16:49:30Z",
+    "reason" : "Last worked on 0 days ago · More clear candidates than your limit of 10",
+    "retired_before" : false,
+    "source" : "rule",
+    "verdict" : "weiter"
+  },
   "git" : {
     "current_branch" : "main",
     "github_url" : "https:\/\/github.com\/moinsen-dev\/secretariat",
     "has_uncommitted_changes" : true,
     "is_repo" : true,
     "last_commit_author" : "Ulrich Diedrichsen",
-    "last_commit_date" : "2026-11-01T13:56:51Z",
-    "last_commit_message" : "Agent guard: close security(1) gaps; backlog for the security interplay",
+    "last_commit_date" : "2026-11-10T07:32:19Z",
+    "last_commit_message" : "Site: buy button no longer links to itself while the store awaits approval",
     "local_secret_files" : 4,
-    "stale_days" : 6,
+    "stale_days" : 0,
     "stash_count" : 0,
-    "total_commits" : 113,
+    "total_commits" : 114,
     "uncommitted_files_count" : 1,
-    "unpushed_commits" : 0
+    "unpushed_commits" : 1
   },
+  "in_progress_since" : "2026-11-11T07:41:18Z",
   "kreislauf" : {
     "idea_id" : "pilot-secretariat",
     "landing_url" : "https:\/\/secretariat.moinsen.dev\/",
@@ -100,13 +108,13 @@
       }
     ]
   },
-  "last_scanned" : "2026-11-08T01:53:28Z",
+  "last_scanned" : "2026-11-11T04:18:11Z",
   "project_path" : "\/Users\/udi\/work\/moinsen\/ideas\/local_secrets_orchestrator",
   "pumuckl_version" : 1,
   "report" : {
-    "accent" : "#2E7D6B",
-    "ai_note" : "Six days away is barely a pause, and the project already has tests, evidence reports and a clear README, so picking it back up should be quick.",
-    "ai_suggestion" : "Run `xcrun swift test` locally to confirm the suite is green after the last agent-guard commit, then start on the security-interplay backlog that commit left open.",
+    "accent" : "#2F6F5E",
+    "ai_note" : "The project was active today with 114 commits, and its security tooling is close to a source-available release, so picking it back up is a short step.",
+    "ai_suggestion" : "Run `xcrun swift test` locally in Sources\/Tests to confirm the build and SecretariatCoreTests are green, then read the security-interplay backlog that commit 190c091 mentions and choose the next item.",
     "architecture" : [
       {
         "lbl" : "UI",
@@ -210,11 +218,11 @@
         "t" : "CLI"
       }
     ],
-    "effort_to_complete" : 45,
+    "effort_to_complete" : 40,
     "history" : [
       "Das Projekt begann als Neubau einer nativen Minimal-App, der Altstand liegt im Legacy-Archiv. Danach kamen die Agenten-Einrichtung und die nichtinteraktive Keychain-CLI, zuletzt die lokale Abnahme von Version 0.2."
     ],
-    "impact" : 75,
+    "impact" : 72,
     "last_state" : [
       {
         "meta" : "Abschlussstand in PLAN\/TRACKER aktualisiert, vor 2 Tagen",
@@ -237,12 +245,12 @@
         "wip" : false
       }
     ],
-    "overall_gem_score" : 78,
+    "overall_gem_score" : 80,
     "progress" : 80,
     "re_entry_action" : "Die signierte dist\/Secretariat.app lokal mit xcrun notarytool notarisieren, das Ticket mit stapler anheften und die Installation per spctl --assess sowie einen echten Lauf von .\/script\/install.sh prüfen.",
-    "re_entry_effort" : "~30m",
+    "re_entry_effort" : "~1h",
     "re_entry_why" : "Release-Reife ist die schwächste Dimension, weil die Abnahme zwar mit Developer-ID signiert, aber nicht notarisiert ist; erst damit lässt sich die App außerhalb dieses Macs ohne Gatekeeper-Warnung weitergeben.",
-    "recency" : 85,
+    "recency" : 95,
     "resumption_ease" : 85,
     "roadmap" : [
       {
@@ -337,8 +345,9 @@
         "t" : "Anforderungen und Nachweise pflegen"
       }
     ],
-    "vision" : "Give developers a native Mac vault that keeps API keys away from coding agents while still letting their tools use them, with a public, auditable codebase."
+    "vision" : "Secretariat lets coding agents use API keys through a CLI without ever reading the key values, backed by a native Mac app with a verifiable open-source core."
   },
+  "retired" : false,
   "scan" : {
     "capability" : {
       "at" : "2026-10-25T09:06:48Z",
@@ -350,23 +359,23 @@
       "head" : "64e0af0"
     },
     "fast" : {
-      "at" : "2026-11-08T01:53:28Z",
-      "head" : "190c091",
-      "mtime" : 1794058795.4660704
+      "at" : "2026-11-11T04:18:11Z",
+      "head" : "2568981",
+      "mtime" : 1794295893.2655485
     },
     "git" : {
-      "at" : "2026-11-08T01:52:47Z",
-      "head" : "190c091",
-      "mtime" : 1794058795.4660704
+      "at" : "2026-11-11T04:17:17Z",
+      "head" : "2568981",
+      "mtime" : 1794295893.2655485
     }
   },
   "scoring" : {
-    "ai_note" : "Six days away is barely a pause, and the project already has tests, evidence reports and a clear README, so picking it back up should be quick.",
-    "ai_suggestion" : "Run `xcrun swift test` locally to confirm the suite is green after the last agent-guard commit, then start on the security-interplay backlog that commit left open.",
-    "effort_to_complete" : 45,
-    "impact" : 75,
-    "overall_gem_score" : 78,
+    "ai_note" : "The project was active today with 114 commits, and its security tooling is close to a source-available release, so picking it back up is a short step.",
+    "ai_suggestion" : "Run `xcrun swift test` locally in Sources\/Tests to confirm the build and SecretariatCoreTests are green, then read the security-interplay backlog that commit 190c091 mentions and choose the next item.",
+    "effort_to_complete" : 40,
+    "impact" : 72,
+    "overall_gem_score" : 80,
     "progress" : 80,
-    "recency" : 85
+    "recency" : 95
   }
 }

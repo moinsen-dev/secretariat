@@ -113,6 +113,9 @@ struct SettingsView: View {
             KeyboardShortcuts.Recorder("Capture clipboard:", name: .capture)
             Text("Copy a credential anywhere, press the shortcut and give it a name if you like. It lands in the Inbox with date and time, and the clipboard is cleared.")
                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            KeyboardShortcuts.Recorder("Fill login:", name: .fillLogin)
+            Text("Click into a password field on a web page, press the shortcut, pick the item and confirm with Touch ID. Secretariat types the password; it never goes to the clipboard. Needs Accessibility access.")
+                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
         .formStyle(.grouped).frame(width: 480)
     }

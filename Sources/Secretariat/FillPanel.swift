@@ -1,0 +1,232 @@
+import AppKit
+import KeyboardShortcuts
+import LocalAuthentication
+import SecretariatCore
+import SwiftUI
+
+extension KeyboardShortcuts.Name {
+    static let fillLogin = Self("fillLogin", default: .init(.p, modifiers: [.control, .option, .command]))
+}
+
+/// Global shortcut while the cursor sits in a password field: a small panel over the page names the site, offers the
+/// matching items and a search; after Touch ID the chosen password is typed into the field. No clipboard, no value on screen.
+final class FillController {
+    static let shared = FillController()
+    private var panel: NSPanel?
+    private weak var model: AppModel?
+
+    func install(_ model: AppModel) {
+        self.model = model
+        KeyboardShortcuts.onKeyUp(for: .fillLogin) { [weak self] in self?.show() }
+    }
+
+    func show() {
+        guard let model else { return }
+        close()
+        let front = NSWorkspace.shared.frontmostApplication
+        let target = front?.processIdentifier == ProcessInfo.processInfo.processIdentifier ? nil : front
+        let trusted = FocusedPage.isTrusted
+        let focus = trusted ? target.map { FocusedPage.focus(pid: $0.processIdentifier) } : nil
+        let page = focus?.url
+        model.reload()
+        let host = page.flatMap { LoginFill.host($0.absoluteString) }
+        let view = FillPanelView(host: host, appName: target?.localizedName, trusted: trusted,
+                                 inPasswordField: focus?.isPasswordField == true,
+                                 search: { query in LoginFill.candidates(model.items, page: page?.absoluteString, query: query) },
+                                 cancel: { [weak self] in self?.close() },
+                                 allowAccess: { [weak self] in
+                                     self?.close()
+                                     // The request puts Secretariat into the list (switched off); the link opens that list.
+                                     FocusedPage.requestTrust()
+                                     if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                                         NSWorkspace.shared.open(url)
+                                     }
+                                 },
+                                 choose: { [weak self] candidate in self?.fill(candidate, host: host, page: page, into: target) })
+        let panel = FillKeyPanel(contentRect: NSRect(x: 0, y: 0, width: 460, height: 300),
+                                 styleMask: [.titled, .closable, .nonactivatingPanel, .fullSizeContentView], backing: .buffered, defer: false)
+        panel.titlebarAppearsTransparent = true
+        panel.titleVisibility = .hidden
+        panel.level = .floating
+        panel.isMovableByWindowBackground = true
+        panel.hidesOnDeactivate = false
+        panel.isReleasedWhenClosed = false
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        let hosting = NSHostingView(rootView: view)
+        panel.contentView = hosting
+        panel.setContentSize(hosting.fittingSize)
+        let screen = NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) } ?? NSScreen.main
+        if let frame = screen?.visibleFrame {
+            panel.setFrameOrigin(NSPoint(x: frame.midX - panel.frame.width / 2, y: frame.maxY - frame.height * 0.28 - panel.frame.height))
+        }
+        panel.makeKeyAndOrderFront(nil)
+        self.panel = panel
+    }
+
+    func close() { panel?.close(); panel = nil }
+
+    /// Touch ID (or the Mac password) for this one fill, then the value goes as keystrokes into the field that had focus.
+    private func fill(_ candidate: LoginFill.Candidate, host: String?, page: URL?, into target: NSRunningApplication?) {
+        close()
+        guard let model, let target, let field = candidate.item.field(candidate.field) else { return }
+        let place = host ?? target.localizedName ?? "the focused field"
+        Task { @MainActor in
+            let context = LAContext()
+            do {
+                guard try await context.evaluatePolicy(.deviceOwnerAuthentication,
+                                                       localizedReason: "fill \(candidate.item.path) into \(place)") else { return }
+            } catch { return }
+            // Give the keyboard back to the page: Touch ID may have made Secretariat the active app.
+            NSApplication.shared.yieldActivation(to: target)
+            target.activate()
+            // Check right before typing, for up to 2 s while the page takes the focus back: same app in front,
+            // a password field on the same page has the focus.
+            var inFront = false, ready = false
+            for _ in 0..<20 {
+                try? await Task.sleep(for: .milliseconds(100))
+                inFront = NSWorkspace.shared.frontmostApplication?.processIdentifier == target.processIdentifier
+                let now = FocusedPage.focus(pid: target.processIdentifier)
+                ready = inFront && now.isPasswordField && now.url?.host == page?.host
+                if ready { break }
+                if !inFront { target.activate() }
+            }
+            guard ready else {
+                let alert = NSAlert()
+                alert.messageText = "Nothing was typed"
+                alert.informativeText = inFront
+                    ? "The cursor is no longer in the password field of \(place). Click into the field and press the shortcut again."
+                    : "\(target.localizedName ?? "The app") did not come back to the front. Click into the password field and press the shortcut again."
+                NSApplication.shared.activate(ignoringOtherApps: true)
+                alert.runModal()
+                return
+            }
+            // Read (and record in the history) only now that the value really goes into the field.
+            guard let value = model.secretValue(candidate.item, field, for: "fill \(place)") else { return }
+            Keystrokes.type(value)
+        }
+    }
+}
+
+private final class FillKeyPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+}
+
+struct FillPanelView: View {
+    let host: String?
+    let appName: String?
+    let trusted: Bool
+    let inPasswordField: Bool
+    let search: (String) -> [LoginFill.Candidate]
+    let cancel: () -> Void
+    let allowAccess: () -> Void
+    let choose: (LoginFill.Candidate) -> Void
+    @State private var query = ""
+    @State private var selected = 0
+    @FocusState private var focused: Bool
+
+    private var results: [LoginFill.Candidate] { search(query) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: "person.badge.key.fill").font(.title2).foregroundStyle(.white)
+                    .frame(width: 38, height: 38).background(.teal.gradient, in: RoundedRectangle(cornerRadius: 9))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Fill Login").font(.headline)
+                    Text(subtitle).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+                }
+            }
+            if !trusted {
+                Label("To see which page the field belongs to and to type the password, Secretariat needs Accessibility access: System Settings › Privacy & Security › Accessibility › Secretariat on. Then press the shortcut again.",
+                      systemImage: "hand.raised").foregroundStyle(.orange).fixedSize(horizontal: false, vertical: true)
+                HStack {
+                    Spacer()
+                    Button("Cancel", action: cancel).keyboardShortcut(.cancelAction)
+                    Button("Allow Access …", action: allowAccess).keyboardShortcut(.defaultAction)
+                }
+            } else {
+                TextField("Search items", text: $query, prompt: Text("Search by name, user or site"))
+                    .textFieldStyle(.roundedBorder).focused($focused)
+                    .onSubmit(submit)
+                    .onKeyPress(.downArrow) { move(1); return .handled }
+                    .onKeyPress(.upArrow) { move(-1); return .handled }
+                    .onChange(of: query) { selected = 0 }
+                list
+                if !inPasswordField {
+                    Label("Click into the password field of the page first, then press the shortcut again. Secretariat only types into password fields.",
+                          systemImage: "cursorarrow.click").foregroundStyle(.orange).font(.callout).fixedSize(horizontal: false, vertical: true)
+                }
+                Text("Touch ID confirms each fill. The password is typed into the field you were in, never copied to the clipboard.")
+                    .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+                HStack {
+                    Spacer()
+                    Button("Cancel", action: cancel).keyboardShortcut(.cancelAction)
+                    Button("Fill", action: submit).keyboardShortcut(.defaultAction).disabled(results.isEmpty || !inPasswordField)
+                }
+            }
+        }
+        .padding(20).frame(width: 460)
+        .onAppear { focused = true }
+    }
+
+    private var subtitle: String {
+        if let host { return host }
+        if !trusted { return "Access needed" }
+        return appName.map { "No web page found in \($0): search instead" } ?? "No web page found: search instead"
+    }
+
+    @ViewBuilder private var list: some View {
+        let items = Array(results.prefix(50))
+        if items.isEmpty {
+            Text(query.isEmpty ? "No item with a password yet." : "Nothing matches “\(query)”.")
+                .foregroundStyle(.secondary).frame(maxWidth: .infinity, minHeight: 60)
+        } else {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 2) {
+                        ForEach(Array(items.enumerated()), id: \.element.id) { index, candidate in
+                            row(candidate, isSelected: index == selected).id(index)
+                                .contentShape(Rectangle())
+                                .onTapGesture { if inPasswordField { choose(candidate) } else { selected = index } }
+                        }
+                    }
+                }
+                .frame(height: min(CGFloat(items.count) * 44, 220))
+                .onChange(of: selected) { _, index in proxy.scrollTo(index) }
+            }
+        }
+    }
+
+    private func row(_ candidate: LoginFill.Candidate, isSelected: Bool) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: candidate.rank == .other ? "key" : "checkmark.seal.fill")
+                .foregroundStyle(candidate.rank == .other ? Color.secondary : Color.teal).frame(width: 18)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(candidate.item.path).lineLimit(1)
+                Text([candidate.username, candidate.host].compactMap { $0 }.joined(separator: " · ").ifEmpty("field \(candidate.field)"))
+                    .font(.caption).foregroundStyle(isSelected ? .white.opacity(0.85) : .secondary).lineLimit(1)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 8).padding(.vertical, 5)
+        .foregroundStyle(isSelected ? .white : .primary)
+        .background(isSelected ? Color.accentColor : .clear, in: RoundedRectangle(cornerRadius: 6))
+    }
+
+    private func move(_ step: Int) {
+        let count = min(results.count, 50)
+        guard count > 0 else { return }
+        selected = (selected + step + count) % count
+    }
+
+    private func submit() {
+        guard inPasswordField else { return }
+        let items = results
+        guard items.indices.contains(selected) else { return }
+        choose(items[selected])
+    }
+}
+
+private extension String {
+    func ifEmpty(_ fallback: String) -> String { isEmpty ? fallback : self }
+}
