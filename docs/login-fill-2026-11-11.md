@@ -4,7 +4,7 @@ Code-Stand: 04c7856 nach der ersten Kritik (erster Stand 548ff65; Build `dist/Se
 
 ## Unit-Tests
 
-`xcrun swift test`: 103 Tests grün (Stand 04c7856), davon 10 in `LoginFillTests.swift` (Host aus URL, registrierbare Domain, Feldwahl,
+`xcrun swift test`: 103 Tests grün (Stand 04c7856), davon 9 in `LoginFillTests.swift` (Host aus URL, registrierbare Domain, Feldwahl,
 Rangfolge gleicher Host > gleiche Domain > Domain im Pfad, alle Einträge ohne Treffer, Suche über Pfad/Benutzer/Host,
 kurze Domain-Labels ohne Treffer, nur Feld `password`, Steuerzeichen abgelehnt, geteilte Hosting-Domains wie pages.dev nie gleiche Domain).
 
@@ -48,9 +48,16 @@ Vor dem Lauf eine Markierung in die Zwischenablage gelegt (Hash `feb968aac2353c1
 5. Verlauf: genau eine neue Zeile „App: Fill Localhost test/filltest/login/password“ nach dem Import, ohne Wert (Schritt 6).
 6. Freigabe-Knopf: fragt an und öffnet die Liste (im ersten Lauf von Uli genutzt, Schritt 8).
 
+## Nach dem zweiten Lauf
+
+Einzige Code-Änderung danach: vier weitere geteilte Hosting-Domains in der Liste (`r2.dev`, `trycloudflare.com`, `ts.net`,
+`cloudflareaccess.com`), Hinweis des Kritikers. Betrifft nur die Rangfolge, nicht Fokusprüfung oder Tippen; Unit-Tests erneut grün.
+Unabhängige Kritik: erste Runde REWORK (vier Muss-Punkte), zweite Runde PASS für Plan und UC22.
+
 ## Grenzen
 
 - Schritte 1, 2 und „Feld leer nach Abbruch“ sind Ulis Beobachtung, nicht automatisch gemessen.
 - Die Liste geteilter Hosting-Domains ist eine Auswahl aus der Public Suffix List, nicht die ganze; eine unbekannte geteilte Domain ändert nur die Reihenfolge, nie das Siegel.
 - Release-Build hat eine andere Bundle-Kennung: Die Freigabe der Bedienungshilfen ist dort einmal neu nötig.
 - Chrome-Browser und Safari nicht im echten Lauf geprüft (gleicher Mechanismus über `AXWebArea`).
+- Die Front-App-Prüfung zwischen den Tipp-Stücken ist praktisch wirkungslos (der Hauptthread schläft dazwischen); die Sicherheit trägt `postToPid` an die Ziel-App.

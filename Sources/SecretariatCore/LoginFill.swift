@@ -46,7 +46,7 @@ public enum LoginFill {
     private static let sharedHosting: Set<String> = [
         "github.io", "gitlab.io", "pages.dev", "workers.dev", "vercel.app", "netlify.app", "herokuapp.com", "web.app",
         "firebaseapp.com", "appspot.com", "azurewebsites.net", "cloudfront.net", "blogspot.com", "onrender.com", "fly.dev",
-        "ngrok.io", "ngrok.app", "glitch.me", "surge.sh", "deno.dev", "wixsite.com", "myshopify.com", "readthedocs.io"]
+        "ngrok.io", "ngrok.app", "r2.dev", "trycloudflare.com", "ts.net", "cloudflareaccess.com", "glitch.me", "surge.sh", "deno.dev", "wixsite.com", "myshopify.com", "readthedocs.io"]
 
     /// Only a field named `password` that holds text gets typed; notes, keys and files never do.
     public static func fillableField(_ item: ItemMeta) -> String? {
