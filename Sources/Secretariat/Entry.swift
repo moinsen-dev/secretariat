@@ -27,6 +27,7 @@ struct SecretariatApp: App {
         _model = State(initialValue: model)
         CaptureController.shared.install(model)
         FillController.shared.install(model)
+        SaveLoginController.shared.install(model)
     }
     var body: some Scene {
         WindowGroup("Secretariat") {
@@ -47,6 +48,7 @@ struct SecretariatApp: App {
                 Button("New Project Profile …") { model.profileEditor = ProfileDraft(revision: model.configuration.revision) }.keyboardShortcut("n", modifiers: [.command, .shift])
                 Button("Capture Clipboard …") { CaptureController.shared.show() }
                 Button("Fill Login …") { FillController.shared.show() }
+                Button("Save Login …") { SaveLoginController.shared.show() }
                 Button("New Screenshot from Clipboard …") { model.screenshotFromClipboard() }
                 Button("Import Screenshot …") { model.chooseScreenshotFile() }
                 Divider()

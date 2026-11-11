@@ -116,6 +116,9 @@ struct SettingsView: View {
             KeyboardShortcuts.Recorder("Fill login:", name: .fillLogin)
             Text("Click into a password field on a web page, press the shortcut, pick the item and confirm with Touch ID. Secretariat types the password; it never goes to the clipboard. Needs Accessibility access.")
                 .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
+            KeyboardShortcuts.Recorder("Save login:", name: .saveLogin)
+            Text("On a login, sign-up or change-password page: saves the page with your user name as a Website login. The password is generated and typed for you, taken from the clipboard, or typed once.")
+                .font(.caption).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
         }
         .formStyle(.grouped).frame(width: 480)
     }

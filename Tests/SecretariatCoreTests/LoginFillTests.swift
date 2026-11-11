@@ -92,3 +92,41 @@ private func login(_ path: String, url: String? = nil, user: String? = "uli@exam
     let items = [login("moinsen/x/admin")]
     #expect(LoginFill.candidates(items, page: "https://x.com", query: "").first?.rank == .other)
 }
+
+@Test func generatedPasswordsAreStrongAndTypable() {
+    var seen = Set<String>()
+    for _ in 0..<200 {
+        let password = PasswordGenerator.make()
+        #expect(password.count == 20)
+        #expect(password.contains { $0.isLowercase } && password.contains { $0.isUppercase } && password.contains { $0.isNumber })
+        #expect(password.contains { "-_.!?#%+=".contains($0) })
+        #expect(!password.contains { "lIO01".contains($0) })
+        #expect(LoginFill.isTypable(password))
+        seen.insert(password)
+    }
+    #expect(seen.count == 200)
+}
+
+@Test func capturedLoginGetsAFreePathAndTheLoginShape() {
+    #expect(LoginCapture.path(host: "github.com", username: "uli", existing: []) == "web/github.com")
+    #expect(LoginCapture.path(host: "github.com", username: "Uli Test", existing: ["web/GitHub.com"]) == "web/github.com/Uli-Test")
+    #expect(LoginCapture.path(host: "github.com", username: "", existing: ["web/github.com"]) == "web/github.com-2")
+    #expect(LoginCapture.path(host: "github.com", username: "a@b.de", existing: ["web/github.com", "web/github.com/a@b.de"]) == "web/github.com/a@b.de-2")
+    let item = LoginCapture.item(host: "app.example.com", path: "web/app.example.com", username: " uli@example.com ")
+    #expect(item.kind == "login")
+    #expect(item.field("url")?.value == "https://app.example.com")
+    #expect(item.field("username")?.value == "uli@example.com")
+    #expect(item.field("password")?.kind == .personal && item.field("password")?.value == nil)
+    #expect(throws: Never.self) { try item.validate() }
+    #expect(LoginFill.fillableField(item) == "password")
+    #expect(LoginCapture.item(host: "x.org", path: "web/x.org", username: "").field("username") == nil)
+}
+
+@Test func aJustSavedLoginComesFirstAmongEqualMatches() {
+    let old = login("test/old", url: "http://localhost:8765/x"), new = login("web/localhost", url: "https://localhost")
+    #expect(LoginFill.candidates([old, new], page: "http://localhost:8765/signup", query: "").first?.item.path == "test/old")
+    #expect(LoginFill.candidates([old, new], page: "http://localhost:8765/signup", query: "", preferred: new.id).first?.item.path == "web/localhost")
+    // Never ahead of a better match.
+    let other = login("zzz/other", url: "https://other.example")
+    #expect(LoginFill.candidates([old, other], page: "http://localhost/", query: "local", preferred: other.id).first?.item.path == "test/old")
+}

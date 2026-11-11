@@ -32,38 +32,25 @@ final class FillController {
         let host = page.flatMap { LoginFill.host($0.absoluteString) }
         let view = FillPanelView(host: host, appName: target?.localizedName, trusted: trusted,
                                  inPasswordField: focus?.isPasswordField == true,
-                                 search: { query in LoginFill.candidates(model.items, page: page?.absoluteString, query: query) },
+                                 search: { query in LoginFill.candidates(model.items, page: page?.absoluteString, query: query,
+                                                                          preferred: SaveLoginController.shared.recentlySaved) },
                                  cancel: { [weak self] in self?.close() },
-                                 allowAccess: { [weak self] in
-                                     self?.close()
-                                     // The request puts Secretariat into the list (switched off); the link opens that list.
-                                     FocusedPage.requestTrust()
-                                     if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
-                                         NSWorkspace.shared.open(url)
-                                     }
-                                 },
+                                 allowAccess: { [weak self] in self?.close(); self?.requestAccess() },
                                  choose: { [weak self] candidate in self?.fill(candidate, host: host, page: page, into: target) })
-        let panel = FillKeyPanel(contentRect: NSRect(x: 0, y: 0, width: 460, height: 300),
-                                 styleMask: [.titled, .closable, .nonactivatingPanel, .fullSizeContentView], backing: .buffered, defer: false)
-        panel.titlebarAppearsTransparent = true
-        panel.titleVisibility = .hidden
-        panel.level = .floating
-        panel.isMovableByWindowBackground = true
-        panel.hidesOnDeactivate = false
-        panel.isReleasedWhenClosed = false
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        let hosting = NSHostingView(rootView: view)
-        panel.contentView = hosting
-        panel.setContentSize(hosting.fittingSize)
-        let screen = NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) } ?? NSScreen.main
-        if let frame = screen?.visibleFrame {
-            panel.setFrameOrigin(NSPoint(x: frame.midX - panel.frame.width / 2, y: frame.maxY - frame.height * 0.28 - panel.frame.height))
-        }
+        let panel = makeFloatingPanel(view)
         panel.makeKeyAndOrderFront(nil)
         self.panel = panel
     }
 
     func close() { panel?.close(); panel = nil }
+
+    /// The request puts Secretariat into the Accessibility list (switched off); the link opens that list.
+    func requestAccess() {
+        FocusedPage.requestTrust()
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+            NSWorkspace.shared.open(url)
+        }
+    }
 
     /// Touch ID (or the Mac password) for this one fill, then the value goes as keystrokes into the field that had focus.
     private func fill(_ candidate: LoginFill.Candidate, host: String?, page: URL?, into target: NSRunningApplication?) {
@@ -76,47 +63,78 @@ final class FillController {
                 guard try await context.evaluatePolicy(.deviceOwnerAuthentication,
                                                        localizedReason: "fill \(candidate.item.path) into \(place)") else { return }
             } catch { return }
-            // Give the keyboard back to the page: Touch ID may have made Secretariat the active app.
-            NSApplication.shared.yieldActivation(to: target)
-            target.activate()
-            // Check right before typing, for up to 2 s while the page takes the focus back: same app in front,
-            // a password field on the same page has the focus.
-            var inFront = false, ready = false
-            for _ in 0..<20 {
-                try? await Task.sleep(for: .milliseconds(100))
-                inFront = NSWorkspace.shared.frontmostApplication?.processIdentifier == target.processIdentifier
-                let now = FocusedPage.focus(pid: target.processIdentifier)
-                ready = inFront && now.isPasswordField && now.url?.host == page?.host
-                if ready { break }
-                if !inFront { target.activate() }
+            await PasswordTyping.type(into: target, page: page, place: place) {
+                // Read (and record in the history) only now that the value really goes into the field.
+                model.secretValue(candidate.item, field, for: "fill \(place)")
             }
-            guard ready else {
-                let alert = NSAlert()
-                alert.messageText = "Nothing was typed"
-                alert.informativeText = inFront
-                    ? "The cursor is no longer in the password field of \(place). Click into the field and press the shortcut again."
-                    : "\(target.localizedName ?? "The app") did not come back to the front. Click into the password field and press the shortcut again."
-                NSApplication.shared.activate(ignoringOtherApps: true)
-                alert.runModal()
-                return
-            }
-            // Read (and record in the history) only now that the value really goes into the field.
-            guard let value = model.secretValue(candidate.item, field, for: "fill \(place)") else { return }
-            guard LoginFill.isTypable(value) else {
-                let alert = NSAlert()
-                alert.messageText = "Nothing was typed"
-                alert.informativeText = "The stored password contains a line break or another control character. Typing it could submit the form or put part of it into another field."
-                NSApplication.shared.activate(ignoringOtherApps: true)
-                alert.runModal()
-                return
-            }
-            let pid = target.processIdentifier
-            Keystrokes.type(value, to: pid) { NSWorkspace.shared.frontmostApplication?.processIdentifier == pid }
         }
     }
 }
 
-private final class FillKeyPanel: NSPanel {
+/// The one way Secretariat types a password: give the keyboard back to the page, wait until a password field of the same
+/// page has the focus, then type only into that app. Used by Fill Login and Save Login.
+@MainActor enum PasswordTyping {
+    @discardableResult
+    static func type(into target: NSRunningApplication, page: URL?, place: String, value: () -> String?) async -> Bool {
+        // Touch ID or the panel may have made Secretariat the active app.
+        NSApplication.shared.yieldActivation(to: target)
+        target.activate()
+        var inFront = false, ready = false
+        for _ in 0..<20 {
+            try? await Task.sleep(for: .milliseconds(100))
+            inFront = NSWorkspace.shared.frontmostApplication?.processIdentifier == target.processIdentifier
+            let now = FocusedPage.focus(pid: target.processIdentifier)
+            ready = inFront && now.isPasswordField && now.url?.host == page?.host
+            if ready { break }
+            if !inFront { target.activate() }
+        }
+        guard ready else {
+            tell(inFront
+                 ? "The cursor is no longer in the password field of \(place). Click into the field and press the shortcut again."
+                 : "\(target.localizedName ?? "The app") did not come back to the front. Click into the password field and press the shortcut again.")
+            return false
+        }
+        guard let text = value() else { return false }
+        guard LoginFill.isTypable(text) else {
+            tell("The password contains a line break or another control character. Typing it could submit the form or put part of it into another field.")
+            return false
+        }
+        let pid = target.processIdentifier
+        Keystrokes.selectAll(in: pid)
+        return Keystrokes.type(text, to: pid) { NSWorkspace.shared.frontmostApplication?.processIdentifier == pid }
+    }
+
+    static func tell(_ text: String) {
+        let alert = NSAlert()
+        alert.messageText = "Nothing was typed"
+        alert.informativeText = text
+        NSApplication.shared.activate(ignoringOtherApps: true)
+        alert.runModal()
+    }
+}
+
+/// A small panel over whatever app is in front that takes the keyboard without activating Secretariat.
+func makeFloatingPanel<V: View>(_ view: V) -> NSPanel {
+    let panel = FillKeyPanel(contentRect: NSRect(x: 0, y: 0, width: 460, height: 300),
+                             styleMask: [.titled, .closable, .nonactivatingPanel, .fullSizeContentView], backing: .buffered, defer: false)
+    panel.titlebarAppearsTransparent = true
+    panel.titleVisibility = .hidden
+    panel.level = .floating
+    panel.isMovableByWindowBackground = true
+    panel.hidesOnDeactivate = false
+    panel.isReleasedWhenClosed = false
+    panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+    let hosting = NSHostingView(rootView: view)
+    panel.contentView = hosting
+    panel.setContentSize(hosting.fittingSize)
+    let screen = NSScreen.screens.first { $0.frame.contains(NSEvent.mouseLocation) } ?? NSScreen.main
+    if let frame = screen?.visibleFrame {
+        panel.setFrameOrigin(NSPoint(x: frame.midX - panel.frame.width / 2, y: frame.maxY - frame.height * 0.28 - panel.frame.height))
+    }
+    return panel
+}
+
+final class FillKeyPanel: NSPanel {
     override var canBecomeKey: Bool { true }
 }
 

@@ -70,7 +70,7 @@ public enum LoginFill {
     static func itemHost(_ item: ItemMeta) -> String? {
         let preferred = ["url", "website", "address"].compactMap { item.field($0) }
         for field in preferred + item.fields where field.kind == .identifier {
-            if let value = field.value, value.contains("."), let host = host(value), preferred.contains(field) || value.contains("://") {
+            if let value = field.value, preferred.contains(field) || value.contains("://"), let host = host(value) {
                 return host
             }
         }
@@ -92,7 +92,8 @@ public enum LoginFill {
 
     /// Items that can fill a field, best fit first. Without a query only the ones that fit the page (all, if none fits);
     /// with a query every item whose path, user name or address contains all its words.
-    public static func candidates(_ items: [ItemMeta], page: String?, query: String) -> [Candidate] {
+    /// `preferred` (a login just saved) comes first among equally good matches, so its confirm field fills with Enter.
+    public static func candidates(_ items: [ItemMeta], page: String?, query: String, preferred: UUID? = nil) -> [Candidate] {
         let pageHost = page.flatMap(host)
         let all = items.compactMap { item -> Candidate? in
             guard let field = fillableField(item) else { return nil }
@@ -111,7 +112,8 @@ public enum LoginFill {
                 return words.allSatisfy { haystack.contains($0) }
             }
         }
-        return chosen.sorted { ($0.rank, $0.item.path.lowercased()) < ($1.rank, $1.item.path.lowercased()) }
+        func key(_ c: Candidate) -> (Rank, Int, String) { (c.rank, c.item.id == preferred ? 0 : 1, c.item.path.lowercased()) }
+        return chosen.sorted { key($0) < key($1) }
     }
 }
 
@@ -192,6 +194,18 @@ public enum FocusedPage {
 /// Types text into the app with this process id, as Unicode key events: no clipboard, independent of the keyboard layout.
 /// Stops (returns false) as soon as another app comes to the front, so no part of the value reaches it.
 public enum Keystrokes {
+    /// ⌘A to the app: in the focused text field it selects the content, so the typed value replaces it instead of
+    /// being appended (a field that already holds dots, or a second fill).
+    public static func selectAll(in pid: pid_t) {
+        let source = CGEventSource(stateID: .combinedSessionState)
+        for keyDown in [true, false] {
+            guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0x00 /* a */, keyDown: keyDown) else { return }
+            event.flags = .maskCommand
+            event.postToPid(pid)
+        }
+        Thread.sleep(forTimeInterval: 0.05)
+    }
+
     @discardableResult
     public static func type(_ text: String, to pid: pid_t, isFront: () -> Bool) -> Bool {
         let source = CGEventSource(stateID: .combinedSessionState)
@@ -213,5 +227,90 @@ public enum Keystrokes {
             Thread.sleep(forTimeInterval: 0.01)
         }
         return true
+    }
+}
+
+/// Strong passwords for new logins: 20 characters from letters, digits and a few symbols most sites accept, without
+/// look-alikes (l, I, O, 0, 1), at least one of each kind. Unbiased choice from the system's secure random source.
+public enum PasswordGenerator {
+    static let lower = Array("abcdefghijkmnopqrstuvwxyz"), upper = Array("ABCDEFGHJKLMNPQRSTUVWXYZ")
+    static let digits = Array("23456789"), symbols = Array("-_.!?#%+=")
+
+    public static func make(length: Int = 20, index: (Int) -> Int = secureIndex) -> String {
+        let groups = [lower, upper, digits, symbols]
+        let all = groups.flatMap { $0 }
+        var characters = groups.map { $0[index($0.count)] }
+        while characters.count < max(length, groups.count) { characters.append(all[index(all.count)]) }
+        // Shuffle so the guaranteed characters don't sit at fixed places.
+        for i in stride(from: characters.count - 1, to: 0, by: -1) { characters.swapAt(i, index(i + 1)) }
+        return String(characters)
+    }
+
+    /// Uniform 0..<bound from SecRandomCopyBytes (rejection sampling, no modulo bias).
+    public static func secureIndex(_ bound: Int) -> Int {
+        precondition(bound > 0 && bound <= 256)
+        let limit = 256 - 256 % bound
+        while true {
+            var byte: UInt8 = 0
+            guard SecRandomCopyBytes(kSecRandomDefault, 1, &byte) == errSecSuccess else { continue }
+            if Int(byte) < limit { return Int(byte) % bound }
+        }
+    }
+}
+
+/// A new login item from the page the user is on.
+public enum LoginCapture {
+    /// `web/<host>`; taken → `web/<host>/<user>`; still taken → numbered.
+    public static func path(host: String, username: String, existing: [String]) -> String {
+        let taken = Set(existing.map { $0.lowercased() })
+        let base = "web/" + clean(host)
+        var candidates = [base]
+        let user = clean(username)
+        if !user.isEmpty { candidates.append("\(base)/\(user)") }
+        if let free = candidates.first(where: { !taken.contains($0.lowercased()) }) { return free }
+        let last = candidates.last!
+        var n = 2
+        while taken.contains("\(last)-\(n)".lowercased()) { n += 1 }
+        return "\(last)-\(n)"
+    }
+
+    /// Only the characters item paths allow; anything else becomes a hyphen.
+    static func clean(_ text: String) -> String {
+        let allowed = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._@-")
+        let mapped = String(text.trimmingCharacters(in: .whitespaces).unicodeScalars.map { allowed.contains($0) ? Character($0) : "-" })
+        return String(mapped.drop(while: { !$0.isLetter && !$0.isNumber }).prefix(60))
+    }
+
+    /// Item of the built-in "Website login" kind; the password goes into the item's encrypted values, not into the meta.
+    public static func item(host: String, path: String, username: String) -> ItemMeta {
+        var fields = [ItemField(name: "url", kind: .identifier, value: "https://\(host)")]
+        let user = username.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !user.isEmpty { fields.append(ItemField(name: "username", kind: .identifier, value: user)) }
+        fields.append(ItemField(name: "password", kind: .personal))
+        return ItemMeta(path: path, kind: "login", fields: fields, source: "Saved from \(host)")
+    }
+}
+
+extension FocusedPage {
+    /// The user name on the page: the focused field if it is a filled text field, else the last filled text field before
+    /// the first password field of the page. Never reads a password field (macOS shows those only as bullets anyway).
+    public static func username(pid: pid_t) -> String? {
+        let app = AXUIElementCreateApplication(pid)
+        AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
+        guard let focused = element(app, kAXFocusedUIElementAttribute) else { return nil }
+        if string(focused, kAXRoleAttribute) == "AXTextField", !isSecure(focused), let value = string(focused, kAXValueAttribute),
+           !value.isEmpty { return value }
+        guard let area = webArea(around: focused)?.element else { return nil }
+        var stack = [area], visited = 0, lastText: String?
+        while let element = stack.popLast(), visited < 5000 {
+            visited += 1
+            if string(element, kAXRoleAttribute) == "AXTextField" {
+                if isSecure(element) { return lastText }
+                if let value = string(element, kAXValueAttribute), !value.isEmpty { lastText = value }
+            }
+            // Depth-first in document order: push children reversed.
+            if let children = value(element, kAXChildrenAttribute) as? [AXUIElement] { stack.append(contentsOf: children.reversed()) }
+        }
+        return nil
     }
 }
