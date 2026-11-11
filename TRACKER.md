@@ -5,33 +5,34 @@
 | ID | Status | Evidence | Reason |
 |---|---|---|---|
 | T001 | ERLEDIGT | E1025 | Regression auf Release 1.13.1 (0c32a02) |
-| T002 | ERLEDIGT | E1106,E1107,E1108 | Neubindung, siehe docs/rebind-entry-capture-2026-11-11.md |
-| T003 | ERLEDIGT | E1109,E1110 | Neubindung, siehe docs/rebind-entry-capture-2026-11-11.md |
-| T004 | ERLEDIGT | E1103 | Neubindung, siehe docs/rebind-entry-capture-2026-11-11.md |
-| T005 | ERLEDIGT | E1104 | Neubindung, siehe docs/rebind-entry-capture-2026-11-11.md |
+| T002 | ERLEDIGT | E1136,E1137,E1138 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
+| T003 | ERLEDIGT | E1139,E1140 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
+| T004 | ERLEDIGT | E1141 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
+| T005 | ERLEDIGT | E1142 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
 | T006 | ERLEDIGT | E1033,E1034 | Regression auf Release 1.13.1 (0c32a02) |
 | T007 | ERLEDIGT | E1035,E1036 | Regression auf Release 1.13.1 (0c32a02) |
 | T008 | ERLEDIGT | E1037,E1038 | Regression auf Release 1.13.1 (0c32a02) |
 | T009 | ERLEDIGT | E1105 | Neubindung, siehe docs/rebind-entry-capture-2026-11-11.md |
 | T010 | ERLEDIGT | E1040,E1041,E1042,E1043 | Regression auf Release 1.13.1 (0c32a02) |
-| T011 | ERLEDIGT | E1115,E1116 | Neubindung, siehe docs/rebind-entry-capture-2026-11-11.md |
+| T011 | ERLEDIGT | E1144,E1145 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
 | T013 | ERLEDIGT | E1048,E1049 | Regression auf Release 1.13.1 (0c32a02) |
-| T014 | ERLEDIGT | E1117,E1118,E1119 | Neubindung, siehe docs/rebind-entry-capture-2026-11-11.md |
+| T014 | ERLEDIGT | E1146,E1147,E1148 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
 | T015 | ERLEDIGT | E1053,E1054 | Regression auf Release 1.13.1 (0c32a02) |
 | T012 | ERLEDIGT | E1046,E1047 | Regression auf Release 1.13.1 (0c32a02) |
 | T016 | ERLEDIGT | E1055,E1056,E1057 | Regression auf Release 1.13.1 (0c32a02) |
 | T017 | ERLEDIGT | E1058,E1059,E1060 | Regression auf Release 1.13.1 (0c32a02) |
-| T018 | ERLEDIGT | E1120,E1121,E1122,E1123 | Neubindung, siehe docs/rebind-entry-capture-2026-11-11.md |
+| T018 | ERLEDIGT | E1149,E1150,E1151,E1152 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
 | T019 | ERLEDIGT | E1091,E1092,E1093 | Regression auf Release 1.13.1; Testwerkzeug beim Parken (01da7ef) |
-| T020 | ERLEDIGT | E1068,E1069,E1070 | Regression auf Release 1.13.1 (0c32a02) |
-| T021 | ERLEDIGT | E1124,E1125,E1126 | Neubindung, siehe docs/rebind-entry-capture-2026-11-11.md |
-| T022 | ERLEDIGT | E1127,E1128,E1129 | Neubindung, siehe docs/rebind-entry-capture-2026-11-11.md |
-| T023 | ERLEDIGT | E1077,E1078,E1079 | Regression auf Release 1.13.1 (0c32a02) |
-| T024 | ERLEDIGT | E1097,E1098,E1099 | Neubindung, siehe docs/rebind-T024-T025-2026-11-11.md |
+| T020 | ERLEDIGT | E1153,E1154,E1155 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
+| T021 | ERLEDIGT | E1156,E1157,E1158 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
+| T022 | ERLEDIGT | E1159,E1160,E1161 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
+| T023 | ERLEDIGT | E1162,E1163,E1164 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
+| T024 | ERLEDIGT | E1165,E1166,E1167 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
 | T025 | ERLEDIGT | E1100,E1101,E1102 | Neubindung, siehe docs/rebind-T024-T025-2026-11-11.md |
 | T026 | IN_ARBEIT | E1086,E1087 | Code fertig, 2 Kritikrunden; offen: Wiederherstellen/Schlüssel prüfen in der App und iCloud-Lauf mit echtem Tresor durch Uli |
-| T027 | ERLEDIGT | E1088,E1089,E1090 | Needs a Value; in 1.13.1 |
-| T028 | ERLEDIGT | E1094,E1095,E1096 | Fill Login gebaut, echter Lauf im Claude-Browser durch Uli, Kritik PASS |
+| T027 | ERLEDIGT | E1168,E1169,E1170 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
+| T028 | ERLEDIGT | E1133,E1134,E1135 | Tippweg mit Save Login gemeinsam, echte Läufe in docs/save-login-2026-11-11.md |
+| T029 | ERLEDIGT | E1130,E1131,E1132 | Save Login gebaut, vier echte Läufe mit Uli, Kritik PASS |
 
 ## Evidence
 
@@ -1166,6 +1167,47 @@
 | E1127 | T022 | build | build | normal | 2026-11-11T14:24:40+00:00 | 169888c | 8964a74a2a2273e12175cb12 | docs/rebind-entry-capture-2026-11-11.md | PASS |
 | E1128 | T022 | unit | unit | normal | 2026-11-11T14:24:40+00:00 | 169888c | 8964a74a2a2273e12175cb12 | docs/rebind-entry-capture-2026-11-11.md | PASS |
 | E1129 | T022 | macos | ui | normal | 2026-11-11T14:24:40+00:00 | 169888c | 8964a74a2a2273e12175cb12 | docs/rebind-entry-capture-2026-11-11.md | PASS |
+| E1130 | T029 | macos | ui | normal | 2026-11-11T15:53:42+00:00 | 310f00c | 55178e35d72acf136022832d | docs/save-login-2026-11-11.md | PASS |
+| E1131 | T029 | unit | unit | normal | 2026-11-11T15:53:42+00:00 | 310f00c | 55178e35d72acf136022832d | docs/save-login-2026-11-11.md | PASS |
+| E1132 | T029 | build | build | normal | 2026-11-11T15:53:42+00:00 | 310f00c | 55178e35d72acf136022832d | docs/save-login-2026-11-11.md | PASS |
+| E1133 | T028 | macos | ui | normal | 2026-11-11T15:53:42+00:00 | 310f00c | 91de3caeea70460928ad682e | docs/save-login-2026-11-11.md | PASS |
+| E1134 | T028 | unit | unit | normal | 2026-11-11T15:53:42+00:00 | 310f00c | 91de3caeea70460928ad682e | docs/save-login-2026-11-11.md | PASS |
+| E1135 | T028 | build | build | normal | 2026-11-11T15:53:43+00:00 | 310f00c | 91de3caeea70460928ad682e | docs/save-login-2026-11-11.md | PASS |
+| E1136 | T002 | build | build | normal | 2026-11-11T15:54:02+00:00 | 310f00c | 09837e9c55d6ca1e7e5b3c3e | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1137 | T002 | macos | ui | normal | 2026-11-11T15:54:02+00:00 | 310f00c | 09837e9c55d6ca1e7e5b3c3e | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1138 | T002 | unit | unit | normal | 2026-11-11T15:54:02+00:00 | 310f00c | 09837e9c55d6ca1e7e5b3c3e | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1139 | T003 | macos | ui | normal | 2026-11-11T15:54:03+00:00 | 310f00c | 011cda18e9a11a0d027da659 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1140 | T003 | unit | unit | normal | 2026-11-11T15:54:03+00:00 | 310f00c | 011cda18e9a11a0d027da659 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1141 | T004 | unit | unit | normal | 2026-11-11T15:54:03+00:00 | 310f00c | 60fe40a7ce465324478b6d51 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1142 | T005 | macos | ui | normal | 2026-11-11T15:54:04+00:00 | 310f00c | 9db55adf2f8829ea9f693c29 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1143 | T009 | inspection | inspection | normal | 2026-11-11T15:54:04+00:00 | 310f00c | 7e4bae191700a944bce0c16e | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1144 | T011 | build | build | normal | 2026-11-11T15:54:05+00:00 | 310f00c | 8c09af5f0780c63a3a394f17 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1145 | T011 | unit | unit | normal | 2026-11-11T15:54:05+00:00 | 310f00c | 8c09af5f0780c63a3a394f17 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1146 | T014 | build | build | normal | 2026-11-11T15:54:05+00:00 | 310f00c | 1208733e5e5714b60607deb7 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1147 | T014 | macos | ui | normal | 2026-11-11T15:54:05+00:00 | 310f00c | 1208733e5e5714b60607deb7 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1148 | T014 | unit | unit | normal | 2026-11-11T15:54:06+00:00 | 310f00c | 1208733e5e5714b60607deb7 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1149 | T018 | build | build | normal | 2026-11-11T15:54:06+00:00 | 310f00c | 29aa25562ac9f1606e93e855 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1150 | T018 | inspection | inspection | normal | 2026-11-11T15:54:06+00:00 | 310f00c | 29aa25562ac9f1606e93e855 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1151 | T018 | macos | ui | normal | 2026-11-11T15:54:06+00:00 | 310f00c | 29aa25562ac9f1606e93e855 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1152 | T018 | unit | unit | normal | 2026-11-11T15:54:06+00:00 | 310f00c | 29aa25562ac9f1606e93e855 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1153 | T020 | build | build | normal | 2026-11-11T15:54:07+00:00 | 310f00c | 8c5a8b97be5ba09aba5a45a9 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1154 | T020 | macos | ui | normal | 2026-11-11T15:54:07+00:00 | 310f00c | 8c5a8b97be5ba09aba5a45a9 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1155 | T020 | unit | unit | normal | 2026-11-11T15:54:07+00:00 | 310f00c | 8c5a8b97be5ba09aba5a45a9 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1156 | T021 | build | build | normal | 2026-11-11T15:54:08+00:00 | 310f00c | 9d1b68df13a4d464a744a50d | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1157 | T021 | macos | ui | normal | 2026-11-11T15:54:08+00:00 | 310f00c | 9d1b68df13a4d464a744a50d | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1158 | T021 | unit | unit | normal | 2026-11-11T15:54:08+00:00 | 310f00c | 9d1b68df13a4d464a744a50d | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1159 | T022 | build | build | normal | 2026-11-11T15:54:09+00:00 | 310f00c | cc37f1b268e636634cf02536 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1160 | T022 | macos | ui | normal | 2026-11-11T15:54:09+00:00 | 310f00c | cc37f1b268e636634cf02536 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1161 | T022 | unit | unit | normal | 2026-11-11T15:54:09+00:00 | 310f00c | cc37f1b268e636634cf02536 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1162 | T023 | build | build | normal | 2026-11-11T15:54:09+00:00 | 310f00c | ce2166eece65b160567ed9e3 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1163 | T023 | macos | ui | normal | 2026-11-11T15:54:10+00:00 | 310f00c | ce2166eece65b160567ed9e3 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1164 | T023 | unit | unit | normal | 2026-11-11T15:54:10+00:00 | 310f00c | ce2166eece65b160567ed9e3 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1165 | T024 | build | build | normal | 2026-11-11T15:54:10+00:00 | 310f00c | 0f23fe553d52184c253b48e6 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1166 | T024 | macos | ui | normal | 2026-11-11T15:54:10+00:00 | 310f00c | 0f23fe553d52184c253b48e6 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1167 | T024 | unit | unit | normal | 2026-11-11T15:54:10+00:00 | 310f00c | 0f23fe553d52184c253b48e6 | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1168 | T027 | build | build | normal | 2026-11-11T15:54:11+00:00 | 310f00c | 5148f98e4d4496b59765f43a | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1169 | T027 | macos | ui | normal | 2026-11-11T15:54:11+00:00 | 310f00c | 5148f98e4d4496b59765f43a | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1170 | T027 | unit | unit | normal | 2026-11-11T15:54:11+00:00 | 310f00c | 5148f98e4d4496b59765f43a | docs/rebind-save-login-2026-11-11.md | PASS |
 
 ## Reviews
 
@@ -1696,6 +1738,23 @@
 | RV523 | UC13 | self | PASS | 1ca3978c3325555315b46f97 | docs/rebind-entry-capture-2026-11-11.md |
 | RV524 | UC16 | self | PASS | f854193bb4bbce1179d246c3 | docs/rebind-entry-capture-2026-11-11.md |
 | RV525 | UC17 | self | PASS | 83e61fb53a5fd600bbf3aa22 | docs/rebind-entry-capture-2026-11-11.md |
+| RV526 | PLAN | independent | PASS | 5ea527e53a76531cd5e0a59f | docs/review-save-login-2026-11-11.md |
+| RV527 | UC22 | independent | PASS | 3d824cb9d7169861f824b936 | docs/review-save-login-2026-11-11.md |
+| RV528 | UC23 | independent | PASS | 79563d4b0941d87ae70e194c | docs/review-save-login-2026-11-11.md |
+| RV529 | UC02 | self | PASS | 964dea9545e5a7e61ef55445 | docs/rebind-save-login-2026-11-11.md |
+| RV530 | UC03 | self | PASS | 566ea007150d43fba718f801 | docs/rebind-save-login-2026-11-11.md |
+| RV531 | UC04 | self | PASS | aac0faebdf5d5aa74044009b | docs/rebind-save-login-2026-11-11.md |
+| RV532 | UC04 | self | PASS | 42138d387e21f1a49d288dbb | docs/rebind-save-login-2026-11-11.md |
+| RV533 | UC07 | self | PASS | 65ca72c5989f82dc4f0debf9 | docs/rebind-save-login-2026-11-11.md |
+| RV534 | UC08 | self | PASS | a6f2477d6433c668c0745847 | docs/rebind-save-login-2026-11-11.md |
+| RV535 | UC09 | self | PASS | f826900e67e12249fac84aa1 | docs/rebind-save-login-2026-11-11.md |
+| RV536 | UC13 | self | PASS | f6cae060502a0f833e33f576 | docs/rebind-save-login-2026-11-11.md |
+| RV537 | UC15 | self | PASS | 7a9fc72d304b4b88b6ac1ac0 | docs/rebind-save-login-2026-11-11.md |
+| RV538 | UC16 | self | PASS | 5fc7d9de1234c63c00282350 | docs/rebind-save-login-2026-11-11.md |
+| RV539 | UC17 | self | PASS | f9da4319b0ddeadb6e4833a6 | docs/rebind-save-login-2026-11-11.md |
+| RV540 | UC18 | self | PASS | f6ed5b9b5f01b304ac3348b2 | docs/rebind-save-login-2026-11-11.md |
+| RV541 | UC19 | self | PASS | e54f02350572abf3d17a3285 | docs/rebind-save-login-2026-11-11.md |
+| RV542 | UC13 | self | PASS | 78cce5d4d8381c77a77108b8 | docs/rebind-save-login-2026-11-11.md |
 
 ## Releases
 

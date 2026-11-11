@@ -2,11 +2,11 @@
 
 ## Übergabe (2026-11-11, Claude Code)
 
-- **Neu:** Fill Login (T028, P22, UC22): ⌃⌥⌘P füllt ein gespeichertes Passwort nach Touch ID in das fokussierte Passwortfeld, auch im eingebauten Browser von Claude Code. Echter Lauf durch Uli, unabhängige Kritik PASS. Commits 548ff65..18d7e2a, **nicht gepusht, kein Release**. Bericht: `docs/login-fill-2026-11-11.md`, Kritik: `docs/review-login-fill-2026-11-11.md`.
-- **Website:** Der Kaufknopf zeigt bis zur Freischaltung durch Lemon Squeezy den Testdownload (2568981). Deploy macht Uli. Go-live-Schritte stehen in `site/index.html` und `site/_redirects`.
-- **Wartet auf Uli:** Release mit Fill Login (im Release die Bedienungshilfen neu freigeben); Lemon Squeezy prüft seit 28.10., die Support-Nachfrage liegt als Entwurf in developer@moinsen.dev; T026 Sicherung im echten Tresor.
+- **Neu:** Fill Login (T028, ⌃⌥⌘P) und Save Login (T029, ⌃⌥⌘S): Passwörter nach Touch ID in Passwortfelder tippen, auch im eingebauten Browser von Claude Code; neue Logins von der Seite aufnehmen (erzeugt, aus der Zwischenablage oder eingetippt). Echte Läufe mit Uli, unabhängige Kritik PASS (je drei Runden). Commits 548ff65..HEAD, **nicht gepusht, kein Release**. Berichte: `docs/login-fill-2026-11-11.md`, `docs/save-login-2026-11-11.md`, Kritik: `docs/review-*.md`.
+- **Website:** Kaufknopf zeigt bis zur Freischaltung durch Lemon Squeezy den Testdownload (2568981). Neuer Abschnitt „Website logins“ (dacd3a8), **erst mit dem Release deployen**. Deploy macht Uli.
+- **Wartet auf Uli:** Release mit Fill/Save Login (Bedienungshilfen im Release neu freigeben); Lemon Squeezy prüft seit 28.10., Support-Nachfrage als Entwurf in developer@moinsen.dev; T026 Sicherung im echten Tresor; Entscheidung iPhone-App (Ideenkompass: „Idee - Secretariat für iPhone“).
 - **Werkzeug:** `check` scheitert an Altlasten von vor dieser Sitzung (T006, T010, T012; dadurch ist P05 mit T007/T008 offen), deshalb aktualisiert `state` diese Datei nicht. Neubindungen: `docs/rebind-*.md`.
-- **Prüfungen gelaufen:** `xcrun swift test` 103/103, `script/build.sh`.
+- **Prüfungen gelaufen:** `xcrun swift test` 108/108, `script/build.sh`.
 
 ## State
 
