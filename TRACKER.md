@@ -5,30 +5,30 @@
 | ID | Status | Evidence | Reason |
 |---|---|---|---|
 | T001 | ERLEDIGT | E1025 | Regression auf Release 1.13.1 (0c32a02) |
-| T002 | ERLEDIGT | E1136,E1137,E1138 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
+| T002 | ERLEDIGT | E1177,E1178,E1179 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
 | T003 | ERLEDIGT | E1139,E1140 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
-| T004 | ERLEDIGT | E1141 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
-| T005 | ERLEDIGT | E1142 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
-| T006 | ERLEDIGT | E1033,E1034 | Regression auf Release 1.13.1 (0c32a02) |
-| T007 | ERLEDIGT | E1035,E1036 | Regression auf Release 1.13.1 (0c32a02) |
-| T008 | ERLEDIGT | E1037,E1038 | Regression auf Release 1.13.1 (0c32a02) |
-| T009 | ERLEDIGT | E1105 | Neubindung, siehe docs/rebind-entry-capture-2026-11-11.md |
-| T010 | ERLEDIGT | E1040,E1041,E1042,E1043 | Regression auf Release 1.13.1 (0c32a02) |
-| T011 | ERLEDIGT | E1144,E1145 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
-| T013 | ERLEDIGT | E1048,E1049 | Regression auf Release 1.13.1 (0c32a02) |
-| T014 | ERLEDIGT | E1146,E1147,E1148 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
-| T015 | ERLEDIGT | E1053,E1054 | Regression auf Release 1.13.1 (0c32a02) |
-| T012 | ERLEDIGT | E1046,E1047 | Regression auf Release 1.13.1 (0c32a02) |
-| T016 | ERLEDIGT | E1055,E1056,E1057 | Regression auf Release 1.13.1 (0c32a02) |
-| T017 | ERLEDIGT | E1058,E1059,E1060 | Regression auf Release 1.13.1 (0c32a02) |
-| T018 | ERLEDIGT | E1149,E1150,E1151,E1152 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
-| T019 | ERLEDIGT | E1091,E1092,E1093 | Regression auf Release 1.13.1; Testwerkzeug beim Parken (01da7ef) |
-| T020 | ERLEDIGT | E1153,E1154,E1155 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
+| T004 | ERLEDIGT | E1180 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T005 | ERLEDIGT | E1181 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T006 | ERLEDIGT | E1182,E1183 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T007 | ERLEDIGT | E1184,E1185 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T008 | ERLEDIGT | E1186,E1187 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T009 | ERLEDIGT | E1188 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T010 | ERLEDIGT | E1189,E1190,E1191,E1192 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T011 | ERLEDIGT | E1193,E1194 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T013 | ERLEDIGT | E1197,E1198 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T014 | ERLEDIGT | E1199,E1200,E1201 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T015 | ERLEDIGT | E1202,E1203 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T012 | ERLEDIGT | E1195,E1196 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T016 | ERLEDIGT | E1204,E1205,E1206 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T017 | ERLEDIGT | E1207,E1208,E1209 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T018 | ERLEDIGT | E1210,E1211,E1212,E1213 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T019 | ERLEDIGT | E1214,E1215,E1216 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T020 | ERLEDIGT | E1217,E1218,E1219 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
 | T021 | ERLEDIGT | E1156,E1157,E1158 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
-| T022 | ERLEDIGT | E1159,E1160,E1161 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
+| T022 | ERLEDIGT | E1220,E1221,E1222 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
 | T023 | ERLEDIGT | E1162,E1163,E1164 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
-| T024 | ERLEDIGT | E1165,E1166,E1167 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
-| T025 | ERLEDIGT | E1100,E1101,E1102 | Neubindung, siehe docs/rebind-T024-T025-2026-11-11.md |
+| T024 | ERLEDIGT | E1223,E1224,E1225 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T025 | ERLEDIGT | E1226,E1227,E1228 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
 | T026 | IN_ARBEIT | E1086,E1087 | Code fertig, 2 Kritikrunden; offen: Wiederherstellen/Schlüssel prüfen in der App und iCloud-Lauf mit echtem Tresor durch Uli |
 | T027 | ERLEDIGT | E1168,E1169,E1170 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
 | T028 | ERLEDIGT | E1133,E1134,E1135 | Tippweg mit Save Login gemeinsam, echte Läufe in docs/save-login-2026-11-11.md |
@@ -1208,6 +1208,64 @@
 | E1168 | T027 | build | build | normal | 2026-11-11T15:54:11+00:00 | 310f00c | 5148f98e4d4496b59765f43a | docs/rebind-save-login-2026-11-11.md | PASS |
 | E1169 | T027 | macos | ui | normal | 2026-11-11T15:54:11+00:00 | 310f00c | 5148f98e4d4496b59765f43a | docs/rebind-save-login-2026-11-11.md | PASS |
 | E1170 | T027 | unit | unit | normal | 2026-11-11T15:54:11+00:00 | 310f00c | 5148f98e4d4496b59765f43a | docs/rebind-save-login-2026-11-11.md | PASS |
+| E1171 | T006 | inspection | inspection | normal | 2026-11-11T16:22:49+00:00 | d3b63c4 | 1918fd9eca5c49a88f48a8a9 | docs/release-1.14.0.md | PASS |
+| E1172 | T006 | macos | ui | normal | 2026-11-11T16:22:49+00:00 | d3b63c4 | 1918fd9eca5c49a88f48a8a9 | docs/release-1.14.0.md | PASS |
+| E1173 | T010 | build | build | normal | 2026-11-11T16:22:50+00:00 | d3b63c4 | 9ebbc82aab3a88016d27f8ec | docs/release-1.14.0.md | PASS |
+| E1174 | T010 | unit | unit | normal | 2026-11-11T16:22:50+00:00 | d3b63c4 | 9ebbc82aab3a88016d27f8ec | docs/release-1.14.0.md | PASS |
+| E1175 | T010 | macos | ui | normal | 2026-11-11T16:22:50+00:00 | d3b63c4 | 9ebbc82aab3a88016d27f8ec | docs/release-1.14.0.md | PASS |
+| E1176 | T010 | inspection | inspection | normal | 2026-11-11T16:22:50+00:00 | d3b63c4 | 9ebbc82aab3a88016d27f8ec | docs/release-1.14.0.md | PASS |
+| E1177 | T002 | build | build | normal | 2026-11-11T16:23:04+00:00 | d3b63c4 | 67d56738fb9d703a2725e352 | docs/regression-1.14.0.md | PASS |
+| E1178 | T002 | macos | ui | normal | 2026-11-11T16:23:04+00:00 | d3b63c4 | 67d56738fb9d703a2725e352 | docs/regression-1.14.0.md | PASS |
+| E1179 | T002 | unit | unit | normal | 2026-11-11T16:23:04+00:00 | d3b63c4 | 67d56738fb9d703a2725e352 | docs/regression-1.14.0.md | PASS |
+| E1180 | T004 | unit | unit | normal | 2026-11-11T16:23:05+00:00 | d3b63c4 | da45100f5df3326a43ca859d | docs/regression-1.14.0.md | PASS |
+| E1181 | T005 | macos | ui | normal | 2026-11-11T16:23:05+00:00 | d3b63c4 | 76220ce37cf8e9a2cdccc005 | docs/regression-1.14.0.md | PASS |
+| E1182 | T006 | inspection | inspection | normal | 2026-11-11T16:23:06+00:00 | d3b63c4 | 1918fd9eca5c49a88f48a8a9 | docs/regression-1.14.0.md | PASS |
+| E1183 | T006 | macos | ui | normal | 2026-11-11T16:23:06+00:00 | d3b63c4 | 1918fd9eca5c49a88f48a8a9 | docs/regression-1.14.0.md | PASS |
+| E1184 | T007 | build | build | normal | 2026-11-11T16:23:06+00:00 | d3b63c4 | eece3f963862abeef1e28e60 | docs/regression-1.14.0.md | PASS |
+| E1185 | T007 | unit | unit | normal | 2026-11-11T16:23:06+00:00 | d3b63c4 | eece3f963862abeef1e28e60 | docs/regression-1.14.0.md | PASS |
+| E1186 | T008 | macos | ui | normal | 2026-11-11T16:23:07+00:00 | d3b63c4 | afe7b10986b1973be9b4df82 | docs/regression-1.14.0.md | PASS |
+| E1187 | T008 | unit | unit | normal | 2026-11-11T16:23:07+00:00 | d3b63c4 | afe7b10986b1973be9b4df82 | docs/regression-1.14.0.md | PASS |
+| E1188 | T009 | inspection | inspection | normal | 2026-11-11T16:23:08+00:00 | d3b63c4 | c263ed48249afc0c98132dac | docs/regression-1.14.0.md | PASS |
+| E1189 | T010 | build | build | normal | 2026-11-11T16:23:08+00:00 | d3b63c4 | 9ebbc82aab3a88016d27f8ec | docs/regression-1.14.0.md | PASS |
+| E1190 | T010 | inspection | inspection | normal | 2026-11-11T16:23:08+00:00 | d3b63c4 | 9ebbc82aab3a88016d27f8ec | docs/regression-1.14.0.md | PASS |
+| E1191 | T010 | macos | ui | normal | 2026-11-11T16:23:09+00:00 | d3b63c4 | 9ebbc82aab3a88016d27f8ec | docs/regression-1.14.0.md | PASS |
+| E1192 | T010 | unit | unit | normal | 2026-11-11T16:23:09+00:00 | d3b63c4 | 9ebbc82aab3a88016d27f8ec | docs/regression-1.14.0.md | PASS |
+| E1193 | T011 | build | build | normal | 2026-11-11T16:23:09+00:00 | d3b63c4 | 4c57ac48d294f83a80466522 | docs/regression-1.14.0.md | PASS |
+| E1194 | T011 | unit | unit | normal | 2026-11-11T16:23:09+00:00 | d3b63c4 | 4c57ac48d294f83a80466522 | docs/regression-1.14.0.md | PASS |
+| E1195 | T012 | inspection | inspection | normal | 2026-11-11T16:23:10+00:00 | d3b63c4 | 6c32d92a5ed5bb1df4797511 | docs/regression-1.14.0.md | PASS |
+| E1196 | T012 | macos | ui | normal | 2026-11-11T16:23:10+00:00 | d3b63c4 | 6c32d92a5ed5bb1df4797511 | docs/regression-1.14.0.md | PASS |
+| E1197 | T013 | build | build | normal | 2026-11-11T16:23:11+00:00 | d3b63c4 | ea51f15b8a43bbe2bffd21f7 | docs/regression-1.14.0.md | PASS |
+| E1198 | T013 | inspection | inspection | normal | 2026-11-11T16:23:11+00:00 | d3b63c4 | ea51f15b8a43bbe2bffd21f7 | docs/regression-1.14.0.md | PASS |
+| E1199 | T014 | build | build | normal | 2026-11-11T16:23:11+00:00 | d3b63c4 | e8c7ee500a3aa6fe99f977f4 | docs/regression-1.14.0.md | PASS |
+| E1200 | T014 | macos | ui | normal | 2026-11-11T16:23:11+00:00 | d3b63c4 | e8c7ee500a3aa6fe99f977f4 | docs/regression-1.14.0.md | PASS |
+| E1201 | T014 | unit | unit | normal | 2026-11-11T16:23:11+00:00 | d3b63c4 | e8c7ee500a3aa6fe99f977f4 | docs/regression-1.14.0.md | PASS |
+| E1202 | T015 | inspection | inspection | normal | 2026-11-11T16:23:12+00:00 | d3b63c4 | 93914a004dbd3b4f5ffd66db | docs/regression-1.14.0.md | PASS |
+| E1203 | T015 | macos | ui | normal | 2026-11-11T16:23:12+00:00 | d3b63c4 | 93914a004dbd3b4f5ffd66db | docs/regression-1.14.0.md | PASS |
+| E1204 | T016 | build | build | normal | 2026-11-11T16:23:13+00:00 | d3b63c4 | 4ad9835bb32f7dcbd8998813 | docs/regression-1.14.0.md | PASS |
+| E1205 | T016 | macos | ui | normal | 2026-11-11T16:23:13+00:00 | d3b63c4 | 4ad9835bb32f7dcbd8998813 | docs/regression-1.14.0.md | PASS |
+| E1206 | T016 | unit | unit | normal | 2026-11-11T16:23:13+00:00 | d3b63c4 | 4ad9835bb32f7dcbd8998813 | docs/regression-1.14.0.md | PASS |
+| E1207 | T017 | build | build | normal | 2026-11-11T16:23:13+00:00 | d3b63c4 | 6508810caba7503535e5febc | docs/regression-1.14.0.md | PASS |
+| E1208 | T017 | macos | ui | normal | 2026-11-11T16:23:14+00:00 | d3b63c4 | 6508810caba7503535e5febc | docs/regression-1.14.0.md | PASS |
+| E1209 | T017 | unit | unit | normal | 2026-11-11T16:23:14+00:00 | d3b63c4 | 6508810caba7503535e5febc | docs/regression-1.14.0.md | PASS |
+| E1210 | T018 | build | build | normal | 2026-11-11T16:23:14+00:00 | d3b63c4 | c72cecacd1b4ad6788a38092 | docs/regression-1.14.0.md | PASS |
+| E1211 | T018 | inspection | inspection | normal | 2026-11-11T16:23:14+00:00 | d3b63c4 | c72cecacd1b4ad6788a38092 | docs/regression-1.14.0.md | PASS |
+| E1212 | T018 | macos | ui | normal | 2026-11-11T16:23:14+00:00 | d3b63c4 | c72cecacd1b4ad6788a38092 | docs/regression-1.14.0.md | PASS |
+| E1213 | T018 | unit | unit | normal | 2026-11-11T16:23:15+00:00 | d3b63c4 | c72cecacd1b4ad6788a38092 | docs/regression-1.14.0.md | PASS |
+| E1214 | T019 | build | build | normal | 2026-11-11T16:23:15+00:00 | d3b63c4 | a5fbfa9f78cc2d64e2939a35 | docs/regression-1.14.0.md | PASS |
+| E1215 | T019 | macos | ui | normal | 2026-11-11T16:23:15+00:00 | d3b63c4 | a5fbfa9f78cc2d64e2939a35 | docs/regression-1.14.0.md | PASS |
+| E1216 | T019 | unit | unit | normal | 2026-11-11T16:23:15+00:00 | d3b63c4 | a5fbfa9f78cc2d64e2939a35 | docs/regression-1.14.0.md | PASS |
+| E1217 | T020 | build | build | normal | 2026-11-11T16:23:16+00:00 | d3b63c4 | 99093cbc4a2ef0fc5f8c41a3 | docs/regression-1.14.0.md | PASS |
+| E1218 | T020 | macos | ui | normal | 2026-11-11T16:23:16+00:00 | d3b63c4 | 99093cbc4a2ef0fc5f8c41a3 | docs/regression-1.14.0.md | PASS |
+| E1219 | T020 | unit | unit | normal | 2026-11-11T16:23:16+00:00 | d3b63c4 | 99093cbc4a2ef0fc5f8c41a3 | docs/regression-1.14.0.md | PASS |
+| E1220 | T022 | build | build | normal | 2026-11-11T16:23:17+00:00 | d3b63c4 | 1d12598730297100866a88f1 | docs/regression-1.14.0.md | PASS |
+| E1221 | T022 | macos | ui | normal | 2026-11-11T16:23:17+00:00 | d3b63c4 | 1d12598730297100866a88f1 | docs/regression-1.14.0.md | PASS |
+| E1222 | T022 | unit | unit | normal | 2026-11-11T16:23:17+00:00 | d3b63c4 | 1d12598730297100866a88f1 | docs/regression-1.14.0.md | PASS |
+| E1223 | T024 | build | build | normal | 2026-11-11T16:23:17+00:00 | d3b63c4 | 06453022335a52340a25cb55 | docs/regression-1.14.0.md | PASS |
+| E1224 | T024 | macos | ui | normal | 2026-11-11T16:23:18+00:00 | d3b63c4 | 06453022335a52340a25cb55 | docs/regression-1.14.0.md | PASS |
+| E1225 | T024 | unit | unit | normal | 2026-11-11T16:23:18+00:00 | d3b63c4 | 06453022335a52340a25cb55 | docs/regression-1.14.0.md | PASS |
+| E1226 | T025 | build | build | normal | 2026-11-11T16:23:18+00:00 | d3b63c4 | 1319b5b763523f1a7e5c924a | docs/regression-1.14.0.md | PASS |
+| E1227 | T025 | macos | ui | normal | 2026-11-11T16:23:18+00:00 | d3b63c4 | 1319b5b763523f1a7e5c924a | docs/regression-1.14.0.md | PASS |
+| E1228 | T025 | unit | unit | normal | 2026-11-11T16:23:18+00:00 | d3b63c4 | 1319b5b763523f1a7e5c924a | docs/regression-1.14.0.md | PASS |
 
 ## Reviews
 
@@ -1755,6 +1813,27 @@
 | RV540 | UC18 | self | PASS | f6ed5b9b5f01b304ac3348b2 | docs/rebind-save-login-2026-11-11.md |
 | RV541 | UC19 | self | PASS | e54f02350572abf3d17a3285 | docs/rebind-save-login-2026-11-11.md |
 | RV542 | UC13 | self | PASS | 78cce5d4d8381c77a77108b8 | docs/rebind-save-login-2026-11-11.md |
+| RV543 | UC02 | self | PASS | 4f2e1631a6f1e09570d794e0 | docs/regression-1.14.0.md |
+| RV544 | UC04 | self | PASS | d4aca60ccc9004dcb3662429 | docs/regression-1.14.0.md |
+| RV545 | UC04 | self | PASS | cdb31dd3d7314006778170fe | docs/regression-1.14.0.md |
+| RV546 | UC05 | self | PASS | 615e401dfd2070089d9804e6 | docs/regression-1.14.0.md |
+| RV547 | UC06 | self | PASS | a895f11a31e3d8c1f3df97e3 | docs/regression-1.14.0.md |
+| RV548 | UC06 | self | PASS | 0a287a0d489d31a325c469d0 | docs/regression-1.14.0.md |
+| RV549 | UC07 | self | PASS | 5903aee471b5e9f7256c278c | docs/regression-1.14.0.md |
+| RV550 | UC07 | self | PASS | 80ac1d6d1130286895b13283 | docs/regression-1.14.0.md |
+| RV551 | UC08 | self | PASS | eec0b2c7eac3dc297d611cfd | docs/regression-1.14.0.md |
+| RV552 | UC08 | self | PASS | 3094d3aae57e7b6e0dcbde24 | docs/regression-1.14.0.md |
+| RV553 | UC09 | self | PASS | 7064e2305f440e3f9ec087b8 | docs/regression-1.14.0.md |
+| RV554 | UC09 | self | PASS | bdcbf1203174c899a1055309 | docs/regression-1.14.0.md |
+| RV555 | UC10 | self | PASS | 36d8bb701b4cca7c77766343 | docs/regression-1.14.0.md |
+| RV556 | UC11 | self | PASS | 0e08244b2bc84729dad4fa73 | docs/regression-1.14.0.md |
+| RV557 | UC12 | self | PASS | 47d13be3b3460d56e65c1c6c | docs/regression-1.14.0.md |
+| RV558 | UC13 | self | PASS | 80d31a854fa9454c422f5805 | docs/regression-1.14.0.md |
+| RV559 | UC14 | self | PASS | cfb593b41687068b5634a40b | docs/regression-1.14.0.md |
+| RV560 | UC15 | self | PASS | 601238550d240157e999d9a2 | docs/regression-1.14.0.md |
+| RV561 | UC17 | self | PASS | ad9620669eca38fe27271f2e | docs/regression-1.14.0.md |
+| RV562 | UC19 | self | PASS | f66987272ed66bdd631174aa | docs/regression-1.14.0.md |
+| RV563 | UC20 | self | PASS | 8af92f506005ca3cc70da0b5 | docs/regression-1.14.0.md |
 
 ## Releases
 
@@ -1780,5 +1859,6 @@
 | L018 | D001 | LOCAL | 5663ea0 | /Users/udi/Applications/Secretariat.app | E898,E899,E905,E906,E907,E908 |
 | L019 | D001 | LOCAL | 1ce097f | /Users/udi/Applications/Secretariat.app | E961,E962,E968,E969,E970,E971 |
 | L020 | D001 | LOCAL | e1ad159 | /Users/udi/Applications/Secretariat.app | E1033,E1034,E1040,E1041,E1042,E1043 |
+| L021 | D001 | LOCAL | d3b63c4 | /Users/udi/Applications/Secretariat.app | E1171,E1172,E1173,E1174,E1175,E1176 |
 
 Status, Beleg und Kritik sind unterschiedliche Angaben. `Evidence` in der Aufgabenzeile referenziert die für ihren Abschluss maßgeblichen Beleg-IDs. Ältere Belege dürfen als Historie bleiben. Bei Reviews ist die letzte Zeile je Scope maßgeblich.
