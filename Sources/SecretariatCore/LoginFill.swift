@@ -167,7 +167,8 @@ public enum FocusedPage {
     public static func passwordFieldLength(pid: pid_t) -> Int? {
         let app = AXUIElementCreateApplication(pid)
         guard let field = element(app, kAXFocusedUIElementAttribute), isSecure(field) else { return nil }
-        return (value(field, kAXNumberOfCharactersAttribute) as? Int) ?? string(field, kAXValueAttribute)?.count ?? 0
+        // Unknown length is nil, never "empty": then nothing is cleared or typed.
+        return (value(field, kAXNumberOfCharactersAttribute) as? Int) ?? string(field, kAXValueAttribute)?.count
     }
 
     /// Empties the focused password field so the typed value replaces its content: ⌘→ to the end, ⌘⌫ to delete to the
@@ -186,6 +187,13 @@ public enum FocusedPage {
             count = passwordFieldLength(pid: pid) ?? -1
         }
         return count == 0
+    }
+
+    /// What a field is called: placeholder, description, title, help and DOM id/class, joined.
+    static func label(of element: AXUIElement) -> String {
+        let names = ["AXPlaceholderValue", kAXDescriptionAttribute, kAXTitleAttribute, kAXHelpAttribute, "AXDOMIdentifier"]
+        let texts = names.compactMap { string(element, $0) } + ((value(element, "AXDOMClassList") as? [String]) ?? [])
+        return texts.joined(separator: " ")
     }
 
     static func isSecure(_ element: AXUIElement) -> Bool { string(element, kAXSubroleAttribute) == "AXSecureTextField" }
@@ -325,12 +333,16 @@ public enum LoginCapture {
         return ItemMeta(path: path, kind: "login", fields: fields, source: "Saved from \(host)")
     }
 
-    /// A user name worth keeping as an identifier (agents may read identifiers): an e-mail address, or 2–100 characters
-    /// without spaces that contain a letter. Codes, card or phone numbers and search text are dropped.
-    public static func plausibleUsername(_ text: String?) -> String? {
+    /// A user name worth keeping as an identifier (agents may read identifiers): an e-mail address, or – only from a field
+    /// that is labelled as user name, login or e-mail – 2–100 characters without spaces that contain a letter. Anything else
+    /// (codes, keys, numbers, search text, unlabelled fields) is dropped and the user types the name.
+    public static func plausibleUsername(_ text: String?, label: String? = nil) -> String? {
         guard let value = text?.trimmingCharacters(in: .whitespacesAndNewlines), (2...100).contains(value.count),
               !value.contains(where: { $0.isWhitespace }), value.contains(where: { $0.isLetter }) else { return nil }
-        return value
+        if value.range(of: #"^[^@\s]+@[^@\s]+\.[^@\s]{2,}$"#, options: .regularExpression) != nil { return value }
+        let name = (label ?? "").lowercased()
+        let labelled = ["user", "login", "e-mail", "email", "benutzer", "account", "konto", "anmeld"].contains { name.contains($0) }
+        return labelled ? value : nil
     }
 }
 
@@ -342,14 +354,14 @@ extension FocusedPage {
         AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
         guard let focused = element(app, kAXFocusedUIElementAttribute) else { return nil }
         if string(focused, kAXRoleAttribute) == "AXTextField", !isSecure(focused), let value = string(focused, kAXValueAttribute),
-           let user = LoginCapture.plausibleUsername(value) { return user }
+           let user = LoginCapture.plausibleUsername(value, label: label(of: focused)) { return user }
         guard let area = webArea(around: focused)?.element else { return nil }
         var stack = [area], visited = 0, lastText: String?
         while let element = stack.popLast(), visited < 5000 {
             visited += 1
             if string(element, kAXRoleAttribute) == "AXTextField" {
                 if isSecure(element) { return lastText }
-                if let user = LoginCapture.plausibleUsername(string(element, kAXValueAttribute)) { lastText = user }
+                if let user = LoginCapture.plausibleUsername(string(element, kAXValueAttribute), label: label(of: element)) { lastText = user }
             }
             // Depth-first in document order: push children reversed.
             if let children = value(element, kAXChildrenAttribute) as? [AXUIElement] { stack.append(contentsOf: children.reversed()) }

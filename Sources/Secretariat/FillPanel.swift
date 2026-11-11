@@ -85,7 +85,7 @@ final class FillController {
             try? await Task.sleep(for: .milliseconds(100))
             inFront = NSWorkspace.shared.frontmostApplication?.processIdentifier == target.processIdentifier
             let now = FocusedPage.focus(pid: target.processIdentifier)
-            ready = inFront && now.isPasswordField && now.url?.host == page?.host
+            ready = inFront && now.isPasswordField && samePage(now.url, page)
             if ready { break }
             if !inFront { target.activate() }
         }
@@ -99,7 +99,7 @@ final class FillController {
         // Prepare the field first (same page, password field, whole content selected so the value replaces it); only then
         // read the value, which also records the fill in the history.
         let now = FocusedPage.focus(pid: pid)
-        guard now.isPasswordField, now.url?.host == page?.host else {
+        guard now.isPasswordField, samePage(now.url, page) else {
             tell("The cursor is no longer in the password field of \(place). \(retry)")
             return false
         }
@@ -108,6 +108,12 @@ final class FillController {
             return false
         }
         guard let text = value() else { return false }
+        // Reading the keychain took a moment: still the same password field?
+        let after = FocusedPage.focus(pid: pid)
+        guard after.isPasswordField, samePage(after.url, page) else {
+            tell("The cursor left the password field of \(place). \(retry)")
+            return false
+        }
         guard LoginFill.isTypable(text) else {
             tell("The password contains a line break or another control character. Typing it could submit the form or put part of it into another field.")
             return false
@@ -116,7 +122,8 @@ final class FillController {
         // The field shows as many dots as it holds characters: check that exactly the password arrived.
         try? await Task.sleep(for: .milliseconds(150))
         let length = FocusedPage.passwordFieldLength(pid: pid)
-        guard typed, length == text.count else {
+        // One dot per character or per UTF-16 unit, depending on the browser.
+        guard typed, let length, length == text.count || length == text.utf16.count else {
             tell("The field holds \(length.map(String.init) ?? "an unknown number of") characters instead of \(text.count). Clear it. \(retry)")
             return false
         }
@@ -127,6 +134,12 @@ final class FillController {
 
     /// A message in its own small panel. Not an app-modal alert: that would block every other Secretariat window,
     /// including the Fill and Save panels, until it is closed.
+    /// Same scheme, host and port (URL.host alone would make localhost:3000 the same page as localhost:8765).
+    static func samePage(_ a: URL?, _ b: URL?) -> Bool {
+        guard let a, let b else { return false }
+        return LoginFill.origin(a) == LoginFill.origin(b)
+    }
+
     static func tell(_ text: String) {
         messagePanel?.close()
         let view = VStack(alignment: .leading, spacing: 12) {

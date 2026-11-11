@@ -134,7 +134,11 @@ private func login(_ path: String, url: String? = nil, user: String? = "uli@exam
 
 @Test func onlyPlausibleUserNamesAreKept() {
     #expect(LoginCapture.plausibleUsername(" uli@example.com ") == "uli@example.com")
-    #expect(LoginCapture.plausibleUsername("moinsen-dev") == "moinsen-dev")
+    #expect(LoginCapture.plausibleUsername("moinsen-dev") == nil)            // unlabelled field: not taken
+    #expect(LoginCapture.plausibleUsername("moinsen-dev", label: "Username") == "moinsen-dev")
+    #expect(LoginCapture.plausibleUsername("ABCD-EFGH-1234", label: "Recovery code") == nil)
+    #expect(LoginCapture.plausibleUsername("DE89370400440532013000", label: "IBAN") == nil)
+    #expect(LoginCapture.plausibleUsername("JBSWY3DPEHPK3PXP") == nil)        // TOTP secret
     #expect(LoginCapture.plausibleUsername("123456") == nil)            // one-time code
     #expect(LoginCapture.plausibleUsername("4111 1111 1111 1111") == nil) // card number
     #expect(LoginCapture.plausibleUsername("+49 151 2345") == nil)      // phone

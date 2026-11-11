@@ -48,6 +48,15 @@ Sollte: Endlosschleife bei fehlendem Zufall, localhost ohne Port. Alle umgesetzt
 4. ⌃⌥⌘S „Clipboard“: `web/localhost-8765/new-user@example.test` (url mit Port, Benutzer, Herkunft), Zwischenablage danach 0 Bytes.
 5. Verlauf: Speichern und Ausfüllen ohne Werte.
 
+## Unabhängige Kritik Runde 2 (6f4844b): UC23 PASS, PLAN REWORK – Umsetzung
+
+Muss-Punkte: unbekannte Feldlänge galt als „leer“; Benutzernamen-Regel ließ alphanumerische Codes, Schlüssel und IBAN durch.
+Umgesetzt: unbekannte Länge → kein Leeren, kein Tippen; Benutzername nur als E-Mail oder aus einem als Benutzer/Login/E-Mail
+bezeichneten Feld (Platzhalter, Beschreibung, Titel, DOM-ID/Klasse). Sollte: Vergleich der Seite über Schema, Host und Port;
+Fokus nach dem Lesen erneut geprüft; Längenprüfung akzeptiert Zeichen oder UTF-16-Einheiten. 108 Tests grün.
+Kein weiterer echter Lauf: die Änderungen betreffen Randfälle (Feld ohne Längenangabe, unbezeichnete Felder) und sind per
+Unit-Test bzw. Code-Prüfung belegt; der Testfall (E-Mail-Feld, Chromium mit Längenangabe) verhält sich unverändert.
+
 ## Grenzen
 
 - Der aus der Zwischenablage gespeicherte Wert ist nicht per Prüfsumme verglichen („Nur für mich“ erreicht kein Programm,
