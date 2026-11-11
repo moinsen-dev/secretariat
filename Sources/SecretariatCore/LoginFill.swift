@@ -29,7 +29,15 @@ public enum LoginFill {
         guard let url = URL(string: withScheme), let scheme = url.scheme?.lowercased(), ["http", "https"].contains(scheme),
               var host = url.host?.lowercased(), host.contains(".") || host == "localhost" else { return nil }
         if host.hasPrefix("www.") { host.removeFirst(4) }
+        // Local services differ only by port: localhost:8765 is not localhost:3000.
+        if host == "localhost" || host == "127.0.0.1", let port = url.port { return "\(host):\(port)" }
         return host
+    }
+
+    /// `scheme://host[:port]` of a page, kept as the item's address.
+    public static func origin(_ url: URL) -> String? {
+        guard let scheme = url.scheme, let host = url.host else { return nil }
+        return "\(scheme)://\(host)" + (url.port.map { ":\($0)" } ?? "")
     }
 
     /// The registrable part of a host: "appstoreconnect.apple.com" → "apple.com", "shop.example.co.uk" → "example.co.uk".
@@ -154,6 +162,32 @@ public enum FocusedPage {
         return Focus(url: nil, isPasswordField: false)
     }
 
+    /// Number of characters in the focused password field (macOS shows other apps only dots, but as many as there are
+    /// characters), or nil when the focus is not in a password field.
+    public static func passwordFieldLength(pid: pid_t) -> Int? {
+        let app = AXUIElementCreateApplication(pid)
+        guard let field = element(app, kAXFocusedUIElementAttribute), isSecure(field) else { return nil }
+        return (value(field, kAXNumberOfCharactersAttribute) as? Int) ?? string(field, kAXValueAttribute)?.count ?? 0
+    }
+
+    /// Empties the focused password field so the typed value replaces its content: ⌘→ to the end, ⌘⌫ to delete to the
+    /// start, then single ⌫ if needed. These keys sit at the same place on every keyboard layout (unlike ⌘A, which is ⌘Q
+    /// on AZERTY). True only when the field is verifiably empty afterwards.
+    public static func clearPasswordField(pid: pid_t) -> Bool {
+        guard var count = passwordFieldLength(pid: pid) else { return false }
+        guard count > 0 else { return true }
+        Keystrokes.press(0x7C /* → */, flags: .maskCommand, to: pid)
+        Keystrokes.press(0x33 /* ⌫ */, flags: .maskCommand, to: pid)
+        Thread.sleep(forTimeInterval: 0.08)
+        count = passwordFieldLength(pid: pid) ?? -1
+        if count > 0 {
+            for _ in 0..<min(count, 256) { Keystrokes.press(0x33, flags: [], to: pid) }
+            Thread.sleep(forTimeInterval: 0.08)
+            count = passwordFieldLength(pid: pid) ?? -1
+        }
+        return count == 0
+    }
+
     static func isSecure(_ element: AXUIElement) -> Bool { string(element, kAXSubroleAttribute) == "AXSecureTextField" }
 
     /// The web area that is or contains the element, with its address.
@@ -194,16 +228,15 @@ public enum FocusedPage {
 /// Types text into the app with this process id, as Unicode key events: no clipboard, independent of the keyboard layout.
 /// Stops (returns false) as soon as another app comes to the front, so no part of the value reaches it.
 public enum Keystrokes {
-    /// ⌘A to the app: in the focused text field it selects the content, so the typed value replaces it instead of
-    /// being appended (a field that already holds dots, or a second fill).
-    public static func selectAll(in pid: pid_t) {
+    /// One key by its position code (only layout-independent keys such as arrows and delete), down and up, to the app.
+    public static func press(_ key: CGKeyCode, flags: CGEventFlags, to pid: pid_t) {
         let source = CGEventSource(stateID: .combinedSessionState)
         for keyDown in [true, false] {
-            guard let event = CGEvent(keyboardEventSource: source, virtualKey: 0x00 /* a */, keyDown: keyDown) else { return }
-            event.flags = .maskCommand
+            guard let event = CGEvent(keyboardEventSource: source, virtualKey: key, keyDown: keyDown) else { return }
+            event.flags = flags
             event.postToPid(pid)
         }
-        Thread.sleep(forTimeInterval: 0.05)
+        Thread.sleep(forTimeInterval: 0.005)
     }
 
     @discardableResult
@@ -252,7 +285,8 @@ public enum PasswordGenerator {
         let limit = 256 - 256 % bound
         while true {
             var byte: UInt8 = 0
-            guard SecRandomCopyBytes(kSecRandomDefault, 1, &byte) == errSecSuccess else { continue }
+            // Without a secure random source no password may be made at all.
+            guard SecRandomCopyBytes(kSecRandomDefault, 1, &byte) == errSecSuccess else { fatalError("No secure random bytes") }
             if Int(byte) < limit { return Int(byte) % bound }
         }
     }
@@ -282,12 +316,21 @@ public enum LoginCapture {
     }
 
     /// Item of the built-in "Website login" kind; the password goes into the item's encrypted values, not into the meta.
-    public static func item(host: String, path: String, username: String) -> ItemMeta {
-        var fields = [ItemField(name: "url", kind: .identifier, value: "https://\(host)")]
+    public static func item(address: String, path: String, username: String) -> ItemMeta {
+        let host = LoginFill.host(address) ?? address
+        var fields = [ItemField(name: "url", kind: .identifier, value: address)]
         let user = username.trimmingCharacters(in: .whitespacesAndNewlines)
         if !user.isEmpty { fields.append(ItemField(name: "username", kind: .identifier, value: user)) }
         fields.append(ItemField(name: "password", kind: .personal))
         return ItemMeta(path: path, kind: "login", fields: fields, source: "Saved from \(host)")
+    }
+
+    /// A user name worth keeping as an identifier (agents may read identifiers): an e-mail address, or 2–100 characters
+    /// without spaces that contain a letter. Codes, card or phone numbers and search text are dropped.
+    public static func plausibleUsername(_ text: String?) -> String? {
+        guard let value = text?.trimmingCharacters(in: .whitespacesAndNewlines), (2...100).contains(value.count),
+              !value.contains(where: { $0.isWhitespace }), value.contains(where: { $0.isLetter }) else { return nil }
+        return value
     }
 }
 
@@ -299,14 +342,14 @@ extension FocusedPage {
         AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
         guard let focused = element(app, kAXFocusedUIElementAttribute) else { return nil }
         if string(focused, kAXRoleAttribute) == "AXTextField", !isSecure(focused), let value = string(focused, kAXValueAttribute),
-           !value.isEmpty { return value }
+           let user = LoginCapture.plausibleUsername(value) { return user }
         guard let area = webArea(around: focused)?.element else { return nil }
         var stack = [area], visited = 0, lastText: String?
         while let element = stack.popLast(), visited < 5000 {
             visited += 1
             if string(element, kAXRoleAttribute) == "AXTextField" {
                 if isSecure(element) { return lastText }
-                if let value = string(element, kAXValueAttribute), !value.isEmpty { lastText = value }
+                if let user = LoginCapture.plausibleUsername(string(element, kAXValueAttribute)) { lastText = user }
             }
             // Depth-first in document order: push children reversed.
             if let children = value(element, kAXChildrenAttribute) as? [AXUIElement] { stack.append(contentsOf: children.reversed()) }

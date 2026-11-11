@@ -13,7 +13,7 @@ private func login(_ path: String, url: String? = nil, user: String? = "uli@exam
 @Test func hostIsLowercasedWithoutWwwAndOnlyForWebAddresses() {
     #expect(LoginFill.host("https://www.GitHub.com/login?x=1") == "github.com")
     #expect(LoginFill.host("appstoreconnect.apple.com") == "appstoreconnect.apple.com")
-    #expect(LoginFill.host("http://localhost:8765/login.html") == "localhost")
+    #expect(LoginFill.host("http://localhost:8765/login.html") == "localhost:8765")
     #expect(LoginFill.host("file:///Applications/Claude.app/index.html") == nil)
     #expect(LoginFill.host("about:blank") == nil)
     #expect(LoginFill.host("  ") == nil)
@@ -112,21 +112,43 @@ private func login(_ path: String, url: String? = nil, user: String? = "uli@exam
     #expect(LoginCapture.path(host: "github.com", username: "Uli Test", existing: ["web/GitHub.com"]) == "web/github.com/Uli-Test")
     #expect(LoginCapture.path(host: "github.com", username: "", existing: ["web/github.com"]) == "web/github.com-2")
     #expect(LoginCapture.path(host: "github.com", username: "a@b.de", existing: ["web/github.com", "web/github.com/a@b.de"]) == "web/github.com/a@b.de-2")
-    let item = LoginCapture.item(host: "app.example.com", path: "web/app.example.com", username: " uli@example.com ")
+    let item = LoginCapture.item(address: "https://app.example.com", path: "web/app.example.com", username: " uli@example.com ")
     #expect(item.kind == "login")
     #expect(item.field("url")?.value == "https://app.example.com")
     #expect(item.field("username")?.value == "uli@example.com")
     #expect(item.field("password")?.kind == .personal && item.field("password")?.value == nil)
     #expect(throws: Never.self) { try item.validate() }
     #expect(LoginFill.fillableField(item) == "password")
-    #expect(LoginCapture.item(host: "x.org", path: "web/x.org", username: "").field("username") == nil)
+    #expect(LoginCapture.item(address: "https://x.org", path: "web/x.org", username: "").field("username") == nil)
+    #expect(LoginCapture.item(address: "http://localhost:8765", path: "web/l", username: "u1").field("url")?.value == "http://localhost:8765")
 }
 
 @Test func aJustSavedLoginComesFirstAmongEqualMatches() {
-    let old = login("test/old", url: "http://localhost:8765/x"), new = login("web/localhost", url: "https://localhost")
+    let old = login("test/old", url: "http://localhost:8765/x"), new = login("web/localhost", url: "http://localhost:8765")
     #expect(LoginFill.candidates([old, new], page: "http://localhost:8765/signup", query: "").first?.item.path == "test/old")
     #expect(LoginFill.candidates([old, new], page: "http://localhost:8765/signup", query: "", preferred: new.id).first?.item.path == "web/localhost")
     // Never ahead of a better match.
     let other = login("zzz/other", url: "https://other.example")
     #expect(LoginFill.candidates([old, other], page: "http://localhost/", query: "local", preferred: other.id).first?.item.path == "test/old")
+}
+
+@Test func onlyPlausibleUserNamesAreKept() {
+    #expect(LoginCapture.plausibleUsername(" uli@example.com ") == "uli@example.com")
+    #expect(LoginCapture.plausibleUsername("moinsen-dev") == "moinsen-dev")
+    #expect(LoginCapture.plausibleUsername("123456") == nil)            // one-time code
+    #expect(LoginCapture.plausibleUsername("4111 1111 1111 1111") == nil) // card number
+    #expect(LoginCapture.plausibleUsername("+49 151 2345") == nil)      // phone
+    #expect(LoginCapture.plausibleUsername("cheap flights berlin") == nil) // search text
+    #expect(LoginCapture.plausibleUsername("x") == nil)
+    #expect(LoginCapture.plausibleUsername(nil) == nil)
+}
+
+@Test func localServicesAreTellApartByPort() {
+    #expect(LoginFill.host("http://localhost:8765/signup") == "localhost:8765")
+    #expect(LoginFill.host("http://localhost/") == "localhost")
+    #expect(LoginFill.origin(URL(string: "http://localhost:8765/a?b=1")!) == "http://localhost:8765")
+    #expect(LoginFill.origin(URL(string: "https://www.github.com/login")!) == "https://www.github.com")
+    let other = login("dev/other", url: "http://localhost:3000")
+    #expect(LoginFill.candidates([other], page: "http://localhost:8765/login", query: "").first?.rank != .sameHost)
+    #expect(LoginCapture.path(host: "localhost:8765", username: "", existing: []) == "web/localhost-8765")
 }

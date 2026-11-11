@@ -10,7 +10,7 @@ lässt sich nicht aufnehmen; Save Login erzeugt, übernimmt aus der Zwischenabla
 
 ## Unit-Tests
 
-`xcrun swift test`: 106 grün; neu: Passwortgenerator (200 Läufe: Länge 20, jede Zeichenart, keine Verwechsler, tippbar,
+`xcrun swift test`: 108 grün (Endstand); neu: Passwortgenerator (200 Läufe: Länge 20, jede Zeichenart, keine Verwechsler, tippbar,
 alle verschieden), freie Namen und Form des Eintrags, Vorrang für gerade gespeicherte Logins (nie vor besseren Treffern).
 
 ## Echter Lauf (UC23) im eingebauten Claude-Browser, Test-Tresor, Registrierungsseite
@@ -29,10 +29,31 @@ Lauf 3 (Uli): Fill Login in das 40-Zeichen-Feld → danach 20 Zeichen, gleich de
 ⌃⌥⌘S mit „Clipboard“ → Eintrag `web/localhost/new-user@example.test-2` (url, Benutzer, Herkunft), Zwischenablage danach 0 Bytes
 (vorher Testwert, 16 Bytes). Verlauf: „Saved web/… (values changed)“ und „Fill Localhost web/localhost/password“, keine Werte.
 
+## Unabhängige Kritik Runde 1 (dd3ec78): PLAN PASS, UC23 REWORK – Umsetzung
+
+Muss-Punkte: ⌘A per Tastenposition wäre auf AZERTY ⌘Q; Benutzernamen-Heuristik nahm jedes gefüllte Feld (Codes, Nummern)
+als lesbare Kennung; Tippen auch ohne Passwortfeld und irreführende Meldung nach dem Speichern; Belege nicht auf dem Endstand.
+Sollte: Endlosschleife bei fehlendem Zufall, localhost ohne Port. Alle umgesetzt.
+
+## Lauf 4 auf dem Endstand (Uli)
+
+1. ⌃⌥⌘S im Passwortfeld: `web/localhost-8765` mit `http://localhost:8765`, Benutzer, Herkunft „Saved from localhost:8765“
+   gespeichert und getippt; ⌃⌥⌘P im Wiederholungsfeld: zeichengleich (20).
+2. Befund: Markieren per Bedienungshilfen (`AXSelectedTextRange`) lässt Chromium im Passwortfeld nicht zu; die Prüfung brach
+   mit Meldung ab (richtig, nichts angehängt). Außerdem sperrte die Meldung als modaler Dialog das Save-Fenster (Uli konnte den
+   Umschalter nicht bedienen) und ein gescheiterter Versuch stand als „Fill“ im Verlauf. Behoben: Leeren per ⌘→/⌘⌫ mit Prüfung
+   der Punktzahl, Längenprüfung nach dem Tippen, Meldungen in eigenem Fenster, Wert erst nach vorbereitetem Feld gelesen.
+3. Mit abweichendem Probewert (21 Zeichen) im Passwortfeld: ⌃⌥⌘P mit `web/localhost-8765` → Feld 20 Zeichen, gleich dem
+   Wiederholungsfeld (Ersetzen belegt).
+4. ⌃⌥⌘S „Clipboard“: `web/localhost-8765/new-user@example.test` (url mit Port, Benutzer, Herkunft), Zwischenablage danach 0 Bytes.
+5. Verlauf: Speichern und Ausfüllen ohne Werte.
+
 ## Grenzen
 
 - Der aus der Zwischenablage gespeicherte Wert ist nicht per Prüfsumme verglichen („Nur für mich“ erreicht kein Programm,
   auch nicht `secretariat run`); belegt sind Speichern und Leeren der Zwischenablage.
 - „Type“ (einmal im Fenster eintippen) nicht im echten Lauf; gleicher Speicherweg wie „Clipboard“.
+- Zwischenablage-Manager (Verlaufs-Apps) können ein kopiertes Passwort behalten, bevor Secretariat die Zwischenablage leert.
+- Ein Login ohne plausiblen Benutzernamen hat kein Feld `username`.
 - Chrome und Safari nicht im echten Lauf; die Benutzernamen-Erkennung ist eine Heuristik (fokussiertes oder letztes gefülltes
   Textfeld vor dem ersten Passwortfeld) und im Fenster änderbar.

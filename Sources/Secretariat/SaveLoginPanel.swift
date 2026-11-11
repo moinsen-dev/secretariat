@@ -33,13 +33,14 @@ final class SaveLoginController {
         let page = focus?.url
         let host = page.flatMap { LoginFill.host($0.absoluteString) }
         let username = trusted ? target.flatMap { FocusedPage.username(pid: $0.processIdentifier) } ?? "" : ""
+        let inPasswordField = focus?.isPasswordField == true
         model.reload()
         let path = host.map { LoginCapture.path(host: $0, username: username, existing: model.items.map(\.path)) } ?? ""
-        let view = SaveLoginView(host: host, trusted: trusted, inPasswordField: focus?.isPasswordField == true,
+        let view = SaveLoginView(host: host, trusted: trusted, inPasswordField: inPasswordField,
                                  path: path, username: username,
                                  cancel: { [weak self] in self?.close() },
                                  allowAccess: { [weak self] in self?.close(); FillController.shared.requestAccess() },
-                                 save: { [weak self] request in self?.save(request, host: host, page: page, into: target) })
+                                 save: { [weak self] request in self?.save(request, host: host, page: page, into: target, typing: inPasswordField) })
         let panel = makeFloatingPanel(view)
         panel.makeKeyAndOrderFront(nil)
         self.panel = panel
@@ -48,8 +49,9 @@ final class SaveLoginController {
     func close() { panel?.close(); panel = nil }
 
     /// Saves the item; returns an error text for the panel instead of closing it.
-    private func save(_ request: SaveLoginView.Request, host: String?, page: URL?, into target: NSRunningApplication?) -> String? {
-        guard let model, let host else { return "No web page found." }
+    private func save(_ request: SaveLoginView.Request, host: String?, page: URL?, into target: NSRunningApplication?,
+                      typing: Bool) -> String? {
+        guard let model, let host, let page, let address = LoginFill.origin(page) else { return "No web page found." }
         let pasteboard = NSPasteboard.general
         let change = pasteboard.changeCount
         let password: String
@@ -60,7 +62,7 @@ final class SaveLoginController {
         }
         guard !password.isEmpty else { return request.source == .clipboard ? "The clipboard holds no text." : "Enter the password." }
         guard LoginFill.isTypable(password) else { return "The password contains a line break or another control character." }
-        let meta = LoginCapture.item(host: host, path: request.path.trimmingCharacters(in: .whitespaces), username: request.username)
+        let meta = LoginCapture.item(address: address, path: request.path.trimmingCharacters(in: .whitespaces), username: request.username)
         do { try model.vault.save(meta, secrets: ["password": password]) } catch { return error.localizedDescription }
         lastSaved = (meta.id, Date())
         // The password is safe now; don't leave it on the clipboard (unless something else was copied meanwhile).
@@ -68,8 +70,10 @@ final class SaveLoginController {
         close()
         model.reload()
         // A new password goes straight into the field it was made for; Fill Login (with Touch ID) fills the confirm field.
-        if request.source == .generate, let target {
-            Task { @MainActor in await PasswordTyping.type(into: target, page: page, place: host) { password } }
+        // Only into the password field the shortcut was pressed in; otherwise Fill Login types it later.
+        if request.source == .generate, typing, let target {
+            let retry = "The new password is saved as \(meta.path). Click into the password field and use Fill Login (⌃⌥⌘P) to type it."
+            Task { @MainActor in await PasswordTyping.type(into: target, page: page, place: host, retry: retry) { password } }
         }
         return nil
     }

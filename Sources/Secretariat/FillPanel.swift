@@ -75,7 +75,8 @@ final class FillController {
 /// page has the focus, then type only into that app. Used by Fill Login and Save Login.
 @MainActor enum PasswordTyping {
     @discardableResult
-    static func type(into target: NSRunningApplication, page: URL?, place: String, value: () -> String?) async -> Bool {
+    static func type(into target: NSRunningApplication, page: URL?, place: String,
+                     retry: String = "Click into the field and press the shortcut again.", value: () -> String?) async -> Bool {
         // Touch ID or the panel may have made Secretariat the active app.
         NSApplication.shared.yieldActivation(to: target)
         target.activate()
@@ -90,8 +91,20 @@ final class FillController {
         }
         guard ready else {
             tell(inFront
-                 ? "The cursor is no longer in the password field of \(place). Click into the field and press the shortcut again."
-                 : "\(target.localizedName ?? "The app") did not come back to the front. Click into the password field and press the shortcut again.")
+                 ? "The cursor is no longer in the password field of \(place). \(retry)"
+                 : "\(target.localizedName ?? "The app") did not come back to the front. \(retry)")
+            return false
+        }
+        let pid = target.processIdentifier
+        // Prepare the field first (same page, password field, whole content selected so the value replaces it); only then
+        // read the value, which also records the fill in the history.
+        let now = FocusedPage.focus(pid: pid)
+        guard now.isPasswordField, now.url?.host == page?.host else {
+            tell("The cursor is no longer in the password field of \(place). \(retry)")
+            return false
+        }
+        guard FocusedPage.clearPasswordField(pid: pid) else {
+            tell("The password field of \(place) could not be emptied. Clear it by hand. \(retry)")
             return false
         }
         guard let text = value() else { return false }
@@ -99,17 +112,32 @@ final class FillController {
             tell("The password contains a line break or another control character. Typing it could submit the form or put part of it into another field.")
             return false
         }
-        let pid = target.processIdentifier
-        Keystrokes.selectAll(in: pid)
-        return Keystrokes.type(text, to: pid) { NSWorkspace.shared.frontmostApplication?.processIdentifier == pid }
+        let typed = Keystrokes.type(text, to: pid, isFront: { NSWorkspace.shared.frontmostApplication?.processIdentifier == pid })
+        // The field shows as many dots as it holds characters: check that exactly the password arrived.
+        try? await Task.sleep(for: .milliseconds(150))
+        let length = FocusedPage.passwordFieldLength(pid: pid)
+        guard typed, length == text.count else {
+            tell("The field holds \(length.map(String.init) ?? "an unknown number of") characters instead of \(text.count). Clear it. \(retry)")
+            return false
+        }
+        return true
     }
 
+    private static var messagePanel: NSPanel?
+
+    /// A message in its own small panel. Not an app-modal alert: that would block every other Secretariat window,
+    /// including the Fill and Save panels, until it is closed.
     static func tell(_ text: String) {
-        let alert = NSAlert()
-        alert.messageText = "Nothing was typed"
-        alert.informativeText = text
-        NSApplication.shared.activate(ignoringOtherApps: true)
-        alert.runModal()
+        messagePanel?.close()
+        let view = VStack(alignment: .leading, spacing: 12) {
+            Label("Nothing was typed", systemImage: "exclamationmark.triangle.fill").font(.headline).foregroundStyle(.orange)
+            Text(text).fixedSize(horizontal: false, vertical: true)
+            HStack { Spacer(); Button("OK") { messagePanel?.close(); messagePanel = nil }.keyboardShortcut(.defaultAction) }
+        }
+        .padding(20).frame(width: 400)
+        let panel = makeFloatingPanel(view)
+        panel.makeKeyAndOrderFront(nil)
+        messagePanel = panel
     }
 }
 
