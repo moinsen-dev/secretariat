@@ -63,9 +63,11 @@ final class FillController {
                 guard try await context.evaluatePolicy(.deviceOwnerAuthentication,
                                                        localizedReason: "fill \(candidate.item.path) into \(place)") else { return }
             } catch { return }
-            await PasswordTyping.type(into: target, page: page, place: place) {
-                // Read (and record in the history) only now that the value really goes into the field.
-                model.secretValue(candidate.item, field, for: "fill \(place)")
+            // The history notes the fill only once the value really is in the field.
+            await PasswordTyping.type(into: target, page: page, place: place, typed: {
+                model.vault.audit.record("read", ["field": "\(candidate.item.path)/\(field.name)", "purpose": "fill \(place)"])
+            }) {
+                model.storedValue(candidate.item, field)
             }
         }
     }
@@ -76,7 +78,8 @@ final class FillController {
 @MainActor enum PasswordTyping {
     @discardableResult
     static func type(into target: NSRunningApplication, page: URL?, place: String,
-                     retry: String = "Click into the field and press the shortcut again.", value: () -> String?) async -> Bool {
+                     retry: String = "Click into the field and press the shortcut again.",
+                     typed onTyped: () -> Void = {}, value: () -> String?) async -> Bool {
         // Touch ID or the panel may have made Secretariat the active app.
         NSApplication.shared.yieldActivation(to: target)
         target.activate()
@@ -104,7 +107,9 @@ final class FillController {
             return false
         }
         guard FocusedPage.clearPasswordField(pid: pid) else {
-            tell("The password field of \(place) could not be emptied. Clear it by hand. \(retry)")
+            tell(FocusedPage.passwordFieldLength(pid: pid) == nil
+                 ? "This browser doesn't tell how many characters the password field holds, so Secretariat can't type safely there."
+                 : "The password field of \(place) could not be emptied. Clear it by hand. \(retry)")
             return false
         }
         guard let text = value() else { return false }
@@ -127,6 +132,7 @@ final class FillController {
             tell("The field holds \(length.map(String.init) ?? "an unknown number of") characters instead of \(text.count). Clear it. \(retry)")
             return false
         }
+        onTyped()
         return true
     }
 

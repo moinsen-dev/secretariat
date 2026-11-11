@@ -337,6 +337,15 @@ final class AppModel {
     func deleteItem(_ item: ItemMeta) {
         if perform({ try vault.delete(id: item.id) }) { selectedItem = nil }
     }
+    /// A stored value without a history line; the caller records the use once it has really happened (Fill Login).
+    func storedValue(_ item: ItemMeta, _ field: ItemField) -> String? {
+        do {
+            guard let value = try vault.personalValue(itemID: item.id, field: field.name) else {
+                throw SecretariatError("No value is stored yet for \(item.path)/\(field.name).")
+            }
+            return value
+        } catch { errorMessage = error.localizedDescription; return nil }
+    }
     /// A stored value for the user; `purpose` (show, copy, export, file) goes into the history, the value never does.
     func secretValue(_ item: ItemMeta, _ field: ItemField, for purpose: String) -> String? {
         do {

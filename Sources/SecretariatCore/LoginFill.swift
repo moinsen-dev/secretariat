@@ -189,11 +189,11 @@ public enum FocusedPage {
         return count == 0
     }
 
-    /// What a field is called: placeholder, description, title, help and DOM id/class, joined.
+    /// What a field is called: placeholder, description, title, help and DOM id, joined.
     static func label(of element: AXUIElement) -> String {
         let names = ["AXPlaceholderValue", kAXDescriptionAttribute, kAXTitleAttribute, kAXHelpAttribute, "AXDOMIdentifier"]
-        let texts = names.compactMap { string(element, $0) } + ((value(element, "AXDOMClassList") as? [String]) ?? [])
-        return texts.joined(separator: " ")
+        // Not the CSS classes: "login-form__input" would label every field of a login form.
+        return names.compactMap { string(element, $0) }.joined(separator: " ")
     }
 
     static func isSecure(_ element: AXUIElement) -> Bool { string(element, kAXSubroleAttribute) == "AXSecureTextField" }
@@ -341,8 +341,9 @@ public enum LoginCapture {
               !value.contains(where: { $0.isWhitespace }), value.contains(where: { $0.isLetter }) else { return nil }
         if value.range(of: #"^[^@\s]+@[^@\s]+\.[^@\s]{2,}$"#, options: .regularExpression) != nil { return value }
         let name = (label ?? "").lowercased()
-        let labelled = ["user", "login", "e-mail", "email", "benutzer", "account", "konto", "anmeld"].contains { name.contains($0) }
-        return labelled ? value : nil
+        let excluded = ["code", "key", "token", "secret", "iban", "recovery", "otp", "pin", "pass"].contains { name.contains($0) }
+        let labelled = ["user", "login", "e-mail", "email", "benutzer", "anmeld"].contains { name.contains($0) }
+        return labelled && !excluded ? value : nil
     }
 }
 

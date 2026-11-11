@@ -139,6 +139,9 @@ private func login(_ path: String, url: String? = nil, user: String? = "uli@exam
     #expect(LoginCapture.plausibleUsername("ABCD-EFGH-1234", label: "Recovery code") == nil)
     #expect(LoginCapture.plausibleUsername("DE89370400440532013000", label: "IBAN") == nil)
     #expect(LoginCapture.plausibleUsername("JBSWY3DPEHPK3PXP") == nil)        // TOTP secret
+    #expect(LoginCapture.plausibleUsername("ABCD-EFGH", label: "Account recovery code") == nil)
+    #expect(LoginCapture.plausibleUsername("ab12cd34", label: "Login PIN") == nil)
+    #expect(LoginCapture.plausibleUsername("Kontonummer12", label: "Kontonummer") == nil)
     #expect(LoginCapture.plausibleUsername("123456") == nil)            // one-time code
     #expect(LoginCapture.plausibleUsername("4111 1111 1111 1111") == nil) // card number
     #expect(LoginCapture.plausibleUsername("+49 151 2345") == nil)      // phone
