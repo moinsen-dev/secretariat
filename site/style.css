@@ -162,6 +162,16 @@ section + section { border-top: 1px solid var(--border); }
 .evidence p { color: var(--muted); font-size: 0.94rem; margin: 0; }
 .source { display: inline-block; margin-top: 10px; font-size: 0.88rem; }
 
+/* Usage numbers and founder quote */
+.stats { list-style: none; padding: 0; margin: 0 0 8px; display: grid; gap: 16px; grid-template-columns: repeat(4, 1fr); }
+.stats li { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; min-width: 0; }
+.stats strong { display: block; font-size: 2rem; line-height: 1.1; color: var(--accent-strong); font-variant-numeric: tabular-nums; }
+.stats span { color: var(--muted); font-size: 0.94rem; }
+.founder-quote { margin: 32px 0 0; padding: 24px 28px; background: var(--accent-soft); border-radius: var(--radius); }
+.founder-quote blockquote { margin: 0 0 10px; font-size: 1.15rem; font-weight: 550; line-height: 1.45; }
+.founder-quote figcaption { color: var(--muted); font-size: 0.92rem; }
+@media (max-width: 760px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+
 /* Steps */
 .steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; counter-reset: step; }
 .steps li { counter-increment: step; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; min-width: 0; }
