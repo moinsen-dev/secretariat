@@ -305,6 +305,36 @@ secretariat profile bind \
   </div>
 </section>
 
+<!-- Website logins -->
+<section id="logins">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Website logins</p>
+      <h2>Click into the password field. Touch ID. Done.</h2>
+      <p class="lead">Your agent opens a login page in Claude Code's built-in browser and stops at the password. Apple's Passwords can't fill there, and browser extensions don't run there. Secretariat can: a shortcut shows the logins for that page, Touch ID confirms, and the password is typed into the field.</p>
+    </div>
+    <div class="split">
+      <article class="card yes">
+        <h3>Fill Login <span class="tag">⌃⌥⌘P</span></h3>
+        <ul>
+          <li>Recognises the page through macOS accessibility, including Claude Code's built-in browser, and lists the logins for it first. A search finds every other one.</li>
+          <li>Types only into a real password field of the same page, checked again right before typing. Never via the clipboard, never into a chat box.</li>
+          <li>Touch ID or your Mac password for every fill. The history notes page and item, never the password.</li>
+        </ul>
+      </article>
+      <article class="card yes">
+        <h3>Save Login <span class="tag">⌃⌥⌘S</span></h3>
+        <ul>
+          <li>On a sign-up or change-password page, Secretariat makes a strong 20-character password, saves it with the page and your user name, and types it in.</li>
+          <li>Or keep a password you copied (the clipboard is cleared afterwards), or type it once in the panel.</li>
+          <li>A password you already typed into a page can't be read by any app: macOS shows other apps only dots. Secretariat tells you so instead of pretending.</li>
+        </ul>
+      </article>
+    </div>
+    <p class="note">The fill needs your finger, so an agent can't log in on its own. Once the password is in the page, the page itself and anything that can script it can read it, as with every password manager.</p>
+  </div>
+</section>
+
 <!-- Features -->
 <section id="features">
   <div class="wrap">
@@ -323,7 +353,7 @@ secretariat profile bind \
       </div>
       <div class="feature">
         <h3>Typed fields</h3>
-        <p>Identifier (agents may read it), secret, file, and only-for-me, which never reaches any program.</p>
+        <p>Identifier (agents may read it), secret, file, and only-for-me, which no program gets: only you can type it into a password field, with Touch ID.</p>
       </div>
       <div class="feature">
         <h3>Templates are data</h3>
@@ -457,6 +487,7 @@ secretariat profile bind \
         <li>Clipboard inbox and encrypted screenshots with notes</li>
         <li>Items from screenshots, read on your Mac by Apple Intelligence</li>
         <li>Agent Guard: masking, Touch ID per item, commit guard, Claude Code hook</li>
+        <li>Fill and save website logins with Touch ID, also in Claude Code's browser</li>
         <li>Leak sweep through all repositories and their history</li>
         <li>Automatic encrypted backup with your own recovery key</li>
         <li>History of every access, by app, terminal or agent</li>
