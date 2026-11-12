@@ -295,3 +295,43 @@ section + section { border-top: 1px solid var(--border); }
   .price-card { padding: 24px; }
   .terminal pre { font-size: 0.74rem; padding: 14px; }
 }
+
+/* How it works: the path of one key */
+.flow { list-style: none; counter-reset: flow; padding: 0; margin: 0 0 20px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+.flow li { counter-increment: flow; position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 16px 16px; }
+.flow li::before { content: counter(flow); display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--on-accent); font-size: 0.85rem; font-weight: 700; margin-bottom: 8px; }
+.flow li:not(:last-child)::after { content: "→"; position: absolute; right: -13px; top: 22px; color: var(--accent); font-weight: 700; background: var(--bg); line-height: 1; padding: 2px 0; }
+.flow h3 { font-size: 1.02rem; margin: 0 0 0.6em; }
+.flow p { font-size: 0.9rem; margin: 0 0 0.6em; color: var(--muted); }
+.flow p:last-child { margin-bottom: 0; }
+.flow p span { display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+.flow .you span { color: var(--text); }
+.flow .sec { padding-top: 0.6em; border-top: 1px dashed var(--border); }
+.flow .sec span { color: var(--accent); }
+.flow-sum { max-width: 72ch; margin: 0 0 36px; color: var(--muted); }
+.flow-sum strong { color: var(--text); font-weight: 600; }
+@media (max-width: 980px) {
+  .flow { grid-template-columns: 1fr; }
+  .flow li:not(:last-child)::after { content: "↓"; right: auto; left: 24px; top: auto; bottom: -15px; padding: 0 2px; }
+}
+
+/* Security: who sees what */
+.table-scroll { overflow-x: auto; margin-bottom: 28px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); }
+.who { width: 100%; border-collapse: collapse; font-size: 0.95rem; min-width: 560px; }
+.who caption { text-align: left; padding: 14px 18px 0; font-size: 0.8rem; font-weight: 650; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.who th, .who td { text-align: left; vertical-align: top; padding: 12px 18px; border-bottom: 1px solid var(--border); }
+.who tbody tr:last-child th, .who tbody tr:last-child td { border-bottom: 0; }
+.who thead th { font-size: 0.82rem; color: var(--muted); font-weight: 650; }
+.who tbody th { font-weight: 600; white-space: nowrap; }
+.who td { color: var(--muted); }
+@media (max-width: 640px) {
+  .who { min-width: 0; }
+  .who thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .who tr { display: block; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .who tbody tr:last-child { border-bottom: 0; }
+  .who th, .who td { display: block; padding: 2px 0; border: 0; }
+  .who tbody th { white-space: normal; margin-bottom: 4px; }
+  .who td::before { display: block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text); }
+  .who td:nth-of-type(1)::before { content: "Sees"; }
+  .who td:nth-of-type(2)::before { content: "Never sees"; margin-top: 6px; }
+}

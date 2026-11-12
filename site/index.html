@@ -20,6 +20,7 @@
     </a>
     <nav class="nav" aria-label="Main">
       <a href="#how">How it works</a>
+      <a href="#security">Security</a>
       <a href="#diy">Build or buy</a>
       <a href="#capture">Capture</a>
       <a href="#guard">Agent Guard</a>
@@ -98,8 +99,37 @@ changes contain secret values:
   <div class="wrap">
     <div class="section-head">
       <p class="eyebrow">How it works</p>
-      <h2>Keep it once. Bind per project. Run through Secretariat.</h2>
+      <h2>From a key on screen to a running program. Your part: a shortcut and, when it matters, a fingerprint.</h2>
+      <p class="lead">Every key takes the same path. You touch it once, when it appears. After that your agents and programs use it by name, on every Mac, and nobody pastes it anywhere again.</p>
     </div>
+    <ol class="flow" aria-label="The path of one key">
+      <li>
+        <h3>It appears</h3>
+        <p class="you"><span>You</span> Copy it from the dashboard and press ⌃⌥⌘V, or paste a screenshot.</p>
+        <p class="sec"><span>Secretariat</span> Takes it into the Inbox, clears the clipboard and guesses the provider.</p>
+      </li>
+      <li>
+        <h3>It's kept</h3>
+        <p class="you"><span>You</span> Check kind and name, then save. For a production key, switch on Touch ID.</p>
+        <p class="sec"><span>Secretariat</span> Stores it in your iCloud keychain, end-to-end encrypted, on all your Macs.</p>
+      </li>
+      <li>
+        <h3>It's bound</h3>
+        <p class="you"><span>You</span> Nothing. Your agent sets up the project.</p>
+        <p class="sec"><span>Secretariat</span> Maps variable names to items for that folder. The agent only ever handles names.</p>
+      </li>
+      <li>
+        <h3>It's used</h3>
+        <p class="you"><span>You</span> Confirm with Touch ID if the item asks for it.</p>
+        <p class="sec"><span>Secretariat</span> Hands the value to the program. The agent sees <code>[masked]</code>.</p>
+      </li>
+      <li>
+        <h3>It's watched</h3>
+        <p class="you"><span>You</span> Look when something needs you: an expiry, a stale copy, a blocked commit.</p>
+        <p class="sec"><span>Secretariat</span> Blocks commits with the value, logs each use, backs up encrypted and lists every copy after a rotation.</p>
+      </li>
+    </ol>
+    <p class="flow-sum"><strong>No <code>.env</code> to keep, no token in a chat, no evening of hunting keys on a new Mac.</strong> The three commands below are what your agent types; you can read them, but you don't have to.</p>
     <ol class="steps">
       <li>
         <h3>Keep it once</h3>
@@ -169,6 +199,45 @@ secretariat profile bind \
       <blockquote>“Between Claude, Codex and me, our whole way of working has changed. No more trouble with credentials, no more hunting for passwords. For me personally, it's a game changer.”</blockquote>
       <figcaption>Ulrich Diedrichsen, who builds Secretariat and runs his projects on it</figcaption>
     </figure>
+  </div>
+</section>
+
+<!-- Security -->
+<section id="security">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Security</p>
+      <h2>Where your keys are, and who sees what.</h2>
+      <p class="lead">There is no Secretariat server and no account. Your keys stay in Apple's keychain on your Macs; Secretariat decides which program gets which value, and keeps everyone else to names.</p>
+    </div>
+    <div class="table-scroll">
+      <table class="who">
+        <caption>Who can see a stored key</caption>
+        <thead><tr><th scope="col">Who</th><th scope="col">Sees</th><th scope="col">Never sees</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">You</th><td>Every value, after you click Show; items with approval only after Touch ID</td><td>–</td></tr>
+          <tr><th scope="row">Your coding agent</th><td>Item and profile names, the program's output with values replaced by <code>[masked]</code></td><td>The values, unless it deliberately extracts one it may run with (<a href="#limits">see limits</a>)</td></tr>
+          <tr><th scope="row">The program you start</th><td>The values its profile binds, as environment variables or 0600 temp files</td><td>Keys of other projects</td></tr>
+          <tr><th scope="row">Apple / iCloud</th><td>End-to-end encrypted keychain data</td><td>The values</td></tr>
+          <tr><th scope="row">moinsen, who makes Secretariat</th><td>Nothing. No server, no telemetry; the license is checked on your Mac, updates come from a static feed</td><td>Anything</td></tr>
+          <tr><th scope="row">Someone with a stolen backup</th><td>A sealed file</td><td>The values, without your recovery key</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="cards three">
+      <article class="card">
+        <h3>The hard boundary</h3>
+        <p>Masking prevents accidents. Touch ID per item stops an agent that is trying: no fingerprint, no value. Agents can switch approval on, only you can switch it off.</p>
+      </article>
+      <article class="card">
+        <h3>Nothing to break into</h3>
+        <p>Without a server of ours there is no database of customer secrets to leak. Sync is your iCloud keychain; backups are sealed to a key only you hold.</p>
+      </article>
+      <article class="card">
+        <h3>Check it yourself</h3>
+        <p>The source is <a href="https://github.com/moinsen-dev/secretariat" rel="noopener">on GitHub</a> with tests, evidence and reviews. The <a href="threat-model.html">threat model</a> names what is protected and what isn't.</p>
+      </article>
+    </div>
   </div>
 </section>
 
