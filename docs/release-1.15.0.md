@@ -11,7 +11,7 @@ Neubindung `docs/rebind-redesign-2026-11-12.md`.
 | Release-Build | `secretariat run werkzeuge -- script/release.sh`: Notarisierung `Accepted`, `stapler validate` ok, `spctl` accepted („Notarized Developer ID“), `codesign --verify --deep --strict` ok, `otool` `sdk 27.2`; `dist/Secretariat-1.15.0.zip` (SHA-256 5a8c0b3a3907c336…), `appcast.xml` sparkle:version 31 |
 | Website | `dist/site-1.15.0`: neues Hauptbild aus dem Release-Build (Testinstanz mit Design-Tresor, hell), Bildunterschrift angepasst; alle Zips bis 1.15.0, `Secretariat-latest.zip` byte-gleich mit dem notarisierten Zip. Lokal geprüft: Bild lädt mit 1587×863 |
 | Installation lokal (M4) | ausstehend (verteilt über mesh an M1/M5/Mini, Ulis Go) |
-| Website live | ausstehend (Uli: wrangler pages deploy) |
+| Website live | Uli: `wrangler pages deploy dist/site-1.15.0 --project-name secretariat --branch main` (Deployment 5925fed9). Live geprüft: Feed 1.15.0; `Secretariat-latest.zip` und `Secretariat-1.15.0.zip` byte-gleich mit dem notarisierten Zip (5a8c0b3a3907c336…); 1.14.0 weiter da (01f25d8f…); neues Hauptbild 1587×863 und neue Bildunterschrift online |
 | GitHub | ausstehend (Repo öffentlich, Ulis Go) |
 
 Grenze: Das Website-Bild „Item from screenshot“ zeigt noch den alten Dialog.
