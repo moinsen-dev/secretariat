@@ -645,6 +645,10 @@ secretariat profile bind \
         <div><p>The app and CLI run on macOS 14 and later. Linux servers are supported as targets: Secretariat can push values to an env file over ssh. There is no Windows support.</p></div>
       </details>
       <details>
+        <summary>Can my team use it?</summary>
+        <div><p>Yes, as a tool for each developer: everyone keeps their own keys in their own keychain, and their agents stay blind to them. One license per person covers all of that person's Macs. What Secretariat doesn't do: shared team vaults, roles, central audit or single sign-on. If your team keeps shared secrets in 1Password or Bitwarden, keep them there; Secretariat covers each developer's own keys and the agent guardrails. Since there is no server of ours, no company keys or usage data ever reach us. For five or more licenses, write to <a href="mailto:business@moinsen.dev">business@moinsen.dev</a>.</p></div>
+      </details>
+      <details>
         <summary>Which agents does it work with?</summary>
         <div><p>Any agent that can run a shell command can use <code>secretariat run</code>. Claude Code also gets the session hint and the company rule file. Claude Desktop, Cursor and other MCP clients without a shell use <code>secretariat mcp</code>.</p></div>
       </details>
