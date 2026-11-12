@@ -63,8 +63,9 @@ struct SecretariatApp: App {
             CommandMenu("Item") {
                 Button("Edit Item …") { if let item = model.currentItem, !Capture.isCapture(item) { model.edit(item) } }
                     .keyboardShortcut("e").disabled(model.currentItem.map(Capture.isCapture) ?? true)
+                // No ⌘⌫ here: a menu shortcut wins over text fields (delete to line start). ⌫ in the list deletes (onDeleteCommand).
                 Button("Delete Item …") { if let item = model.currentItem { model.pendingDelete = item } }
-                    .keyboardShortcut(.delete, modifiers: .command).disabled(model.currentItem == nil)
+                    .disabled(model.currentItem == nil)
             }
             CommandGroup(before: .toolbar) {
                 Button("Reload") { model.reload() }.keyboardShortcut("r")
