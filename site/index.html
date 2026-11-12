@@ -21,12 +21,10 @@
     <nav class="nav" aria-label="Main">
       <a href="#how">How it works</a>
       <a href="#security">Security</a>
-      <a href="#diy">Build or buy</a>
-      <a href="#capture">Capture</a>
       <a href="#guard">Agent Guard</a>
-      <a href="#mcp">MCP tokens</a>
+      <a href="#teams">Teams</a>
+      <a href="#diy">Build or buy</a>
       <a href="#compare">Compare</a>
-      <a href="threat-model.html">Threat model</a>
       <a class="btn small" href="#pricing">Buy</a>
     </nav>
   </div>
@@ -444,7 +442,33 @@ secretariat profile bind \
   </div>
 </section>
 
-<!-- Features -->
+<!-- Teams -->
+<section id="teams">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">In a team <span class="tag">New</span></p>
+      <h2>Give a colleague a key. Not a copy in a chat.</h2>
+      <p class="lead">Keys still end up in Slack threads and wiki pages because there is no better way to hand them over. Secretariat seals them to the colleague's code: a file only they can open, confirmed with your Touch ID.</p>
+    </div>
+    <div class="cards">
+      <article class="card">
+        <h3>Exchange codes once</h3>
+        <p>Every person has a share code. Add colleagues under Team and compare the fingerprint once. Admins can push the team list to every Mac with MDM.</p>
+      </article>
+      <article class="card">
+        <h3>Sealed per person</h3>
+        <p>Pick items and colleagues, confirm with Touch ID, send the file any way you like. Only the people you chose can open it; Secretariat shows who sent it and never overwrites an existing item.</p>
+      </article>
+      <article class="card">
+        <h3>When someone leaves</h3>
+        <p>Remove them, and Secretariat lists every key they got and marks it “Rotate” until a new value is saved. Targets then shows each copy that still has the old one.</p>
+      </article>
+    </div>
+    <p class="note">Agents can't share, add members or open packages: that happens only in the app. No shared vault, no server, no roles or single sign-on. <a href="teams.html">Admin guide</a> · <a href="threat-model.html">Threat model</a></p>
+  </div>
+</section>
+
+<!-- Feature grid -->
 <section id="features">
   <div class="wrap">
     <div class="section-head">
@@ -646,7 +670,7 @@ secretariat profile bind \
       </details>
       <details>
         <summary>Can my team use it?</summary>
-        <div><p>Yes, as a tool for each developer: everyone keeps their own keys in their own keychain, and their agents stay blind to them. One license per person covers all of that person's Macs. What Secretariat doesn't do: shared team vaults, roles, central audit or single sign-on. If your team keeps shared secrets in 1Password or Bitwarden, keep them there; Secretariat covers each developer's own keys and the agent guardrails. Since there is no server of ours, no company keys or usage data ever reach us. For five or more licenses, write to <a href="mailto:business@moinsen.dev">business@moinsen.dev</a>.</p></div>
+        <div><p>Yes. Everyone keeps their own keys in their own keychain, and their agents stay blind to them. When a key has to go to a colleague, it travels as a sealed file only that colleague can open; when someone leaves, Secretariat lists what they got and marks it for rotation. What it doesn't do: a shared live vault, roles, central audit or single sign-on. For those, keep shared secrets in 1Password or Bitwarden. One license per person covers all of that person's Macs; for five or more, write to <a href="mailto:business@moinsen.dev">business@moinsen.dev</a>. Admins: <a href="teams.html">rolling out to a team</a>.</p></div>
       </details>
       <details>
         <summary>Which agents does it work with?</summary>

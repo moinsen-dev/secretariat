@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Secretariat in a team — admin guide</title>
+<meta name="description" content="Rolling out Secretariat to a team of Mac developers: share codes, sealed packages, offboarding, MDM settings and limits.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b6e69'/%3E%3Ccircle cx='16' cy='13' r='4.5' fill='white'/%3E%3Cpath d='M13.6 15.5h4.8l1.4 9h-7.6z' fill='white'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="Secretariat home">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--accent)"/><circle cx="16" cy="13" r="4.5" fill="var(--on-accent)"/><path d="M13.6 15.5h4.8l1.4 9h-7.6z" fill="var(--on-accent)"/></svg>
+      Secretariat
+    </a>
+    <nav class="nav" aria-label="Main">
+      <a href="index.html#how">How it works</a>
+      <a href="index.html#guard">Agent Guard</a>
+      <a href="threat-model.html">Threat model</a>
+      <a class="btn small" href="index.html#pricing">Buy</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="prose">
+  <div class="wrap narrow">
+    <p class="eyebrow">For teams</p>
+    <h1>Secretariat in a team</h1>
+    <p class="lead">Every developer keeps their own keys in their own keychain, and their agents stay blind to them. When a key has to go to a colleague, it travels as a sealed file only that colleague can open. No server, no shared vault to break into.</p>
+    <p class="updated">Applies to Secretariat 1.16.</p>
+
+    <h2>How sharing works</h2>
+    <ol>
+      <li><strong>Exchange codes once.</strong> Under Library → Team, each person copies their share code and sends it to colleagues by mail or chat. The colleague adds it under Team → Add Member. Compare the fingerprint once by phone or in person; the code itself is public.</li>
+      <li><strong>Share.</strong> Select an item, choose Item → Share Item …, pick colleagues and items, confirm with Touch ID, save the file. Send the <code>.secretariat-share</code> file any way you like.</li>
+      <li><strong>Open.</strong> The colleague double-clicks the file (or File → Open Share …). Secretariat shows who sent it, which items it holds and which already exist; existing items are never overwritten. New items carry “Shared by …” as their source.</li>
+    </ol>
+    <p>Sharing, adding members and opening packages happen only in the app. No command-line call and no agent can share or import; the CLI shows only <code>secretariat team code</code> and <code>secretariat team list</code>.</p>
+
+    <h2>When someone leaves</h2>
+    <p>Remove them under Team. Secretariat lists every item you shared with them and marks those items “Rotate”, in the app, in <code>secretariat status</code> and in <code>items --json</code>. The mark disappears as soon as you save a new value. After rotating, <code>secretariat targets</code> shows every copy (Cloudflare, Supabase, GitHub, servers) that still has the old value. The item detail also says when a value changed after you shared it, so you know who has an outdated copy.</p>
+
+    <h2>Rolling out with MDM</h2>
+    <h3>The app</h3>
+    <p>Secretariat is a notarized Developer ID app. Your MDM can deploy the download from the website, or an installer package once we ship one (<code>Secretariat-&lt;version&gt;.pkg</code>, signed and notarized; ask at <a href="mailto:business@moinsen.dev">business@moinsen.dev</a>). Each user then links the command-line tool once: <code>ln -s /Applications/Secretariat.app/Contents/MacOS/Secretariat ~/bin/secretariat</code>.</p>
+    <h3>Team members for everyone</h3>
+    <p>Push a configuration profile with the payload <code>com.apple.ManagedClient.preferences</code> for the domain <code>dev.moinsen.secretariat.local</code> and the key <code>TeamMembers</code>: an array of share codes. Those members appear on every Mac as “Managed by your organization” and can't be removed in the app. Secretariat reads only values the profile enforces; a value someone sets with <code>defaults write</code> is ignored.</p>
+<pre class="cmd">&lt;key&gt;TeamMembers&lt;/key&gt;
+&lt;array&gt;
+  &lt;string&gt;stc1:…code of the team lead…&lt;/string&gt;
+  &lt;string&gt;stc1:…code of the build machine owner…&lt;/string&gt;
+&lt;/array&gt;</pre>
+    <p>Never put keys into a configuration profile. Profiles are readable on the Mac; keys belong in each person's keychain.</p>
+
+    <h2>Licenses</h2>
+    <p>A license is personal and covers all Macs of that person. For five or more licenses, write to <a href="mailto:business@moinsen.dev">business@moinsen.dev</a>.</p>
+
+    <h2>Limits</h2>
+    <ul>
+      <li>No shared live vault: a shared key is a copy. Changing it means sharing it again.</li>
+      <li>No central audit log: each Mac keeps its own history of access.</li>
+      <li>No single sign-on, SCIM or roles. If you need those, keep shared secrets in 1Password or Bitwarden and use Secretariat for each developer's own keys and the agent guardrails.</li>
+      <li>Your own templates don't travel; a shared item of an unknown kind shows the generic template.</li>
+      <li>macOS only.</li>
+    </ul>
+    <p>Details on what each layer protects: <a href="threat-model.html">threat model</a>.</p>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <span>© 2026 moinsen · Ulrich Diedrichsen, Hamburg</span>
+    <nav aria-label="Footer">
+      <a href="index.html">Home</a>
+      <a href="impressum.html" lang="de">Impressum</a>
+      <a href="datenschutz.html" lang="de">Datenschutz</a>
+      <a href="mailto:business@moinsen.dev">business@moinsen.dev</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>

@@ -4,6 +4,21 @@
 <dict>
 	<key>CFBundleDisplayName</key>
 	<string>Secretariat</string>
+	<key>CFBundleDocumentTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeName</key>
+			<string>Secretariat Share Package</string>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>LSHandlerRank</key>
+			<string>Owner</string>
+			<key>LSItemContentTypes</key>
+			<array>
+				<string>dev.moinsen.secretariat.share</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>Secretariat</string>
 	<key>CFBundleIconFile</key>
@@ -30,5 +45,25 @@
 	<string>https://secretariat.moinsen.dev/appcast.xml</string>
 	<key>SUPublicEDKey</key>
 	<string>R5yMawdkthWg6ObdsdlElhXtSefPwK9i5dUNfDIj1VY=</string>
+	<key>UTExportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>Secretariat Share Package</string>
+			<key>UTTypeIdentifier</key>
+			<string>dev.moinsen.secretariat.share</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>secretariat-share</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
 </dict>
 </plist>

@@ -629,9 +629,10 @@ public enum Commands {
             let cutoff = f.string(from: Calendar.current.date(byAdding: .day, value: days, to: Date())!)
             struct Expiring: Encodable { let path: String; let expires: String }
             struct TargetState: Encodable { let name: String; let stale: [String]; let never: [String]; let missing: [String] }
+            struct Rotate: Encodable { let path: String; let reason: String }
             struct Out: Encodable {
                 let schemaVersion = 2; let ok = true; let version: String; let items: Int; let profiles: Int
-                let expiring: [Expiring]; let approval: [String]; let targets: [TargetState]; let recent: [String]; let license: String
+                let expiring: [Expiring]; let approval: [String]; let rotate: [Rotate]; let targets: [TargetState]; let recent: [String]; let license: String
             }
             let report = try Targets.report(vault: vault)
             let license: String = switch vault.licensing.state() {
@@ -646,14 +647,38 @@ public enum Commands {
             }
             let out = Out(version: CommandLineInterface.version, items: items.count, profiles: try vault.configuration.load().profiles.count,
                           expiring: items.compactMap { i in i.expires.flatMap { $0 <= cutoff ? Expiring(path: i.path, expires: $0) : nil } }.sorted { $0.expires < $1.expires },
-                          approval: items.filter(\.needsApproval).map(\.path).sorted(), targets: targets,
+                          approval: items.filter(\.needsApproval).map(\.path).sorted(),
+                          rotate: items.compactMap { i in i.rotateReason.map { Rotate(path: i.path, reason: $0) } }.sorted { $0.path < $1.path }, targets: targets,
                           recent: vault.audit.tail(a.option("--lines").flatMap(Int.init) ?? 20), license: license)
             let text = ["Secretariat \(out.version): \(out.items) items, \(out.profiles) profiles",
                         "expiring within \(days) days: \(out.expiring.isEmpty ? "none" : out.expiring.map { "\($0.path) (\($0.expires))" }.joined(separator: ", "))",
                         "need Touch ID: \(out.approval.isEmpty ? "none" : out.approval.joined(separator: ", "))",
+                        "to rotate: \(out.rotate.isEmpty ? "none" : out.rotate.map { "\($0.path) (\($0.reason))" }.joined(separator: ", "))",
                         "license: \(license)",
                         "targets: \(targets.isEmpty ? "none" : targets.map { "\($0.name)\($0.stale.isEmpty && $0.never.isEmpty && $0.missing.isEmpty ? " ok" : " stale \($0.stale.count) never \($0.never.count) missing \($0.missing.count)")" }.joined(separator: ", "))"]
             return (0, try json(out), text.joined(separator: "\n"))
+
+        // MARK: team (read only: sharing, members and opening packages happen in the app)
+        case ("team", "code"):
+            _ = try Arguments(all.dropFirst(2), usage: usage)
+            let code = try Team.ownCode(vault: vault)
+            struct Out: Encodable { let schemaVersion = 2; let ok = true; let name: String; let code: String; let fingerprint: String }
+            let key = try Team.privateKey(vault: vault).publicKey.rawRepresentation
+            let out = Out(name: Team.ownName(vault: vault), code: code, fingerprint: Team.fingerprint(key))
+            return (0, try json(out), "\(out.code)\nName: \(out.name) · fingerprint \(out.fingerprint)\nGive this code to your team; they add you in the app (Library → Team).")
+        case ("team", "list"):
+            _ = try Arguments(all.dropFirst(2), usage: usage)
+            struct Entry: Encodable { let name: String; let fingerprint: String; let managed: Bool; let shared: Int }
+            struct Out: Encodable { let schemaVersion = 2; let ok = true; let members: [Entry] }
+            let members = Team.members(vault: vault, managed: ManagedSettings(paths: vault.configuration.paths)).map {
+                Entry(name: $0.name, fingerprint: Team.fingerprint($0.key), managed: $0.managed, shared: Team.sharedWith($0, vault: vault).count)
+            }
+            let text = members.isEmpty ? "No team members. Add them in the app (Library → Team)." : members.map {
+                "\($0.name)\t\($0.fingerprint)\($0.shared > 0 ? "\tshared \($0.shared)" : "")\($0.managed ? "\tmanaged by your organization" : "")"
+            }.joined(separator: "\n")
+            return (0, try json(Out(members: members)), text)
+        case ("team", _):
+            throw AgentError("invalid_arguments", "Usage: secretariat team code|list [--json]. Adding members, sharing and opening packages happen in the app.")
 
         case ("backup", "status"):
             _ = try Arguments(all.dropFirst(2), usage: usage)

@@ -113,6 +113,7 @@ public enum Backup {
     public struct StoredItem: Codable, Equatable, Sendable {
         public var meta: ItemMeta
         public var secrets: [String: String]
+        public init(meta: ItemMeta, secrets: [String: String]) { self.meta = meta; self.secrets = secrets }
     }
 
     /// Everything a restore needs, in plaintext only inside the sealed part. Not included: license and trial.

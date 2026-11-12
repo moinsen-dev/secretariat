@@ -24,6 +24,7 @@ enum Entry {
 }
 
 struct SecretariatApp: App {
+    @NSApplicationDelegateAdaptor(ShareOpener.self) private var opener
     @State private var model: AppModel
     private let updates = Updates()
     init() {
@@ -37,11 +38,17 @@ struct SecretariatApp: App {
         WindowGroup("Secretariat") {
             MainView(model: model)
                 .frame(minWidth: 900, minHeight: 520)
-                .onAppear { NSApplication.shared.activate(ignoringOtherApps: true) }
+                .onAppear {
+                    NSApplication.shared.activate(ignoringOtherApps: true)
+                    opener.model = model
+                    opener.pending.first.map(model.openShare); opener.pending = []
+                }
                 // Profiles and items change from the CLI, agents and other Macs; pick that up when the user comes back.
                 .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in model.reload() }
         }
         .defaultSize(width: 1180, height: 720)
+        // Opening a share package (double-click) goes to ShareOpener and the existing window, never a second one.
+        .handlesExternalEvents(matching: [])
         .commands {
             CommandGroup(after: .appInfo) {
                 Button("Check for Updates …") { updates.check() }.disabled(!updates.available)
@@ -55,6 +62,7 @@ struct SecretariatApp: App {
                 Button("Save Login …") { SaveLoginController.shared.show() }
                 Button("New Screenshot from Clipboard …") { model.screenshotFromClipboard() }
                 Button("Import Screenshot …") { model.chooseScreenshotFile() }
+                Button("Open Share …") { model.chooseShareFile() }.keyboardShortcut("o", modifiers: [.command, .shift])
                 Divider()
                 Button("New Template …") { model.templateEditor = TemplateDraft(template: Template(id: "", title: ""), isNew: true) }
                     .keyboardShortcut("n", modifiers: [.command, .option])
@@ -63,6 +71,8 @@ struct SecretariatApp: App {
             CommandMenu("Item") {
                 Button("Edit Item …") { if let item = model.currentItem, !Capture.isCapture(item) { model.edit(item) } }
                     .keyboardShortcut("e").disabled(model.currentItem.map(Capture.isCapture) ?? true)
+                Button("Share Item …") { model.startShare(model.currentItem) }
+                    .disabled(model.currentItem.map(Capture.isCapture) ?? true)
                 // No ⌘⌫ here: a menu shortcut wins over text fields (delete to line start). ⌫ in the list deletes (onDeleteCommand).
                 Button("Delete Item …") { if let item = model.currentItem { model.pendingDelete = item } }
                     .disabled(model.currentItem == nil)

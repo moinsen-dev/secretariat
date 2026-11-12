@@ -171,6 +171,8 @@ public enum CommandLineInterface {
       secretariat status [--days N] [--json]          overview: counts, expiring items, Touch ID items, targets, recent log
       secretariat screenshots [--json]                how many encrypted screenshots this Mac can open (counts only)
       secretariat registry export · scan [FOLDER] [--json] · log [--lines N] · --version
+      secretariat team code [--json]                  your share code for colleagues (sharing itself happens in the app)
+      secretariat team list [--json]                  team members with fingerprints and how many items each got
       secretariat backup status [--json]              automatic encrypted backup: key id, where, newest files (set up in the app)
       secretariat backup now [--json]                 back up right away (sealed to the backup key; only the recovery key opens it)
       secretariat history [--period day|week|month|quarter|year] [--via ORIGIN] [--lines N] [--json]

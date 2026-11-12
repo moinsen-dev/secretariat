@@ -32,7 +32,7 @@
     <p class="eyebrow">Threat model</p>
     <h1>What Secretariat protects, and what it doesn't</h1>
     <p class="lead">Secretariat is built against accidents: a key landing in an agent's context, a log or a commit. It is not a sandbox. This page says where the line is, so you can decide what else you need.</p>
-    <p class="updated">Applies to Secretariat 1.7.</p>
+    <p class="updated">Applies to Secretariat 1.16.</p>
 
     <div class="split">
       <article class="card yes">
@@ -89,9 +89,15 @@
     <h3>Targets and rotation</h3>
     <p>Secretariat remembers where it pushed each value: Cloudflare Workers, Supabase, GitHub, Linux env files over ssh. After a rotation, <code>secretariat targets</code> lists every copy that is now stale. It knows only the copies it pushed itself, not ones you placed by hand.</p>
 
+    <h3>Sharing with your team</h3>
+    <p>Each person has a sharing key; the private half stays in their synced keychain, the public half is their share code. A package is sealed with a random key (ChaCha20-Poly1305); that key is sealed to every recipient with HPKE in authenticated mode, bound to the package header and to a hash of the sealed content. Only a named recipient can open it, the sender is proven by their key, and a co-recipient can't swap the content for others. Header and file name show the sender's name, the date, recipient key ids and how many items, never item names or values.</p>
+    <p>Sharing, adding members and opening packages happen only in the app, and every share asks for Touch ID or your Mac password. Team members and the record of what you shared live in the keychain, not in a file an agent could edit. The app shows names from your own team list; a package from an unknown key is marked as such and imported only after you confirm. A share code's checksum only catches typos: compare the fingerprint with the person once by phone or in person. What someone received stays with them when they leave; the app lists those items and marks them for rotation.</p>
+
     <h2>Out of scope</h2>
     <h3>Malware with your user rights</h3>
     <p>Software that runs as you can do what you can do: start programs through Secretariat, read their environment, wait for you to approve a prompt. Secretariat doesn't defend against a compromised user account.</p>
+    <h3>Agents that control your screen</h3>
+    <p>An agent you grant Accessibility or screen control can click through the app like you: show a value, share an item. Touch ID prompts still need your finger. Grant that kind of access only to tools you trust.</p>
     <h3>Your Apple Account and iCloud keychain</h3>
     <p>Sync is Apple's iCloud keychain. Whoever controls your Apple Account and can add a device to your keychain can read what is in it. Secretariat has no server of its own, so there is nothing else to break into, and nothing else to rely on.</p>
     <h3>The services your keys belong to</h3>

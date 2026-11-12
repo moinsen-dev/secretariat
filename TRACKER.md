@@ -34,6 +34,9 @@
 | T028 | ERLEDIGT | E1290,E1291,E1292 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
 | T029 | ERLEDIGT | E1293,E1294,E1295 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
 | T030 | ERLEDIGT | E1296,E1297,E1298 | Redesign Liquid Glass, Kritik PASS, docs/redesign-2026-11-12.md |
+| T031 | OFFEN | - | - |
+| T032 | OFFEN | - | - |
+| T033 | OFFEN | - | - |
 
 ## Evidence
 
@@ -2058,6 +2061,7 @@
 | RV662 | UC20 | self | PASS | 01ec85db3d514cf16393ccf1 | docs/release-1.15.0.md |
 | RV663 | UC05 | self | PASS | 7460b0a0f15eba4eaa9052ad | docs/release-1.15.0.md |
 | RV664 | UC07 | self | PASS | 591f7920f9dadc8f9bdda41d | docs/release-1.15.0.md |
+| RV665 | PLAN | independent | PASS | 295e2c7388ed98f2d06fe4f2 | docs/review-team-plan-2026-11-12.md |
 
 ## Releases
 

@@ -27,10 +27,11 @@ public struct ItemInfo: Encodable, Sendable {
     public let expires: String?
     public let rotated: String?
     public let source: String
+    public let rotateReason: String?
     public let usedBy: [String]
     init(_ item: ItemMeta, usedBy: [String]) {
         path = item.path; kind = item.kind; fields = item.fields.map(FieldInfo.init)
-        expires = item.expires; rotated = item.rotated; source = item.source; self.usedBy = usedBy
+        expires = item.expires; rotated = item.rotated; source = item.source; rotateReason = item.rotateReason; self.usedBy = usedBy
     }
 }
 public struct ItemList: Encodable, Sendable {

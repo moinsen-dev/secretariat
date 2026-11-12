@@ -197,6 +197,16 @@ final class AppModel {
     var historyPeriod = HistoryPeriod.week
     var historyVia: String?
     var thumbnails: [UUID: NSImage] = [:]
+    // Team (TeamView.swift)
+    var teamMembers: [Team.Member] = []
+    var ownCode = ""
+    var ownName = ""
+    var ownFingerprint = ""
+    var selectedMember: String?
+    var shareDraft: ShareDraft?
+    var openedShare: OpenedShare?
+    var addMemberDraft: AddMemberDraft?
+    var offboarding: Offboarding?
 
     init() {
         reload()
@@ -245,6 +255,7 @@ final class AppModel {
         if selection == "targets" { refreshTargets() }
         license = Vault(paths: paths).licensing.state()
         reloadScreenshots()
+        loadTeam()
         // The retention set in History applies on every start and return to the app, off the main thread.
         if selection == "history" { loadHistory() } else { let paths = paths; Task.detached { Vault(paths: paths).pruneHistory() } }
         backUpAutomatically()

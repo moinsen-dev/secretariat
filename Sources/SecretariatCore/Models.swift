@@ -177,6 +177,8 @@ public struct ItemMeta: Codable, Equatable, Identifiable, Sendable {
     /// Agents can switch it on, never off.
     public var approval: Bool?
     public var needsApproval: Bool { approval == true }
+    /// Marked to rotate, with the reason (e.g. someone it was shared with left the team). Cleared when a value changes.
+    public var rotateReason: String?
     public init(id: UUID = UUID(), path: String, kind: String, fields: [ItemField] = [], expires: String? = nil,
                 rotated: String? = nil, source: String = "", approval: Bool? = nil) {
         self.id = id; self.path = path; self.kind = kind; self.fields = fields

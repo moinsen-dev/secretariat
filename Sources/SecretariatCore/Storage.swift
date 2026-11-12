@@ -19,6 +19,7 @@ public struct AppPaths: Sendable {
     public var licenseService: String { itemService.replacingOccurrences(of: ".items.", with: ".license.") }
     public var screenshotKeyService: String { itemService.replacingOccurrences(of: ".items.", with: ".screenshots.") }
     public var backupKeyService: String { itemService.replacingOccurrences(of: ".items.", with: ".backup.") }
+    public var teamKeyService: String { itemService.replacingOccurrences(of: ".items.", with: ".team.") }
     public var isDefault: Bool { directory == AppPaths.defaultDirectory }
     static func canonical(_ path: String) -> String {
         for root in ["/tmp/", "/var/", "/etc/"] where path.hasPrefix("/private" + root) { return String(path.dropFirst(8)) }
@@ -182,21 +183,26 @@ public struct Vault {
     public let backupKeys: any LicenseStore
     /// Keys of the encrypted screenshots; a backup carries them so screenshots stay readable after a restore.
     public let screenshotKeys: any ScreenshotKeyring
+    /// Sharing key, team members and the record of what was shared (synced; agents can't edit it like a file).
+    public let teamKeys: any LicenseStore
     public let registryDirectory: URL?
     public let expectedRevision: Int?
     public init(configuration: ConfigurationStore, items: any ItemStore, templates: any TemplateStore = InMemoryTemplateStore(),
                 licenses: any LicenseStore = InMemoryLicenseStore(), approver: any Approver = DeviceOwnerApprover(),
                 audit: AuditLog = AuditLog(url: nil), backupKeys: any LicenseStore = InMemoryLicenseStore(),
-                screenshotKeys: any ScreenshotKeyring = InMemoryScreenshotKeyring(), registryDirectory: URL? = nil, expectedRevision: Int? = nil) {
+                screenshotKeys: any ScreenshotKeyring = InMemoryScreenshotKeyring(), teamKeys: any LicenseStore = InMemoryLicenseStore(),
+                registryDirectory: URL? = nil, expectedRevision: Int? = nil) {
         self.configuration = configuration; self.items = items; self.templates = templates; self.licenses = licenses; self.approver = approver; self.audit = audit
-        self.backupKeys = backupKeys; self.screenshotKeys = screenshotKeys
+        self.backupKeys = backupKeys; self.screenshotKeys = screenshotKeys; self.teamKeys = teamKeys
         self.registryDirectory = registryDirectory; self.expectedRevision = expectedRevision
     }
     public init(paths: AppPaths = AppPaths(), expectedRevision: Int? = nil) {
         self.init(configuration: ConfigurationStore(paths: paths), items: SyncedItemStore(service: paths.itemService),
                   templates: SyncedTemplateStore(service: paths.templateService), licenses: SyncedLicenseStore(service: paths.licenseService), audit: AuditLog(url: paths.auditLog),
                   backupKeys: SyncedLicenseStore(service: paths.backupKeyService, label: "Secretariat backup"),
-                  screenshotKeys: SyncedScreenshotKeyring(service: paths.screenshotKeyService), registryDirectory: paths.registryDirectory, expectedRevision: expectedRevision)
+                  screenshotKeys: SyncedScreenshotKeyring(service: paths.screenshotKeyService),
+                  teamKeys: SyncedLicenseStore(service: paths.teamKeyService, label: "Secretariat team"),
+                  registryDirectory: paths.registryDirectory, expectedRevision: expectedRevision)
     }
 
     // MARK: templates
@@ -278,7 +284,7 @@ public struct Vault {
             for (name, value) in secrets where value.utf8.contains(0) && meta.field(name)?.kind != .file {
                 throw SecretariatError("Values must not contain a null character (\(name)).")
             }
-            if let old = try? items.secrets(id: meta.id), old != secrets { meta.rotated = today() }
+            if let old = try? items.secrets(id: meta.id), old != secrets { meta.rotated = today(); meta.rotateReason = nil }
             else if (try? items.secrets(id: meta.id)) == nil, !secrets.isEmpty { meta.rotated = today() }
         }
         try items.save(meta, secrets: secrets)

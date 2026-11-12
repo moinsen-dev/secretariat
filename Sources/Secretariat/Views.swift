@@ -42,6 +42,10 @@ struct MainView: View {
         .sheet(item: $model.screenshotDraft) { draft in ScreenshotComposer(model: model, draft: draft) }
         .sheet(item: $model.backupSetup) { draft in BackupSetupView(model: model, draft: draft) }
         .sheet(isPresented: $model.showRestore) { RestoreView(model: model) }
+        .sheet(item: $model.addMemberDraft) { draft in AddMemberSheet(model: model, draft: draft) }
+        .sheet(item: $model.shareDraft) { _ in ShareSheet(model: model) }
+        .sheet(item: $model.openedShare) { _ in OpenShareSheet(model: model) }
+        .sheet(item: $model.offboarding) { off in OffboardingSheet(model: model, offboarding: off) }
         .alert("That didn't work", isPresented: flag(model.errorMessage != nil) { model.errorMessage = nil }) {
             Button("OK", role: .cancel) { model.errorMessage = nil }
         } message: { Text(model.errorMessage ?? "") }
@@ -131,6 +135,7 @@ struct MainView: View {
                 Label("Templates", systemImage: "square.grid.2x2").tag("templates")
                 Label("Screenshots", systemImage: "photo.on.rectangle").badge(model.screenshots.count).tag("screenshots")
                 Label("History", systemImage: "clock.arrow.circlepath").tag("history")
+                Label("Team", systemImage: "person.2").badge(model.teamMembers.count).tag("team")
                 if !needingValues.isEmpty {
                     Label("Needs a Value", systemImage: "exclamationmark.triangle").badge(needingValues.count).tag("placeholders")
                         .help("Items whose stored value is a .env comment or a template placeholder, not a real key")
@@ -224,6 +229,8 @@ struct MainView: View {
             HistorySummary(model: model)
         } else if model.selection == "backup" {
             BackupSummary(model: model)
+        } else if model.selection == "team" {
+            TeamSummary(model: model)
         } else if model.selection == "screenshots" {
             // Searching here filters the screenshots by title and note.
             ScreenshotList(model: model, query: query)
@@ -254,7 +261,7 @@ struct MainView: View {
         .contextMenu(forSelectionType: UUID.self) { ids in
             if let item = ids.first.flatMap(model.item) {
                 if Capture.isCapture(item) { Button("Turn into Item …") { model.file(item) } }
-                else { Button("Edit …") { model.edit(item) } }
+                else { Button("Edit …") { model.edit(item) }; Button("Share …") { model.startShare(item) } }
                 Button("Delete …", role: .destructive) { model.pendingDelete = item }
             }
         } primaryAction: { ids in
@@ -456,6 +463,15 @@ struct MainView: View {
             HistoryList(model: model)
         } else if model.selection == "backup" {
             BackupList(model: model)
+        } else if model.selection == "team" {
+            if model.selectedMember == TeamSummary.selfTag {
+                OwnCodeDetail(model: model)
+            } else if let member = model.teamMembers.first(where: { $0.keyID == model.selectedMember }) {
+                MemberDetail(model: model, member: member).id(member.keyID)
+            } else {
+                ContentUnavailableView("No Member Selected", systemImage: "person.2",
+                                       description: Text("Share keys with colleagues: each gets a sealed file only they can open."))
+            }
         } else if model.selection == "screenshots" {
             if let shot = model.screenshots.first(where: { $0.id == model.selectedScreenshot }) {
                 ScreenshotDetail(model: model, shot: shot).id(shot.id)
@@ -569,6 +585,10 @@ struct ItemRow: View {
                 }.font(.subheadline).lineLimit(1)
             }
             Spacer(minLength: 6)
+            if let reason = item.rotateReason {
+                Image(systemName: "arrow.triangle.2.circlepath").foregroundStyle(.orange).help("Rotate: \(reason)")
+                    .accessibilityLabel("Rotate: \(reason)")
+            }
             if item.needsApproval { Image(systemName: "touchid").foregroundStyle(.pink).help("Needs Touch ID before a program uses it") }
             ExpiryBadge(date: item.expires)
         }.padding(.vertical, 4)
@@ -624,6 +644,7 @@ struct ItemDetail: View {
                         Button("Edit") { model.edit(item) }.help("Edit (⌘E)").glassButton()
                     }
                     Menu {
+                        if !Capture.isCapture(item) { Button("Share …", systemImage: "square.and.arrow.up") { model.startShare(item) } }
                         Button("Delete …", systemImage: "trash", role: .destructive, action: delete)
                     } label: { Image(systemName: "ellipsis") }
                         .menuIndicator(.hidden).fixedSize().glassButton().accessibilityLabel("More")
@@ -656,6 +677,7 @@ struct ItemDetail: View {
                 LabeledContent("Used in", value: usages.isEmpty ? "Nowhere yet" : usages.joined(separator: ", "))
                 LabeledContent("Touch ID", value: item.needsApproval ? "Required before a program uses it" : "Not required")
             }
+            SharedWithSection(model: model, item: item)
         }
         .formStyle(.grouped)
     }
