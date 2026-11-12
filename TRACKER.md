@@ -33,7 +33,7 @@
 | T027 | ERLEDIGT | E1287,E1288,E1289 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
 | T028 | ERLEDIGT | E1290,E1291,E1292 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
 | T029 | ERLEDIGT | E1293,E1294,E1295 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
-| T030 | OFFEN | - | - |
+| T030 | ERLEDIGT | E1296,E1297,E1298 | Redesign Liquid Glass, Kritik PASS, docs/redesign-2026-11-12.md |
 
 ## Evidence
 
@@ -2039,6 +2039,25 @@
 | RV643 | UC10 | self | PASS | 8f4f78ed92b2e7f5ee1c2213 | docs/release-1.15.0.md |
 | RV644 | UC12 | self | PASS | 10a2964072af4a22582d71aa | docs/release-1.15.0.md |
 | RV645 | UC14 | self | PASS | f2c347771d5dfface2463345 | docs/release-1.15.0.md |
+| RV646 | UC23 | self | PASS | 1c230223133e942be698eb8a | docs/release-1.15.0.md |
+| RV647 | UC02 | self | PASS | ba21e16e03886f8fb1d1d438 | docs/release-1.15.0.md |
+| RV648 | UC04 | self | PASS | 9b4747d3f0a81c4c89004c9c | docs/release-1.15.0.md |
+| RV649 | UC05 | self | PASS | 81ff0608f06e3a41b73e8bcc | docs/release-1.15.0.md |
+| RV650 | UC06 | self | PASS | 3883f3fb1261837de60700f2 | docs/release-1.15.0.md |
+| RV651 | UC07 | self | PASS | 7f5ec2b9dea60d41b652c062 | docs/release-1.15.0.md |
+| RV652 | UC08 | self | PASS | 21e61f281eb9709103238362 | docs/release-1.15.0.md |
+| RV653 | UC09 | self | PASS | 34b926e6f507d17ed3004e7e | docs/release-1.15.0.md |
+| RV654 | UC10 | self | PASS | 51416e980300beea0a2e04e1 | docs/release-1.15.0.md |
+| RV655 | UC11 | self | PASS | 3695dc872fb722260abe65b1 | docs/release-1.15.0.md |
+| RV656 | UC12 | self | PASS | 75c5565465c113847dce082f | docs/release-1.15.0.md |
+| RV657 | UC13 | self | PASS | e118cf3e7af19490e9f4385e | docs/release-1.15.0.md |
+| RV658 | UC14 | self | PASS | 4226fe8643633da274656c9c | docs/release-1.15.0.md |
+| RV659 | UC15 | self | PASS | 82e3f680d42219457b5e8c30 | docs/release-1.15.0.md |
+| RV660 | UC17 | self | PASS | 54d6e462dddbd2ce85e0ef03 | docs/release-1.15.0.md |
+| RV661 | UC19 | self | PASS | 446c61aee5adcb7e25db9de4 | docs/release-1.15.0.md |
+| RV662 | UC20 | self | PASS | 01ec85db3d514cf16393ccf1 | docs/release-1.15.0.md |
+| RV663 | UC05 | self | PASS | 7460b0a0f15eba4eaa9052ad | docs/release-1.15.0.md |
+| RV664 | UC07 | self | PASS | 591f7920f9dadc8f9bdda41d | docs/release-1.15.0.md |
 
 ## Releases
 
@@ -2065,5 +2084,6 @@
 | L019 | D001 | LOCAL | 1ce097f | /Users/udi/Applications/Secretariat.app | E961,E962,E968,E969,E970,E971 |
 | L020 | D001 | LOCAL | e1ad159 | /Users/udi/Applications/Secretariat.app | E1033,E1034,E1040,E1041,E1042,E1043 |
 | L021 | D001 | LOCAL | d3b63c4 | /Users/udi/Applications/Secretariat.app | E1171,E1172,E1173,E1174,E1175,E1176 |
+| L022 | D001 | LOCAL | d288a79 | /Users/udi/Applications/Secretariat.app | E1304,E1305,E1311,E1312,E1313,E1314 |
 
 Status, Beleg und Kritik sind unterschiedliche Angaben. `Evidence` in der Aufgabenzeile referenziert die für ihren Abschluss maßgeblichen Beleg-IDs. Ältere Belege dürfen als Historie bleiben. Bei Reviews ist die letzte Zeile je Scope maßgeblich.

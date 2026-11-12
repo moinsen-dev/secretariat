@@ -7,9 +7,9 @@
 - phase: P24
 - use_case: UC24
 - task: T030
-- next: Uli: Installation (mesh), Website-Deploy dist/site-1.15.0 und Push freigeben
-- updated: 2026-11-12T17:53:42+00:00
+- next: Release 1.15.0 ist live; M5 holt die Version beim nächsten mesh-Lauf
+- updated: 2026-11-12T17:57:33+00:00
 - plan_sha256: 49cc90a4873ab39ff2341a3aad22b115c3935c9219ba4907fda2d808b2be9ebe
-- tracker_sha256: 26bb13b7a60c479a05eb9a83fa20eb587c2cab28bc78e189419d0394cdd951b1
+- tracker_sha256: edf7a8c961a858708530727a4e7e4009b1ca46b7516add2bf9fb395793bdffe3
 
 Einstieg: `AGENTS.md`. Verbindliche Aufgabenstatus und Nachweise: `TRACKER.md`. Diese Zusammenfassung mit dem Werkzeug aus Plan und Tracker aktualisieren.
