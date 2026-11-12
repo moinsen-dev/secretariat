@@ -5,34 +5,35 @@
 | ID | Status | Evidence | Reason |
 |---|---|---|---|
 | T001 | ERLEDIGT | E1025 | Regression auf Release 1.13.1 (0c32a02) |
-| T002 | ERLEDIGT | E1177,E1178,E1179 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T003 | ERLEDIGT | E1139,E1140 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
-| T004 | ERLEDIGT | E1180 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T005 | ERLEDIGT | E1181 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T006 | ERLEDIGT | E1182,E1183 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T007 | ERLEDIGT | E1184,E1185 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T008 | ERLEDIGT | E1186,E1187 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T009 | ERLEDIGT | E1188 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T010 | ERLEDIGT | E1189,E1190,E1191,E1192 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T011 | ERLEDIGT | E1193,E1194 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T013 | ERLEDIGT | E1197,E1198 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T014 | ERLEDIGT | E1199,E1200,E1201 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T015 | ERLEDIGT | E1202,E1203 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T012 | ERLEDIGT | E1195,E1196 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T002 | ERLEDIGT | E1239,E1240,E1241 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T003 | ERLEDIGT | E1242,E1243 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T004 | ERLEDIGT | E1244 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T005 | ERLEDIGT | E1245 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T006 | ERLEDIGT | E1246,E1247 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T007 | ERLEDIGT | E1248,E1249 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T008 | ERLEDIGT | E1250,E1251 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T009 | ERLEDIGT | E1252 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T010 | ERLEDIGT | E1253,E1254,E1255,E1256 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T011 | ERLEDIGT | E1257,E1258 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T013 | ERLEDIGT | E1259,E1260 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T014 | ERLEDIGT | E1261,E1262,E1263 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T015 | ERLEDIGT | E1264,E1265 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T012 | ERLEDIGT | E1266,E1267 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
 | T016 | ERLEDIGT | E1204,E1205,E1206 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
 | T017 | ERLEDIGT | E1207,E1208,E1209 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T018 | ERLEDIGT | E1210,E1211,E1212,E1213 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T018 | ERLEDIGT | E1268,E1269,E1270,E1271 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
 | T019 | ERLEDIGT | E1214,E1215,E1216 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T020 | ERLEDIGT | E1217,E1218,E1219 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T021 | ERLEDIGT | E1156,E1157,E1158 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
-| T022 | ERLEDIGT | E1220,E1221,E1222 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
-| T023 | ERLEDIGT | E1162,E1163,E1164 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
-| T024 | ERLEDIGT | E1223,E1224,E1225 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
+| T020 | ERLEDIGT | E1272,E1273,E1274 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T021 | ERLEDIGT | E1275,E1276,E1277 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T022 | ERLEDIGT | E1278,E1279,E1280 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T023 | ERLEDIGT | E1281,E1282,E1283 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T024 | ERLEDIGT | E1284,E1285,E1286 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
 | T025 | ERLEDIGT | E1226,E1227,E1228 | Neubindung Release 1.14.0, siehe docs/regression-1.14.0.md |
 | T026 | IN_ARBEIT | E1086,E1087 | Code fertig, 2 Kritikrunden; offen: Wiederherstellen/Schlüssel prüfen in der App und iCloud-Lauf mit echtem Tresor durch Uli |
-| T027 | ERLEDIGT | E1168,E1169,E1170 | Neubindung, siehe docs/rebind-save-login-2026-11-11.md |
-| T028 | ERLEDIGT | E1133,E1134,E1135 | Tippweg mit Save Login gemeinsam, echte Läufe in docs/save-login-2026-11-11.md |
-| T029 | ERLEDIGT | E1130,E1131,E1132 | Save Login gebaut, vier echte Läufe mit Uli, Kritik PASS |
+| T027 | ERLEDIGT | E1287,E1288,E1289 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T028 | ERLEDIGT | E1290,E1291,E1292 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T029 | ERLEDIGT | E1293,E1294,E1295 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
+| T030 | OFFEN | - | - |
 
 ## Evidence
 
@@ -1266,6 +1267,76 @@
 | E1226 | T025 | build | build | normal | 2026-11-11T16:23:18+00:00 | d3b63c4 | 1319b5b763523f1a7e5c924a | docs/regression-1.14.0.md | PASS |
 | E1227 | T025 | macos | ui | normal | 2026-11-11T16:23:18+00:00 | d3b63c4 | 1319b5b763523f1a7e5c924a | docs/regression-1.14.0.md | PASS |
 | E1228 | T025 | unit | unit | normal | 2026-11-11T16:23:18+00:00 | d3b63c4 | 1319b5b763523f1a7e5c924a | docs/regression-1.14.0.md | PASS |
+| E1229 | T030 | build | build | normal | 2026-11-12T17:37:11+00:00 | 8715d4a | e2c7df5ad01a598a1c4083a6 | docs/redesign-2026-11-12.md | PASS |
+| E1230 | T030 | unit | unit | normal | 2026-11-12T17:37:11+00:00 | 8715d4a | e2c7df5ad01a598a1c4083a6 | docs/redesign-2026-11-12.md | PASS |
+| E1231 | T030 | macos | ui | normal | 2026-11-12T17:37:11+00:00 | 8715d4a | e2c7df5ad01a598a1c4083a6 | docs/redesign-2026-11-12.md | PASS |
+| E1232 | T004 | unit | unit | normal | 2026-11-12T17:37:53+00:00 | 8715d4a | 8e9834bea8fb68676026f38d | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1233 | T005 | macos | ui | normal | 2026-11-12T17:37:53+00:00 | 8715d4a | 3c86822fba33f72b3dfe8160 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1234 | T009 | inspection | inspection | normal | 2026-11-12T17:37:53+00:00 | 8715d4a | a04fd4f8972c1ec8b198ffa9 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1235 | T002 | build | build | normal | 2026-11-12T17:38:02+00:00 | 8715d4a | 50b6b293c49ca8ed130d209a | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1236 | T030 | build | build | normal | 2026-11-12T17:38:22+00:00 | 8715d4a | d1530827bc4724ca6cf19fa2 | docs/redesign-2026-11-12.md | PASS |
+| E1237 | T030 | unit | unit | normal | 2026-11-12T17:38:22+00:00 | 8715d4a | d1530827bc4724ca6cf19fa2 | docs/redesign-2026-11-12.md | PASS |
+| E1238 | T030 | macos | ui | normal | 2026-11-12T17:38:22+00:00 | 8715d4a | d1530827bc4724ca6cf19fa2 | docs/redesign-2026-11-12.md | PASS |
+| E1239 | T002 | build | build | normal | 2026-11-12T17:38:23+00:00 | 8715d4a | 50b6b293c49ca8ed130d209a | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1240 | T002 | macos | ui | normal | 2026-11-12T17:38:23+00:00 | 8715d4a | 50b6b293c49ca8ed130d209a | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1241 | T002 | unit | unit | normal | 2026-11-12T17:38:23+00:00 | 8715d4a | 50b6b293c49ca8ed130d209a | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1242 | T003 | macos | ui | normal | 2026-11-12T17:38:23+00:00 | 8715d4a | 7ba1094c3361729bb0eed415 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1243 | T003 | unit | unit | normal | 2026-11-12T17:38:23+00:00 | 8715d4a | 7ba1094c3361729bb0eed415 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1244 | T004 | unit | unit | normal | 2026-11-12T17:38:23+00:00 | 8715d4a | 8e9834bea8fb68676026f38d | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1245 | T005 | macos | ui | normal | 2026-11-12T17:38:24+00:00 | 8715d4a | 3c86822fba33f72b3dfe8160 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1246 | T006 | inspection | inspection | normal | 2026-11-12T17:38:24+00:00 | 8715d4a | e7a17dca7b240987c0db9673 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1247 | T006 | macos | ui | normal | 2026-11-12T17:38:24+00:00 | 8715d4a | e7a17dca7b240987c0db9673 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1248 | T007 | build | build | normal | 2026-11-12T17:38:24+00:00 | 8715d4a | 8c1022cd35cf199e4513bf78 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1249 | T007 | unit | unit | normal | 2026-11-12T17:38:24+00:00 | 8715d4a | 8c1022cd35cf199e4513bf78 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1250 | T008 | macos | ui | normal | 2026-11-12T17:38:25+00:00 | 8715d4a | 622485c206c3c131f51c3fd0 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1251 | T008 | unit | unit | normal | 2026-11-12T17:38:25+00:00 | 8715d4a | 622485c206c3c131f51c3fd0 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1252 | T009 | inspection | inspection | normal | 2026-11-12T17:38:25+00:00 | 8715d4a | a04fd4f8972c1ec8b198ffa9 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1253 | T010 | build | build | normal | 2026-11-12T17:38:25+00:00 | 8715d4a | 9693f50422d4cda50a40396e | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1254 | T010 | inspection | inspection | normal | 2026-11-12T17:38:25+00:00 | 8715d4a | 9693f50422d4cda50a40396e | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1255 | T010 | macos | ui | normal | 2026-11-12T17:38:26+00:00 | 8715d4a | 9693f50422d4cda50a40396e | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1256 | T010 | unit | unit | normal | 2026-11-12T17:38:26+00:00 | 8715d4a | 9693f50422d4cda50a40396e | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1257 | T011 | build | build | normal | 2026-11-12T17:38:26+00:00 | 8715d4a | d1c7effa6073f1399366c242 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1258 | T011 | unit | unit | normal | 2026-11-12T17:38:26+00:00 | 8715d4a | d1c7effa6073f1399366c242 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1259 | T013 | build | build | normal | 2026-11-12T17:38:26+00:00 | 8715d4a | 010c5c01c7923c6842a2b25a | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1260 | T013 | inspection | inspection | normal | 2026-11-12T17:38:27+00:00 | 8715d4a | 010c5c01c7923c6842a2b25a | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1261 | T014 | build | build | normal | 2026-11-12T17:38:27+00:00 | 8715d4a | fb622cd2d955158cd78b19c5 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1262 | T014 | macos | ui | normal | 2026-11-12T17:38:27+00:00 | 8715d4a | fb622cd2d955158cd78b19c5 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1263 | T014 | unit | unit | normal | 2026-11-12T17:38:27+00:00 | 8715d4a | fb622cd2d955158cd78b19c5 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1264 | T015 | inspection | inspection | normal | 2026-11-12T17:38:27+00:00 | 8715d4a | d3b9506836b8978427a0cfcd | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1265 | T015 | macos | ui | normal | 2026-11-12T17:38:28+00:00 | 8715d4a | d3b9506836b8978427a0cfcd | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1266 | T012 | inspection | inspection | normal | 2026-11-12T17:38:28+00:00 | 8715d4a | 8ba2faebc9140cfb1285f00d | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1267 | T012 | macos | ui | normal | 2026-11-12T17:38:28+00:00 | 8715d4a | 8ba2faebc9140cfb1285f00d | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1268 | T018 | build | build | normal | 2026-11-12T17:38:28+00:00 | 8715d4a | 94accce423c5599c899c8a48 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1269 | T018 | inspection | inspection | normal | 2026-11-12T17:38:29+00:00 | 8715d4a | 94accce423c5599c899c8a48 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1270 | T018 | macos | ui | normal | 2026-11-12T17:38:29+00:00 | 8715d4a | 94accce423c5599c899c8a48 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1271 | T018 | unit | unit | normal | 2026-11-12T17:38:29+00:00 | 8715d4a | 94accce423c5599c899c8a48 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1272 | T020 | build | build | normal | 2026-11-12T17:38:29+00:00 | 8715d4a | afe9322da959f71615e385a0 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1273 | T020 | macos | ui | normal | 2026-11-12T17:38:29+00:00 | 8715d4a | afe9322da959f71615e385a0 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1274 | T020 | unit | unit | normal | 2026-11-12T17:38:30+00:00 | 8715d4a | afe9322da959f71615e385a0 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1275 | T021 | build | build | normal | 2026-11-12T17:38:30+00:00 | 8715d4a | 8439c8c64c2b30c0f8aef9aa | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1276 | T021 | macos | ui | normal | 2026-11-12T17:38:30+00:00 | 8715d4a | 8439c8c64c2b30c0f8aef9aa | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1277 | T021 | unit | unit | normal | 2026-11-12T17:38:30+00:00 | 8715d4a | 8439c8c64c2b30c0f8aef9aa | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1278 | T022 | build | build | normal | 2026-11-12T17:38:30+00:00 | 8715d4a | 9dddacbc197410e10c2cf404 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1279 | T022 | macos | ui | normal | 2026-11-12T17:38:31+00:00 | 8715d4a | 9dddacbc197410e10c2cf404 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1280 | T022 | unit | unit | normal | 2026-11-12T17:38:31+00:00 | 8715d4a | 9dddacbc197410e10c2cf404 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1281 | T023 | build | build | normal | 2026-11-12T17:38:31+00:00 | 8715d4a | a34a61be08df309ae8025056 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1282 | T023 | macos | ui | normal | 2026-11-12T17:38:31+00:00 | 8715d4a | a34a61be08df309ae8025056 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1283 | T023 | unit | unit | normal | 2026-11-12T17:38:31+00:00 | 8715d4a | a34a61be08df309ae8025056 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1284 | T024 | build | build | normal | 2026-11-12T17:38:31+00:00 | 8715d4a | 950c6b42000f7a48773f0be5 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1285 | T024 | macos | ui | normal | 2026-11-12T17:38:32+00:00 | 8715d4a | 950c6b42000f7a48773f0be5 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1286 | T024 | unit | unit | normal | 2026-11-12T17:38:32+00:00 | 8715d4a | 950c6b42000f7a48773f0be5 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1287 | T027 | build | build | normal | 2026-11-12T17:38:32+00:00 | 8715d4a | 068f0f3b9daa99c1906fe253 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1288 | T027 | macos | ui | normal | 2026-11-12T17:38:32+00:00 | 8715d4a | 068f0f3b9daa99c1906fe253 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1289 | T027 | unit | unit | normal | 2026-11-12T17:38:32+00:00 | 8715d4a | 068f0f3b9daa99c1906fe253 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1290 | T028 | build | build | normal | 2026-11-12T17:38:33+00:00 | 8715d4a | abc58dd9de4c2f2295d7d313 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1291 | T028 | macos | ui | normal | 2026-11-12T17:38:33+00:00 | 8715d4a | abc58dd9de4c2f2295d7d313 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1292 | T028 | unit | unit | normal | 2026-11-12T17:38:33+00:00 | 8715d4a | abc58dd9de4c2f2295d7d313 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1293 | T029 | build | build | normal | 2026-11-12T17:38:33+00:00 | 8715d4a | 0266b3f959d811b66d007da8 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1294 | T029 | macos | ui | normal | 2026-11-12T17:38:34+00:00 | 8715d4a | 0266b3f959d811b66d007da8 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1295 | T029 | unit | unit | normal | 2026-11-12T17:38:34+00:00 | 8715d4a | 0266b3f959d811b66d007da8 | docs/rebind-redesign-2026-11-12.md | PASS |
+| E1296 | T030 | build | build | normal | 2026-11-12T17:38:50+00:00 | 8715d4a | ef248001fa7673bc859f7146 | docs/redesign-2026-11-12.md | PASS |
+| E1297 | T030 | unit | unit | normal | 2026-11-12T17:38:51+00:00 | 8715d4a | ef248001fa7673bc859f7146 | docs/redesign-2026-11-12.md | PASS |
+| E1298 | T030 | macos | ui | normal | 2026-11-12T17:38:51+00:00 | 8715d4a | ef248001fa7673bc859f7146 | docs/redesign-2026-11-12.md | PASS |
 
 ## Reviews
 
@@ -1834,6 +1905,61 @@
 | RV561 | UC17 | self | PASS | ad9620669eca38fe27271f2e | docs/regression-1.14.0.md |
 | RV562 | UC19 | self | PASS | f66987272ed66bdd631174aa | docs/regression-1.14.0.md |
 | RV563 | UC20 | self | PASS | 8af92f506005ca3cc70da0b5 | docs/regression-1.14.0.md |
+| RV564 | UC24 | independent | PASS | b00c66a7244a479dc1814dc9 | docs/review-redesign-2026-11-12.md |
+| RV565 | PLAN | independent | PASS | dff3543c1b8da1a04b9b7fbc | docs/review-redesign-2026-11-12.md |
+| RV566 | UC24 | independent | PASS | 0287275dfb6bb4ba935b4d48 | docs/review-redesign-2026-11-12.md |
+| RV567 | UC03 | self | PASS | f465ac0f2cd92bb01bf7212d | docs/rebind-redesign-2026-11-12.md |
+| RV568 | UC04 | self | PASS | 8fbc51393c9dabf067bc0f6a | docs/rebind-redesign-2026-11-12.md |
+| RV569 | UC05 | self | PASS | 37336f461ca955eae39530ed | docs/rebind-redesign-2026-11-12.md |
+| RV570 | UC06 | self | PASS | f5f687b139b0db256ea4cf85 | docs/rebind-redesign-2026-11-12.md |
+| RV571 | UC07 | self | PASS | 6d8270e39070194f25f445e7 | docs/rebind-redesign-2026-11-12.md |
+| RV572 | UC08 | self | PASS | 3fdabf13c3f63f6aac29ce0e | docs/rebind-redesign-2026-11-12.md |
+| RV573 | UC09 | self | PASS | ee1e11d52ae2a183e0168ce3 | docs/rebind-redesign-2026-11-12.md |
+| RV574 | UC10 | self | PASS | b13f0c2c72d98e795cb4ac0e | docs/rebind-redesign-2026-11-12.md |
+| RV575 | UC11 | self | PASS | 0e08244b2bc84729dad4fa73 | docs/rebind-redesign-2026-11-12.md |
+| RV576 | UC14 | self | PASS | cfb593b41687068b5634a40b | docs/rebind-redesign-2026-11-12.md |
+| RV577 | UC16 | self | PASS | 062f038c9820a3ba8e7f4ef1 | docs/rebind-redesign-2026-11-12.md |
+| RV578 | UC17 | self | PASS | 6df68224b997ac1807570bc1 | docs/rebind-redesign-2026-11-12.md |
+| RV579 | UC18 | self | PASS | 2d5bc8c668ddf4b261001af2 | docs/rebind-redesign-2026-11-12.md |
+| RV580 | UC19 | self | PASS | c681339744895f12043e7e21 | docs/rebind-redesign-2026-11-12.md |
+| RV581 | UC20 | self | PASS | 8af92f506005ca3cc70da0b5 | docs/rebind-redesign-2026-11-12.md |
+| RV582 | UC22 | self | PASS | fe7a6173ca137ef4daf09db1 | docs/rebind-redesign-2026-11-12.md |
+| RV583 | UC23 | self | PASS | f7f213f5a7365a855f7ee6f7 | docs/rebind-redesign-2026-11-12.md |
+| RV584 | UC03 | self | PASS | f465ac0f2cd92bb01bf7212d | docs/rebind-redesign-2026-11-12.md |
+| RV585 | UC05 | self | PASS | 37336f461ca955eae39530ed | docs/rebind-redesign-2026-11-12.md |
+| RV586 | UC07 | self | PASS | 6d8270e39070194f25f445e7 | docs/rebind-redesign-2026-11-12.md |
+| RV587 | UC09 | self | PASS | ee1e11d52ae2a183e0168ce3 | docs/rebind-redesign-2026-11-12.md |
+| RV588 | UC11 | self | PASS | 0e08244b2bc84729dad4fa73 | docs/rebind-redesign-2026-11-12.md |
+| RV589 | UC14 | self | PASS | cfb593b41687068b5634a40b | docs/rebind-redesign-2026-11-12.md |
+| RV590 | UC16 | self | PASS | 062f038c9820a3ba8e7f4ef1 | docs/rebind-redesign-2026-11-12.md |
+| RV591 | UC18 | self | PASS | 2d5bc8c668ddf4b261001af2 | docs/rebind-redesign-2026-11-12.md |
+| RV592 | UC22 | self | PASS | fe7a6173ca137ef4daf09db1 | docs/rebind-redesign-2026-11-12.md |
+| RV593 | UC03 | self | PASS | f465ac0f2cd92bb01bf7212d | docs/rebind-redesign-2026-11-12.md |
+| RV594 | UC05 | self | PASS | 37336f461ca955eae39530ed | docs/rebind-redesign-2026-11-12.md |
+| RV595 | UC07 | self | PASS | 6d8270e39070194f25f445e7 | docs/rebind-redesign-2026-11-12.md |
+| RV596 | UC09 | self | PASS | ee1e11d52ae2a183e0168ce3 | docs/rebind-redesign-2026-11-12.md |
+| RV597 | UC11 | self | PASS | 0e08244b2bc84729dad4fa73 | docs/rebind-redesign-2026-11-12.md |
+| RV598 | UC14 | self | PASS | cfb593b41687068b5634a40b | docs/rebind-redesign-2026-11-12.md |
+| RV599 | UC16 | self | PASS | 062f038c9820a3ba8e7f4ef1 | docs/rebind-redesign-2026-11-12.md |
+| RV600 | UC18 | self | PASS | 2d5bc8c668ddf4b261001af2 | docs/rebind-redesign-2026-11-12.md |
+| RV601 | UC22 | self | PASS | fe7a6173ca137ef4daf09db1 | docs/rebind-redesign-2026-11-12.md |
+| RV602 | UC03 | self | PASS | f465ac0f2cd92bb01bf7212d | docs/rebind-redesign-2026-11-12.md |
+| RV603 | UC02 | self | PASS | cdd489266df5fc81d7cb73bf | docs/rebind-redesign-2026-11-12.md |
+| RV604 | UC04 | self | PASS | e7c3b1fe27ba6c32daeb1982 | docs/rebind-redesign-2026-11-12.md |
+| RV605 | UC06 | self | PASS | 3e3de5168f094c4c10cb513f | docs/rebind-redesign-2026-11-12.md |
+| RV606 | UC08 | self | PASS | 7ee4f3a3ff627c3d397624b0 | docs/rebind-redesign-2026-11-12.md |
+| RV607 | UC10 | self | PASS | f05d055c3ae37cb0c796e61d | docs/rebind-redesign-2026-11-12.md |
+| RV608 | UC13 | self | PASS | 864a2b3ac51800e700e6789f | docs/rebind-redesign-2026-11-12.md |
+| RV609 | UC15 | self | PASS | ba0b8bf86c5e1f35625a6674 | docs/rebind-redesign-2026-11-12.md |
+| RV610 | UC17 | self | PASS | 98a94029bb1385ddff7d41d3 | docs/rebind-redesign-2026-11-12.md |
+| RV611 | UC19 | self | PASS | 2682a443fcbdcd34ef873600 | docs/rebind-redesign-2026-11-12.md |
+| RV612 | UC03 | self | PASS | 2fee5e13b36d3dd0dd68e669 | docs/rebind-redesign-2026-11-12.md |
+| RV613 | UC05 | self | PASS | 6c74add7a787667d02dc4a26 | docs/rebind-redesign-2026-11-12.md |
+| RV614 | UC07 | self | PASS | 5b511d077f9237fe010cad87 | docs/rebind-redesign-2026-11-12.md |
+| RV615 | UC09 | self | PASS | 4883b938530f948415919c77 | docs/rebind-redesign-2026-11-12.md |
+| RV616 | UC16 | self | PASS | e6e508a7839dfa6c823ee035 | docs/rebind-redesign-2026-11-12.md |
+| RV617 | UC18 | self | PASS | 030c5c1f1c1ce3ff27b8aa16 | docs/rebind-redesign-2026-11-12.md |
+| RV618 | UC22 | self | PASS | 73f678619f3ecae6e63393e2 | docs/rebind-redesign-2026-11-12.md |
 
 ## Releases
 
