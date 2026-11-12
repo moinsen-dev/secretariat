@@ -2,7 +2,9 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
 cd "$ROOT"
-xcrun swift build
+# SwiftPM records the deployment target (14.0) as the SDK version, and macOS then shows the app in its old,
+# compatibility look. Record the SDK it is really built with, so it gets the current design (Liquid Glass).
+xcrun swift build -Xlinker -platform_version -Xlinker macos -Xlinker 14.0 -Xlinker "$(xcrun --sdk macosx --show-sdk-version)"
 mkdir -p Assets dist
 if [[ ! -f Assets/AppIcon.icns ]]; then
   icon_tmp="$(mktemp -d)"

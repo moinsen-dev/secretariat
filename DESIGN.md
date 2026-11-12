@@ -9,7 +9,7 @@ Vorbilder: **Erinnerungen** (Seitenleiste mit Kacheln und Listen), **Notizen** (
    Liquid Glass von selbst. Keine eigenen Hintergründe in Seitenleiste, Symbolleiste oder Sheets. Glas selbst nur sparsam und nur
    für eigene schwebende Bedienelemente (Apple HIG „Materials“: *Use Liquid Glass effects sparingly*).
 2. **Gebaut mit aktuellem SDK.** Das Binary muss das echte SDK melden (`LC_BUILD_VERSION sdk 27.0`), sonst zeigt macOS die App im
-   Kompatibilitätsaussehen. SwiftPM trägt sonst die Mindestversion ein; deshalb `-platform_version` in `Package.swift`.
+   Kompatibilitätsaussehen. SwiftPM trägt sonst die Mindestversion ein; deshalb setzt `script/build.sh` `-platform_version` mit der echten SDK-Version (`xcrun --show-sdk-version`).
 3. **Ein Gesicht je Art.** Jede Vorlage hat Symbol und Farbe; Liste, Detail und Editor zeigen sie als abgerundetes Farbquadrat
    mit weißem Symbol (`KindIcon`), wie Ordner und Listen in Apples Apps.
 4. **Wenig Text, klare Fußnoten.** Erklärungen stehen als Fußnote unter dem Abschnitt, nicht als Absatz zwischen Feldern.
@@ -25,3 +25,6 @@ Vorbilder: **Erinnerungen** (Seitenleiste mit Kacheln und Listen), **Notizen** (
 | Detail | großes `KindIcon` und Titel oben, Felder in `Form(.grouped)`, Kopieren/Zeigen als randlose Symbole |
 | Neuer Eintrag | Passwörter: Kopf mit großem `KindIcon` und Name als Titelzeile, Art als Menü, Felder als gruppierte Liste, „Weitere Optionen“ eingeklappt |
 | Suche | in der Symbolleiste rechts (Standardplatz unter macOS 26/27) |
+| Status (Probezeit) | unten in der Seitenleiste, kein Textknopf in der Symbolleiste |
+| Badges | Text in Primärfarbe auf getönter Kapsel (Kontrast), nie Weiß auf Orange/Grün |
+| Bedienungshilfe | jedes Symbolknopf- und Formularelement hat einen Namen (`accessibilityLabel`) |

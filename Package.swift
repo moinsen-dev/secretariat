@@ -13,11 +13,8 @@ let package = Package(
                                                                 .product(name: "KeyboardShortcuts", package: "KeyboardShortcuts")],
                           swiftSettings: [.defaultIsolation(MainActor.self)],
                           // The app bundle carries Sparkle.framework in Contents/Frameworks (script/build.sh).
-                          // SwiftPM records the deployment target (14.0) as the SDK version; macOS then shows the app in the
-                          // old look for compatibility. Record the SDK it is built with so it gets the current design (Liquid Glass).
-                          linkerSettings: [.unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks",
-                                                         "-Xlinker", "-platform_version", "-Xlinker", "macos",
-                                                         "-Xlinker", "14.0", "-Xlinker", "27.0"])]),
+                          // script/build.sh also records the real SDK version (Liquid Glass, DESIGN.md rule 2).
+                          linkerSettings: [.unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"])]),
         .testTarget(name: "SecretariatCoreTests", dependencies: ["SecretariatCore"])
     ]
 )

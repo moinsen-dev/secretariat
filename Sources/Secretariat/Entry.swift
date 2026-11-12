@@ -59,6 +59,13 @@ struct SecretariatApp: App {
                 Button("New Template …") { model.templateEditor = TemplateDraft(template: Template(id: "", title: ""), isNew: true) }
                     .keyboardShortcut("n", modifiers: [.command, .option])
             }
+            // Like Notes and Reminders: the selected item's actions in the menu bar, with their shortcuts.
+            CommandMenu("Item") {
+                Button("Edit Item …") { if let item = model.currentItem, !Capture.isCapture(item) { model.edit(item) } }
+                    .keyboardShortcut("e").disabled(model.currentItem.map(Capture.isCapture) ?? true)
+                Button("Delete Item …") { if let item = model.currentItem { model.pendingDelete = item } }
+                    .keyboardShortcut(.delete, modifiers: .command).disabled(model.currentItem == nil)
+            }
             CommandGroup(before: .toolbar) {
                 Button("Reload") { model.reload() }.keyboardShortcut("r")
                 Divider()

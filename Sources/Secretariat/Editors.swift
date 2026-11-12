@@ -9,6 +9,7 @@ struct ItemEditor: View {
     @State private var error: String?
     @State private var importingField: UUID?
     @State private var advanced = false
+    @FocusState private var nameFocused: Bool
     @State private var showRead = false
     @Environment(\.dismiss) private var dismiss
     static let providers = ["openai", "anthropic", "deepseek", "google-gemini", "mistral", "groq", "openrouter", "elevenlabs",
@@ -20,6 +21,9 @@ struct ItemEditor: View {
     var body: some View {
         Form {
             Section { header }
+            if let error {
+                Section { Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red) }
+            }
             if let note = draft.readNote { Section { readFromScreenshot(note) } }
             if isNew {
                 Section {
@@ -63,18 +67,17 @@ struct ItemEditor: View {
             Section {
                 DisclosureGroup("More Options", isExpanded: $advanced) { advancedSection }
             }
-            if let error {
-                Section { Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red) }
-            }
         }
         .formStyle(.grouped)
+        .onAppear { if isNew && !draft.customPath { nameFocused = true } }
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
+            ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction) }
             ToolbarItem(placement: .confirmationAction) {
                 Button(isNew ? "Add" : "Save") {
                     if model.saveItem(draft) { dismiss() }
                     else { error = model.errorMessage; model.errorMessage = nil }
                 }
+                .keyboardShortcut(.defaultAction)
                 .disabled(!draft.missing.isEmpty || draft.fields.isEmpty)
                 .help(draft.missing.isEmpty ? "" : "Still missing: \(draft.missing.joined(separator: ", "))")
             }
@@ -127,8 +130,8 @@ struct ItemEditor: View {
                 } else {
                     HStack(spacing: 6) {
                         TextField(draft.template.identity ? "Organisation" : "Provider", text: $draft.provider,
-                                  prompt: Text(draft.template.identity ? "Organisation" : "Provider, e.g. OpenAI"))
-                            .font(.title2.weight(.semibold)).textFieldStyle(.plain).labelsHidden()
+                                  prompt: Text(draft.template.identity ? "Organisation (required)" : "Provider, e.g. OpenAI (required)"))
+                            .font(.title2.weight(.semibold)).textFieldStyle(.plain).labelsHidden().focused($nameFocused)
                         if !draft.template.identity {
                             Menu {
                                 ForEach(Self.providers, id: \.self) { p in Button(p) { draft.provider = p } }
@@ -162,7 +165,7 @@ struct ItemEditor: View {
     private var everywhereHint: String {
         let names = draft.envPrefix.isEmpty ? "PROVIDER_API_KEY"
             : (everywhereVariables.isEmpty ? "a variable" : everywhereVariables.joined(separator: ", "))
-        return "Tools you start with `secretariat run werkzeuge` (wrangler, gh, eas …) get it as \(names) in every folder."
+        return "Tools you start through the profile “werkzeuge” (wrangler, gh, eas …) get it as \(names) in every folder."
     }
     /// Variables that the profile "werkzeuge" already gives to another item; saving would replace them.
     private var everywhereConflicts: [String] {
@@ -198,8 +201,7 @@ struct ItemEditor: View {
                 }
             }
         }
-        .font(.callout).padding(10).frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.accentColor.opacity(0.1), in: RoundedRectangle(cornerRadius: 8))
+        .font(.callout).frame(maxWidth: .infinity, alignment: .leading)
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didResignActiveNotification)) { _ in showRead = false }
     }
 
@@ -375,7 +377,7 @@ struct TemplateEditor: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(draft.isNew ? "New Template" : "Edit Template").font(.title2.bold())
+            Text(draft.isNew ? "New Template" : "Edit Template").font(.title2.weight(.semibold))
             Form {
                 if draft.isNew {
                     LabeledContent("ID") {
@@ -442,16 +444,17 @@ struct TemplateEditor: View {
             Text("Env suffix: with “Give to all tools” the field becomes <PROVIDER>[_<PROJECT>]_<suffix>, e.g. OPENAI_API_KEY.")
                 .font(.caption).foregroundStyle(.secondary)
             if let error { Text(error).foregroundStyle(.red).font(.callout) }
-            HStack {
-                Spacer()
-                Button("Cancel", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction)
-                Button("Save") {
+        }.padding(28).frame(width: 860)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() }.keyboardShortcut(.cancelAction) }
+            ToolbarItem(placement: .confirmationAction) {
+                Button(draft.isNew ? "Add" : "Save") {
                     if model.saveTemplate(draft) { dismiss() }
                     else { error = model.errorMessage; model.errorMessage = nil }
                 }.keyboardShortcut(.defaultAction)
                     .disabled(draft.template.id.isEmpty || draft.template.title.trimmingCharacters(in: .whitespaces).isEmpty)
             }
-        }.padding(28).frame(width: 860)
+        }
     }
 
     private func move(_ id: UUID, by offset: Int) {

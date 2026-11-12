@@ -33,9 +33,6 @@ struct MainView: View {
                 Button { model.itemEditor = model.newItemDraft() } label: { Label("New Item", systemImage: "square.and.pencil") }
                     .help("New item (⌘N)")
             }
-            if let badge = licenseBadge {
-                ToolbarItem { Button { model.showLicense = true } label: { Text(badge) }.help("Secretariat license") }
-            }
         }
         .sheet(isPresented: $model.showLicense) { LicenseView(model: model) }
         .sheet(item: $model.itemEditor) { draft in ItemEditor(model: model, draft: draft) }
@@ -144,9 +141,16 @@ struct MainView: View {
         }
         .listStyle(.sidebar)
         .safeAreaInset(edge: .bottom) {
-            Button { model.profileEditor = ProfileDraft(revision: model.configuration.revision) } label: {
-                Label("Add Project", systemImage: "plus.circle.fill").frame(maxWidth: .infinity, alignment: .leading)
-            }.buttonStyle(.borderless).foregroundStyle(.secondary).padding(.horizontal, 16).padding(.vertical, 12)
+            VStack(alignment: .leading, spacing: 8) {
+                if let badge = licenseBadge {
+                    Button { model.showLicense = true } label: { Label(badge, systemImage: "seal") }
+                        .buttonStyle(.borderless).font(.callout).foregroundStyle(.secondary).help("Secretariat license")
+                }
+                Button { model.profileEditor = ProfileDraft(revision: model.configuration.revision) } label: {
+                    Label("Add Project", systemImage: "plus.circle.fill")
+                }.buttonStyle(.borderless).foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).padding(.vertical, 12)
         }
     }
 
@@ -194,6 +198,9 @@ struct MainView: View {
         }
     }
 
+    /// How many organisations (first path part) the items use; with more than one, rows name theirs.
+    private var organisations: Int { Set(stored.compactMap { $0.path.split(separator: "/").first }).count }
+
     /// Colour of the list's large title, like the smart lists in Reminders.
     private var listColor: Color {
         if !query.isEmpty { return .primary }
@@ -238,7 +245,7 @@ struct MainView: View {
         return List(selection: $model.selectedItem) {
             ListTitle(title: listTitle, count: items.count, color: listColor)
             ForEach(ordered) { item in
-                ItemRow(model: model, item: item).tag(item.id)
+                ItemRow(model: model, item: item, showOrganisation: organisations > 1).tag(item.id)
             }
         }
         .listStyle(.inset)
@@ -499,6 +506,7 @@ struct SmartTile: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(title), \(count)")
+        .accessibilityAddTraits(selected ? .isSelected : [])
     }
 }
 
@@ -532,6 +540,7 @@ extension View {
 struct ItemRow: View {
     let model: AppModel
     let item: ItemMeta
+    var showOrganisation = false
 
     private var title: String {
         if Capture.isCapture(item) {
@@ -554,7 +563,9 @@ struct ItemRow: View {
                 Text(title).font(.body.weight(.semibold)).lineLimit(1)
                 HStack(spacing: 6) {
                     if let date { Text(date).foregroundStyle(.primary.opacity(0.75)) }
-                    Text(model.template(item.kind).title).foregroundStyle(.secondary)
+                    Text([model.template(item.kind).title,
+                          showOrganisation && !Capture.isCapture(item) ? item.path.split(separator: "/").first.map(String.init) : nil]
+                            .compactMap { $0 }.joined(separator: " · ")).foregroundStyle(.secondary)
                 }.font(.subheadline).lineLimit(1)
             }
             Spacer(minLength: 6)
@@ -610,7 +621,7 @@ struct ItemDetail: View {
                     Spacer(minLength: 12)
                     // Like the Passwords app: one Edit button on the item, more in a menu.
                     if !Capture.isCapture(item) {
-                        Button("Edit") { model.edit(item) }.keyboardShortcut("e").help("Edit (⌘E)").glassButton()
+                        Button("Edit") { model.edit(item) }.help("Edit (⌘E)").glassButton()
                     }
                     Menu {
                         Button("Delete …", systemImage: "trash", role: .destructive, action: delete)
@@ -664,6 +675,7 @@ struct ItemDetail: View {
                         else { revealed[field.name] = nil }
                     } label: { Image(systemName: revealed[field.name] == nil ? "eye" : "eye.slash") }
                         .buttonStyle(.borderless).help(revealed[field.name] == nil ? "Show" : "Hide")
+                        .accessibilityLabel("\(revealed[field.name] == nil ? "Show" : "Hide") \(template.spec(field.name)?.label ?? field.name)")
                     copyButton(field, secret: true) { model.secretValue(item, field, for: "copy") }
                 case .file:
                     Label(field.fileName ?? "File", systemImage: "doc").lineLimit(1)
@@ -683,6 +695,7 @@ struct ItemDetail: View {
             copiedField = field.name
         } label: { Image(systemName: copiedField == field.name ? "checkmark" : "doc.on.doc") }
             .buttonStyle(.borderless)
+            .accessibilityLabel("Copy \(template.spec(field.name)?.label ?? field.name)")
             .help(secret ? "Copy (the clipboard is cleared after 60 seconds)" : "Copy")
     }
 }
@@ -704,35 +717,49 @@ struct LicenseView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openURL) private var openURL
 
+    private var licensed: Bool { if case .licensed = model.license { true } else { false } }
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text("Secretariat License").font(.title2.bold())
-            switch model.license {
-            case .licensed(let email):
-                Label(email.isEmpty ? "This build doesn't check licenses." : "Licensed to \(email). Thank you!", systemImage: "checkmark.seal.fill")
-                    .foregroundStyle(.green)
-            case .trial(let days):
-                Text("You're trying Secretariat: \(days) day\(days == 1 ? "" : "s") left. Everything works during the trial and afterwards — a license keeps the project going.")
-            case .expired:
-                Text("The 14-day trial has ended. Everything keeps working; please buy a license if Secretariat is useful to you.")
+        Form {
+            Section {
+                HStack(spacing: 14) {
+                    KindIcon(symbol: licensed ? "checkmark.seal.fill" : "seal.fill", color: licensed ? .green : .accentColor, size: 56)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Secretariat License").font(.title2.weight(.semibold))
+                        switch model.license {
+                        case .licensed(let email):
+                            Text(email.isEmpty ? "This build doesn't check licenses." : "Licensed to \(email). Thank you!").foregroundStyle(.secondary)
+                        case .trial(let days):
+                            Text("Trial: \(days) day\(days == 1 ? "" : "s") left. Everything keeps working afterwards; a license keeps the project going.")
+                                .foregroundStyle(.secondary)
+                        case .expired:
+                            Text("The 14-day trial has ended. Everything keeps working; please buy a license if Secretariat is useful to you.")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                }.padding(.vertical, 6)
             }
-            if case .licensed = model.license {} else {
-                Text("Paste the license block from your purchase email. It is stored in your iCloud Keychain and covers all your Macs.")
-                    .font(.callout).foregroundStyle(.secondary)
-                TextEditor(text: $text)
-                    .font(.system(.caption, design: .monospaced))
-                    .frame(height: 110)
-                    .overlay(RoundedRectangle(cornerRadius: 6).stroke(.quaternary))
-                    .accessibilityLabel("License")
-                if let error { Text(error).foregroundStyle(.red).font(.callout) }
-            }
-            HStack {
-                if case .licensed = model.license {} else {
+            if !licensed {
+                Section {
+                    TextEditor(text: $text)
+                        .font(.system(.caption, design: .monospaced))
+                        .frame(height: 110)
+                        .accessibilityLabel("License")
+                } header: { Text("License block") } footer: {
+                    Text("Paste the block from your purchase email. It is stored in your iCloud Keychain and covers all your Macs.")
+                        .foregroundStyle(.secondary)
+                }
+                Section {
                     Button("Buy License (39 €)") { openURL(Licensing.buyURL) }
                 }
-                Spacer()
-                Button("Close") { dismiss() }.keyboardShortcut(.cancelAction)
-                if case .licensed = model.license {} else {
+                if let error { Section { Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red) } }
+            }
+        }
+        .formStyle(.grouped)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) { Button("Close") { dismiss() }.keyboardShortcut(.cancelAction) }
+            if !licensed {
+                ToolbarItem(placement: .confirmationAction) {
                     Button("Activate") {
                         do { try model.activateLicense(text); error = nil; dismiss() }
                         catch { self.error = error.localizedDescription }
@@ -740,11 +767,9 @@ struct LicenseView: View {
                 }
             }
         }
-        .fixedSize(horizontal: false, vertical: true)
-        .padding(24).frame(width: 520)
+        .frame(width: 520, height: licensed ? 220 : 470)
     }
 }
-
 
 struct ExpiryBadge: View {
     let date: String?
@@ -752,7 +777,7 @@ struct ExpiryBadge: View {
         if let days = daysUntil(date), days <= 30 {
             Text(days < 0 ? "expired" : days == 0 ? "expires today" : days == 1 ? "1 day left" : "\(days) days left")
                 .font(.caption.bold()).padding(.horizontal, 7).padding(.vertical, 2)
-                .foregroundStyle(.white).background(days < 0 ? Color.red : Color.orange, in: Capsule())
+                .foregroundStyle(.primary).background((days < 0 ? Color.red : Color.orange).opacity(0.28), in: Capsule())
         }
     }
 }
@@ -775,6 +800,6 @@ struct StatusBadge: View {
         default: ("missing", .red)
         }
         Text(title).font(.caption.bold()).padding(.horizontal, 7).padding(.vertical, 2)
-            .foregroundStyle(.white).background(color, in: Capsule())
+            .foregroundStyle(.primary).background(color.opacity(0.28), in: Capsule())
     }
 }
