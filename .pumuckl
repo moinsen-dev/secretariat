@@ -12,14 +12,14 @@
     "has_uncommitted_changes" : true,
     "is_repo" : true,
     "last_commit_author" : "Ulrich Diedrichsen",
-    "last_commit_date" : "2026-11-10T07:32:19Z",
-    "last_commit_message" : "Site: buy button no longer links to itself while the store awaits approval",
+    "last_commit_date" : "2026-11-11T16:28:34Z",
+    "last_commit_message" : "Site: 'In daily use' section with last week's real usage numbers (Claude Code, Codex, scripts), before\/after and Uli's quote; backlog: iPhone app",
     "local_secret_files" : 4,
     "stale_days" : 0,
     "stash_count" : 0,
-    "total_commits" : 114,
+    "total_commits" : 135,
     "uncommitted_files_count" : 1,
-    "unpushed_commits" : 1
+    "unpushed_commits" : 0
   },
   "in_progress_since" : "2026-11-11T07:41:18Z",
   "kreislauf" : {
@@ -108,13 +108,13 @@
       }
     ]
   },
-  "last_scanned" : "2026-11-11T04:18:11Z",
+  "last_scanned" : "2026-11-12T04:24:35Z",
   "project_path" : "\/Users\/udi\/work\/moinsen\/ideas\/local_secrets_orchestrator",
   "pumuckl_version" : 1,
   "report" : {
     "accent" : "#2F6F5E",
-    "ai_note" : "The project was active today with 114 commits, and its security tooling is close to a source-available release, so picking it back up is a short step.",
-    "ai_suggestion" : "Run `xcrun swift test` locally in Sources\/Tests to confirm the build and SecretariatCoreTests are green, then read the security-interplay backlog that commit 190c091 mentions and choose the next item.",
+    "ai_note" : "Secretariat is already shipped at 1.14.0 with 135 commits, real daily use, and a public source tree, so picking it back up is mostly a matter of finishing the next tracked task.",
+    "ai_suggestion" : "Run `xcrun swift test` locally in the project and confirm the SecretariatCoreTests suite is green, then open TRACKER.md and choose the next open task.",
     "architecture" : [
       {
         "lbl" : "UI",
@@ -222,7 +222,7 @@
     "history" : [
       "Das Projekt begann als Neubau einer nativen Minimal-App, der Altstand liegt im Legacy-Archiv. Danach kamen die Agenten-Einrichtung und die nichtinteraktive Keychain-CLI, zuletzt die lokale Abnahme von Version 0.2."
     ],
-    "impact" : 72,
+    "impact" : 75,
     "last_state" : [
       {
         "meta" : "Abschlussstand in PLAN\/TRACKER aktualisiert, vor 2 Tagen",
@@ -245,10 +245,10 @@
         "wip" : false
       }
     ],
-    "overall_gem_score" : 80,
-    "progress" : 80,
+    "overall_gem_score" : 82,
+    "progress" : 85,
     "re_entry_action" : "Die signierte dist\/Secretariat.app lokal mit xcrun notarytool notarisieren, das Ticket mit stapler anheften und die Installation per spctl --assess sowie einen echten Lauf von .\/script\/install.sh prüfen.",
-    "re_entry_effort" : "~1h",
+    "re_entry_effort" : "~30m",
     "re_entry_why" : "Release-Reife ist die schwächste Dimension, weil die Abnahme zwar mit Developer-ID signiert, aber nicht notarisiert ist; erst damit lässt sich die App außerhalb dieses Macs ohne Gatekeeper-Warnung weitergeben.",
     "recency" : 95,
     "resumption_ease" : 85,
@@ -345,7 +345,7 @@
         "t" : "Anforderungen und Nachweise pflegen"
       }
     ],
-    "vision" : "Secretariat lets coding agents use API keys through a CLI without ever reading the key values, backed by a native Mac app with a verifiable open-source core."
+    "vision" : "A trustworthy Mac vault that keeps API keys away from coding agents while staying auditable and recoverable."
   },
   "retired" : false,
   "scan" : {
@@ -359,23 +359,23 @@
       "head" : "64e0af0"
     },
     "fast" : {
-      "at" : "2026-11-11T04:18:11Z",
-      "head" : "2568981",
-      "mtime" : 1794295893.2655485
+      "at" : "2026-11-12T04:24:35Z",
+      "head" : "80852c6",
+      "mtime" : 1794414586.5370543
     },
     "git" : {
-      "at" : "2026-11-11T04:17:17Z",
-      "head" : "2568981",
-      "mtime" : 1794295893.2655485
+      "at" : "2026-11-12T04:23:52Z",
+      "head" : "80852c6",
+      "mtime" : 1794414586.5370543
     }
   },
   "scoring" : {
-    "ai_note" : "The project was active today with 114 commits, and its security tooling is close to a source-available release, so picking it back up is a short step.",
-    "ai_suggestion" : "Run `xcrun swift test` locally in Sources\/Tests to confirm the build and SecretariatCoreTests are green, then read the security-interplay backlog that commit 190c091 mentions and choose the next item.",
+    "ai_note" : "Secretariat is already shipped at 1.14.0 with 135 commits, real daily use, and a public source tree, so picking it back up is mostly a matter of finishing the next tracked task.",
+    "ai_suggestion" : "Run `xcrun swift test` locally in the project and confirm the SecretariatCoreTests suite is green, then open TRACKER.md and choose the next open task.",
     "effort_to_complete" : 40,
-    "impact" : 72,
-    "overall_gem_score" : 80,
-    "progress" : 80,
+    "impact" : 75,
+    "overall_gem_score" : 82,
+    "progress" : 85,
     "recency" : 95
   }
 }

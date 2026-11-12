@@ -20,7 +20,7 @@ struct MainView: View {
             detail
         }
         // One search across all items, profiles and targets. ⌘F focuses it.
-        .searchable(text: $search, placement: .sidebar, prompt: Text("Search"))
+        .searchable(text: $search, prompt: Text("Search"))
         .onChange(of: model.selection) { _, selection in
             model.copied = false
             if selection == "targets" { model.refreshTargets() }
@@ -107,7 +107,7 @@ struct MainView: View {
             Section {
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
                     SmartTile(title: "Inbox", symbol: "tray.fill", color: .blue, count: inbox.count, selected: model.selection == "inbox") { model.selection = "inbox" }
-                    SmartTile(title: "All", symbol: "key.horizontal.fill", color: .gray, count: stored.count, selected: model.selection == "items") { model.selection = "items" }
+                    SmartTile(title: "All", symbol: "key.horizontal.fill", color: Color(nsColor: .systemGray), count: stored.count, selected: model.selection == "items") { model.selection = "items" }
                     SmartTile(title: "Expiring", symbol: "clock.fill", color: .orange, count: expiring.count, selected: model.selection == "expiring") { model.selection = "expiring" }
                     SmartTile(title: "Touch ID", symbol: "touchid", color: .pink, count: guarded.count, selected: model.selection == "approval") { model.selection = "approval" }
                 }
@@ -145,8 +145,8 @@ struct MainView: View {
         .listStyle(.sidebar)
         .safeAreaInset(edge: .bottom) {
             Button { model.profileEditor = ProfileDraft(revision: model.configuration.revision) } label: {
-                Label("New Project", systemImage: "plus.circle").frame(maxWidth: .infinity, alignment: .leading)
-            }.buttonStyle(.borderless).padding(12)
+                Label("Add Project", systemImage: "plus.circle.fill").frame(maxWidth: .infinity, alignment: .leading)
+            }.buttonStyle(.borderless).foregroundStyle(.secondary).padding(.horizontal, 16).padding(.vertical, 12)
         }
     }
 
@@ -194,6 +194,18 @@ struct MainView: View {
         }
     }
 
+    /// Colour of the list's large title, like the smart lists in Reminders.
+    private var listColor: Color {
+        if !query.isEmpty { return .primary }
+        switch model.selection {
+        case "inbox": return .blue
+        case "expiring": return .orange
+        case "approval": return .pink
+        case "placeholders": return .orange
+        default: return .primary
+        }
+    }
+
     @ViewBuilder private var content: some View {
         if model.loadFailed {
             ContentUnavailableView {
@@ -221,23 +233,17 @@ struct MainView: View {
 
     private var itemList: some View {
         let items = visibleItems
-        let sectioned = model.selection == "items" || !query.isEmpty
+        // Notes-style: one flat list; the account stands in each row, not as a heading per item.
+        let ordered = model.selection == "items" || !query.isEmpty ? items.sorted { $0.path < $1.path } : items
         return List(selection: $model.selectedItem) {
-            if sectioned {
-                ForEach(Dictionary(grouping: items, by: \.group).sorted { $0.key < $1.key }, id: \.key) { group, members in
-                    Section(group) {
-                        ForEach(members.sorted { $0.path < $1.path }) { item in ItemRow(model: model, item: item, showGroup: false).tag(item.id) }
-                    }
-                }
-            } else {
-                ForEach(items) { item in
-                    ItemRow(model: model, item: item, showGroup: !model.selection.hasPrefix("group:")).tag(item.id)
-                }
+            ListTitle(title: listTitle, count: items.count, color: listColor)
+            ForEach(ordered) { item in
+                ItemRow(model: model, item: item).tag(item.id)
             }
         }
         .listStyle(.inset)
         .navigationTitle(listTitle)
-        .navigationSubtitle(items.count == 1 ? "1 item" : "\(items.count) items")
+        .hidingToolbarTitle()
         .contextMenu(forSelectionType: UUID.self) { ids in
             if let item = ids.first.flatMap(model.item) {
                 if Capture.isCapture(item) { Button("Turn into Item …") { model.file(item) } }
@@ -378,7 +384,7 @@ struct MainView: View {
                             Text(template.title).font(.headline)
                             Text(template.fields.count == 1 ? "1 field" : "\(template.fields.count) fields").font(.subheadline).foregroundStyle(.secondary)
                         }
-                    } icon: { Image(systemName: template.symbol).foregroundStyle(.tint) }
+                    } icon: { KindIcon(symbol: template.symbol, color: template.color, size: 28) }
                     .padding(.vertical, 3).tag(template.id)
                 }
             }
@@ -409,7 +415,7 @@ struct MainView: View {
     private func templateDetail(_ template: Template) -> some View {
         Form {
             Section {
-                DetailHeader(symbol: template.symbol, color: .accentColor, title: template.title,
+                DetailHeader(symbol: template.symbol, color: template.color, title: template.title,
                              subtitle: template.explanation.isEmpty ? template.id : template.explanation)
                 if template.isBuiltin { LabeledContent("Built-in", value: model.isOverridden(template) ? "Changed by you" : "Unchanged") }
                 if template.identity { LabeledContent("Identity", value: "Every agent session knows these values") }
@@ -474,23 +480,51 @@ struct SmartTile: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .top) {
-                    Image(systemName: symbol).font(.system(size: 13, weight: .semibold)).foregroundStyle(selected ? color : .white)
-                        .frame(width: 26, height: 26).background(selected ? AnyShapeStyle(.white) : AnyShapeStyle(color.gradient), in: Circle())
+                    Image(systemName: symbol).font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
+                        .frame(width: 28, height: 28)
+                        .background(selected ? AnyShapeStyle(.white.opacity(0.28)) : AnyShapeStyle(color.gradient), in: Circle())
                     Spacer()
-                    Text("\(count)").font(.title2.bold()).monospacedDigit()
+                    Text("\(count)").font(.title2.weight(.bold)).monospacedDigit()
                 }
-                Text(title).font(.callout.weight(.semibold)).foregroundStyle(selected ? .white : .secondary)
+                Text(title).font(.callout.weight(.semibold)).foregroundStyle(selected ? AnyShapeStyle(.white) : AnyShapeStyle(.secondary))
             }
-            .padding(9)
+            .padding(.horizontal, 10).padding(.vertical, 9)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .foregroundStyle(selected ? .white : .primary)
-            .background(selected ? AnyShapeStyle(color.gradient) : AnyShapeStyle(.quaternary.opacity(0.6)), in: RoundedRectangle(cornerRadius: 10))
-            .contentShape(RoundedRectangle(cornerRadius: 10))
+            .foregroundStyle(selected ? AnyShapeStyle(.white) : AnyShapeStyle(.primary))
+            .background(selected ? AnyShapeStyle(color.gradient) : AnyShapeStyle(.fill.tertiary),
+                        in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(title), \(count)")
+    }
+}
+
+/// Reminders-style large list title with the count on the right.
+struct ListTitle: View {
+    let title: String
+    let count: Int
+    let color: Color
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title).font(.largeTitle.weight(.bold)).foregroundStyle(color).lineLimit(1)
+            Spacer()
+            Text("\(count)").font(.largeTitle.weight(.semibold)).foregroundStyle(.secondary).monospacedDigit()
+        }
+        .padding(.top, 4).padding(.bottom, 6)
+        .listRowSeparator(.hidden)
+        .selectionDisabled()
+        .accessibilityElement(children: .combine)
+    }
+}
+
+extension View {
+    /// The list shows its own large title; the window toolbar then needs none (macOS 15+).
+    @ViewBuilder func hidingToolbarTitle() -> some View {
+        if #available(macOS 15.0, *) { toolbar(removing: .title) } else { self }
     }
 }
 
@@ -498,15 +532,15 @@ struct SmartTile: View {
 struct ItemRow: View {
     let model: AppModel
     let item: ItemMeta
-    let showGroup: Bool
 
     private var title: String {
         if Capture.isCapture(item) {
             let name = Capture.name(of: item).replacingOccurrences(of: "-", with: " ")
             return name.isEmpty ? "Untitled capture" : name
         }
-        let rest = item.path.dropFirst(item.group.count).drop { $0 == "/" }
-        return rest.isEmpty ? String(item.path.split(separator: "/").last ?? "") : String(rest)
+        // Provider and purpose; the organisation (moinsen/…) is the same for almost everything and stands in the detail.
+        let parts = item.path.split(separator: "/").map(String.init)
+        return (parts.count > 1 ? parts.dropFirst() : parts[...]).joined(separator: " › ")
     }
     private var date: String? {
         if Capture.isCapture(item) { return Capture.capturedAt(item).flatMap(captureDate) }
@@ -515,18 +549,18 @@ struct ItemRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: model.template(item.kind).symbol).foregroundStyle(.tint).frame(width: 20)
+            KindIcon(symbol: model.template(item.kind).symbol, color: model.template(item.kind).color, size: 28)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.headline).lineLimit(1)
+                Text(title).font(.body.weight(.semibold)).lineLimit(1)
                 HStack(spacing: 6) {
                     if let date { Text(date).foregroundStyle(.primary.opacity(0.75)) }
-                    Text(showGroup && !Capture.isCapture(item) ? item.group : model.template(item.kind).title).foregroundStyle(.secondary)
+                    Text(model.template(item.kind).title).foregroundStyle(.secondary)
                 }.font(.subheadline).lineLimit(1)
             }
             Spacer(minLength: 6)
             if item.needsApproval { Image(systemName: "touchid").foregroundStyle(.pink).help("Needs Touch ID before a program uses it") }
             ExpiryBadge(date: item.expires)
-        }.padding(.vertical, 3)
+        }.padding(.vertical, 4)
     }
 }
 
@@ -547,14 +581,13 @@ struct DetailHeader: View {
     let subtitle: String
 
     var body: some View {
-        HStack(spacing: 14) {
-            Image(systemName: symbol).font(.title2).foregroundStyle(.white)
-                .frame(width: 44, height: 44).background(color.gradient, in: RoundedRectangle(cornerRadius: 10))
+        HStack(spacing: 16) {
+            KindIcon(symbol: symbol, color: color, size: 56)
             VStack(alignment: .leading, spacing: 3) {
-                Text(title).font(.title2.bold()).textSelection(.enabled).lineLimit(2)
+                Text(title).font(.title.weight(.bold)).textSelection(.enabled).lineLimit(2)
                 Text(subtitle).foregroundStyle(.secondary).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
             }
-        }.padding(.vertical, 4)
+        }.padding(.vertical, 6)
     }
 }
 
@@ -570,8 +603,20 @@ struct ItemDetail: View {
     var body: some View {
         Form {
             Section {
-                DetailHeader(symbol: template.symbol, color: Capture.isCapture(item) ? .blue : .accentColor, title: item.path,
-                             subtitle: template.title)
+                HStack(alignment: .center) {
+                    DetailHeader(symbol: template.symbol, color: template.color,
+                                 title: String(item.path.split(separator: "/").last ?? Substring(item.path)),
+                                 subtitle: "\(template.title) · \(item.path)")
+                    Spacer(minLength: 12)
+                    // Like the Passwords app: one Edit button on the item, more in a menu.
+                    if !Capture.isCapture(item) {
+                        Button("Edit") { model.edit(item) }.keyboardShortcut("e").help("Edit (⌘E)").glassButton()
+                    }
+                    Menu {
+                        Button("Delete …", systemImage: "trash", role: .destructive, action: delete)
+                    } label: { Image(systemName: "ellipsis") }
+                        .menuIndicator(.hidden).fixedSize().glassButton().accessibilityLabel("More")
+                }
             }
             if Capture.isCapture(item) {
                 Section {
@@ -602,12 +647,6 @@ struct ItemDetail: View {
             }
         }
         .formStyle(.grouped)
-        .toolbar {
-            ToolbarItemGroup {
-                if !Capture.isCapture(item) { Button("Edit") { model.edit(item) } }
-                Button(role: .destructive, action: delete) { Label("Delete", systemImage: "trash") }
-            }
-        }
     }
 
     private func fieldRow(_ field: ItemField) -> some View {
@@ -633,7 +672,7 @@ struct ItemDetail: View {
             }
         } label: {
             Text(template.spec(field.name)?.label ?? field.name)
-            Text("\(field.name) · \(field.kind.title)")
+            if field.kind != .identifier { Text(field.kind.title) }
         }
     }
 

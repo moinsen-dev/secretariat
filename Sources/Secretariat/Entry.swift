@@ -15,6 +15,10 @@ enum Entry {
         }
         Origin.set(Origin.app)
         NSApplication.shared.setActivationPolicy(.regular)
+        // Design checks: light or dark for this instance only, without touching the Mac's setting.
+        if let look = ProcessInfo.processInfo.environment["SECRETARIAT_APPEARANCE"] {
+            NSApplication.shared.appearance = NSAppearance(named: look == "light" ? .aqua : .darkAqua)
+        }
         SecretariatApp.main()
     }
 }
