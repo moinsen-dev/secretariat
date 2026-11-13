@@ -5,38 +5,38 @@
 | ID | Status | Evidence | Reason |
 |---|---|---|---|
 | T001 | ERLEDIGT | E1025 | Regression auf Release 1.13.1 (0c32a02) |
-| T002 | ERLEDIGT | E1299,E1300,E1301 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T003 | ERLEDIGT | E1242,E1243 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
-| T004 | ERLEDIGT | E1302 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T005 | ERLEDIGT | E1303 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T006 | ERLEDIGT | E1304,E1305 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T007 | ERLEDIGT | E1306,E1307 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T008 | ERLEDIGT | E1308,E1309 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T009 | ERLEDIGT | E1310 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T010 | ERLEDIGT | E1311,E1312,E1313,E1314 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T011 | ERLEDIGT | E1315,E1316 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T013 | ERLEDIGT | E1317,E1318 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T014 | ERLEDIGT | E1319,E1320,E1321 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T015 | ERLEDIGT | E1322,E1323 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T012 | ERLEDIGT | E1324,E1325 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T016 | ERLEDIGT | E1326,E1327,E1328 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T017 | ERLEDIGT | E1329,E1330,E1331 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T018 | ERLEDIGT | E1332,E1333,E1334,E1335 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T019 | ERLEDIGT | E1336,E1337,E1338 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T020 | ERLEDIGT | E1339,E1340,E1341 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T021 | ERLEDIGT | E1275,E1276,E1277 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
-| T022 | ERLEDIGT | E1342,E1343,E1344 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T023 | ERLEDIGT | E1281,E1282,E1283 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
-| T024 | ERLEDIGT | E1345,E1346,E1347 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
-| T025 | ERLEDIGT | E1348,E1349,E1350 | Neubindung Release 1.15.0, siehe docs/release-1.15.0.md |
+| T002 | ERLEDIGT | E1360,E1361,E1362 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T003 | ERLEDIGT | E1363,E1364 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T004 | ERLEDIGT | E1365 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T005 | ERLEDIGT | E1366 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T006 | ERLEDIGT | E1367,E1368 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T007 | ERLEDIGT | E1369,E1370 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T008 | ERLEDIGT | E1371,E1372 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T009 | ERLEDIGT | E1373 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T010 | ERLEDIGT | E1374,E1375,E1376,E1377 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T011 | ERLEDIGT | E1378,E1379 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T013 | ERLEDIGT | E1380,E1381 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T014 | ERLEDIGT | E1382,E1383,E1384 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T015 | ERLEDIGT | E1385,E1386 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T012 | ERLEDIGT | E1387,E1388 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T016 | ERLEDIGT | E1389,E1390,E1391 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T017 | ERLEDIGT | E1392,E1393,E1394 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T018 | ERLEDIGT | E1395,E1396,E1397,E1398 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T019 | ERLEDIGT | E1399,E1400,E1401 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T020 | ERLEDIGT | E1402,E1403,E1404 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T021 | ERLEDIGT | E1405,E1406,E1407 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T022 | ERLEDIGT | E1408,E1409,E1410 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T023 | ERLEDIGT | E1411,E1412,E1413 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T024 | ERLEDIGT | E1414,E1415,E1416 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T025 | ERLEDIGT | E1417,E1418,E1419 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
 | T026 | IN_ARBEIT | E1086,E1087 | Code fertig, 2 Kritikrunden; offen: Wiederherstellen/Schlüssel prüfen in der App und iCloud-Lauf mit echtem Tresor durch Uli |
-| T027 | ERLEDIGT | E1287,E1288,E1289 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
-| T028 | ERLEDIGT | E1290,E1291,E1292 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
-| T029 | ERLEDIGT | E1293,E1294,E1295 | Neubindung nach Redesign, siehe docs/rebind-redesign-2026-11-12.md |
-| T030 | ERLEDIGT | E1296,E1297,E1298 | Redesign Liquid Glass, Kritik PASS, docs/redesign-2026-11-12.md |
-| T031 | OFFEN | - | - |
-| T032 | OFFEN | - | - |
-| T033 | OFFEN | - | - |
+| T027 | ERLEDIGT | E1420,E1421,E1422 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T028 | ERLEDIGT | E1423,E1424,E1425 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T029 | ERLEDIGT | E1426,E1427,E1428 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T030 | ERLEDIGT | E1435,E1436,E1437 | Redesign; Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
+| T031 | ERLEDIGT | E1351,E1352,E1353 | Team-Pakete, zwei App-Läufe mit Touch ID durch Uli, Abnahme PASS |
+| T032 | ERLEDIGT | E1354,E1355,E1356 | Austritt und Rotations-Markierung, App-Lauf, Abnahme PASS |
+| T033 | BLOCKIERT | E1432,E1433,E1434 | pkg braucht Developer ID Installer-Zertifikat (Uli: developer.apple.com → Certificates); verwaltete Mitglieder per Fixture belegt |
 
 ## Evidence
 
@@ -1392,6 +1392,93 @@
 | E1348 | T025 | build | build | normal | 2026-11-12T17:53:18+00:00 | ceb0bd6 | 33a01b5e1ed82a0fc80ffd37 | docs/release-1.15.0.md | PASS |
 | E1349 | T025 | macos | ui | normal | 2026-11-12T17:53:19+00:00 | ceb0bd6 | 33a01b5e1ed82a0fc80ffd37 | docs/release-1.15.0.md | PASS |
 | E1350 | T025 | unit | unit | normal | 2026-11-12T17:53:19+00:00 | ceb0bd6 | 33a01b5e1ed82a0fc80ffd37 | docs/release-1.15.0.md | PASS |
+| E1351 | T031 | build | build | normal | 2026-11-13T07:23:23+00:00 | 2643bfc | 4b4b236a3c93ede803471b24 | docs/team-2026-11-12.md | PASS |
+| E1352 | T031 | unit | unit | normal | 2026-11-13T07:23:23+00:00 | 2643bfc | 4b4b236a3c93ede803471b24 | docs/team-2026-11-12.md | PASS |
+| E1353 | T031 | macos | ui | normal | 2026-11-13T07:23:24+00:00 | 2643bfc | 4b4b236a3c93ede803471b24 | docs/team-2026-11-12.md | PASS |
+| E1354 | T032 | build | build | normal | 2026-11-13T07:23:24+00:00 | 2643bfc | 965549639237bffe91c892b6 | docs/team-2026-11-12.md | PASS |
+| E1355 | T032 | unit | unit | normal | 2026-11-13T07:23:24+00:00 | 2643bfc | 965549639237bffe91c892b6 | docs/team-2026-11-12.md | PASS |
+| E1356 | T032 | macos | ui | normal | 2026-11-13T07:23:24+00:00 | 2643bfc | 965549639237bffe91c892b6 | docs/team-2026-11-12.md | PASS |
+| E1357 | T033 | build | build | normal | 2026-11-13T07:23:24+00:00 | 2643bfc | ca2a6cc9d74705e117ef3aa0 | docs/team-2026-11-12.md | PASS |
+| E1358 | T033 | unit | unit | normal | 2026-11-13T07:23:24+00:00 | 2643bfc | ca2a6cc9d74705e117ef3aa0 | docs/team-2026-11-12.md | PASS |
+| E1359 | T033 | macos | ui | fixture | 2026-11-13T07:23:25+00:00 | 2643bfc | ca2a6cc9d74705e117ef3aa0 | docs/team-2026-11-12.md | PASS |
+| E1360 | T002 | build | build | normal | 2026-11-13T07:23:46+00:00 | 2643bfc | e2efbd519ab140a25f9a3b42 | docs/rebind-team-2026-11-13.md | PASS |
+| E1361 | T002 | macos | ui | normal | 2026-11-13T07:23:46+00:00 | 2643bfc | e2efbd519ab140a25f9a3b42 | docs/rebind-team-2026-11-13.md | PASS |
+| E1362 | T002 | unit | unit | normal | 2026-11-13T07:23:46+00:00 | 2643bfc | e2efbd519ab140a25f9a3b42 | docs/rebind-team-2026-11-13.md | PASS |
+| E1363 | T003 | macos | ui | normal | 2026-11-13T07:23:46+00:00 | 2643bfc | 540f53b41387babb80b912dd | docs/rebind-team-2026-11-13.md | PASS |
+| E1364 | T003 | unit | unit | normal | 2026-11-13T07:23:47+00:00 | 2643bfc | 540f53b41387babb80b912dd | docs/rebind-team-2026-11-13.md | PASS |
+| E1365 | T004 | unit | unit | normal | 2026-11-13T07:23:47+00:00 | 2643bfc | bceb6fa9da36aa4ff54399ed | docs/rebind-team-2026-11-13.md | PASS |
+| E1366 | T005 | macos | ui | normal | 2026-11-13T07:23:47+00:00 | 2643bfc | 00224e0796bd25ba0c0bdf70 | docs/rebind-team-2026-11-13.md | PASS |
+| E1367 | T006 | inspection | inspection | normal | 2026-11-13T07:23:47+00:00 | 2643bfc | dd94b3263a440eea4b21860e | docs/rebind-team-2026-11-13.md | PASS |
+| E1368 | T006 | macos | ui | normal | 2026-11-13T07:23:47+00:00 | 2643bfc | dd94b3263a440eea4b21860e | docs/rebind-team-2026-11-13.md | PASS |
+| E1369 | T007 | build | build | normal | 2026-11-13T07:23:47+00:00 | 2643bfc | 7516b955f34640bf3ac79ea5 | docs/rebind-team-2026-11-13.md | PASS |
+| E1370 | T007 | unit | unit | normal | 2026-11-13T07:23:48+00:00 | 2643bfc | 7516b955f34640bf3ac79ea5 | docs/rebind-team-2026-11-13.md | PASS |
+| E1371 | T008 | macos | ui | normal | 2026-11-13T07:23:48+00:00 | 2643bfc | df655e51290b41c0cff919b4 | docs/rebind-team-2026-11-13.md | PASS |
+| E1372 | T008 | unit | unit | normal | 2026-11-13T07:23:48+00:00 | 2643bfc | df655e51290b41c0cff919b4 | docs/rebind-team-2026-11-13.md | PASS |
+| E1373 | T009 | inspection | inspection | normal | 2026-11-13T07:23:48+00:00 | 2643bfc | d830fca544b2c27e63664af3 | docs/rebind-team-2026-11-13.md | PASS |
+| E1374 | T010 | build | build | normal | 2026-11-13T07:23:48+00:00 | 2643bfc | d80bddbd083351350f551a37 | docs/rebind-team-2026-11-13.md | PASS |
+| E1375 | T010 | inspection | inspection | normal | 2026-11-13T07:23:48+00:00 | 2643bfc | d80bddbd083351350f551a37 | docs/rebind-team-2026-11-13.md | PASS |
+| E1376 | T010 | macos | ui | normal | 2026-11-13T07:23:48+00:00 | 2643bfc | d80bddbd083351350f551a37 | docs/rebind-team-2026-11-13.md | PASS |
+| E1377 | T010 | unit | unit | normal | 2026-11-13T07:23:49+00:00 | 2643bfc | d80bddbd083351350f551a37 | docs/rebind-team-2026-11-13.md | PASS |
+| E1378 | T011 | build | build | normal | 2026-11-13T07:23:49+00:00 | 2643bfc | 69ef02c9ee7762f42762c980 | docs/rebind-team-2026-11-13.md | PASS |
+| E1379 | T011 | unit | unit | normal | 2026-11-13T07:23:49+00:00 | 2643bfc | 69ef02c9ee7762f42762c980 | docs/rebind-team-2026-11-13.md | PASS |
+| E1380 | T013 | build | build | normal | 2026-11-13T07:23:49+00:00 | 2643bfc | 9db3d3799462032228e8da84 | docs/rebind-team-2026-11-13.md | PASS |
+| E1381 | T013 | inspection | inspection | normal | 2026-11-13T07:23:49+00:00 | 2643bfc | 9db3d3799462032228e8da84 | docs/rebind-team-2026-11-13.md | PASS |
+| E1382 | T014 | build | build | normal | 2026-11-13T07:23:50+00:00 | 2643bfc | 43153f9dfcf38250a582dd82 | docs/rebind-team-2026-11-13.md | PASS |
+| E1383 | T014 | macos | ui | normal | 2026-11-13T07:23:50+00:00 | 2643bfc | 43153f9dfcf38250a582dd82 | docs/rebind-team-2026-11-13.md | PASS |
+| E1384 | T014 | unit | unit | normal | 2026-11-13T07:23:50+00:00 | 2643bfc | 43153f9dfcf38250a582dd82 | docs/rebind-team-2026-11-13.md | PASS |
+| E1385 | T015 | inspection | inspection | normal | 2026-11-13T07:23:50+00:00 | 2643bfc | 34928ef5285f9092756ab540 | docs/rebind-team-2026-11-13.md | PASS |
+| E1386 | T015 | macos | ui | normal | 2026-11-13T07:23:50+00:00 | 2643bfc | 34928ef5285f9092756ab540 | docs/rebind-team-2026-11-13.md | PASS |
+| E1387 | T012 | inspection | inspection | normal | 2026-11-13T07:23:50+00:00 | 2643bfc | cbc48c5a3e98bcd58d24275b | docs/rebind-team-2026-11-13.md | PASS |
+| E1388 | T012 | macos | ui | normal | 2026-11-13T07:23:51+00:00 | 2643bfc | cbc48c5a3e98bcd58d24275b | docs/rebind-team-2026-11-13.md | PASS |
+| E1389 | T016 | build | build | normal | 2026-11-13T07:23:51+00:00 | 2643bfc | 35adf40f2ed811749892f290 | docs/rebind-team-2026-11-13.md | PASS |
+| E1390 | T016 | macos | ui | normal | 2026-11-13T07:23:51+00:00 | 2643bfc | 35adf40f2ed811749892f290 | docs/rebind-team-2026-11-13.md | PASS |
+| E1391 | T016 | unit | unit | normal | 2026-11-13T07:23:51+00:00 | 2643bfc | 35adf40f2ed811749892f290 | docs/rebind-team-2026-11-13.md | PASS |
+| E1392 | T017 | build | build | normal | 2026-11-13T07:23:51+00:00 | 2643bfc | 9099dcc2120c9854f9db0327 | docs/rebind-team-2026-11-13.md | PASS |
+| E1393 | T017 | macos | ui | normal | 2026-11-13T07:23:52+00:00 | 2643bfc | 9099dcc2120c9854f9db0327 | docs/rebind-team-2026-11-13.md | PASS |
+| E1394 | T017 | unit | unit | normal | 2026-11-13T07:23:52+00:00 | 2643bfc | 9099dcc2120c9854f9db0327 | docs/rebind-team-2026-11-13.md | PASS |
+| E1395 | T018 | build | build | normal | 2026-11-13T07:23:52+00:00 | 2643bfc | bc8d80de692ef84b7bc7c2e1 | docs/rebind-team-2026-11-13.md | PASS |
+| E1396 | T018 | inspection | inspection | normal | 2026-11-13T07:23:52+00:00 | 2643bfc | bc8d80de692ef84b7bc7c2e1 | docs/rebind-team-2026-11-13.md | PASS |
+| E1397 | T018 | macos | ui | normal | 2026-11-13T07:23:52+00:00 | 2643bfc | bc8d80de692ef84b7bc7c2e1 | docs/rebind-team-2026-11-13.md | PASS |
+| E1398 | T018 | unit | unit | normal | 2026-11-13T07:23:52+00:00 | 2643bfc | bc8d80de692ef84b7bc7c2e1 | docs/rebind-team-2026-11-13.md | PASS |
+| E1399 | T019 | build | build | normal | 2026-11-13T07:23:53+00:00 | 2643bfc | c3344452764a83f3e49192a4 | docs/rebind-team-2026-11-13.md | PASS |
+| E1400 | T019 | macos | ui | normal | 2026-11-13T07:23:53+00:00 | 2643bfc | c3344452764a83f3e49192a4 | docs/rebind-team-2026-11-13.md | PASS |
+| E1401 | T019 | unit | unit | normal | 2026-11-13T07:23:53+00:00 | 2643bfc | c3344452764a83f3e49192a4 | docs/rebind-team-2026-11-13.md | PASS |
+| E1402 | T020 | build | build | normal | 2026-11-13T07:23:53+00:00 | 2643bfc | 73c808e1e889fd3cc9e2ef36 | docs/rebind-team-2026-11-13.md | PASS |
+| E1403 | T020 | macos | ui | normal | 2026-11-13T07:23:53+00:00 | 2643bfc | 73c808e1e889fd3cc9e2ef36 | docs/rebind-team-2026-11-13.md | PASS |
+| E1404 | T020 | unit | unit | normal | 2026-11-13T07:23:53+00:00 | 2643bfc | 73c808e1e889fd3cc9e2ef36 | docs/rebind-team-2026-11-13.md | PASS |
+| E1405 | T021 | build | build | normal | 2026-11-13T07:23:53+00:00 | 2643bfc | 2e7d9b947634c340ecd55a3a | docs/rebind-team-2026-11-13.md | PASS |
+| E1406 | T021 | macos | ui | normal | 2026-11-13T07:23:54+00:00 | 2643bfc | 2e7d9b947634c340ecd55a3a | docs/rebind-team-2026-11-13.md | PASS |
+| E1407 | T021 | unit | unit | normal | 2026-11-13T07:23:54+00:00 | 2643bfc | 2e7d9b947634c340ecd55a3a | docs/rebind-team-2026-11-13.md | PASS |
+| E1408 | T022 | build | build | normal | 2026-11-13T07:23:54+00:00 | 2643bfc | 8721205e5b7d88cbbd0b290f | docs/rebind-team-2026-11-13.md | PASS |
+| E1409 | T022 | macos | ui | normal | 2026-11-13T07:23:54+00:00 | 2643bfc | 8721205e5b7d88cbbd0b290f | docs/rebind-team-2026-11-13.md | PASS |
+| E1410 | T022 | unit | unit | normal | 2026-11-13T07:23:54+00:00 | 2643bfc | 8721205e5b7d88cbbd0b290f | docs/rebind-team-2026-11-13.md | PASS |
+| E1411 | T023 | build | build | normal | 2026-11-13T07:23:54+00:00 | 2643bfc | ee836e698f747a350629b508 | docs/rebind-team-2026-11-13.md | PASS |
+| E1412 | T023 | macos | ui | normal | 2026-11-13T07:23:55+00:00 | 2643bfc | ee836e698f747a350629b508 | docs/rebind-team-2026-11-13.md | PASS |
+| E1413 | T023 | unit | unit | normal | 2026-11-13T07:23:55+00:00 | 2643bfc | ee836e698f747a350629b508 | docs/rebind-team-2026-11-13.md | PASS |
+| E1414 | T024 | build | build | normal | 2026-11-13T07:23:55+00:00 | 2643bfc | f147792e0a9c9af6b129c3f5 | docs/rebind-team-2026-11-13.md | PASS |
+| E1415 | T024 | macos | ui | normal | 2026-11-13T07:23:55+00:00 | 2643bfc | f147792e0a9c9af6b129c3f5 | docs/rebind-team-2026-11-13.md | PASS |
+| E1416 | T024 | unit | unit | normal | 2026-11-13T07:23:55+00:00 | 2643bfc | f147792e0a9c9af6b129c3f5 | docs/rebind-team-2026-11-13.md | PASS |
+| E1417 | T025 | build | build | normal | 2026-11-13T07:23:55+00:00 | 2643bfc | 809b10d402da7551d706459b | docs/rebind-team-2026-11-13.md | PASS |
+| E1418 | T025 | macos | ui | normal | 2026-11-13T07:23:56+00:00 | 2643bfc | 809b10d402da7551d706459b | docs/rebind-team-2026-11-13.md | PASS |
+| E1419 | T025 | unit | unit | normal | 2026-11-13T07:23:56+00:00 | 2643bfc | 809b10d402da7551d706459b | docs/rebind-team-2026-11-13.md | PASS |
+| E1420 | T027 | build | build | normal | 2026-11-13T07:23:56+00:00 | 2643bfc | 9f8c34496255721f8ec56843 | docs/rebind-team-2026-11-13.md | PASS |
+| E1421 | T027 | macos | ui | normal | 2026-11-13T07:23:56+00:00 | 2643bfc | 9f8c34496255721f8ec56843 | docs/rebind-team-2026-11-13.md | PASS |
+| E1422 | T027 | unit | unit | normal | 2026-11-13T07:23:56+00:00 | 2643bfc | 9f8c34496255721f8ec56843 | docs/rebind-team-2026-11-13.md | PASS |
+| E1423 | T028 | build | build | normal | 2026-11-13T07:23:57+00:00 | 2643bfc | 1a8ebebc35fc347f2475debb | docs/rebind-team-2026-11-13.md | PASS |
+| E1424 | T028 | macos | ui | normal | 2026-11-13T07:23:57+00:00 | 2643bfc | 1a8ebebc35fc347f2475debb | docs/rebind-team-2026-11-13.md | PASS |
+| E1425 | T028 | unit | unit | normal | 2026-11-13T07:23:57+00:00 | 2643bfc | 1a8ebebc35fc347f2475debb | docs/rebind-team-2026-11-13.md | PASS |
+| E1426 | T029 | build | build | normal | 2026-11-13T07:23:57+00:00 | 2643bfc | 43698d031916c645981503b1 | docs/rebind-team-2026-11-13.md | PASS |
+| E1427 | T029 | macos | ui | normal | 2026-11-13T07:23:57+00:00 | 2643bfc | 43698d031916c645981503b1 | docs/rebind-team-2026-11-13.md | PASS |
+| E1428 | T029 | unit | unit | normal | 2026-11-13T07:23:57+00:00 | 2643bfc | 43698d031916c645981503b1 | docs/rebind-team-2026-11-13.md | PASS |
+| E1429 | T030 | build | build | normal | 2026-11-13T07:23:58+00:00 | 2643bfc | fc15846a248ff78b8af6edd8 | docs/rebind-team-2026-11-13.md | PASS |
+| E1430 | T030 | macos | ui | normal | 2026-11-13T07:23:58+00:00 | 2643bfc | fc15846a248ff78b8af6edd8 | docs/rebind-team-2026-11-13.md | PASS |
+| E1431 | T030 | unit | unit | normal | 2026-11-13T07:23:58+00:00 | 2643bfc | fc15846a248ff78b8af6edd8 | docs/rebind-team-2026-11-13.md | PASS |
+| E1432 | T033 | build | build | normal | 2026-11-13T07:24:40+00:00 | 770c09e | 947ea14683dfe1551cbcfcf5 | docs/team-2026-11-12.md | PASS |
+| E1433 | T033 | unit | unit | normal | 2026-11-13T07:24:40+00:00 | 770c09e | 947ea14683dfe1551cbcfcf5 | docs/team-2026-11-12.md | PASS |
+| E1434 | T033 | macos | ui | fixture | 2026-11-13T07:24:41+00:00 | 770c09e | 947ea14683dfe1551cbcfcf5 | docs/team-2026-11-12.md | PASS |
+| E1435 | T030 | build | build | normal | 2026-11-13T07:24:50+00:00 | 770c09e | fc15846a248ff78b8af6edd8 | docs/rebind-team-2026-11-13.md | PASS |
+| E1436 | T030 | unit | unit | normal | 2026-11-13T07:24:50+00:00 | 770c09e | fc15846a248ff78b8af6edd8 | docs/rebind-team-2026-11-13.md | PASS |
+| E1437 | T030 | macos | ui | normal | 2026-11-13T07:24:50+00:00 | 770c09e | fc15846a248ff78b8af6edd8 | docs/rebind-team-2026-11-13.md | PASS |
 
 ## Reviews
 
@@ -2062,6 +2149,51 @@
 | RV663 | UC05 | self | PASS | 7460b0a0f15eba4eaa9052ad | docs/release-1.15.0.md |
 | RV664 | UC07 | self | PASS | 591f7920f9dadc8f9bdda41d | docs/release-1.15.0.md |
 | RV665 | PLAN | independent | PASS | 295e2c7388ed98f2d06fe4f2 | docs/review-team-plan-2026-11-12.md |
+| RV666 | UC02 | self | PASS | 4652cb983cec8e74a3a80a7c | docs/rebind-team-2026-11-13.md |
+| RV667 | UC03 | self | PASS | c04c15a728e7e2dfd29d4ac1 | docs/rebind-team-2026-11-13.md |
+| RV668 | UC04 | self | PASS | 832ecd49b838151e547315a4 | docs/rebind-team-2026-11-13.md |
+| RV669 | UC05 | self | PASS | 59d30c9900365e75fe47aa65 | docs/rebind-team-2026-11-13.md |
+| RV670 | UC06 | self | PASS | 17ed76abdb6ceccb822d4169 | docs/rebind-team-2026-11-13.md |
+| RV671 | UC07 | self | PASS | edc088f3eee1712990390356 | docs/rebind-team-2026-11-13.md |
+| RV672 | UC08 | self | PASS | c3ccb636514d3d913a2618ad | docs/rebind-team-2026-11-13.md |
+| RV673 | UC09 | self | PASS | 5c2362a8b8b211a36bbac663 | docs/rebind-team-2026-11-13.md |
+| RV674 | UC10 | self | PASS | 6b9ae251e6650c121f28cda9 | docs/rebind-team-2026-11-13.md |
+| RV675 | UC11 | self | PASS | cf6cf8c5066b9991487a912a | docs/rebind-team-2026-11-13.md |
+| RV676 | UC12 | self | PASS | 850fae0e08fbd22565a0ff43 | docs/rebind-team-2026-11-13.md |
+| RV677 | UC13 | self | PASS | 97c143e3932535082ce84305 | docs/rebind-team-2026-11-13.md |
+| RV678 | UC14 | self | PASS | d8316b7696eb90ae4b1bdd0b | docs/rebind-team-2026-11-13.md |
+| RV679 | UC15 | self | PASS | a77b277a69b03434bb852f17 | docs/rebind-team-2026-11-13.md |
+| RV680 | UC16 | self | PASS | ed3cf413bd960f5aeb99991a | docs/rebind-team-2026-11-13.md |
+| RV681 | UC17 | self | PASS | a46f61e2d103c910561f5b29 | docs/rebind-team-2026-11-13.md |
+| RV682 | UC18 | self | PASS | 05503677db5a5dbba5e3c35c | docs/rebind-team-2026-11-13.md |
+| RV683 | UC19 | self | PASS | da8141c49a7ff91f52cc3fca | docs/rebind-team-2026-11-13.md |
+| RV684 | UC20 | self | PASS | 50262e729314060c675c0444 | docs/rebind-team-2026-11-13.md |
+| RV685 | UC22 | self | PASS | 1567d04eda94c4c2fc588f53 | docs/rebind-team-2026-11-13.md |
+| RV686 | UC23 | self | PASS | b4534c0fee27a1e202bb525f | docs/rebind-team-2026-11-13.md |
+| RV687 | UC03 | self | PASS | 5ac95f3cdc8e6dcb4281a0b4 | docs/rebind-team-2026-11-13.md |
+| RV688 | UC05 | self | PASS | a2874b22893c528be1e58759 | docs/rebind-team-2026-11-13.md |
+| RV689 | UC07 | self | PASS | 0b6cfb5abb17606f78b545bf | docs/rebind-team-2026-11-13.md |
+| RV690 | UC09 | self | PASS | e88afb3b6ba375af674df4bd | docs/rebind-team-2026-11-13.md |
+| RV691 | UC11 | self | PASS | 47ad3da541a2a5b9974fec7c | docs/rebind-team-2026-11-13.md |
+| RV692 | UC13 | self | PASS | 9cfb48b8f4fd2d7142afe3c3 | docs/rebind-team-2026-11-13.md |
+| RV693 | UC15 | self | PASS | 221ebe3e862bfb73e3cc1466 | docs/rebind-team-2026-11-13.md |
+| RV694 | UC17 | self | PASS | 404e641933372eada48042f3 | docs/rebind-team-2026-11-13.md |
+| RV695 | UC19 | self | PASS | 399d55cab105826e3b7b75a5 | docs/rebind-team-2026-11-13.md |
+| RV696 | UC20 | self | PASS | 333a9d223b314d428a5370a7 | docs/rebind-team-2026-11-13.md |
+| RV697 | UC23 | self | PASS | 2e952b8e65cc36f10d16a5c5 | docs/rebind-team-2026-11-13.md |
+| RV698 | UC04 | self | PASS | 5ee0c24a766846c1421b4945 | docs/rebind-team-2026-11-13.md |
+| RV699 | UC06 | self | PASS | c3d525ea92607a2bfad9dd57 | docs/rebind-team-2026-11-13.md |
+| RV700 | UC08 | self | PASS | 764eb726b7d4be400451b859 | docs/rebind-team-2026-11-13.md |
+| RV701 | UC10 | self | PASS | 08a2567ed17163b326653a5e | docs/rebind-team-2026-11-13.md |
+| RV702 | UC12 | self | PASS | d5c080644f63b45878a25acd | docs/rebind-team-2026-11-13.md |
+| RV703 | UC14 | self | PASS | f5d5569a37b8c39d3acdc34a | docs/rebind-team-2026-11-13.md |
+| RV704 | UC16 | self | PASS | 8380c85dbac7b3b7fb939557 | docs/rebind-team-2026-11-13.md |
+| RV705 | UC18 | self | PASS | 80c092c3975c1caaa0bcc021 | docs/rebind-team-2026-11-13.md |
+| RV706 | UC22 | self | PASS | e0df54d247223e21a7a60fa9 | docs/rebind-team-2026-11-13.md |
+| RV707 | UC25 | independent | PASS | f642eae4cac976ba76bd6db3 | docs/review-team-2026-11-13.md |
+| RV708 | UC26 | independent | PASS | 807b355e5f203d8753458661 | docs/review-team-2026-11-13.md |
+| RV709 | UC27 | independent | BLOCKED | 81e7a31e3ff0e8fa29bfbe55 | docs/review-team-2026-11-13.md |
+| RV710 | UC24 | self | PASS | 38cb4e9eee6d95b512d221ad | docs/rebind-team-2026-11-13.md |
 
 ## Releases
 

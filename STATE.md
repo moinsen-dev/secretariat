@@ -4,12 +4,12 @@
 
 - schema: app-workflow/1
 - status: ACTIVE
-- phase: P24
-- use_case: UC24
-- task: T030
-- next: Release 1.15.0 ist live; M5 holt die Version beim nächsten mesh-Lauf
-- updated: 2026-11-12T17:57:33+00:00
-- plan_sha256: 49cc90a4873ab39ff2341a3aad22b115c3935c9219ba4907fda2d808b2be9ebe
-- tracker_sha256: edf7a8c961a858708530727a4e7e4009b1ca46b7516add2bf9fb395793bdffe3
+- phase: P25
+- use_case: UC27
+- task: T033
+- next: Uli: Developer ID Installer-Zertifikat anlegen, dann script/package.sh; Release 1.16.0 mit Team nach Ulis Ja
+- updated: 2026-11-13T07:24:56+00:00
+- plan_sha256: 14232fb1661398cfdf07e96ede2f00de0084f0dc747ae4add6352d4d5baf8c7e
+- tracker_sha256: 76943e003b4bb2eede0884c87531544bb95190739743e3a5595419400b2dcfe8
 
 Einstieg: `AGENTS.md`. Verbindliche Aufgabenstatus und Nachweise: `TRACKER.md`. Diese Zusammenfassung mit dem Werkzeug aus Plan und Tracker aktualisieren.
