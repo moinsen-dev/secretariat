@@ -11,6 +11,6 @@ Bedrohungsmodell. Prüfungen: `docs/team-2026-11-12.md`, Abnahme `docs/review-te
 | Release-Build | `secretariat run werkzeuge -- script/release.sh`: Notarisierung `Accepted`, `stapler validate` ok, `spctl` accepted („Notarized Developer ID“), `codesign --verify --deep --strict` ok, `sdk 27.2`; `dist/Secretariat-1.16.0.zip` (SHA-256 2511b17eb52fdbed…), `appcast.xml` sparkle:version 32 |
 | Installation lokal (M4) | Ulis Go: `script/install.sh`, `--version` 1.16.0, `codesign` ok, `status`: 276 Einträge, 177 Profile, „to rotate: none“; `team list`: keine Mitglieder |
 | Verteilung | `mesh deliver`: m1 und mini „delivered secretariat“; Mini per SSH `--version` 1.16.0; M5 offline, folgt beim nächsten Lauf |
-| Website | `dist/site-1.16.0` gebaut (alle Zips bis 1.16.0, `Secretariat-latest.zip` = 1.16.0, `teams.html`); Veröffentlichung durch Uli ausstehend |
+| Website | Uli: `wrangler pages deploy dist/site-1.16.0 --project-name secretariat --branch main` (Deployment ea7cae97). Live geprüft: Feed 1.16.0; `Secretariat-latest.zip` und `Secretariat-1.16.0.zip` byte-gleich mit dem notarisierten Zip (2511b17eb52fdbed…), 1.15.0 weiter da; Abschnitt `#teams`, `/teams` (Admin-Anleitung) und „Sharing with your team“ im Bedrohungsmodell online |
 | GitHub | Ulis Go: Push nach `main` |
 | MDM-Paket | blockiert: kein „Developer ID Installer“-Zertifikat |
