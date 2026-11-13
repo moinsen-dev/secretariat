@@ -10,7 +10,8 @@ Inhalt: Website-Logins rund um Zugangsdaten (Richtung Uli 2026-11-13): Passwort-
 | Installation lokal (M4) | Ulis Go („ja release“): `script/install.sh` → `~/Applications/Secretariat.app`, `secretariat --version` 1.17.0, `codesign --verify --deep --strict` ok, `spctl` ok; `status`: Tresor geöffnet, Lizenz aktiv, nichts zu rotieren |
 | App mit echtem Tresor | View → Inventory (⌥⌘I) öffnet die Inventur, Liste „To Review“ mit den importierten Logins, Profilfilter und „Check Online“; `audit-logins` zählt Lösch-Wege (nur Zahlen hier) |
 | Verteilung | über das Mesh innerhalb von 15 Minuten an die anderen Macs (nicht einzeln geprüft) |
-| Website / GitHub | nicht ausgeführt: Website-Deploy und Push nur mit Ulis Go |
+| GitHub | Ulis Go („Ja, beides“): Push nach `main` (be476f4..83fe4d6); vorher die ungepushten Commits auf Adressen und Namen aus dem Tresor geprüft: keine |
+| Website | Ulis Go: `secretariat run werkzeuge -- wrangler pages deploy dist/site-1.17.0 --project-name secretariat --branch main` (Deployment 1516f035). Live geprüft: Feed 1.17.0; `Secretariat-1.17.0.zip` und `Secretariat-latest.zip` byte-gleich mit dem notarisierten Zip (9ef9f7f2bd040afb…), `Secretariat-1.17.0.pkg` und `Secretariat-latest.pkg` byte-gleich mit dem Paket (998d11bab255b957…); Abschnitt `#accounts` mit `import-logins` online; 1.16.0 weiter erreichbar |
 
 ## Neubindung der älteren Aufgaben (T001–T033)
 
