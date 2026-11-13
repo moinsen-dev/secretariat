@@ -707,6 +707,10 @@ secretariat profile bind \
         <div><p>Yes. Everyone keeps their own keys in their own keychain, and their agents stay blind to them. When a key has to go to a colleague, it travels as a sealed file only that colleague can open; when someone leaves, Secretariat lists what they got and lets you mark it for rotation. What it doesn't do: a shared live vault, roles, central audit or single sign-on. For those, keep shared secrets in 1Password or Bitwarden. One license per person covers all of that person's Macs; for five or more, write to <a href="mailto:business@moinsen.dev">business@moinsen.dev</a>. Admins: <a href="teams.html">rolling out to a team</a>.</p></div>
       </details>
       <details>
+        <summary>How do I use my own API key with Claude Code or Codex?</summary>
+        <div><p>Step by step, with and without Secretariat: <a href="/claude-code-api-key">Claude Code with an Anthropic API key</a> (environment variable, <code>apiKeyHelper</code>, keeping the key out of the commands the agent runs) and <a href="/codex-api-key">Codex CLI with an OpenAI API key</a> (keychain instead of <code>auth.json</code>, <code>CODEX_API_KEY</code> for single runs).</p></div>
+      </details>
+      <details>
         <summary>Which agents does it work with?</summary>
         <div><p>Any agent that can run a shell command can use <code>secretariat run</code>. Claude Code also gets the session hint and the company rule file. Claude Desktop, Cursor and other MCP clients without a shell use <code>secretariat mcp</code>.</p></div>
       </details>
