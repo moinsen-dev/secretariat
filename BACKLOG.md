@@ -21,3 +21,11 @@ Zu prüfen:
 Eingetragen 2026-11-11 von Uli („erst mal ins Backlog“).
 
 Tresor unterwegs: Einträge suchen und ansehen (Face ID), Website-Logins per iOS-AutoFill (Credential-Provider-Erweiterung), Kennungen kopieren. Technisch ohne eigenen Server möglich: Die Einträge liegen synchronisiert im iCloud-Schlüsselbund mit der Zugriffsgruppe `VXX45ZYNM8.dev.moinsen.secretariat.local`, eine iPhone-App desselben Teams darf diese Gruppe lesen. Offen: App-Store-Prüfung für Passwortmanager, Preismodell (Teil der Mac-Lizenz oder eigener Preis), Pflegeaufwand, Schutz von „Only for me“ und Touch-ID-Kennzeichen auf iOS. Ausarbeitung: Ideenkompass, „Idee - Secretariat für iPhone“.
+
+## Öffnen und anmelden: Nacharbeiten
+
+Eingetragen 2026-11-13. „Open and Sign In“ (`secretariat open`, MCP `open_login`) ist seit 1.18.0 erledigt, Bericht `docs/open-login-2026-11-13.md`. Offen:
+
+- Mit Safari und Firefox als Standardbrowser prüfen (bisher nur Chrome).
+- Touch-ID-Abbruch: kurzer Hinweis statt stillem Ende.
+- Mehrstufige Anmeldungen (erst Benutzername, dann Passwort auf der nächsten Seite) und Anmeldeseiten, die auf einen anderen Host umleiten (SSO), werden noch nicht ausgefüllt.

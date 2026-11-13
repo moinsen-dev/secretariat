@@ -316,6 +316,15 @@ public enum Commands {
             guard a.positional.count == 2 else { throw AgentError("invalid_arguments", "Usage: secretariat item rename PATH NEW_PATH") }
             return try show(try vault.rename(path: a.positional[0], to: a.positional[1]))
 
+        case ("open", _):
+            let a = try Arguments(all.dropFirst(), usage: usage)
+            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Usage: secretariat open PATH") }
+            let item = try vault.item(path: a.positional[0])
+            let url = try LoginOpen.check(item)
+            try LoginOpen.send(item.path, Origin.current)
+            let host = LoginFill.host(url.absoluteString) ?? url.absoluteString
+            return try done("Opening \(host) in the default browser. Secretariat fills \(item.path) after Touch ID; the form is not submitted.")
+
         case ("get", _):
             let a = try Arguments(all.dropFirst(), usage: usage)
             guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Usage: secretariat get PATH/FIELD") }

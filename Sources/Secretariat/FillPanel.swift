@@ -146,10 +146,10 @@ final class FillController {
         return LoginFill.origin(a) == LoginFill.origin(b)
     }
 
-    static func tell(_ text: String) {
+    static func tell(_ text: String, title: String = "Nothing was typed") {
         messagePanel?.close()
         let view = VStack(alignment: .leading, spacing: 12) {
-            Label("Nothing was typed", systemImage: "exclamationmark.triangle.fill").font(.headline).foregroundStyle(.orange)
+            Label(title, systemImage: "exclamationmark.triangle.fill").font(.headline).foregroundStyle(.orange)
             Text(text).fixedSize(horizontal: false, vertical: true)
             HStack { Spacer(); Button("OK") { messagePanel?.close(); messagePanel = nil }.keyboardShortcut(.defaultAction) }
         }

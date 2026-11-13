@@ -33,6 +33,7 @@ struct SecretariatApp: App {
         CaptureController.shared.install(model)
         FillController.shared.install(model)
         SaveLoginController.shared.install(model)
+        OpenLoginController.shared.install(model)
     }
     var body: some Scene {
         WindowGroup("Secretariat") {

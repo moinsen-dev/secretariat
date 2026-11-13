@@ -67,7 +67,8 @@ public enum LoginFill {
         !value.isEmpty && !value.unicodeScalars.contains { CharacterSet.controlCharacters.contains($0) }
     }
 
-    static func username(_ item: ItemMeta) -> String? {
+    /// The user name stored with a login item (an identifier field username, login, email or user).
+    public static func username(_ item: ItemMeta) -> String? {
         for name in ["username", "login", "email", "user"] {
             if let field = item.field(name), field.kind == .identifier, let value = field.value, !value.isEmpty { return value }
         }

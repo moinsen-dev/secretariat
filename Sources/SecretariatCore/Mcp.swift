@@ -27,6 +27,8 @@ public enum McpServer {
              properties: [:], required: []) { _ in ["items"] },
         Tool(name: "show_item", description: "One item with its fields (identifier values only).",
              properties: ["path": str], required: ["path"]) { a in ["item", "show", try string(a, "path")] },
+        Tool(name: "open_login", description: "Open a login item's web address (field url or website) in the user's default browser and let the Secretariat app fill the user name and password after the user confirms with Touch ID. You never get the password; the form is not submitted, the user does that. Use it when the user wants to be signed in to a site.",
+             properties: ["path": str], required: ["path"]) { a in ["open", try string(a, "path")] },
         Tool(name: "get_identifier", description: "Value of a non-secret identifier field, e.g. moinsen/apple-developer/team_id or moinsen/company/email. Refuses secret fields.",
              properties: ["reference": str], required: ["reference"]) { a in ["get", try string(a, "reference")] },
         Tool(name: "list_templates", description: "Templates (kinds of items) with their fields.",

@@ -652,6 +652,11 @@ struct ItemDetail: View {
                                  subtitle: "\(template.title) · \(item.path)")
                     Spacer(minLength: 12)
                     // Like the Passwords app: one Edit button on the item, more in a menu.
+                    if LoginOpen.address(item) != nil, LoginFill.fillableField(item) != nil {
+                        Button("Open and Sign In", systemImage: "arrow.up.forward.app") { OpenLoginController.shared.open(item) }
+                            .help("Open the page in your browser and fill the user name and password after Touch ID. The form is not submitted.")
+                            .glassButton()
+                    }
                     if !Capture.isCapture(item) {
                         Button("Edit") { model.edit(item) }.help("Edit (⌘E)").glassButton()
                     }

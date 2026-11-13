@@ -78,8 +78,10 @@ public struct HistoryEntry: Identifiable, Equatable, Sendable {
         case "run": return "Run with profile \(details["profile"] ?? "?") · \(count("variables", "variable"))"
         case "mcp.run": return "Run through MCP with profile \(details["profile"] ?? "?")"
         case "mcp": return "MCP tool \(details["tool"] ?? "?")"
+        case "open.login": return "Opened \(details["host"] ?? "?") to sign in with \(details["item"] ?? "?")"
         case "get": return "Read identifier \(details["field"] ?? "?")"
-        case "read": return "\((details["purpose"] ?? "show").capitalized) \(details["field"] ?? "?")"
+        // Only the first letter: the purpose may name a host ("fill example.com"), which must keep its spelling.
+        case "read": return "\((details["purpose"] ?? "show").prefix(1).uppercased() + (details["purpose"] ?? "show").dropFirst()) \(details["field"] ?? "?")"
         case "item.save": return "Saved \(details["item"] ?? "?")" + (details["values"] == "set" ? " (values changed)" : "")
         case "item.delete": return "Deleted \(details["item"] ?? "?")"
         case "field.move": return "Moved \(details["from"] ?? "?") to \(details["to"] ?? "?")"

@@ -117,7 +117,7 @@ public struct PreparedLaunch {
 }
 
 public enum CommandLineInterface {
-    public static let version = "1.17.0"
+    public static let version = "1.18.0"
     public static let help = """
     Secretariat \(version) – confidential data for you and your agents
 
@@ -127,6 +127,7 @@ public enum CommandLineInterface {
       secretariat item create PATH --kind KIND [--set FIELD=VALUE …] [--source TEXT] [--expires YYYY-MM-DD] [--json]
       secretariat item set PATH [--set FIELD=VALUE …] [--unset FIELD …] [--source TEXT] [--expires YYYY-MM-DD] [--json]
       secretariat item rename PATH NEW_PATH [--json]
+      secretariat open PATH                          open the item's web address in the default browser; the app fills user name and password after Touch ID
       secretariat get PATH/FIELD                     value of an identifier (never secrets)
       secretariat header PATH/FIELD [--bearer] [--name HEADER]
                                                      headersHelper for HTTP MCP servers: {"Authorization":"Bearer …"} to a pipe, never a terminal or file
