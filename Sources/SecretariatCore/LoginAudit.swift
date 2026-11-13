@@ -10,7 +10,7 @@ public enum LoginAudit {
         case local, reused, weak, leaked, domainGone
         public var title: String {
             switch self {
-            case .local: "Local address"
+            case .local: "Local or IP address"
             case .reused: "Reused password"
             case .weak: "Weak password"
             case .leaked: "In known leaks"
@@ -93,10 +93,9 @@ public enum LoginAudit {
         let h = host.split(separator: ":").first.map(String.init) ?? host
         if h == "localhost" || h.hasSuffix(".local") || h.hasSuffix(".lan") || h.hasSuffix(".home") || h.hasSuffix(".internal")
             || h.hasSuffix(".fritz.box") || h == "fritz.box" || h.hasSuffix(".localhost") { return true }
-        let parts = h.split(separator: ".").compactMap { Int($0) }
-        guard parts.count == 4 else { return false }
-        return parts[0] == 10 || parts[0] == 127 || (parts[0] == 192 && parts[1] == 168) || (parts[0] == 172 && (16...31).contains(parts[1]))
-            || (parts[0] == 169 && parts[1] == 254)
+        // Any IP address is a device or server (router, NAS, test machine), not an account at a company.
+        let labels = h.split(separator: ".", omittingEmptySubsequences: false)
+        return labels.count == 4 && labels.allSatisfy { !$0.isEmpty && $0.allSatisfy(\.isNumber) }
     }
 
     static func host(_ item: ItemMeta) -> String? {

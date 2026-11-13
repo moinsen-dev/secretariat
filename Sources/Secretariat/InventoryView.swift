@@ -253,7 +253,7 @@ struct InventoryDetail: View {
 
     private func text(_ finding: LoginAudit.Finding) -> String {
         switch finding {
-        case .local: "Local address (router, test server); usually safe to delete"
+        case .local: "Local or IP address (router, server, test machine); no account at a company"
         case .reused: "Same password as " + entry.reusedWith.prefix(3).joined(separator: ", ") + (entry.reusedWith.count > 3 ? " and \(entry.reusedWith.count - 3) more" : "")
         case .weak: "Weak password: short or only one kind of character"
         case .leaked: "This password appears \((entry.leakCount ?? 0).formatted()) times in known leaks"

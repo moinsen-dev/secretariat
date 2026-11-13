@@ -13,7 +13,8 @@ private func login(_ path: String, _ url: String, user: String = "me", origin: S
     for host in ["192.168.178.1", "10.0.0.5", "172.20.1.1", "127.0.0.1", "localhost:3000", "fritz.box", "nas.local", "printer.lan"] {
         #expect(LoginAudit.isLocal(host), "\(host)")
     }
-    for host in ["example.com", "172.32.0.1", "8.8.8.8", "github.com"] { #expect(!LoginAudit.isLocal(host), "\(host)") }
+    for host in ["8.8.8.8", "0.0.0.0", "203.0.113.15"] { #expect(LoginAudit.isLocal(host), "\(host)") }   // IP addresses are devices
+    for host in ["example.com", "github.com", "1password.eu", "90elf.de", "123zimmerpflanzen.de"] { #expect(!LoginAudit.isLocal(host), "\(host)") }
 }
 
 @Test func weakPasswords() {
