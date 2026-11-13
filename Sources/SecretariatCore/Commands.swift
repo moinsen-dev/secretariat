@@ -437,8 +437,8 @@ public enum Commands {
             return (0, try json(result), lines.joined(separator: "\n"))
 
         case ("audit-logins", _):
-            let a = try Arguments(all.dropFirst(), values: ["--from", "--finding"], usage: usage)
-            guard a.positional.isEmpty else { throw AgentError("invalid_arguments", "Usage: secretariat audit-logins [--from PROFILE] [--finding local|reused|weak|leaked|domainGone]") }
+            let a = try Arguments(all.dropFirst(), values: ["--from", "--finding", "--closing"], usage: usage)
+            guard a.positional.isEmpty else { throw AgentError("invalid_arguments", "Usage: secretariat audit-logins [--from PROFILE] [--finding local|reused|weak|leaked|domainGone] [--closing easy|medium|hard|impossible]") }
             let items = try vault.list()
             let online = LoginAudit.loadOnline(vault.configuration.paths)
             var entries = LoginAudit.entries(items, facts: LoginAudit.facts(items, vault: vault), online: online)
@@ -449,12 +449,17 @@ public enum Commands {
                 guard let finding = LoginAudit.Finding(rawValue: raw) else { throw AgentError("invalid_arguments", "Unknown finding \(raw). Use local, reused, weak, leaked or domainGone.") }
                 listed = entries.filter { $0.findings.contains(finding) }.map(\.item.path)
             }
+            if let raw = try a.option("--closing") {
+                guard let difficulty = AccountDeletion.Difficulty(rawValue: raw) else { throw AgentError("invalid_arguments", "Unknown --closing \(raw). Use easy, medium, hard or impossible.") }
+                listed += entries.filter { $0.deletion?.difficulty == difficulty }.map(\.item.path)
+            }
             struct Audit: Encodable { let schemaVersion = 2; let ok = true; let summary: LoginAudit.Summary; let listed: [String] }
             var lines = ["\(summary.logins) website logins",
                          "Local addresses: \(summary.local)", "Reused passwords: \(summary.reused)", "Weak passwords: \(summary.weak)",
                          summary.onlineChecked == nil ? "In known leaks / domain gone: not checked yet (app: Inventory → Check Online)"
                                                       : "In known leaks: \(summary.leaked)\nDomain gone: \(summary.domainGone)",
-                         "Decided: keep \(summary.keep), close \(summary.close), change \(summary.change); open \(summary.undecided)"]
+                         "Decided: keep \(summary.keep), close \(summary.close), change \(summary.change); open \(summary.undecided)",
+                         "Closing (JustDeleteMe): easy \(summary.easy), extra steps \(summary.medium), via support \(summary.hard), impossible \(summary.impossible), no guide \(summary.withoutGuide)"]
             lines += listed
             return (0, try json(Audit(summary: summary, listed: listed)), lines.joined(separator: "\n"))
 

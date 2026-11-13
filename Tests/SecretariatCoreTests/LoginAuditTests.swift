@@ -50,7 +50,7 @@ private func login(_ path: String, _ url: String, user: String = "me", origin: S
     #expect(summary.undecided == 4)
     #expect(LoginAudit.changePasswordURL(byPath["web/a.test"]!)?.absoluteString == "https://a.test/.well-known/change-password")
     #expect(LoginAudit.changePasswordURL(byPath["web/192.168.178.1"]!) == nil)
-    #expect(LoginAudit.closeAccountSearchURL(byPath["web/shop.b.test"]!)?.absoluteString.contains("b.test%20delete%20account") == true)
+    #expect(LoginAudit.closeAccountURL(byPath["web/shop.b.test"]!)?.absoluteString.contains("b.test%20delete%20account") == true)
 }
 
 @Test func pwnedRangeAnswerIsParsed() {
@@ -89,4 +89,37 @@ private func login(_ path: String, _ url: String, user: String = "me", origin: S
     let (_, privat) = try f.cli("audit-logins", "--from", "Chrome: Privat")
     #expect(privat.contains("\"logins\" : 1"))
     #expect(f.code("audit-logins", "--finding", "nope") == "invalid_arguments")
+}
+
+@Test func deletionGuidesMatchByHostAndSite() {
+    let guides = [AccountDeletion.Guide(name: "Shop", url: "https://help.shop.test/delete", difficulty: .easy, domains: ["shop.test"], notes: nil, email: nil),
+                  AccountDeletion.Guide(name: "Mail", url: "https://mail.test/settings", difficulty: .hard, domains: [], notes: "Write to support.", email: "privacy@mail.test")]
+    let directory = AccountDeletion.Directory(guides: guides)
+    #expect(directory.guide(host: "shop.test")?.name == "Shop")
+    #expect(directory.guide(host: "accounts.shop.test")?.name == "Shop")      // same registrable site
+    #expect(directory.guide(host: "mail.test")?.email == "privacy@mail.test")
+    #expect(directory.guide(host: "other.test") == nil)
+    let item = login("web/shop.test", "https://www.shop.test/login")
+    let router = login("web/192.168.0.1", "http://192.168.0.1/")
+    let entries = LoginAudit.entries([item, router], facts: [:], guides: directory)
+    #expect(entries.first { $0.item.path == "web/shop.test" }?.deletion?.difficulty == .easy)
+    #expect(entries.first { $0.item.path == "web/192.168.0.1" }?.deletion == nil)
+    #expect(LoginAudit.closeAccountURL(entries.first { $0.item.path == "web/shop.test" }!)?.absoluteString == "https://help.shop.test/delete")
+    let summary = LoginAudit.summary(entries, online: .init())
+    #expect(summary.easy == 1 && summary.withoutGuide == 0)
+}
+
+@Test func bundledDeletionDirectoryLoads() {
+    let directory = AccountDeletion.bundled
+    #expect(directory.count > 400)
+    #expect(directory.source.contains("MIT"))
+    #expect(directory.guide(host: "github.com") != nil)
+}
+
+@Test func auditLoginsListsByClosingDifficulty() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    try f.vault.save(login("web/github.com", "https://github.com/login"), secrets: ["password": "Artificial-Long-Value-31"])
+    let (_, json) = try f.cli("audit-logins", "--closing", AccountDeletion.bundled.guide(host: "github.com")!.difficulty.rawValue)
+    #expect(json.contains("web/github.com"))
+    #expect(f.code("audit-logins", "--closing", "sometimes") == "invalid_arguments")
 }

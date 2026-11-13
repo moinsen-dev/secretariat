@@ -4,7 +4,7 @@ import SecretariatCore
 
 /// What the inventory shows: a finding, a decision, the open ones, or all.
 enum InventoryFilter: Hashable {
-    case open, all, finding(LoginAudit.Finding), decision(LoginAudit.Decision)
+    case open, all, finding(LoginAudit.Finding), decision(LoginAudit.Decision), closing(AccountDeletion.Difficulty)
     var title: String {
         switch self {
         case .open: "To Review"
@@ -13,6 +13,7 @@ enum InventoryFilter: Hashable {
         case .decision(.keep): "Kept"
         case .decision(.close): "To Close"
         case .decision(.change): "To Change"
+        case .closing(let d): d.title
         }
     }
     func matches(_ entry: LoginAudit.Entry) -> Bool {
@@ -21,10 +22,11 @@ enum InventoryFilter: Hashable {
         case .all: true
         case .finding(let f): entry.findings.contains(f)
         case .decision(let d): entry.decision == d
+        case .closing(let d): entry.deletion?.difficulty == d
         }
     }
     static let pickable: [InventoryFilter] = [.open, .all] + LoginAudit.Finding.allCases.map { .finding($0) }
-        + LoginAudit.Decision.allCases.map { .decision($0) }
+        + LoginAudit.Decision.allCases.map { .decision($0) } + AccountDeletion.Difficulty.allCases.map { .closing($0) }
 }
 
 struct InventoryState {
@@ -166,6 +168,7 @@ struct InventoryRow: View {
                     ForEach(LoginAudit.Finding.allCases.filter { entry.findings.contains($0) }, id: \.self) { finding in
                         Image(systemName: finding.symbol).help(finding.title).accessibilityLabel(finding.title)
                     }
+                    if let guide = entry.deletion { Text(guide.difficulty.rawValue).foregroundStyle(guide.difficulty == .easy ? .green : .secondary) }
                     if let decision = entry.decision { Text(decision.title).foregroundStyle(.tint) }
                 }
                 .font(.caption).foregroundStyle(.secondary)
@@ -203,7 +206,7 @@ struct InventoryDetail: View {
                             Button("Change Password …", systemImage: "key") { NSWorkspace.shared.open(url) }
                                 .help("Opens the site's standard page for changing passwords")
                         }
-                        if let url = LoginAudit.closeAccountSearchURL(entry) {
+                        if entry.deletion == nil, let url = LoginAudit.closeAccountURL(entry) {
                             Button("How to Close …", systemImage: "magnifyingglass") { NSWorkspace.shared.open(url) }
                                 .help("Searches the web for how to delete this account")
                         }
@@ -214,6 +217,22 @@ struct InventoryDetail: View {
                 } footer: {
                     Text("Close the account on the site first, then delete the entry here. Keep marks logins you checked and still need.")
                 }
+                if let guide = entry.deletion {
+                    Section {
+                        LabeledContent(guide.difficulty.title) {
+                            Button("Open Deletion Page …", systemImage: "arrow.up.forward.square") {
+                                if let url = URL(string: guide.url) { NSWorkspace.shared.open(url) }
+                            }
+                        }
+                        Text(guide.difficulty.explanation).foregroundStyle(.secondary)
+                        if let notes = guide.notes { Text(notes).foregroundStyle(.secondary).textSelection(.enabled) }
+                        if let email = guide.email {
+                            LabeledContent("Write to", value: email).textSelection(.enabled)
+                        }
+                    } header: { Text("How to close") } footer: {
+                        Text("Deletion guide for \(guide.name) from JustDeleteMe (MIT License).")
+                    }
+                }
             }
             .formStyle(.grouped)
             .scrollDisabled(true)
@@ -223,7 +242,10 @@ struct InventoryDetail: View {
         }
     }
 
-    private var formHeight: CGFloat { CGFloat(250 + max(entry.findings.count - 1, 0) * 28 + (entry.origins.isEmpty ? 0 : 28)) }
+    private var formHeight: CGFloat {
+        let guide = entry.deletion.map { 150 + ($0.notes == nil ? 0 : 60) + ($0.email == nil ? 0 : 28) } ?? 0
+        return CGFloat(250 + max(entry.findings.count - 1, 0) * 28 + (entry.origins.isEmpty ? 0 : 28) + guide)
+    }
 
     private func text(_ finding: LoginAudit.Finding) -> String {
         switch finding {

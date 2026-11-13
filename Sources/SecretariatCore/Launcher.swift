@@ -135,7 +135,7 @@ public enum CommandLineInterface {
       secretariat import-file FILE PATH/FIELD [--replace] [--json]
       secretariat import-logins FILE.csv [--from "Chrome: PROFILE"] [--dry-run] [--json]
                                                      website logins from a browser password export (Google, Apple, Firefox, Bitwarden, 1Password); prints paths and counts only
-      secretariat audit-logins [--from PROFILE] [--finding local|reused|weak|leaked|domainGone] [--json]
+      secretariat audit-logins [--from PROFILE] [--finding local|reused|weak|leaked|domainGone] [--closing easy|medium|hard|impossible] [--json]
                                                      inventory of website logins: counts and paths, never values
       Kinds are templates: secretariat template list | show ID
       secretariat template create ID --title T [--symbol SF] [--explanation E] [--identity]

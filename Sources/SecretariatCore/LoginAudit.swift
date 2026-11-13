@@ -81,6 +81,8 @@ public enum LoginAudit {
         public let reusedWith: [String]
         public let leakCount: Int?
         public let decision: Decision?
+        /// How to close the account, when the deletion directory knows the site.
+        public let deletion: AccountDeletion.Guide?
         public var username: String { item.field("username")?.value ?? "" }
         public var address: String { item.field("url")?.value ?? "" }
     }
@@ -109,7 +111,8 @@ public enum LoginAudit {
     public static func isLogin(_ item: ItemMeta) -> Bool { item.kind == "login" && item.field("password") != nil }
 
     /// `facts` holds what is known about each login's password (missing: unreadable or empty).
-    public static func entries(_ items: [ItemMeta], facts: [UUID: Facts], online: Online = Online()) -> [Entry] {
+    public static func entries(_ items: [ItemMeta], facts: [UUID: Facts], online: Online = Online(),
+                               guides: AccountDeletion.Directory = AccountDeletion.bundled) -> [Entry] {
         let logins = items.filter(isLogin)
         var byFingerprint: [String: [ItemMeta]] = [:]
         for item in logins { if let f = facts[item.id] { byFingerprint[f.fingerprint, default: []].append(item) } }
@@ -132,7 +135,8 @@ public enum LoginAudit {
             }
             if let site, online.hosts[site] == .gone { findings.insert(.domainGone) }
             return Entry(item: item, host: host, site: site, origins: PasswordImport.origins(item), findings: findings,
-                         reusedWith: reusedWith, leakCount: leakCount, decision: decision(item))
+                         reusedWith: reusedWith, leakCount: leakCount, decision: decision(item),
+                         deletion: local ? nil : guides.guide(host: host))
         }.sorted { $0.item.path < $1.item.path }
     }
 
@@ -161,8 +165,9 @@ public enum LoginAudit {
         guard let host = entry.host, !(entry.findings.contains(.local)) else { return nil }
         return URL(string: "https://\(host)/.well-known/change-password")
     }
-    /// A web search for how to delete the account on that site.
-    public static func closeAccountSearchURL(_ entry: Entry) -> URL? {
+    /// The deletion page from the directory, or else a web search for how to delete the account on that site.
+    public static func closeAccountURL(_ entry: Entry) -> URL? {
+        if let guide = entry.deletion, let url = URL(string: guide.url) { return url }
         guard let site = entry.site else { return nil }
         var components = URLComponents(string: "https://www.google.com/search")!
         components.queryItems = [URLQueryItem(name: "q", value: "\(site) delete account")]
@@ -273,6 +278,8 @@ public enum LoginAudit {
         public var logins = 0
         public var local = 0, reused = 0, weak = 0, leaked = 0, domainGone = 0
         public var keep = 0, close = 0, change = 0, undecided = 0
+        /// Logins by how hard closing the account is (directory known); `withoutGuide` for the rest outside local addresses.
+        public var easy = 0, medium = 0, hard = 0, impossible = 0, withoutGuide = 0
         public var onlineChecked: Date?
     }
     public static func summary(_ entries: [Entry], online: Online) -> Summary {
@@ -284,6 +291,10 @@ public enum LoginAudit {
             if e.findings.contains(.leaked) { s.leaked += 1 }
             if e.findings.contains(.domainGone) { s.domainGone += 1 }
             switch e.decision { case .keep: s.keep += 1; case .close: s.close += 1; case .change: s.change += 1; case nil: s.undecided += 1 }
+            switch e.deletion?.difficulty {
+            case .easy: s.easy += 1; case .medium: s.medium += 1; case .hard: s.hard += 1; case .impossible: s.impossible += 1
+            case nil: if !e.findings.contains(.local) { s.withoutGuide += 1 }
+            }
         }
         return s
     }
