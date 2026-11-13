@@ -62,6 +62,7 @@ struct SecretariatApp: App {
                 Button("Save Login …") { SaveLoginController.shared.show() }
                 Button("New Screenshot from Clipboard …") { model.screenshotFromClipboard() }
                 Button("Import Screenshot …") { model.chooseScreenshotFile() }
+                Button("Import Passwords (CSV) …") { model.choosePasswordFile() }
                 Button("Open Share …") { model.chooseShareFile() }.keyboardShortcut("o", modifiers: [.command, .shift])
                 Divider()
                 Button("New Template …") { model.templateEditor = TemplateDraft(template: Template(id: "", title: ""), isNew: true) }

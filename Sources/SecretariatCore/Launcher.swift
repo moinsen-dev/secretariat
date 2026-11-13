@@ -133,6 +133,8 @@ public enum CommandLineInterface {
       secretariat field move PATH/FIELD PATH/FIELD [--replace] [--json]
       secretariat import FILE VARIABLE[=PATH/FIELD] … [--profile PROFILE] [--replace] [--json]
       secretariat import-file FILE PATH/FIELD [--replace] [--json]
+      secretariat import-logins FILE.csv [--dry-run] [--json]
+                                                     website logins from a browser password export (Google, Apple, Firefox, Bitwarden, 1Password); prints paths and counts only
       Kinds are templates: secretariat template list | show ID
       secretariat template create ID --title T [--symbol SF] [--explanation E] [--identity]
       secretariat template set ID [--title T] [--symbol SF] [--explanation E] [--identity|--no-identity]

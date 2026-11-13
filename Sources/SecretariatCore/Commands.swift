@@ -397,6 +397,37 @@ public enum Commands {
                                itemKind: "certificate", source: "import-file \(a.positional[0])", replace: a.flags.contains("--replace"))
             return try done("File imported: \(reference) (the original file stays in place; the user decides whether to delete it)")
 
+        case ("import-logins", _):
+            let a = try Arguments(all.dropFirst(), flags: ["--dry-run"], usage: usage)
+            guard a.positional.count == 1 else { throw AgentError("invalid_arguments", "Usage: secretariat import-logins FILE.csv [--dry-run]") }
+            let path = (a.positional[0] as NSString).expandingTildeInPath
+            guard let data = FileManager.default.contents(atPath: path), let text = String(data: data, encoding: .utf8) else {
+                throw AgentError("file_unreadable", "File not readable: \(a.positional[0])")
+            }
+            let rows: [PasswordImport.Row]
+            do { rows = try PasswordImport.rows(text) } catch { throw AgentError("not_a_password_export", error.localizedDescription) }
+            let name = (path as NSString).lastPathComponent
+            let plan = try PasswordImport.plan(rows, vault: vault, source: "Imported from \(name)")
+            let dryRun = a.flags.contains("--dry-run")
+            let created = dryRun ? [] : try PasswordImport.apply(plan, vault: vault, file: path)
+            struct Imported: Encodable {
+                let schemaVersion = 2; let ok = true; let dryRun: Bool; let rows: Int
+                let new: [String]; let alreadyThere: [String]; let differs: [String]
+                let duplicates: Int; let withoutPassword: Int; let unusable: Int
+            }
+            let result = Imported(dryRun: dryRun, rows: plan.rows, new: dryRun ? plan.new.map(\.meta.path) : created,
+                                  alreadyThere: plan.alreadyThere, differs: plan.differs,
+                                  duplicates: plan.duplicates, withoutPassword: plan.withoutPassword, unusable: plan.unusable)
+            var lines = ["\(plan.rows) rows in \(name)",
+                         (dryRun ? "Would import: " : "Imported: ") + "\(dryRun ? plan.new.count : created.count) logins",
+                         "Already there: \(plan.alreadyThere.count)",
+                         "Different password than the stored login (left alone): \(plan.differs.count)",
+                         "Repeated in the file: \(plan.duplicates)", "Without password: \(plan.withoutPassword)"]
+            if plan.unusable > 0 { lines.append("Without address or name: \(plan.unusable)") }
+            if !plan.differs.isEmpty { lines.append("Check: " + plan.differs.joined(separator: ", ")) }
+            if !dryRun { lines.append("The CSV holds every password in plain text. Delete it now (Finder → Move to Trash, then empty the trash).") }
+            return (0, try json(result), lines.joined(separator: "\n"))
+
         // MARK: profiles
         case ("profiles", _):
             let result = try service.profiles()

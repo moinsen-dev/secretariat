@@ -44,6 +44,7 @@ struct MainView: View {
         .sheet(isPresented: $model.showRestore) { RestoreView(model: model) }
         .sheet(item: $model.addMemberDraft) { draft in AddMemberSheet(model: model, draft: draft) }
         .sheet(item: $model.shareDraft) { _ in ShareSheet(model: model) }
+        .sheet(item: $model.passwordImport) { _ in PasswordImportSheet(model: model) }
         .sheet(item: $model.openedShare) { _ in OpenShareSheet(model: model) }
         .sheet(item: $model.offboarding) { off in OffboardingSheet(model: model, offboarding: off) }
         .alert("That didn't work", isPresented: flag(model.errorMessage != nil) { model.errorMessage = nil }) {

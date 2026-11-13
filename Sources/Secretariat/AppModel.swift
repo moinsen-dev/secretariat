@@ -204,6 +204,7 @@ final class AppModel {
     var ownFingerprint = ""
     var selectedMember: String?
     var shareDraft: ShareDraft?
+    var passwordImport: PasswordImportDraft?
     var openedShare: OpenedShare?
     var addMemberDraft: AddMemberDraft?
     var offboarding: Offboarding?
