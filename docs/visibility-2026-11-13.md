@@ -67,3 +67,9 @@ Das GitHub-Repo `moinsen-dev/secretariat` hat keine Topics und 0 Sterne.
 
 **Abbruch-/Erfolgskriterium (Vorschlag):** nach 8 Wochen Startseite und mindestens zwei Anleitungen im Index; mindestens ein
 Begriff aus Tabelle 1 in den Top 20; Secretariat in mindestens 1 von 10 Antworten der Stichprobe „ohne Marke“. Sonst Kanal überdenken.
+
+## Stand 2026-11-13 (Nachtrag)
+
+- SEO-Grundlagen live (Deployment 08b66139), Sitemap-Einreichung bei Google/Bing durch Uli offen.
+- Anleitungen `/claude-code-api-key` und `/codex-api-key` geschrieben, gegen offizielle Doku geprüft (unabhängiger Faktencheck: 5 Fehler gefunden und behoben, u. a. Codex-Speicherarten, gekürzte Schlüsselanzeige von `codex login`, Touch ID als harte Grenze statt „nur ein Programm“), in Sitemap und FAQ verlinkt; Commits aac2878, 485e9ee; Deploy durch Uli offen.
+
