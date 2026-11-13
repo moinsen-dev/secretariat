@@ -2,22 +2,21 @@
 
 ## Übergabe
 
-- Release 1.17.0 (2026-11-13): Passwort-Import mit „Found in“, Inventur, Lösch-Wege (JustDeleteMe), MCP-Werkzeuge für Agenten. Notarisiertes Zip und MDM-.pkg in `dist/`, lokal installiert, Website-Ordner `dist/site-1.17.0` gebaut. Bericht `docs/release-1.17.0.md`.
-- Tracker neu gebunden (T001–T037, Selbstprüfung), `check`: STRUCTURE_OK.
-- Live (2026-11-13): Website und Feed 1.17.0 deployt und geprüft (Zip und .pkg byte-gleich), alles nach GitHub gepusht.
-- Nächster Arbeitsschritt: in der Inventur Logins als „Close account“ markieren; Agenten recherchieren nur diese Sites (MCP `login_sites --decision close --needs-route`). Danach Bausteine Löschanträge per Mail und Abwickeln per Agent.
+- Release 1.18.0 (2026-11-13): „Open and Sign In“ – Login-Seite im Standardbrowser öffnen, nach Touch ID Benutzername und Passwort eintragen (App-Knopf, `secretariat open PATH`, MCP `open_login`). Notarisiert, lokal installiert (Mesh verteilt), Website und Feed live und geprüft. Berichte `docs/open-login-2026-11-13.md`, `docs/release-1.18.0.md`.
+- Tracker neu gebunden (T001–T038, Selbstprüfung), `check`: STRUCTURE_OK.
+- Nächster Arbeitsschritt: Nacharbeiten aus BACKLOG („Öffnen und anmelden: Nacharbeiten“) oder in der Inventur Logins als „Close account“ markieren und Agenten recherchieren lassen.
 - Regel: In docs/, PLAN, TRACKER, STATE und Tests keine Adressen, Benutzernamen oder Site-Namen aus Ulis Tresor (öffentliches Repo).
 
 ## State
 
 - schema: app-workflow/1
 - status: ACTIVE
-- phase: P27
-- use_case: UC31
-- task: T037
-- next: Uli: Website dist/site-1.17.0 veröffentlichen und pushen; dann in der App Logins als Close markieren, Agenten recherchieren nur diese
-- updated: 2026-11-13T09:22:36+00:00
-- plan_sha256: 5fdb3479c00ca18c5711f5319f12594cf3048e9e6a9639cd098149734a5e01b7
-- tracker_sha256: 3435db58422e5049c46ce6706b12cacd4b73975c008ea5eef3b14c4d9827aaca
+- phase: P28
+- use_case: UC32
+- task: T038
+- next: Nacharbeiten aus BACKLOG (Safari/Firefox, Touch-ID-Abbruch, mehrstufige Logins) oder Close-Markierungen in der Inventur
+- updated: 2026-11-13T12:57:14+00:00
+- plan_sha256: a00569f5dbe8a3f7b09595b53387e207bc124fb6889effbf456e491b87edca98
+- tracker_sha256: 446d852f16376436322d0f6caa57d7812e5dd7797dd20916a57b9515c75a9829
 
 Einstieg: `AGENTS.md`. Verbindliche Aufgabenstatus und Nachweise: `TRACKER.md`. Diese Zusammenfassung mit dem Werkzeug aus Plan und Tracker aktualisieren.

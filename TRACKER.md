@@ -5,42 +5,43 @@
 | ID | Status | Evidence | Reason |
 |---|---|---|---|
 | T001 | ERLEDIGT | E1520,E1525 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T002 | ERLEDIGT | E1526,E1527,E1528 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T003 | ERLEDIGT | E1529,E1530 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T004 | ERLEDIGT | E1521,E1524,E1531 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T005 | ERLEDIGT | E1522,E1532 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T006 | ERLEDIGT | E1533,E1534 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T007 | ERLEDIGT | E1535,E1536 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T008 | ERLEDIGT | E1537,E1538 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T009 | ERLEDIGT | E1523,E1539 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T010 | ERLEDIGT | E1540,E1541,E1542,E1543 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T011 | ERLEDIGT | E1544,E1545 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T013 | ERLEDIGT | E1548,E1549 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T014 | ERLEDIGT | E1550,E1551,E1552 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T015 | ERLEDIGT | E1553,E1554 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T012 | ERLEDIGT | E1546,E1547 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T016 | ERLEDIGT | E1555,E1556,E1557 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T017 | ERLEDIGT | E1558,E1559,E1560 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T018 | ERLEDIGT | E1561,E1562,E1563,E1564 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T019 | ERLEDIGT | E1565,E1566,E1567 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T020 | ERLEDIGT | E1568,E1569,E1570 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T021 | ERLEDIGT | E1571,E1572,E1573 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T022 | ERLEDIGT | E1574,E1575,E1576 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T002 | ERLEDIGT | E1622,E1623,E1624 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T003 | ERLEDIGT | E1625,E1626 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T004 | ERLEDIGT | E1627 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T005 | ERLEDIGT | E1628 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T006 | ERLEDIGT | E1629,E1630 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T007 | ERLEDIGT | E1631,E1632 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T008 | ERLEDIGT | E1633,E1634 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T009 | ERLEDIGT | E1635 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T010 | ERLEDIGT | E1636,E1637,E1638,E1639 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T011 | ERLEDIGT | E1640,E1641 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T013 | ERLEDIGT | E1644,E1645 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T014 | ERLEDIGT | E1646,E1647,E1648 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T015 | ERLEDIGT | E1649,E1650 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T012 | ERLEDIGT | E1642,E1643 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T016 | ERLEDIGT | E1651,E1652,E1653 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T017 | ERLEDIGT | E1654,E1655,E1656 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T018 | ERLEDIGT | E1657,E1658,E1659,E1660 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T019 | ERLEDIGT | E1664,E1665,E1666 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T020 | ERLEDIGT | E1667,E1668,E1669 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T021 | ERLEDIGT | E1670,E1671,E1672 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T022 | ERLEDIGT | E1673,E1674,E1675 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
 | T023 | ERLEDIGT | E1577,E1578,E1579 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T024 | ERLEDIGT | E1580,E1581,E1582 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T025 | ERLEDIGT | E1583,E1584,E1585 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T024 | ERLEDIGT | E1676,E1677,E1678 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T025 | ERLEDIGT | E1679,E1680,E1681 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
 | T026 | IN_ARBEIT | E1586,E1587,E1588 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T027 | ERLEDIGT | E1589,E1590,E1591 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T028 | ERLEDIGT | E1592,E1593,E1594 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T029 | ERLEDIGT | E1595,E1596,E1597 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T030 | ERLEDIGT | E1598,E1599,E1600 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T031 | ERLEDIGT | E1601,E1602,E1603 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T032 | ERLEDIGT | E1604,E1605,E1606 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T027 | ERLEDIGT | E1661,E1662,E1663 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T028 | ERLEDIGT | E1682,E1683,E1684 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T029 | ERLEDIGT | E1685,E1686,E1687 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T030 | ERLEDIGT | E1688,E1689,E1690 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T031 | ERLEDIGT | E1691,E1692,E1693 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T032 | ERLEDIGT | E1694,E1695,E1696 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
 | T033 | BLOCKIERT | E1607,E1608,E1609 | pkg signiert, notarisiert, live (2c76bdaf); Abnahme PASS; macos-Nachweis der verwalteten Mitglieder nur per Fixture, ein echter erzwungener Wert braucht ein installiertes Profil (Ulis Ja) |
-| T034 | ERLEDIGT | E1610,E1611,E1612 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T035 | ERLEDIGT | E1613,E1614,E1615 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T036 | ERLEDIGT | E1616,E1617,E1618 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T037 | ERLEDIGT | E1619,E1620,E1621 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T034 | ERLEDIGT | E1697,E1698,E1699 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T035 | ERLEDIGT | E1700,E1701,E1702 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T036 | ERLEDIGT | E1703,E1704,E1705 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T037 | ERLEDIGT | E1706,E1707,E1708 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T038 | OFFEN | - | - |
 
 ## Evidence
 
@@ -1667,6 +1668,93 @@
 | E1619 | T037 | build | build | normal | 2026-11-13T09:21:20+00:00 | 786f1ab | 03550f09f8bd83f31114b444 | docs/release-1.17.0.md | PASS |
 | E1620 | T037 | unit | unit | normal | 2026-11-13T09:21:21+00:00 | 786f1ab | 03550f09f8bd83f31114b444 | docs/release-1.17.0.md | PASS |
 | E1621 | T037 | macos | ui | normal | 2026-11-13T09:21:21+00:00 | 786f1ab | 03550f09f8bd83f31114b444 | docs/release-1.17.0.md | PASS |
+| E1622 | T002 | build | build | normal | 2026-11-13T12:56:03+00:00 | 741198e | df51e7dcb23566c94f7a229f | docs/release-1.18.0.md | PASS |
+| E1623 | T002 | unit | unit | normal | 2026-11-13T12:56:04+00:00 | 741198e | df51e7dcb23566c94f7a229f | docs/release-1.18.0.md | PASS |
+| E1624 | T002 | macos | ui | normal | 2026-11-13T12:56:04+00:00 | 741198e | df51e7dcb23566c94f7a229f | docs/release-1.18.0.md | PASS |
+| E1625 | T003 | macos | ui | normal | 2026-11-13T12:56:05+00:00 | 741198e | 24328f75c045933e9ccc8169 | docs/release-1.18.0.md | PASS |
+| E1626 | T003 | unit | unit | normal | 2026-11-13T12:56:05+00:00 | 741198e | 24328f75c045933e9ccc8169 | docs/release-1.18.0.md | PASS |
+| E1627 | T004 | unit | unit | normal | 2026-11-13T12:56:06+00:00 | 741198e | 8308c0f9c01426c02d5c4aa3 | docs/release-1.18.0.md | PASS |
+| E1628 | T005 | macos | ui | normal | 2026-11-13T12:56:07+00:00 | 741198e | 36a1cdc83e137f09b81c9da0 | docs/release-1.18.0.md | PASS |
+| E1629 | T006 | inspection | inspection | normal | 2026-11-13T12:56:08+00:00 | 741198e | 048d691d46f9210ee6f1ce7a | docs/release-1.18.0.md | PASS |
+| E1630 | T006 | macos | ui | normal | 2026-11-13T12:56:08+00:00 | 741198e | 048d691d46f9210ee6f1ce7a | docs/release-1.18.0.md | PASS |
+| E1631 | T007 | build | build | normal | 2026-11-13T12:56:09+00:00 | 741198e | f524c02771abdf0cde78e105 | docs/release-1.18.0.md | PASS |
+| E1632 | T007 | unit | unit | normal | 2026-11-13T12:56:09+00:00 | 741198e | f524c02771abdf0cde78e105 | docs/release-1.18.0.md | PASS |
+| E1633 | T008 | unit | unit | normal | 2026-11-13T12:56:10+00:00 | 741198e | 395198dff93512722dffe012 | docs/release-1.18.0.md | PASS |
+| E1634 | T008 | macos | ui | normal | 2026-11-13T12:56:10+00:00 | 741198e | 395198dff93512722dffe012 | docs/release-1.18.0.md | PASS |
+| E1635 | T009 | inspection | inspection | normal | 2026-11-13T12:56:11+00:00 | 741198e | 31a202df6de1ea92dcfcef2d | docs/release-1.18.0.md | PASS |
+| E1636 | T010 | build | build | normal | 2026-11-13T12:56:11+00:00 | 741198e | 780ee66e641dc2f826dfb5dd | docs/release-1.18.0.md | PASS |
+| E1637 | T010 | unit | unit | normal | 2026-11-13T12:56:11+00:00 | 741198e | 780ee66e641dc2f826dfb5dd | docs/release-1.18.0.md | PASS |
+| E1638 | T010 | macos | ui | normal | 2026-11-13T12:56:12+00:00 | 741198e | 780ee66e641dc2f826dfb5dd | docs/release-1.18.0.md | PASS |
+| E1639 | T010 | inspection | inspection | normal | 2026-11-13T12:56:12+00:00 | 741198e | 780ee66e641dc2f826dfb5dd | docs/release-1.18.0.md | PASS |
+| E1640 | T011 | build | build | normal | 2026-11-13T12:56:13+00:00 | 741198e | 6fef47e27d07ecfbb7e45fa6 | docs/release-1.18.0.md | PASS |
+| E1641 | T011 | unit | unit | normal | 2026-11-13T12:56:13+00:00 | 741198e | 6fef47e27d07ecfbb7e45fa6 | docs/release-1.18.0.md | PASS |
+| E1642 | T012 | macos | ui | normal | 2026-11-13T12:56:13+00:00 | 741198e | b9d05413699b2c83c6012f2b | docs/release-1.18.0.md | PASS |
+| E1643 | T012 | inspection | inspection | normal | 2026-11-13T12:56:14+00:00 | 741198e | b9d05413699b2c83c6012f2b | docs/release-1.18.0.md | PASS |
+| E1644 | T013 | build | build | normal | 2026-11-13T12:56:15+00:00 | 741198e | 2f35784b0dd1b40ebedd7229 | docs/release-1.18.0.md | PASS |
+| E1645 | T013 | inspection | inspection | normal | 2026-11-13T12:56:15+00:00 | 741198e | 2f35784b0dd1b40ebedd7229 | docs/release-1.18.0.md | PASS |
+| E1646 | T014 | build | build | normal | 2026-11-13T12:56:15+00:00 | 741198e | 5983741aa84b08922c81dec5 | docs/release-1.18.0.md | PASS |
+| E1647 | T014 | unit | unit | normal | 2026-11-13T12:56:15+00:00 | 741198e | 5983741aa84b08922c81dec5 | docs/release-1.18.0.md | PASS |
+| E1648 | T014 | macos | ui | normal | 2026-11-13T12:56:16+00:00 | 741198e | 5983741aa84b08922c81dec5 | docs/release-1.18.0.md | PASS |
+| E1649 | T015 | macos | ui | normal | 2026-11-13T12:56:17+00:00 | 741198e | 1b257d680f72d2ff39ef9f87 | docs/release-1.18.0.md | PASS |
+| E1650 | T015 | inspection | inspection | normal | 2026-11-13T12:56:17+00:00 | 741198e | 1b257d680f72d2ff39ef9f87 | docs/release-1.18.0.md | PASS |
+| E1651 | T016 | build | build | normal | 2026-11-13T12:56:18+00:00 | 741198e | 3268ead0ee20d4e9af7c2c2a | docs/release-1.18.0.md | PASS |
+| E1652 | T016 | unit | unit | normal | 2026-11-13T12:56:18+00:00 | 741198e | 3268ead0ee20d4e9af7c2c2a | docs/release-1.18.0.md | PASS |
+| E1653 | T016 | macos | ui | normal | 2026-11-13T12:56:18+00:00 | 741198e | 3268ead0ee20d4e9af7c2c2a | docs/release-1.18.0.md | PASS |
+| E1654 | T017 | build | build | normal | 2026-11-13T12:56:19+00:00 | 741198e | ab1937619f3f16180a92e5bd | docs/release-1.18.0.md | PASS |
+| E1655 | T017 | unit | unit | normal | 2026-11-13T12:56:19+00:00 | 741198e | ab1937619f3f16180a92e5bd | docs/release-1.18.0.md | PASS |
+| E1656 | T017 | macos | ui | normal | 2026-11-13T12:56:19+00:00 | 741198e | ab1937619f3f16180a92e5bd | docs/release-1.18.0.md | PASS |
+| E1657 | T018 | build | build | normal | 2026-11-13T12:56:20+00:00 | 741198e | b70efaef370f7fec3c2f2cb0 | docs/release-1.18.0.md | PASS |
+| E1658 | T018 | unit | unit | normal | 2026-11-13T12:56:21+00:00 | 741198e | b70efaef370f7fec3c2f2cb0 | docs/release-1.18.0.md | PASS |
+| E1659 | T018 | macos | ui | normal | 2026-11-13T12:56:21+00:00 | 741198e | b70efaef370f7fec3c2f2cb0 | docs/release-1.18.0.md | PASS |
+| E1660 | T018 | inspection | inspection | normal | 2026-11-13T12:56:21+00:00 | 741198e | b70efaef370f7fec3c2f2cb0 | docs/release-1.18.0.md | PASS |
+| E1661 | T027 | build | build | normal | 2026-11-13T12:56:21+00:00 | 741198e | fc1b26b106b48326c1c3adc4 | docs/release-1.18.0.md | PASS |
+| E1662 | T027 | unit | unit | normal | 2026-11-13T12:56:22+00:00 | 741198e | fc1b26b106b48326c1c3adc4 | docs/release-1.18.0.md | PASS |
+| E1663 | T027 | macos | ui | normal | 2026-11-13T12:56:22+00:00 | 741198e | fc1b26b106b48326c1c3adc4 | docs/release-1.18.0.md | PASS |
+| E1664 | T019 | build | build | normal | 2026-11-13T12:56:23+00:00 | 741198e | 5a53bc60bd95aa98251888b1 | docs/release-1.18.0.md | PASS |
+| E1665 | T019 | unit | unit | normal | 2026-11-13T12:56:23+00:00 | 741198e | 5a53bc60bd95aa98251888b1 | docs/release-1.18.0.md | PASS |
+| E1666 | T019 | macos | ui | normal | 2026-11-13T12:56:23+00:00 | 741198e | 5a53bc60bd95aa98251888b1 | docs/release-1.18.0.md | PASS |
+| E1667 | T020 | build | build | normal | 2026-11-13T12:56:24+00:00 | 741198e | 5fd39da30ab019813bf482d6 | docs/release-1.18.0.md | PASS |
+| E1668 | T020 | unit | unit | normal | 2026-11-13T12:56:24+00:00 | 741198e | 5fd39da30ab019813bf482d6 | docs/release-1.18.0.md | PASS |
+| E1669 | T020 | macos | ui | normal | 2026-11-13T12:56:25+00:00 | 741198e | 5fd39da30ab019813bf482d6 | docs/release-1.18.0.md | PASS |
+| E1670 | T021 | build | build | normal | 2026-11-13T12:56:26+00:00 | 741198e | 437ec5feec0b5610fb1bdf35 | docs/release-1.18.0.md | PASS |
+| E1671 | T021 | unit | unit | normal | 2026-11-13T12:56:26+00:00 | 741198e | 437ec5feec0b5610fb1bdf35 | docs/release-1.18.0.md | PASS |
+| E1672 | T021 | macos | ui | normal | 2026-11-13T12:56:26+00:00 | 741198e | 437ec5feec0b5610fb1bdf35 | docs/release-1.18.0.md | PASS |
+| E1673 | T022 | build | build | normal | 2026-11-13T12:56:27+00:00 | 741198e | f0a7e95b4fcf5d3bb32794a8 | docs/release-1.18.0.md | PASS |
+| E1674 | T022 | unit | unit | normal | 2026-11-13T12:56:27+00:00 | 741198e | f0a7e95b4fcf5d3bb32794a8 | docs/release-1.18.0.md | PASS |
+| E1675 | T022 | macos | ui | normal | 2026-11-13T12:56:27+00:00 | 741198e | f0a7e95b4fcf5d3bb32794a8 | docs/release-1.18.0.md | PASS |
+| E1676 | T024 | build | build | normal | 2026-11-13T12:56:29+00:00 | 741198e | 9c4603a9113e79030c4c95d7 | docs/release-1.18.0.md | PASS |
+| E1677 | T024 | unit | unit | normal | 2026-11-13T12:56:29+00:00 | 741198e | 9c4603a9113e79030c4c95d7 | docs/release-1.18.0.md | PASS |
+| E1678 | T024 | macos | ui | normal | 2026-11-13T12:56:29+00:00 | 741198e | 9c4603a9113e79030c4c95d7 | docs/release-1.18.0.md | PASS |
+| E1679 | T025 | build | build | normal | 2026-11-13T12:56:30+00:00 | 741198e | 6df86aa9bf0f4002e264099b | docs/release-1.18.0.md | PASS |
+| E1680 | T025 | unit | unit | normal | 2026-11-13T12:56:31+00:00 | 741198e | 6df86aa9bf0f4002e264099b | docs/release-1.18.0.md | PASS |
+| E1681 | T025 | macos | ui | normal | 2026-11-13T12:56:31+00:00 | 741198e | 6df86aa9bf0f4002e264099b | docs/release-1.18.0.md | PASS |
+| E1682 | T028 | build | build | normal | 2026-11-13T12:56:32+00:00 | 741198e | 7e45cd4641753ce11ec545ed | docs/release-1.18.0.md | PASS |
+| E1683 | T028 | unit | unit | normal | 2026-11-13T12:56:33+00:00 | 741198e | 7e45cd4641753ce11ec545ed | docs/release-1.18.0.md | PASS |
+| E1684 | T028 | macos | ui | normal | 2026-11-13T12:56:33+00:00 | 741198e | 7e45cd4641753ce11ec545ed | docs/release-1.18.0.md | PASS |
+| E1685 | T029 | build | build | normal | 2026-11-13T12:56:34+00:00 | 741198e | 0fe610a753ef636310941437 | docs/release-1.18.0.md | PASS |
+| E1686 | T029 | unit | unit | normal | 2026-11-13T12:56:34+00:00 | 741198e | 0fe610a753ef636310941437 | docs/release-1.18.0.md | PASS |
+| E1687 | T029 | macos | ui | normal | 2026-11-13T12:56:34+00:00 | 741198e | 0fe610a753ef636310941437 | docs/release-1.18.0.md | PASS |
+| E1688 | T030 | build | build | normal | 2026-11-13T12:56:35+00:00 | 741198e | 73a59d6f23cd3c821637c1ce | docs/release-1.18.0.md | PASS |
+| E1689 | T030 | unit | unit | normal | 2026-11-13T12:56:35+00:00 | 741198e | 73a59d6f23cd3c821637c1ce | docs/release-1.18.0.md | PASS |
+| E1690 | T030 | macos | ui | normal | 2026-11-13T12:56:35+00:00 | 741198e | 73a59d6f23cd3c821637c1ce | docs/release-1.18.0.md | PASS |
+| E1691 | T031 | build | build | normal | 2026-11-13T12:56:36+00:00 | 741198e | ae59578dd51762a36c15cafd | docs/release-1.18.0.md | PASS |
+| E1692 | T031 | unit | unit | normal | 2026-11-13T12:56:37+00:00 | 741198e | ae59578dd51762a36c15cafd | docs/release-1.18.0.md | PASS |
+| E1693 | T031 | macos | ui | normal | 2026-11-13T12:56:37+00:00 | 741198e | ae59578dd51762a36c15cafd | docs/release-1.18.0.md | PASS |
+| E1694 | T032 | build | build | normal | 2026-11-13T12:56:38+00:00 | 741198e | 94ef963303b8d9aaf3fc683d | docs/release-1.18.0.md | PASS |
+| E1695 | T032 | unit | unit | normal | 2026-11-13T12:56:38+00:00 | 741198e | 94ef963303b8d9aaf3fc683d | docs/release-1.18.0.md | PASS |
+| E1696 | T032 | macos | ui | normal | 2026-11-13T12:56:38+00:00 | 741198e | 94ef963303b8d9aaf3fc683d | docs/release-1.18.0.md | PASS |
+| E1697 | T034 | build | build | normal | 2026-11-13T12:56:40+00:00 | 741198e | 9d1784644fc3d9d5b1995f27 | docs/release-1.18.0.md | PASS |
+| E1698 | T034 | unit | unit | normal | 2026-11-13T12:56:40+00:00 | 741198e | 9d1784644fc3d9d5b1995f27 | docs/release-1.18.0.md | PASS |
+| E1699 | T034 | macos | ui | normal | 2026-11-13T12:56:40+00:00 | 741198e | 9d1784644fc3d9d5b1995f27 | docs/release-1.18.0.md | PASS |
+| E1700 | T035 | build | build | normal | 2026-11-13T12:56:41+00:00 | 741198e | eb277926653af23ce538e627 | docs/release-1.18.0.md | PASS |
+| E1701 | T035 | unit | unit | normal | 2026-11-13T12:56:41+00:00 | 741198e | eb277926653af23ce538e627 | docs/release-1.18.0.md | PASS |
+| E1702 | T035 | macos | ui | normal | 2026-11-13T12:56:41+00:00 | 741198e | eb277926653af23ce538e627 | docs/release-1.18.0.md | PASS |
+| E1703 | T036 | build | build | normal | 2026-11-13T12:56:42+00:00 | 741198e | f7aded6c226d22ffc28a117b | docs/release-1.18.0.md | PASS |
+| E1704 | T036 | unit | unit | normal | 2026-11-13T12:56:43+00:00 | 741198e | f7aded6c226d22ffc28a117b | docs/release-1.18.0.md | PASS |
+| E1705 | T036 | macos | ui | normal | 2026-11-13T12:56:43+00:00 | 741198e | f7aded6c226d22ffc28a117b | docs/release-1.18.0.md | PASS |
+| E1706 | T037 | build | build | normal | 2026-11-13T12:56:44+00:00 | 741198e | e4d3917f64a76041d882c658 | docs/release-1.18.0.md | PASS |
+| E1707 | T037 | unit | unit | normal | 2026-11-13T12:56:44+00:00 | 741198e | e4d3917f64a76041d882c658 | docs/release-1.18.0.md | PASS |
+| E1708 | T037 | macos | ui | normal | 2026-11-13T12:56:44+00:00 | 741198e | e4d3917f64a76041d882c658 | docs/release-1.18.0.md | PASS |
 
 ## Reviews
 
@@ -2617,6 +2705,41 @@
 | RV943 | UC29 | self | PASS | a483e6b1e2707399c4c4037a | docs/release-1.17.0.md |
 | RV944 | UC30 | self | PASS | b965287c2eeb903d3fef057b | docs/release-1.17.0.md |
 | RV945 | UC31 | self | PASS | 7949cf59b742744798297976 | docs/release-1.17.0.md |
+| RV946 | UC01 | self | PASS | 4f5d805112d308f1095a62b8 | docs/release-1.18.0.md |
+| RV947 | UC02 | self | PASS | 77962a709440b7ece4df53fb | docs/release-1.18.0.md |
+| RV948 | UC03 | self | PASS | 8727918b2b139767836bf7f1 | docs/release-1.18.0.md |
+| RV949 | UC04 | self | PASS | da589aa8b8d50188aca63d5a | docs/release-1.18.0.md |
+| RV950 | UC05 | self | PASS | 0b5a3be1dc1bb93d6aa3c89f | docs/release-1.18.0.md |
+| RV951 | UC06 | self | PASS | eb28bdc9176e2779feeb8ac0 | docs/release-1.18.0.md |
+| RV952 | UC07 | self | PASS | 3da01ba34eb9fdcd3e9973a9 | docs/release-1.18.0.md |
+| RV953 | UC08 | self | PASS | 86ce2e69bc68d59e5faf32e8 | docs/release-1.18.0.md |
+| RV954 | UC09 | self | PASS | e165f6ce277ddf860c8e6f1d | docs/release-1.18.0.md |
+| RV955 | UC10 | self | PASS | d80c264d02340022376f8211 | docs/release-1.18.0.md |
+| RV956 | UC11 | self | PASS | 050589c923cd10ecb33502b7 | docs/release-1.18.0.md |
+| RV957 | UC12 | self | PASS | fed577ff71ee11cd9eae293a | docs/release-1.18.0.md |
+| RV958 | UC13 | self | PASS | f534667d194e3099cd1f531f | docs/release-1.18.0.md |
+| RV959 | UC14 | self | PASS | 215a1e21b2f7f976d5765029 | docs/release-1.18.0.md |
+| RV960 | UC15 | self | PASS | 9c0fbbe8c1bdb5264dc3043d | docs/release-1.18.0.md |
+| RV961 | UC16 | self | PASS | 502e4cba7ec080c1cd69714d | docs/release-1.18.0.md |
+| RV962 | UC17 | self | PASS | 23f9e0dc8408a5bb9e407b12 | docs/release-1.18.0.md |
+| RV963 | UC18 | self | PASS | ceab6d16c8732e3a79dc3c83 | docs/release-1.18.0.md |
+| RV964 | UC19 | self | PASS | 10ee9cd9fd84ad9e8d653955 | docs/release-1.18.0.md |
+| RV965 | UC20 | self | PASS | 32ab96799416f023513597db | docs/release-1.18.0.md |
+| RV966 | UC21 | self | PASS | 6b2b39ff8a6acdb5ad3c0065 | docs/release-1.18.0.md |
+| RV967 | UC22 | self | PASS | 282f1e84539d4088f433275c | docs/release-1.18.0.md |
+| RV968 | UC23 | self | PASS | fe86806ffb637dcca6875237 | docs/release-1.18.0.md |
+| RV969 | UC24 | self | PASS | 2149b4672d2f70792c9c4d7b | docs/release-1.18.0.md |
+| RV970 | UC25 | self | PASS | 968631217532e67b7d1ee2c6 | docs/release-1.18.0.md |
+| RV971 | UC26 | self | PASS | 0f97fcbd3078a987cf3be46f | docs/release-1.18.0.md |
+| RV972 | UC27 | self | PASS | 069465f6a3f232bf4fca6651 | docs/release-1.18.0.md |
+| RV973 | UC28 | self | PASS | 32dbdc6a19ae758c11c062a2 | docs/release-1.18.0.md |
+| RV974 | UC29 | self | PASS | fea37ec6c9f30d31d582435e | docs/release-1.18.0.md |
+| RV975 | UC30 | self | PASS | b02277b3dc27795f3a50d629 | docs/release-1.18.0.md |
+| RV976 | UC31 | self | PASS | 3bbefd28a12c6b5e16b86aaf | docs/release-1.18.0.md |
+| RV977 | UC32 | self | PASS | 4372344a4a84dc9658b231ed | docs/open-login-2026-11-13.md |
+| RV978 | PLAN | self | PASS | a25b17b11034449b8e97866e | docs/release-1.18.0.md |
+| RV979 | UC05 | self | PASS | bd2b9ee51eb9245efb0fd049 | docs/release-1.18.0.md |
+| RV980 | UC07 | self | PASS | 4025059007b54c1b77ef1440 | docs/release-1.18.0.md |
 
 ## Releases
 
@@ -2646,5 +2769,6 @@
 | L022 | D001 | LOCAL | d288a79 | /Users/udi/Applications/Secretariat.app | E1304,E1305,E1311,E1312,E1313,E1314 |
 | L023 | D001 | LOCAL | 82e3761 | /Users/udi/Applications/Secretariat.app | E1443,E1444,E1450,E1451,E1452,E1453 |
 | L024 | D001 | LOCAL | 786f1ab | /Users/udi/Applications/Secretariat.app | E1533,E1534,E1540,E1541,E1542,E1543 |
+| L025 | D001 | LOCAL | 741198e | /Users/udi/Applications/Secretariat.app | E1629,E1630,E1636,E1637,E1638,E1639 |
 
 Status, Beleg und Kritik sind unterschiedliche Angaben. `Evidence` in der Aufgabenzeile referenziert die für ihren Abschluss maßgeblichen Beleg-IDs. Ältere Belege dürfen als Historie bleiben. Bei Reviews ist die letzte Zeile je Scope maßgeblich.
