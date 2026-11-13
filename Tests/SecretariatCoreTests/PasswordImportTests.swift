@@ -124,3 +124,10 @@ passkey-only.test,https://passkey-only.test/,dora,,
     let plan = PasswordImport.plan(rows, existing: [], source: "t", origin: " Chrome, Work ") { _ in nil }
     #expect(plan.origin == "Chrome  Work")
 }
+
+@Test func websiteLoginsStayOutOfTheAgentRegistry() {
+    let login = ItemMeta(path: "web/shop.test", kind: "login", fields: [ItemField(name: "username", kind: .identifier, value: "me@private.test")])
+    let api = ItemMeta(path: "moinsen/x", kind: "api", fields: [ItemField(name: "key_id", kind: .identifier, value: "K1")])
+    let text = RegistryExport.render([login, api])
+    #expect(!text.contains("me@private.test")); #expect(!text.contains("web/shop.test")); #expect(text.contains("K1"))
+}
