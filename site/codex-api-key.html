@@ -41,13 +41,13 @@
   <div class="wrap narrow">
     <p class="eyebrow">Guide</p>
     <h1>Codex CLI with an API key, without a key in plain text</h1>
-    <p class="lead">Codex CLI signs in with ChatGPT or with an OpenAI Platform API key. With a key, the default setup can leave it in <code>~/.codex/auth.json</code> as plain text, and a key exported in your shell reaches every command Codex runs. Here is how to keep it in the macOS keychain instead.</p>
+    <p class="lead">Codex CLI signs in with ChatGPT or with an OpenAI Platform API key. With a key, Codex can keep the login as plain text in <code>~/.codex/auth.json</code> (setting <code>file</code>), and a key exported in your shell reaches every command Codex runs. Here is how to keep it in the macOS keychain instead.</p>
     <p class="updated">Checked against OpenAI's Codex documentation on 13 November 2026.</p>
 
     <h2>How Codex uses a key</h2>
     <ul>
       <li><strong>Interactive <code>codex</code>:</strong> uses the saved login. <code>OPENAI_API_KEY</code> in your shell does not sign you in by itself; you log in once with <code>printenv OPENAI_API_KEY | codex login --with-api-key</code>, which reads the key from stdin.</li>
-      <li><strong>Where the login is stored:</strong> <code>cli_auth_credentials_store</code> in <code>~/.codex/config.toml</code>: <code>file</code> (plain text <code>auth.json</code>), <code>keyring</code> (the OS credential store), <code>auto</code> or <code>ephemeral</code> (memory only).</li>
+      <li><strong>Where the login is stored:</strong> <code>cli_auth_credentials_store</code> in <code>~/.codex/config.toml</code>: <code>file</code> (plain text <code>auth.json</code>), <code>keyring</code> (the OS credential store; fails if it isn't available), <code>auto</code> (the credential store when available, otherwise <code>auth.json</code>) or <code>ephemeral</code> (memory of the running process only).</li>
       <li><strong><code>codex exec</code>, <code>codex review</code> and the SDK</strong> also accept <code>CODEX_API_KEY</code>. OpenAI's advice: set it only for the Codex command that needs it, never for a whole job or shell.</li>
     </ul>
 
@@ -63,13 +63,14 @@ secretariat profile bind codex-api OPENAI_API_KEY \
   personal/openai/api/api_key
 secretariat run codex-api -- sh -c \
   'printenv OPENAI_API_KEY | codex login --with-api-key'</pre>
-    <p>The key goes from your iCloud keychain through a pipe into Codex's keychain entry. It never appears in your terminal, your shell history or a file. <code>codex login status</code> confirms the login.</p>
+    <p>Run this in your own terminal, not through an agent. The key goes from your iCloud keychain through a pipe into Codex's keychain entry. The full key doesn't appear in your terminal, your shell history or a file; Codex prints only a shortened form (first and last characters). <code>codex login status</code> confirms the login.</p>
 
     <h2>Step 3: scripts and <code>codex exec</code></h2>
-    <p>For automation, bind the key as <code>CODEX_API_KEY</code> and give it only to that one run:</p>
-<pre class="cmd">secretariat profile bind codex-api CODEX_API_KEY \
+    <p>For automation, use a second profile that holds only <code>CODEX_API_KEY</code>, so the run gets exactly the one variable it needs:</p>
+<pre class="cmd">secretariat profile create codex-exec --dir '*'
+secretariat profile bind codex-exec CODEX_API_KEY \
   personal/openai/api/api_key
-secretariat run codex-api -- codex exec "triage open bug reports"</pre>
+secretariat run codex-exec -- codex exec "triage open bug reports"</pre>
     <p>When an agent or a pipe reads the output, Secretariat replaces the key with <code>[masked]</code>. Codex passes its environment on to the commands it runs, keys included: <code>ignore_default_excludes</code> is <code>true</code> by default. Turn the automatic filter for names containing KEY, SECRET or TOKEN on:</p>
 <pre class="cmd"># ~/.codex/config.toml
 [shell_environment_policy]

@@ -62,14 +62,15 @@
     <p>No plain file, no export. The catch: the same command works for the agent too. Claude can run <code>security find-generic-password … -w</code> in its Bash tool and the key lands in the conversation. Add a deny rule such as <code>"Bash(security find-generic-password *)"</code> under <code>permissions.deny</code>, and know that a rule matches the command text, not every way to reach the keychain.</p>
 
     <h2>Option 2: start Claude Code through Secretariat</h2>
-    <p>Secretariat keeps the key in your iCloud keychain and hands it to exactly one program. Capture the key from the Console with ⌃⌥⌘V (or import it), then bind it to a profile that works in every folder:</p>
+    <p>Secretariat keeps the key in your iCloud keychain and hands it to the program you start through it. Capture the key from the Console with ⌃⌥⌘V (or import it), then bind it to a profile that works in every folder:</p>
 <pre class="cmd">secretariat profile create claude-api --dir '*'
 secretariat profile bind claude-api ANTHROPIC_API_KEY \
   personal/anthropic/api/api_key</pre>
     <p>Start Claude Code like this, for example as a shell alias:</p>
 <pre class="cmd">alias claude-api='CLAUDE_CODE_SUBPROCESS_ENV_SCRUB=1 \
   secretariat run claude-api -- claude'</pre>
-    <p>Claude Code gets the key for its own requests; with the scrub, the commands it runs don't. On top of that, Secretariat's Claude Code hook refuses <code>printenv</code>, <code>cat .env</code> and reading keychain passwords before they run (<code>secretariat guard claude install</code>), and every start is logged with time and origin. Switch on Touch ID for the item and each start waits for your fingerprint.</p>
+    <p>Claude Code gets the key for its own requests; with the scrub, the commands it runs don't. Secretariat's Claude Code hook refuses <code>printenv</code>, <code>cat .env</code> and reading keychain passwords before they run (<code>secretariat guard claude install</code>), and every start is logged with time and origin.</p>
+    <p>One limit to know: an agent running as you can call <code>secretariat run claude-api -- …</code> itself, and the hook doesn't stop every way to write the value somewhere. The hard boundary is Touch ID: switch it on for this item (<code>secretariat item set personal/anthropic/api --approval on</code>) and every start waits for your fingerprint.</p>
 
     <h2>Option 3: let Claude Code use your keys for tools, not for itself</h2>
     <p>Often the question behind “Claude Code API key” is a different one: Claude needs a Stripe, OpenAI or Cloudflare key to run tests or deploy. Keep your subscription for Claude Code and let it run those tools through Secretariat by profile name; the program gets the value, Claude sees <code>[masked]</code>. See <a href="/#how">how it works</a>.</p>
@@ -78,7 +79,7 @@ secretariat profile bind claude-api ANTHROPIC_API_KEY \
     <ul>
       <li>Claude Code itself must hold the key to call the API. Anything running as your user with enough effort can get at it; see the <a href="/threat-model">threat model</a>.</li>
       <li>A key in <code>~/.zshrc</code> or a project <code>.env</code> is still readable by any process. Remove those copies once the key lives in the keychain.</li>
-      <li>Claude Desktop and cloud sessions ignore <code>ANTHROPIC_API_KEY</code> and <code>apiKeyHelper</code>; they use your account login.</li>
+      <li>Claude Desktop and cloud sessions ignore <code>ANTHROPIC_API_KEY</code> and <code>apiKeyHelper</code>; they sign in with your account (except desktop sessions set up for a third-party inference provider).</li>
     </ul>
     <p>Sources: Claude Code docs on <a href="https://code.claude.com/docs/en/iam" rel="noopener">authentication</a>, <a href="https://code.claude.com/docs/en/settings-reference" rel="noopener">settings</a> and <a href="https://code.claude.com/docs/en/env-vars" rel="noopener">environment variables</a>.</p>
     <p><a class="btn" href="/Secretariat-latest.zip">Download Secretariat (14-day trial)</a></p>
