@@ -14,7 +14,7 @@ JustDeleteMe `sites.json` von GitHub (MIT, Copyright Robb Lewis & contributors),
 | build | `script/build.sh`: `Secretariat_SecretariatCore.bundle` liegt in `Contents/Resources`; die signierte CLI im Paket findet das Verzeichnis (Zählung unten) |
 | macos | Testinstanz mit künstlichem GitHub-Login: Zeile zeigt „easy“, Liste „Easy to close (1)“; Detail „How to close“: „Easy to close“, Erklärung, „Open Deletion Page …“, Quellenhinweis JustDeleteMe (MIT). CLI-Regression 24/24 |
 
-Echter Tresor (nur gezählt, nichts geändert): 1270 Logins; mit Lösch-Weg 142 (80 einfach, 15 mit Zusatzschritten, 31 über den Support, 16 nicht löschbar), ohne Eintrag 1036, Rest lokale Adressen. Je Profil: gmail 69/12/22/16, uli@ 9/2/8/0, developer@ 5/1/4/0.
+Echter Tresor (nur gezählt, nichts geändert): 1270 Logins; mit Lösch-Weg 142 (80 einfach, 15 mit Zusatzschritten, 31 über den Support, 16 nicht löschbar), ohne Eintrag 1036, Rest lokale Adressen.
 
 ## Grenzen und Folgerung
 
