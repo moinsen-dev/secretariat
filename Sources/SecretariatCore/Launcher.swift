@@ -137,6 +137,10 @@ public enum CommandLineInterface {
                                                      website logins from a browser password export (Google, Apple, Firefox, Bitwarden, 1Password); prints paths and counts only
       secretariat audit-logins [--from PROFILE] [--finding local|reused|weak|leaked|domainGone] [--closing easy|medium|hard|impossible] [--json]
                                                      inventory of website logins: counts and paths, never values
+      secretariat login-sites [--needs-route] [--from PROFILE] [--decision open|keep|close|change] [--limit N] [--offset N] [--json]
+                                                     website logins grouped by site, with the known way to close each account
+      secretariat login-route SITE --difficulty easy|medium|hard|impossible (--url URL | --contact EMAIL) --source URL [--note TEXT] [--json]
+                                                     record a researched way to close the account on every login of SITE
       Kinds are templates: secretariat template list | show ID
       secretariat template create ID --title T [--symbol SF] [--explanation E] [--identity]
       secretariat template set ID [--title T] [--symbol SF] [--explanation E] [--identity|--no-identity]

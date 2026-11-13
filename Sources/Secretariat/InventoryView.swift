@@ -220,8 +220,8 @@ struct InventoryDetail: View {
                 if let guide = entry.deletion {
                     Section {
                         LabeledContent(guide.difficulty.title) {
-                            Button("Open Deletion Page …", systemImage: "arrow.up.forward.square") {
-                                if let url = URL(string: guide.url) { NSWorkspace.shared.open(url) }
+                            if let url = guide.url.flatMap(URL.init(string:)) {
+                                Button("Open Deletion Page …", systemImage: "arrow.up.forward.square") { NSWorkspace.shared.open(url) }
                             }
                         }
                         Text(guide.difficulty.explanation).foregroundStyle(.secondary)
@@ -230,7 +230,11 @@ struct InventoryDetail: View {
                             LabeledContent("Write to", value: email).textSelection(.enabled)
                         }
                     } header: { Text("How to close") } footer: {
-                        Text("Deletion guide for \(guide.name) from JustDeleteMe (MIT License).")
+                        if let source = guide.source {
+                            Text("Researched \(guide.checked ?? "") from \(source)").textSelection(.enabled)
+                        } else {
+                            Text("Deletion guide for \(guide.name) from JustDeleteMe (MIT License).")
+                        }
                     }
                 }
             }

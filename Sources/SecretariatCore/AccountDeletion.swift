@@ -28,11 +28,23 @@ public enum AccountDeletion {
 
     public struct Guide: Codable, Equatable, Sendable {
         public let name: String
-        public let url: String
+        /// Deletion page (or help page); nil when only a contact is known.
+        public let url: String?
         public let difficulty: Difficulty
         public let domains: [String]
         public let notes: String?
+        /// E-mail address (or contact form URL) for a deletion request.
         public let email: String?
+        /// Where a researched route was found (a URL); nil for the bundled directory.
+        public var source: String? = nil
+        /// yyyy-MM-dd when a researched route was recorded.
+        public var checked: String? = nil
+        public var isResearched: Bool { source != nil }
+        public init(name: String, url: String?, difficulty: Difficulty, domains: [String], notes: String?, email: String?,
+                    source: String? = nil, checked: String? = nil) {
+            self.name = name; self.url = url; self.difficulty = difficulty; self.domains = domains; self.notes = notes; self.email = email
+            self.source = source; self.checked = checked
+        }
     }
 
     public struct Directory: Sendable {
@@ -45,7 +57,7 @@ public enum AccountDeletion {
             var bySite: [String: Guide] = [:], byHost: [String: Guide] = [:]
             for guide in guides {
                 var hosts = guide.domains
-                if let host = LoginFill.host(guide.url) { hosts.append(host) }
+                if let url = guide.url, let host = LoginFill.host(url) { hosts.append(host) }
                 for host in hosts {
                     let h = host.hasPrefix("www.") ? String(host.dropFirst(4)) : host
                     if byHost[h] == nil { byHost[h] = guide }

@@ -136,7 +136,7 @@ public enum LoginAudit {
             if let site, online.hosts[site] == .gone { findings.insert(.domainGone) }
             return Entry(item: item, host: host, site: site, origins: PasswordImport.origins(item), findings: findings,
                          reusedWith: reusedWith, leakCount: leakCount, decision: decision(item),
-                         deletion: local ? nil : guides.guide(host: host))
+                         deletion: local ? nil : (LoginRoutes.route(item) ?? guides.guide(host: host)))
         }.sorted { $0.item.path < $1.item.path }
     }
 
@@ -167,7 +167,7 @@ public enum LoginAudit {
     }
     /// The deletion page from the directory, or else a web search for how to delete the account on that site.
     public static func closeAccountURL(_ entry: Entry) -> URL? {
-        if let guide = entry.deletion, let url = URL(string: guide.url) { return url }
+        if let guide = entry.deletion, let url = guide.url.flatMap(URL.init(string:)) { return url }
         guard let site = entry.site else { return nil }
         var components = URLComponents(string: "https://www.google.com/search")!
         components.queryItems = [URLQueryItem(name: "q", value: "\(site) delete account")]

@@ -459,9 +459,42 @@ public enum Commands {
                          summary.onlineChecked == nil ? "In known leaks / domain gone: not checked yet (app: Inventory → Check Online)"
                                                       : "In known leaks: \(summary.leaked)\nDomain gone: \(summary.domainGone)",
                          "Decided: keep \(summary.keep), close \(summary.close), change \(summary.change); open \(summary.undecided)",
-                         "Closing (JustDeleteMe): easy \(summary.easy), extra steps \(summary.medium), via support \(summary.hard), impossible \(summary.impossible), no guide \(summary.withoutGuide)"]
+                         "Closing (directory or researched): easy \(summary.easy), extra steps \(summary.medium), via support \(summary.hard), impossible \(summary.impossible), no guide \(summary.withoutGuide)"]
             lines += listed
             return (0, try json(Audit(summary: summary, listed: listed)), lines.joined(separator: "\n"))
+
+        case ("login-sites", _):
+            let a = try Arguments(all.dropFirst(), values: ["--from", "--decision", "--limit", "--offset"], flags: ["--needs-route"], usage: usage)
+            guard a.positional.isEmpty else { throw AgentError("invalid_arguments", "Usage: secretariat login-sites [--needs-route] [--from PROFILE] [--decision open|keep|close|change] [--limit N] [--offset N]") }
+            let items = try vault.list()
+            var entries = LoginAudit.entries(items, facts: [:], online: LoginAudit.loadOnline(vault.configuration.paths))
+            if let from = try a.option("--from") { entries = entries.filter { $0.origins.contains { $0.caseInsensitiveCompare(from) == .orderedSame } } }
+            if let raw = try a.option("--decision") {
+                if raw == "open" { entries = entries.filter { $0.decision == nil } }
+                else if let decision = LoginAudit.Decision(rawValue: raw) { entries = entries.filter { $0.decision == decision } }
+                else { throw AgentError("invalid_arguments", "Unknown --decision \(raw). Use open, keep, close or change.") }
+            }
+            var sites = LoginRoutes.sites(entries)
+            if a.flags.contains("--needs-route") { sites = sites.filter { $0.route == nil } }
+            let limit = min(max(Int(try a.option("--limit") ?? "50") ?? 50, 1), 500), offset = max(Int(try a.option("--offset") ?? "0") ?? 0, 0)
+            let page = Array(sites.dropFirst(offset).prefix(limit))
+            struct Sites: Encodable { let schemaVersion = 2; let ok = true; let total: Int; let offset: Int; let sites: [LoginRoutes.Site] }
+            let lines = ["\(sites.count) sites" + (sites.count > page.count ? " (showing \(offset + 1)–\(offset + page.count))" : "")]
+                + page.map { "\($0.site)  \($0.logins.count) login\($0.logins.count == 1 ? "" : "s")  " + ($0.route.map { "\($0.difficulty) via \($0.source)" } ?? "no route") }
+            return (0, try json(Sites(total: sites.count, offset: offset, sites: page)), lines.joined(separator: "\n"))
+
+        case ("login-route", _):
+            let a = try Arguments(all.dropFirst(), values: ["--url", "--contact", "--difficulty", "--note", "--source"], usage: usage)
+            let routeUsage = "Usage: secretariat login-route SITE --difficulty easy|medium|hard|impossible (--url URL | --contact EMAIL_OR_FORM) --source URL [--note TEXT]"
+            guard a.positional.count == 1, let raw = try a.option("--difficulty"), let source = try a.option("--source") else {
+                throw AgentError("invalid_arguments", routeUsage)
+            }
+            guard let difficulty = AccountDeletion.Difficulty(rawValue: raw) else { throw AgentError("invalid_arguments", routeUsage) }
+            let route = LoginRoutes.Route(url: try a.option("--url"), contact: try a.option("--contact"), difficulty: difficulty,
+                                          note: try a.option("--note"), source: source)
+            let changed = try LoginRoutes.set(route, site: a.positional[0], vault: vault)
+            struct Routed: Encodable { let schemaVersion = 2; let ok = true; let site: String; let logins: [String] }
+            return (0, try json(Routed(site: a.positional[0], logins: changed)), "Route recorded for \(changed.count) login\(changed.count == 1 ? "" : "s"): " + changed.joined(separator: ", "))
 
         // MARK: profiles
         case ("profiles", _):

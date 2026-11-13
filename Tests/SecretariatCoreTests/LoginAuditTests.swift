@@ -123,3 +123,58 @@ private func login(_ path: String, _ url: String, user: String = "me", origin: S
     #expect(json.contains("web/github.com"))
     #expect(f.code("audit-logins", "--closing", "sometimes") == "invalid_arguments")
 }
+
+@Test func researchedRouteCoversEverySiteLoginAndWinsOverTheDirectory() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    let a = login("web/shop.test", "https://www.shop.test/login", user: "one")
+    let b = login("web/shop.test/two", "https://accounts.shop.test/", user: "two")
+    let other = login("web/other.test", "https://other.test/")
+    for item in [a, b, other] { try f.vault.save(item, secrets: ["password": "Artificial-\(item.path)"]) }
+    let route = LoginRoutes.Route(url: nil, contact: "privacy@shop.test", difficulty: .hard, note: "Request by e-mail with the account address.",
+                                  source: "https://shop.test/privacy")
+    let changed = try LoginRoutes.set(route, site: "https://shop.test/", vault: f.vault, today: "2026-11-13")
+    #expect(changed.sorted() == ["web/shop.test", "web/shop.test/two"])
+    #expect(try f.vault.personalValue(itemID: a.id, field: "password") == "Artificial-web/shop.test")
+    let directory = AccountDeletion.Directory(guides: [.init(name: "Shop", url: "https://shop.test/delete", difficulty: .easy, domains: ["shop.test"], notes: nil, email: nil)])
+    let entries = LoginAudit.entries(try f.vault.list(), facts: [:], guides: directory)
+    let guide = entries.first { $0.item.path == "web/shop.test" }?.deletion
+    #expect(guide?.difficulty == .hard); #expect(guide?.email == "privacy@shop.test"); #expect(guide?.source == "https://shop.test/privacy")
+    #expect(guide?.checked == "2026-11-13"); #expect(guide?.url == nil)
+    // Recording again replaces the route instead of adding fields.
+    try LoginRoutes.set(.init(url: "https://shop.test/account/delete", contact: nil, difficulty: .easy, note: nil, source: "https://shop.test/help"),
+                        site: "shop.test", vault: f.vault, today: "2026-11-14")
+    let item = try f.vault.item(path: "web/shop.test")
+    #expect(item.fields.filter { $0.name.hasPrefix("deletion_") }.count == 4)   // url, difficulty, source, checked
+    #expect(LoginRoutes.route(item)?.difficulty == .easy)
+    // Rules: a source page is required, contacts are mail or http(s), notes are one line.
+    func code(_ r: LoginRoutes.Route) -> String? { do { try LoginRoutes.set(r, site: "shop.test", vault: f.vault); return nil } catch let e as AgentError { return e.code } catch { return "other" } }
+    #expect(code(.init(url: "https://x.test", contact: nil, difficulty: .easy, note: nil, source: "not a url")) == "invalid_arguments")
+    #expect(code(.init(url: nil, contact: nil, difficulty: .easy, note: nil, source: "https://x.test")) == "invalid_arguments")
+    #expect(code(.init(url: nil, contact: "javascript:alert(1)", difficulty: .easy, note: nil, source: "https://x.test")) == "invalid_arguments")
+    #expect(code(.init(url: "https://x.test", contact: nil, difficulty: .easy, note: "two\nlines", source: "https://x.test")) == "invalid_arguments")
+    #expect((try? LoginRoutes.set(route, site: "nowhere.test", vault: f.vault)) == nil)
+}
+
+@Test func mcpToolsLetAnAgentWorkThroughSitesWithoutValues() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    try f.vault.save(login("web/github.com", "https://github.com/login", origin: "Chrome: Work"), secrets: ["password": "Artificial-Github-Value-1"])
+    try f.vault.save(login("web/unknown-shop.test", "https://unknown-shop.test/", origin: "Chrome: Privat"), secrets: ["password": "Artificial-Shop-Value-2"])
+    try f.vault.save(login("web/192.168.0.1", "http://192.168.0.1/"), secrets: ["password": "Artificial-Router-3"])
+
+    let (sites, sitesError) = McpServer.call("login_sites", ["needs_route": true], service: f.service, executable: "/tmp/s")
+    #expect(!sitesError); #expect(sites.contains("unknown-shop.test")); #expect(!sites.contains("\"site\" : \"github.com\""))
+    #expect(!sites.contains("192.168.0.1")); #expect(sites.contains("\"total\" : 1"))
+    let (set, setError) = McpServer.call("set_deletion_route", ["site": "unknown-shop.test", "difficulty": "hard", "contact": "privacy@unknown-shop.test",
+                                                                "source": "https://unknown-shop.test/privacy"], service: f.service, executable: "/tmp/s")
+    #expect(!setError); #expect(set.contains("web/unknown-shop.test"))
+    let (after, _) = McpServer.call("login_sites", ["needs_route": true], service: f.service, executable: "/tmp/s")
+    #expect(after.contains("\"total\" : 0"))
+    let (all, _) = McpServer.call("login_sites", ["from": "Chrome: Privat"], service: f.service, executable: "/tmp/s")
+    #expect(all.contains("privacy@unknown-shop.test")); #expect(all.contains("https://unknown-shop.test/privacy"))
+    let (inventory, inventoryError) = McpServer.call("login_inventory", ["closing": "hard"], service: f.service, executable: "/tmp/s")
+    #expect(!inventoryError); #expect(inventory.contains("web/unknown-shop.test"))
+    for output in [sites, set, after, all, inventory] { #expect(!output.contains("Artificial-")) }
+    let (bad, badError) = McpServer.call("set_deletion_route", ["site": "unknown-shop.test", "difficulty": "hard", "source": "https://x.test"],
+                                         service: f.service, executable: "/tmp/s")
+    #expect(badError); #expect(bad.contains("invalid_arguments"))
+}

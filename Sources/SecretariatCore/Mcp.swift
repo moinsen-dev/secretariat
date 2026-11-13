@@ -51,6 +51,24 @@ public enum McpServer {
             return ["import", try string(a, "file")] + mappings.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }
                 + ((a["profile"] as? String).map { ["--profile", $0] } ?? [])
         },
+        Tool(name: "login_inventory", description: "Inventory of the user's website logins: counts of local addresses, reused, weak and leaked passwords, gone domains, decisions and how hard each account is to close. Optional: from (browser profile, e.g. \"Chrome: Work\"), finding (local|reused|weak|leaked|domainGone) or closing (easy|medium|hard|impossible) to list matching login paths. Never values.",
+             properties: ["from": str, "finding": str, "closing": str], required: []) { a in
+            ["audit-logins"] + ((a["from"] as? String).map { ["--from", $0] } ?? []) + ((a["finding"] as? String).map { ["--finding", $0] } ?? [])
+                + ((a["closing"] as? String).map { ["--closing", $0] } ?? [])
+        },
+        Tool(name: "login_sites", description: "Website logins grouped by site (registrable domain) with usernames, browser profiles, findings, the user's decisions and the known way to close the account (deletion page, contact, difficulty, source). needs_route=true lists only sites without a known way: research those (the site's help pages and privacy policy) and record what you find with set_deletion_route. Paged with limit/offset.",
+             properties: ["needs_route": ["type": "boolean"], "from": str, "decision": ["type": "string", "description": "open, keep, close or change"],
+                          "limit": ["type": "integer"], "offset": ["type": "integer"]], required: []) { a in
+            ["login-sites"] + ((a["needs_route"] as? Bool) == true ? ["--needs-route"] : []) + ((a["from"] as? String).map { ["--from", $0] } ?? [])
+                + ((a["decision"] as? String).map { ["--decision", $0] } ?? [])
+                + ((a["limit"] as? Int).map { ["--limit", String($0)] } ?? []) + ((a["offset"] as? Int).map { ["--offset", String($0)] } ?? [])
+        },
+        Tool(name: "set_deletion_route", description: "Record how to close the account on a site, for every login of that site: deletion page (url) and/or contact for a deletion request (contact: privacy e-mail or contact form), difficulty (easy: a delete button; medium: extra steps; hard: only via support or a request; impossible: no real deletion) and the page you found it on (source, required). Optional one-line note. Only record what the source says; this does not close anything.",
+             properties: ["site": str, "difficulty": str, "url": str, "contact": str, "note": str, "source": str], required: ["site", "difficulty", "source"]) { a in
+            ["login-route", try string(a, "site"), "--difficulty", try string(a, "difficulty"), "--source", try string(a, "source")]
+                + ((a["url"] as? String).map { ["--url", $0] } ?? []) + ((a["contact"] as? String).map { ["--contact", $0] } ?? [])
+                + ((a["note"] as? String).map { ["--note", $0] } ?? [])
+        },
         Tool(name: "guard_check", description: "Check a git repository's staged changes for known secret values (file:line and item names only).",
              properties: ["directory": str], required: ["directory"]) { a in ["guard", "check", try string(a, "directory")] },
     ]
