@@ -127,6 +127,31 @@ changes contain secret values:
   </div>
 </section>
 
+<!-- For vibe-coders -->
+<section id="new-to-keys">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">New to keys and agents?</p>
+      <h2>You build by talking to your agent. You don't need to be a security person.</h2>
+      <p class="lead">Sooner or later your agent asks for a key: for OpenAI, Stripe or Supabase. Paste it into the chat and it sits in a transcript. Put it in a file called <code>.env</code> and the agent can read it, and one day it lands on GitHub. Secretariat is the place where those keys go instead.</p>
+    </div>
+    <ol class="steps">
+      <li>
+        <h3>A service shows you a key</h3>
+        <p>Copy it and press <kbd>⌃⌥⌘V</kbd>. Secretariat keeps it and empties the clipboard. That's your whole part.</p>
+      </li>
+      <li>
+        <h3>Your agent does the setup</h3>
+        <p>It tells Secretariat which key the project needs, by name. Your app gets the key when it runs; the agent only ever sees <code>[masked]</code>.</p>
+      </li>
+      <li>
+        <h3>A slip gets stopped</h3>
+        <p>With the commit guard on, a commit that contains one of your keys is refused before it reaches GitHub, and Secretariat names the key.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
 <!-- How it works -->
 <section id="how">
   <div class="wrap">

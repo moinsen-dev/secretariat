@@ -105,6 +105,38 @@
         },
         "source" : "feedback-cafe",
         "url" : "https:\/\/secretariat.moinsen.dev\/"
+      },
+      {
+        "check_id" : "j_8xEfvO63p1vrSy",
+        "date" : "2026-11-13T15:19:07Z",
+        "insight" : "Imprint named Lemon Squeezy while the page sells through Polar, launch price hidden, only the maker's own quote.",
+        "live" : true,
+        "round" : 1,
+        "scores" : {
+          "audience" : 5,
+          "clarity" : 4,
+          "next_step" : 4,
+          "trust" : 3,
+          "value" : 4
+        },
+        "source" : "feedback-cafe",
+        "url" : "https:\/\/secretariat.moinsen.dev\/"
+      },
+      {
+        "check_id" : "WSZ15W81uHXBqFdk",
+        "date" : "2026-11-13T16:10:43Z",
+        "insight" : "Contradiction fixed and launch price clear; with vibe-coders as second audience the page lacked a plain-language entry (added locally in 9e65293, not yet deployed).",
+        "live" : true,
+        "round" : 2,
+        "scores" : {
+          "audience" : 4,
+          "clarity" : 4,
+          "next_step" : 5,
+          "trust" : 4,
+          "value" : 4
+        },
+        "source" : "feedback-cafe",
+        "url" : "https:\/\/secretariat.moinsen.dev\/"
       }
     ]
   },
