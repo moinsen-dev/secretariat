@@ -196,9 +196,14 @@ private struct Pair {
     #expect(ManagedSettings(paths: p.a.vault.configuration.paths, environment: env).teamMembers().count == 1)
     #expect(ManagedSettings(paths: AppPaths(directory: AppPaths.defaultDirectory), environment: env).values == nil)
     // Unforced values (defaults write by the user or an agent) aren't read for the real domain.
-    let real = ManagedSettings(paths: AppPaths(directory: AppPaths.defaultDirectory), environment: [:]).teamMembers()
-    let allManaged = real.allSatisfy { $0.managed }
-    #expect(allManaged)
+    // A value written like `defaults write` (not enforced by a profile) is ignored. Throwaway domain, removed afterwards.
+    let domain = "dev.moinsen.secretariat.test.\(UUID().uuidString)" as CFString
+    CFPreferencesSetAppValue("TeamMembers" as CFString, [benCode] as CFArray, domain)
+    CFPreferencesAppSynchronize(domain)
+    defer { CFPreferencesSetAppValue("TeamMembers" as CFString, nil, domain); CFPreferencesAppSynchronize(domain) }
+    #expect((CFPreferencesCopyAppValue("TeamMembers" as CFString, domain) as? [String]) == [benCode])   // the value is there …
+    let unforced = ManagedSettings(paths: AppPaths(directory: AppPaths.defaultDirectory), environment: [:], domain: domain as String)
+    #expect(unforced.teamMembers().isEmpty)                                                            // … but not enforced, so ignored
 }
 
 private extension JSONDecoder {

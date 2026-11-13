@@ -369,10 +369,13 @@ public enum Team {
 public struct ManagedSettings: Sendable {
     public static let domain = "dev.moinsen.secretariat.local"
     let values: [String: any Sendable]?
+    /// The preferences domain read when no fixture is used; tests point it at a throwaway domain.
+    let domain: String
 
     /// Reads forced values from macOS. A test vault (SECRETARIAT_HOME) may point SECRETARIAT_MANAGED_FIXTURE at a
     /// plist instead; the real vault never reads a fixture.
-    public init(paths: AppPaths = AppPaths(), environment: [String: String] = ProcessInfo.processInfo.environment) {
+    public init(paths: AppPaths = AppPaths(), environment: [String: String] = ProcessInfo.processInfo.environment, domain: String = ManagedSettings.domain) {
+        self.domain = domain
         if !paths.isDefault, let fixture = environment["SECRETARIAT_MANAGED_FIXTURE"], !fixture.isEmpty {
             let plist = (try? Data(contentsOf: URL(fileURLWithPath: fixture)))
                 .flatMap { try? PropertyListSerialization.propertyList(from: $0, format: nil) as? [String: Any] }
@@ -381,7 +384,7 @@ public struct ManagedSettings: Sendable {
             values = nil
         }
     }
-    init(values: [String: any Sendable]) { self.values = values }
+    init(values: [String: any Sendable]) { self.values = values; domain = Self.domain }
 
     static func sendable(_ value: Any) -> (any Sendable)? {
         if let s = value as? String { return s }
@@ -391,8 +394,8 @@ public struct ManagedSettings: Sendable {
 
     func value(_ key: String) -> Any? {
         if let values { return values[key] }
-        guard CFPreferencesAppValueIsForced(key as CFString, Self.domain as CFString) else { return nil }
-        return CFPreferencesCopyAppValue(key as CFString, Self.domain as CFString)
+        guard CFPreferencesAppValueIsForced(key as CFString, domain as CFString) else { return nil }
+        return CFPreferencesCopyAppValue(key as CFString, domain as CFString)
     }
 
     /// `TeamMembers`: share codes; invalid ones are ignored.

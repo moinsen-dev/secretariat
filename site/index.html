@@ -453,7 +453,7 @@ secretariat profile bind \
     <div class="cards">
       <article class="card">
         <h3>Exchange codes once</h3>
-        <p>Every person has a share code. Add colleagues under Team and compare the fingerprint once. Admins can push the team list to every Mac with MDM.</p>
+        <p>Every person has a share code. Add colleagues under Team and compare the fingerprint once. Admins can also set the team list through a managed configuration profile.</p>
       </article>
       <article class="card">
         <h3>Sealed per person</h3>
@@ -461,7 +461,7 @@ secretariat profile bind \
       </article>
       <article class="card">
         <h3>When someone leaves</h3>
-        <p>Remove them, and Secretariat lists every key they got and marks it “Rotate” until a new value is saved. Targets then shows each copy that still has the old one.</p>
+        <p>Remove them, and Secretariat lists every key they got. One click marks those keys “Rotate” until a new value is saved; Targets then shows each copy that still has the old one.</p>
       </article>
     </div>
     <p class="note">Agents can't share, add members or open packages: that happens only in the app. No shared vault, no server, no roles or single sign-on. <a href="teams.html">Admin guide</a> · <a href="threat-model.html">Threat model</a></p>
@@ -670,7 +670,7 @@ secretariat profile bind \
       </details>
       <details>
         <summary>Can my team use it?</summary>
-        <div><p>Yes. Everyone keeps their own keys in their own keychain, and their agents stay blind to them. When a key has to go to a colleague, it travels as a sealed file only that colleague can open; when someone leaves, Secretariat lists what they got and marks it for rotation. What it doesn't do: a shared live vault, roles, central audit or single sign-on. For those, keep shared secrets in 1Password or Bitwarden. One license per person covers all of that person's Macs; for five or more, write to <a href="mailto:business@moinsen.dev">business@moinsen.dev</a>. Admins: <a href="teams.html">rolling out to a team</a>.</p></div>
+        <div><p>Yes. Everyone keeps their own keys in their own keychain, and their agents stay blind to them. When a key has to go to a colleague, it travels as a sealed file only that colleague can open; when someone leaves, Secretariat lists what they got and lets you mark it for rotation. What it doesn't do: a shared live vault, roles, central audit or single sign-on. For those, keep shared secrets in 1Password or Bitwarden. One license per person covers all of that person's Macs; for five or more, write to <a href="mailto:business@moinsen.dev">business@moinsen.dev</a>. Admins: <a href="teams.html">rolling out to a team</a>.</p></div>
       </details>
       <details>
         <summary>Which agents does it work with?</summary>

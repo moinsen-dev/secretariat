@@ -104,7 +104,9 @@ extension AppModel {
                 let panel = NSSavePanel()
                 panel.allowedContentTypes = [.secretariatShare]
                 let who = recipients.count == 1 ? recipients[0].name : "\(recipients.count) people"
-                panel.nameFieldStringValue = "Secretariat \(chosen.count == 1 ? chosen[0].path.replacingOccurrences(of: "/", with: "-") : "\(chosen.count) items") for \(who).\(Team.fileExtension)"
+                // No item names in the file name: it travels through mail and chat (threat model: names never outside the sealed part).
+                let day = ISO8601DateFormatter.string(from: Date(), timeZone: .current, formatOptions: [.withFullDate])
+                panel.nameFieldStringValue = "Secretariat share for \(who), \(day).\(Team.fileExtension)"
                 panel.message = "Send this file to \(names) by mail, chat or AirDrop. Only they can open it."
                 guard panel.runModal() == .OK, let url = panel.url else { shareDraft?.working = false; return }
                 guard FileManager.default.createFile(atPath: url.path, contents: data, attributes: [.posixPermissions: 0o600]) else {

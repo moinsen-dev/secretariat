@@ -43,13 +43,13 @@
     <p>Sharing, adding members and opening packages happen only in the app. No command-line call and no agent can share or import; the CLI shows only <code>secretariat team code</code> and <code>secretariat team list</code>.</p>
 
     <h2>When someone leaves</h2>
-    <p>Remove them under Team. Secretariat lists every item you shared with them and marks those items “Rotate”, in the app, in <code>secretariat status</code> and in <code>items --json</code>. The mark disappears as soon as you save a new value. After rotating, <code>secretariat targets</code> shows every copy (Cloudflare, Supabase, GitHub, servers) that still has the old value. The item detail also says when a value changed after you shared it, so you know who has an outdated copy.</p>
+    <p>Remove them under Team. Secretariat lists every item you shared with them; “Mark for Rotation” marks those items “Rotate”, in the app, in <code>secretariat status</code> and in <code>items --json</code>. The mark disappears as soon as you save a new value. After rotating, <code>secretariat targets</code> shows every copy (Cloudflare, Supabase, GitHub, servers) that still has the old value. The item detail also says when a value changed after you shared it, so you know who has an outdated copy.</p>
 
     <h2>Rolling out with MDM</h2>
     <h3>The app</h3>
     <p>Secretariat is a notarized Developer ID app. Your MDM can deploy the download from the website, or an installer package once we ship one (<code>Secretariat-&lt;version&gt;.pkg</code>, signed and notarized; ask at <a href="mailto:business@moinsen.dev">business@moinsen.dev</a>). Each user then links the command-line tool once: <code>ln -s /Applications/Secretariat.app/Contents/MacOS/Secretariat ~/bin/secretariat</code>.</p>
     <h3>Team members for everyone</h3>
-    <p>Push a configuration profile with the payload <code>com.apple.ManagedClient.preferences</code> for the domain <code>dev.moinsen.secretariat.local</code> and the key <code>TeamMembers</code>: an array of share codes. Those members appear on every Mac as “Managed by your organization” and can't be removed in the app. Secretariat reads only values the profile enforces; a value someone sets with <code>defaults write</code> is ignored.</p>
+    <p>Push a configuration profile with the payload <code>com.apple.ManagedClient.preferences</code> for the domain <code>dev.moinsen.secretariat.local</code> and the key <code>TeamMembers</code>: an array of share codes. Those members appear on every Mac as “Managed by your organization” and can't be removed in the app. Secretariat reads only values the profile enforces; a value someone sets with <code>defaults write</code> is ignored. We have tested the reading with Secretariat's test settings, not yet with every MDM: tell us how it works with yours.</p>
 <pre class="cmd">&lt;key&gt;TeamMembers&lt;/key&gt;
 &lt;array&gt;
   &lt;string&gt;stc1:…code of the team lead…&lt;/string&gt;
