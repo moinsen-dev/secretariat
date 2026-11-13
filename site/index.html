@@ -26,7 +26,7 @@
  "description": "Mac app and command line tool that keeps API keys in the iCloud keychain and lets coding agents such as Claude Code and Codex run tools with them without reading the values.",
  "applicationCategory": "DeveloperApplication",
  "operatingSystem": "macOS 14 or later",
- "softwareVersion": "1.16.0",
+ "softwareVersion": "1.18.0",
  "url": "https://secretariat.moinsen.dev/",
  "downloadUrl": "https://secretariat.moinsen.dev/Secretariat-latest.zip",
  "screenshot": "https://secretariat.moinsen.dev/img/app-main.png",
@@ -75,9 +75,10 @@
       <p class="lead">Grab a key from the clipboard with one shortcut, or let Secretariat read it off a screenshot, on your Mac. It lives in your iCloud keychain. Agents start your tools through it: the program gets the values, the agent sees <code>[masked]</code>. No server, no account, no subscription.</p>
       <div class="cta-row">
         <a class="btn" href="Secretariat-latest.zip">Download free trial</a>
-        <a class="btn secondary" href="#pricing">Buy for 39 €</a>
+        <a class="btn secondary" href="#pricing">Buy for 29 € (launch price)</a>
       </div>
-      <p class="fineprint">14 days with everything, no account. After that it keeps working and asks you to buy. Needs macOS 14 or later; reading screenshots with Apple Intelligence needs macOS 26. Honest about its limits: <a href="threat-model.html">read the threat model</a>.</p>
+      <p class="fineprint">14 days with everything, no account. After that it keeps working and asks you to buy. 29 € once until 11 December 2026, then 39 €. Needs macOS 14 or later; reading screenshots with Apple Intelligence needs macOS 26.</p>
+      <p class="fineprint"><strong>How far “don't get to read them” goes:</strong> masking keeps keys out of an agent's context by accident. Against an agent that tries on purpose, Touch ID per item is the hard boundary: no fingerprint, no value. <a href="threat-model.html">The threat model</a> has the details.</p>
     </div>
     <div>
       <figure class="terminal" aria-label="Example: an agent runs a command through Secretariat and sees masked output">
@@ -104,7 +105,7 @@ changes contain secret values:
     <div class="section-head">
       <p class="eyebrow">The problem</p>
       <h2>Agents read <code>.env</code>. Blocking the file isn't enough.</h2>
-      <p class="lead">A key in a plain file ends up in the agent's context, in a log, or in a commit sooner or later. This happened in public throughout 2026.</p>
+      <p class="lead">An API key is the password a program uses to talk to a paid service such as OpenAI or Stripe; whoever has it can spend on your account. A key in a plain file ends up in the agent's context, in a log, or in a commit sooner or later. This happened in public throughout 2026.</p>
     </div>
     <ul class="evidence">
       <li>
@@ -162,6 +163,7 @@ changes contain secret values:
       </li>
     </ol>
     <p class="flow-sum"><strong>No <code>.env</code> to keep, no token in a chat, no evening of hunting keys on a new Mac.</strong> The three commands below are what your agent types; you can read them, but you don't have to.</p>
+    <p class="note"><strong>Your first day needs only this section:</strong> keep your keys, let your agent run through Secretariat, switch on the commit guard (<code>secretariat guard install --all ~/work</code>). Logins, teams, MCP tokens, backup and targets further down are there when a project asks for them.</p>
     <ol class="steps">
       <li>
         <h3>Keep it once</h3>
@@ -228,8 +230,8 @@ secretariat profile bind \
       </article>
     </div>
     <figure class="founder-quote">
-      <blockquote>“Between Claude, Codex and me, our whole way of working has changed. No more trouble with credentials, no more hunting for passwords. For me personally, it's a game changer.”</blockquote>
-      <figcaption>Ulrich Diedrichsen, who builds Secretariat and runs his projects on it</figcaption>
+      <blockquote>“Between Claude, Codex and me, our whole way of working has changed. No more trouble with credentials, no more hunting for passwords.”</blockquote>
+      <figcaption>Ulrich Diedrichsen, who builds Secretariat. The maker's view, not a customer's: Secretariat went on sale in November 2026, and the numbers above are his own. Using it yourself? <a href="mailto:business@moinsen.dev?subject=Secretariat%20experience">Tell us how it went</a>, and with your permission we'll quote you here.</figcaption>
     </figure>
   </div>
 </section>
@@ -308,7 +310,7 @@ secretariat profile bind \
     <div class="features">
       <div class="feature">
         <h3>Tested, not hoped</h3>
-        <p>94 automated tests and a CLI regression run before every release. Each new feature also goes to a separate reviewer agent with a fresh context, whose only job is to break it; the feature ships when that review passes. Tests and reviews are <a href="https://github.com/moinsen-dev/secretariat" rel="noopener">on GitHub</a>. The last one found that an agent could have read an MCP token through the MCP tool. Fixed before release. These are our own checks, not an outside audit.</p>
+        <p>94 automated tests and a CLI regression run before every release. Each new feature also goes to a separate reviewer agent with a fresh context, whose only job is to break it; the feature ships when that review passes. Tests and reviews are <a href="https://github.com/moinsen-dev/secretariat" rel="noopener">on GitHub</a>. The last one found that an agent could have read an MCP token through the MCP tool. Fixed before release. These are our own checks, not an outside audit. Found a way past the guard? Write to <a href="mailto:business@moinsen.dev?subject=Secretariat%20security">business@moinsen.dev</a>; fixes and credit go into the release notes.</p>
       </div>
       <div class="feature">
         <h3>Honest about limits</h3>
@@ -320,7 +322,7 @@ secretariat profile bind \
       </div>
     </div>
 
-    <p class="note">We've spent those days, and the weeks after them. 39 € buys them back, so your weekend goes to the thing you actually wanted to ship. Secretariat is made by Ulrich Diedrichsen in Hamburg, who runs his own 150 projects on it every day.</p>
+    <p class="note">We've spent those days, and the weeks after them. 29 € at launch (39 € after 11 December) buys them back, so your weekend goes to the thing you actually wanted to ship. Secretariat is made by Ulrich Diedrichsen in Hamburg, who runs his own 150 projects on it every day.</p>
   </div>
 </section>
 
@@ -537,6 +539,7 @@ secretariat profile bind \
     <div class="section-head">
       <p class="eyebrow">Everything else</p>
       <h2>Built for one developer with many projects.</h2>
+      <p class="lead">None of this is needed on day one. It's there for the day a project asks for it.</p>
     </div>
     <div class="features">
       <div class="feature">
@@ -676,8 +679,8 @@ secretariat profile bind \
     </div>
     <div class="price-card" id="buy">
       <h3>Secretariat 1.x</h3>
-      <div class="price"><strong>39 €</strong><span>one-time</span></div>
-      <div class="launch">Launch price: 29 € until 11 December 2026</div>
+      <div class="price"><strong>29 €</strong><span>one-time, launch price</span></div>
+      <div class="launch">Until 11 December 2026, then 39 €. The code LAUNCH29 is already filled in at checkout.</div>
       <ul class="checklist">
         <li>Mac app and <code>secretariat</code> CLI</li>
         <li>Clipboard inbox and encrypted screenshots with notes</li>
@@ -693,9 +696,9 @@ secretariat profile bind \
         <li>All 1.x updates included</li>
         <li>macOS 14 or later</li>
       </ul>
-      <a class="btn block" href="/buy">Buy Secretariat</a>
+      <a class="btn block" href="/buy">Buy for 29 €</a>
       <a class="btn secondary block" href="Secretariat-latest.zip">Download the free trial</a>
-      <p class="fineprint">Checkout by Polar. For the launch price, enter the code <strong>LAUNCH29</strong> at checkout (until 11 December 2026). Your license arrives by email within a minute and is checked offline; there is no account.</p>
+      <p class="fineprint">Checkout by Polar. If the field is empty, enter <strong>LAUNCH29</strong>. Your license arrives by email within a minute and is checked offline; there is no account.</p>
     </div>
   </div>
 </section>
