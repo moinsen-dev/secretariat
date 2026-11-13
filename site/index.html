@@ -3,11 +3,45 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Secretariat — capture, keep and use your keys on the Mac</title>
+<title>Secretariat – API keys for Claude Code & Codex agents on Mac</title>
 <meta name="description" content="Secretariat captures API keys from the clipboard or a screenshot, keeps them in your iCloud keychain, and lets your coding agents run your tools with them without ever reading them. Screenshots are read by on-device AI only. No server, no account, no subscription.">
+<link rel="canonical" href="https://secretariat.moinsen.dev/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Secretariat">
+<meta property="og:title" content="Secretariat – API keys for Claude Code & Codex agents on Mac">
+<meta property="og:description" content="Secretariat captures API keys from the clipboard or a screenshot, keeps them in your iCloud keychain, and lets your coding agents run your tools with them without ever reading them. Screenshots are read by on-device AI only. No server, no account, no subscription.">
+<meta property="og:url" content="https://secretariat.moinsen.dev/">
+<meta property="og:image" content="https://secretariat.moinsen.dev/img/app-main.png">
+<meta property="og:image:width" content="1587">
+<meta property="og:image:height" content="863">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230b6e69'/%3E%3Ccircle cx='16' cy='13' r='4.5' fill='white'/%3E%3Cpath d='M13.6 15.5h4.8l1.4 9h-7.6z' fill='white'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="style.css">
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "SoftwareApplication",
+ "name": "Secretariat",
+ "description": "Mac app and command line tool that keeps API keys in the iCloud keychain and lets coding agents such as Claude Code and Codex run tools with them without reading the values.",
+ "applicationCategory": "DeveloperApplication",
+ "operatingSystem": "macOS 14 or later",
+ "softwareVersion": "1.16.0",
+ "url": "https://secretariat.moinsen.dev/",
+ "downloadUrl": "https://secretariat.moinsen.dev/Secretariat-latest.zip",
+ "screenshot": "https://secretariat.moinsen.dev/img/app-main.png",
+ "offers": {
+  "@type": "Offer",
+  "price": "39",
+  "priceCurrency": "EUR"
+ },
+ "author": {
+  "@type": "Person",
+  "name": "Ulrich Diedrichsen",
+  "url": "https://www.moinsen.dev"
+ }
+}
+</script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -542,7 +576,7 @@ secretariat profile bind \
     <div class="section-head">
       <p class="eyebrow">Alternatives</p>
       <h2>Why not 1Password, Doppler, Infisical or a free tool?</h2>
-      <p class="lead">They are good tools, and in 2026 most of them keep values away from agents too. Here is where Secretariat differs. Competitor details as of October 2026.</p>
+      <p class="lead">They are good tools, and in 2026 most of them keep values away from agents too. Here is where Secretariat differs. Competitor details as of November 2026.</p>
     </div>
     <div class="compare">
       <article class="card">
@@ -573,14 +607,14 @@ secretariat profile bind \
         </dl>
       </article>
       <article class="card">
-        <h3>Free tools <small>Varlock, dotenvx, LLM Secrets and others</small></h3>
-        <dl>
-          <dt>What they do</dt>
-          <dd>Varlock gives agents names and types and scans commits; dotenvx <code>--redact</code> replaces values in output, though the agent's process still receives them; LLM Secrets, secretctl, tsm and others inject values with passkey or Touch ID. All free, most open source.</dd>
-          <dt>Choose Secretariat if</dt>
-          <dd>you want the bundle in one Mac app: per-item Touch ID, masking, commit guard, targets and rotation tracking, bulk import, without assembling it yourself.</dd>
-        </dl>
-      </article>
+        <h3>Free tools <small>akm, NoxKey, mxkey, Varlock, dotenvx and others</small></h3>
+          <dl>
+            <dt>What they do</dt>
+            <dd>In 2025 and 2026 a wave of free, mostly open-source tools keeps keys in the macOS Keychain and runs commands by name: akm (Homebrew, skills for Claude Code, Codex and Gemini CLI, output redacted), NoxKey (menu bar app with Touch ID and an MCP handoff), mxkey (a bash wrapper with an agent skill). Varlock gives agents names and types; dotenvx --redact masks output while the process still receives the values.</dd>
+            <dt>Choose Secretariat if</dt>
+            <dd>you want more than injection: capture from clipboard and screenshots, a commit guard and leak sweep with your real values, Fill and Save Login, history, encrypted backup, pushing to Cloudflare, Supabase or GitHub with stale-copy tracking, and sealed sharing in a team, in one native app.</dd>
+          </dl>
+        </article>
     </div>
     <p class="note">If one of these already covers what you need, keep using it. Prices and features are taken from each vendor's own pages; they change, so check before you decide.</p>
   </div>
