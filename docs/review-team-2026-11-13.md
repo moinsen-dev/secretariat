@@ -19,3 +19,10 @@ T033 als Fixture). Sollte umgesetzt: Satz zum Dateinamen im Bedrohungsmodell, �
 URTEIL UC25: PASS
 URTEIL UC26: PASS
 URTEIL UC27: BLOCKED (Schritt 1 per Fixture belegt; `.pkg` wartet auf das „Developer ID Installer“-Zertifikat; Admin-Anleitung online erst nach Ulis Ja)
+
+## Runde 3 (UC27, 2ce3d97 und b1b64d8)
+Paket signiert, notarisiert, gestapelt, Inhalt geprüft, keine Skripte; `/teams` live. Bedingung: der nächste Deploy enthält
+`Secretariat-latest.pkg` und wird live geprüft. Erfüllt mit Deployment 2c76bdaf (siehe Bericht). Die Meldungen „write: Permission denied“
+stammen von `pkgbuild`; das Paket ist nicht relocatable.
+
+URTEIL UC27: PASS
