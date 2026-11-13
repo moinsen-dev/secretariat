@@ -1,4 +1,3 @@
 # The app's "Buy" and the site's buy button both go through /buy, so the checkout can change in one place.
 # Polar (merchant of record) since 13 Nov 2026; the checkout link and its success page are set up in Polar.
-# discount_code prefills the launch code LAUNCH29; remove the parameter after 11 Dec 2026.
-/buy https://buy.polar.sh/polar_cl_JymzvKq6EdBUHEiAH0HotlFhA5RqB8otBvIFp2uSs52?discount_code=LAUNCH29 302
+/buy https://buy.polar.sh/polar_cl_JymzvKq6EdBUHEiAH0HotlFhA5RqB8otBvIFp2uSs52 302
