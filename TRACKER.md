@@ -36,7 +36,7 @@
 | T030 | ERLEDIGT | E1435,E1436,E1437 | Redesign; Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
 | T031 | ERLEDIGT | E1490,E1491,E1492 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
 | T032 | ERLEDIGT | E1354,E1355,E1356 | Austritt und Rotations-Markierung, App-Lauf, Abnahme PASS |
-| T033 | BLOCKIERT | E1432,E1433,E1434 | pkg braucht Developer ID Installer-Zertifikat (Uli: developer.apple.com → Certificates); verwaltete Mitglieder per Fixture belegt |
+| T033 | BLOCKIERT | E1496,E1497,E1498 | pkg signiert, notarisiert, live (2c76bdaf); Abnahme PASS; macos-Nachweis der verwalteten Mitglieder nur per Fixture, ein echter erzwungener Wert braucht ein installiertes Profil (Ulis Ja) |
 
 ## Evidence
 
@@ -1534,6 +1534,12 @@
 | E1490 | T031 | build | build | normal | 2026-11-13T07:28:22+00:00 | 82e3761 | 7e9e615acd0224f37ff72fcd | docs/release-1.16.0.md | PASS |
 | E1491 | T031 | macos | ui | normal | 2026-11-13T07:28:22+00:00 | 82e3761 | 7e9e615acd0224f37ff72fcd | docs/release-1.16.0.md | PASS |
 | E1492 | T031 | unit | unit | normal | 2026-11-13T07:28:22+00:00 | 82e3761 | 7e9e615acd0224f37ff72fcd | docs/release-1.16.0.md | PASS |
+| E1493 | T033 | build | build | normal | 2026-11-13T07:48:04+00:00 | b1b64d8 | 4787eba769fae1ff34dbfa39 | docs/team-2026-11-12.md | PASS |
+| E1494 | T033 | unit | unit | normal | 2026-11-13T07:48:04+00:00 | b1b64d8 | 4787eba769fae1ff34dbfa39 | docs/team-2026-11-12.md | PASS |
+| E1495 | T033 | macos | ui | fixture | 2026-11-13T07:48:04+00:00 | b1b64d8 | 4787eba769fae1ff34dbfa39 | docs/team-2026-11-12.md | PASS |
+| E1496 | T033 | build | build | normal | 2026-11-13T07:52:17+00:00 | a5c3edf | 4787eba769fae1ff34dbfa39 | docs/team-2026-11-12.md | PASS |
+| E1497 | T033 | unit | unit | normal | 2026-11-13T07:52:17+00:00 | a5c3edf | 4787eba769fae1ff34dbfa39 | docs/team-2026-11-12.md | PASS |
+| E1498 | T033 | macos | ui | fixture | 2026-11-13T07:52:17+00:00 | a5c3edf | 4787eba769fae1ff34dbfa39 | docs/team-2026-11-12.md | PASS |
 
 ## Reviews
 
@@ -2278,6 +2284,23 @@
 | RV737 | UC14 | self | PASS | 8300a43f1afeffa2088fb140 | docs/release-1.16.0.md |
 | RV738 | UC05 | self | PASS | 3b9995ec65b53498d3714ebd | docs/release-1.16.0.md |
 | RV739 | UC07 | self | PASS | a3564ebba783f0dcd9599f39 | docs/release-1.16.0.md |
+| RV740 | UC27 | independent | PASS | cedff2e83f37e96c4984e956 | docs/review-team-2026-11-13.md |
+| RV741 | UC02 | self | PASS | 0ac42c7a6e296e7e1c8a9114 | docs/release-1.16.0.md |
+| RV742 | UC04 | self | PASS | 8a44a886be96cdc2f907e266 | docs/release-1.16.0.md |
+| RV743 | UC05 | self | PASS | f5d5582376b1abe2b8e54ec5 | docs/release-1.16.0.md |
+| RV744 | UC06 | self | PASS | bcd553d55041a4a8c064f831 | docs/release-1.16.0.md |
+| RV745 | UC07 | self | PASS | e67bc11f0d584ecca5bfa890 | docs/release-1.16.0.md |
+| RV746 | UC08 | self | PASS | cd849e9bcc8ad3bc97ab2776 | docs/release-1.16.0.md |
+| RV747 | UC09 | self | PASS | 9ec82f5e64ac6dd3af9f0440 | docs/release-1.16.0.md |
+| RV748 | UC10 | self | PASS | 847687d006dcc53fd3533b1a | docs/release-1.16.0.md |
+| RV749 | UC11 | self | PASS | 28b371d0438c38763384f47f | docs/release-1.16.0.md |
+| RV750 | UC12 | self | PASS | ca4d6c848dc1e361d1ff23c4 | docs/release-1.16.0.md |
+| RV751 | UC13 | self | PASS | 69c78deb6dde36351712c717 | docs/release-1.16.0.md |
+| RV752 | UC14 | self | PASS | 85f8cc1b0f171414fe8906d3 | docs/release-1.16.0.md |
+| RV753 | UC15 | self | PASS | 1446e7627d679aced94cc134 | docs/release-1.16.0.md |
+| RV754 | UC17 | self | PASS | d4e4874e58f9b6aace15bda7 | docs/release-1.16.0.md |
+| RV755 | UC19 | self | PASS | 5766ac0b6ac1c18b7599eda2 | docs/release-1.16.0.md |
+| RV756 | UC20 | self | PASS | d8d70f484e8ef2b97d5dd803 | docs/release-1.16.0.md |
 
 ## Releases
 
