@@ -5,7 +5,7 @@ Regeln: Logbook „ASO, SEO und GEO – Übersicht“ (verbindlicher Ablauf), �
 
 ## Befund
 
-**Besuche (Pulse, Cloudflare Web Analytics, ohne Bots):** 26 in 7 Tagen (Woche davor 30), 90 im Oktober/November-Monat (davor 40).
+**Besuche (Pulse, Cloudflare Web Analytics, ohne Bots):** 26 in 7 Tagen (Woche davor 30), 90 im Monatsfenster von Pulse (davor 40).
 Google-Klicks lassen sich für die Unterdomain nicht trennen (Search-Console-Eigenschaft `sc-domain:moinsen.dev`).
 
 **Index (Google, im echten Browser, `site:secretariat.moinsen.dev`):** nur die Startseite. `/teams` und `/threat-model` fehlen.
