@@ -1,5 +1,13 @@
 # Aktueller Arbeitsstand
 
+## Übergabe
+
+- Geändert (2026-11-13): Passwort-Import aus Browser-CSV mit Chrome-Profil („Found in“), Website-Logins raus aus der Registry, Inventur der Logins (Library → Inventory, `audit-logins`). Commits c3de961 bis 773dff6, nicht gepusht.
+- Echter Tresor: 1270 Logins aus drei Chrome-Profilen importiert; Inventur offline: 92 lokal, 805 mehrfach, 74 schwach.
+- Halb fertig: T034/T035 OFFEN, schließen mit Release 1.17.0 und Neubindung aller älteren Aufgaben samt Planprüfung (`check` meldet PLAN_REVIEW und veraltete Belege). Uli will das Release später.
+- Nächster Schritt: Release 1.17.0 bauen und installieren (nach Ulis Ja), dann in der App „Check Online“.
+- Gelaufen: `xcrun swift test` 132/132, `script/regression_cli.sh` 24/24, App-Läufe in Testinstanzen (docs/password-import-2026-11-13.md, docs/login-inventory-2026-11-13.md).
+
 ## State
 
 - schema: app-workflow/1
