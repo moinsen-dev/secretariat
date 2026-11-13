@@ -80,6 +80,7 @@ struct SecretariatApp: App {
             }
             CommandGroup(before: .toolbar) {
                 Button("Reload") { model.reload() }.keyboardShortcut("r")
+                Button("Inventory") { model.selection = "inventory" }.keyboardShortcut("i", modifiers: [.command, .option])
                 Divider()
             }
         }

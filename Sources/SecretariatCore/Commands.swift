@@ -436,6 +436,28 @@ public enum Commands {
             if !dryRun { lines.append("The CSV holds every password in plain text. Delete it now (Finder → Move to Trash, then empty the trash).") }
             return (0, try json(result), lines.joined(separator: "\n"))
 
+        case ("audit-logins", _):
+            let a = try Arguments(all.dropFirst(), values: ["--from", "--finding"], usage: usage)
+            guard a.positional.isEmpty else { throw AgentError("invalid_arguments", "Usage: secretariat audit-logins [--from PROFILE] [--finding local|reused|weak|leaked|domainGone]") }
+            let items = try vault.list()
+            let online = LoginAudit.loadOnline(vault.configuration.paths)
+            var entries = LoginAudit.entries(items, facts: LoginAudit.facts(items, vault: vault), online: online)
+            if let from = try a.option("--from") { entries = entries.filter { $0.origins.contains { $0.caseInsensitiveCompare(from) == .orderedSame } } }
+            let summary = LoginAudit.summary(entries, online: online)
+            var listed: [String] = []
+            if let raw = try a.option("--finding") {
+                guard let finding = LoginAudit.Finding(rawValue: raw) else { throw AgentError("invalid_arguments", "Unknown finding \(raw). Use local, reused, weak, leaked or domainGone.") }
+                listed = entries.filter { $0.findings.contains(finding) }.map(\.item.path)
+            }
+            struct Audit: Encodable { let schemaVersion = 2; let ok = true; let summary: LoginAudit.Summary; let listed: [String] }
+            var lines = ["\(summary.logins) website logins",
+                         "Local addresses: \(summary.local)", "Reused passwords: \(summary.reused)", "Weak passwords: \(summary.weak)",
+                         summary.onlineChecked == nil ? "In known leaks / domain gone: not checked yet (app: Inventory → Check Online)"
+                                                      : "In known leaks: \(summary.leaked)\nDomain gone: \(summary.domainGone)",
+                         "Decided: keep \(summary.keep), close \(summary.close), change \(summary.change); open \(summary.undecided)"]
+            lines += listed
+            return (0, try json(Audit(summary: summary, listed: listed)), lines.joined(separator: "\n"))
+
         // MARK: profiles
         case ("profiles", _):
             let result = try service.profiles()

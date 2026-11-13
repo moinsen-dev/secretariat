@@ -135,6 +135,8 @@ struct MainView: View {
                 Label("Targets", systemImage: "arrow.up.forward.app").tag("targets")
                 Label("Templates", systemImage: "square.grid.2x2").tag("templates")
                 Label("Screenshots", systemImage: "photo.on.rectangle").badge(model.screenshots.count).tag("screenshots")
+                Label("Inventory", systemImage: "checklist").tag("inventory")
+                    .help("Website logins: local leftovers, reused, weak or leaked passwords, domains that are gone")
                 Label("History", systemImage: "clock.arrow.circlepath").tag("history")
                 Label("Team", systemImage: "person.2").badge(model.teamMembers.count).tag("team")
                 if !needingValues.isEmpty {
@@ -226,6 +228,8 @@ struct MainView: View {
             } description: {
                 Text("Your existing data is kept. Please check the configuration and reload.")
             } actions: { Button("Reload") { model.reload() } }
+        } else if model.selection == "inventory" {
+            InventoryList(model: model)
         } else if model.selection == "history" {
             HistorySummary(model: model)
         } else if model.selection == "backup" {
@@ -460,7 +464,14 @@ struct MainView: View {
     // MARK: Detail column
 
     @ViewBuilder private var detail: some View {
-        if model.selection == "history" {
+        if model.selection == "inventory" {
+            if let entry = model.inventory.entries.first(where: { $0.id == model.selectedItem }) {
+                InventoryDetail(model: model, entry: entry).id(entry.id)
+            } else {
+                ContentUnavailableView("No Login Selected", systemImage: "checklist",
+                                       description: Text("Pick a login to see what was found and decide: keep it, close the account, or change the password."))
+            }
+        } else if model.selection == "history" {
             HistoryList(model: model)
         } else if model.selection == "backup" {
             BackupList(model: model)

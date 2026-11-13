@@ -205,6 +205,7 @@ final class AppModel {
     var selectedMember: String?
     var shareDraft: ShareDraft?
     var passwordImport: PasswordImportDraft?
+    var inventory = InventoryState()
     var openedShare: OpenedShare?
     var addMemberDraft: AddMemberDraft?
     var offboarding: Offboarding?
