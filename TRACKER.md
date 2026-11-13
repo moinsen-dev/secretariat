@@ -1550,6 +1550,9 @@
 | E1505 | T034 | build | build | normal | 2026-11-13T08:08:20+00:00 | 3da23b0 | ad3ee5a742541428ffd39f03 | docs/password-import-2026-11-13.md | PASS |
 | E1506 | T034 | unit | unit | normal | 2026-11-13T08:08:20+00:00 | 3da23b0 | ad3ee5a742541428ffd39f03 | docs/password-import-2026-11-13.md | PASS |
 | E1507 | T034 | macos | ui | normal | 2026-11-13T08:08:20+00:00 | 3da23b0 | ad3ee5a742541428ffd39f03 | docs/password-import-2026-11-13.md | PASS |
+| E1508 | T035 | build | build | normal | 2026-11-13T08:27:25+00:00 | 440ea61 | d9fb8bd35f7cdc0d557c1330 | docs/login-inventory-2026-11-13.md | PASS |
+| E1509 | T035 | unit | unit | normal | 2026-11-13T08:27:25+00:00 | 440ea61 | d9fb8bd35f7cdc0d557c1330 | docs/login-inventory-2026-11-13.md | PASS |
+| E1510 | T035 | macos | ui | normal | 2026-11-13T08:27:25+00:00 | 440ea61 | d9fb8bd35f7cdc0d557c1330 | docs/login-inventory-2026-11-13.md | PASS |
 
 ## Reviews
 
