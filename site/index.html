@@ -476,6 +476,34 @@ secretariat profile bind \
   </div>
 </section>
 
+<!-- Account inventory -->
+<section id="accounts">
+  <div class="wrap">
+    <div class="section-head">
+      <p class="eyebrow">Your logins <span class="tag">New in 1.17</span></p>
+      <h2>Every login you ever saved. And a way out of the ones you no longer need.</h2>
+      <p class="lead">Browsers collect logins for years: test accounts on localhost, the same password on twenty sites, shops that closed long ago. Secretariat brings them into one place, shows what is risky and tells you how to close the accounts you don't want any more.</p>
+    </div>
+    <div class="cards">
+      <article class="card">
+        <h3>Import from your browser</h3>
+        <p>Use the password export of Google Password Manager, Apple Passwords, Firefox, Bitwarden or 1Password. Each login remembers which Chrome profile it was found in, the password is stored “only for me”, and nothing you already have is overwritten. A dry run shows the counts first.</p>
+<pre class="cmd">secretariat import-logins \
+  passwords.csv --from "Chrome: Work"</pre>
+      </article>
+      <article class="card">
+        <h3>See what's risky</h3>
+        <p>Library → Inventory lists logins on local addresses, reused and weak passwords. On request, “Check Online” asks Have I Been Pwned whether a password appears in known leaks (only the first five characters of its SHA-1 hash leave your Mac) and checks which domains no longer exist. For each login you decide: keep, change or close.</p>
+      </article>
+      <article class="card">
+        <h3>Close what you don't need</h3>
+        <p>The bundled JustDeleteMe directory (MIT license) says how hard each account is to close and links the deletion page. For sites it doesn't know, your coding agent can research the way via MCP and record it with its source. No tool closes an account for you, and no agent sees a password.</p>
+      </article>
+    </div>
+    <p class="note">The inventory reads each password once on your Mac and keeps, in memory, only what it needs: whether it is weak, a hash to spot reuse and a hash for the leak check. Values never appear in the list, in the CLI or for agents.</p>
+  </div>
+</section>
+
 <!-- Teams -->
 <section id="teams">
   <div class="wrap">
