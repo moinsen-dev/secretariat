@@ -42,4 +42,6 @@ print(f"""<?xml version="1.0" encoding="utf-8"?>
 </rss>""")
 PY
 echo "Feed: $ROOT/dist/appcast.xml"
+# Installer package for MDM, when the "Developer ID Installer" certificate is on this Mac.
+if security find-identity -v | grep -q "Developer ID Installer"; then ./script/package.sh; else echo "No Developer ID Installer certificate: no .pkg built."; fi
 echo "Release: $ROOT/$zip"
