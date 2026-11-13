@@ -40,7 +40,7 @@
 | T034 | OFFEN | E1505,E1506,E1507 | Code fertig und geprüft (3da23b0, build/unit/macos PASS, inkl. Chrome-Profile); Abschluss nach Neubindung beim Release 1.17.0 |
 | T035 | OFFEN | E1508,E1509,E1510 | Code fertig und geprüft (440ea61, build/unit/macos PASS); Abschluss mit Neubindung beim Release 1.17.0 |
 | T036 | OFFEN | E1511,E1512,E1513 | Code fertig und geprüft (63db701, build/unit/macos PASS); Abschluss mit Neubindung beim Release 1.17.0 |
-| T037 | OFFEN | E1514,E1515,E1516 | Code fertig und geprüft (38db5fc, build/unit/macos PASS); Abschluss mit Neubindung beim Release 1.17.0 |
+| T037 | OFFEN | E1517,E1518,E1519 | Code fertig und geprüft (93fe7eb); Recherche-Probelauf 20 Sites; Abschluss mit Neubindung beim Release 1.17.0 |
 
 ## Evidence
 
@@ -1562,6 +1562,9 @@
 | E1514 | T037 | build | build | normal | 2026-11-13T08:51:39+00:00 | 38db5fc | 0147b92eb43781c7d8a4295b | docs/agent-deletion-routes-2026-11-13.md | PASS |
 | E1515 | T037 | unit | unit | normal | 2026-11-13T08:51:39+00:00 | 38db5fc | 0147b92eb43781c7d8a4295b | docs/agent-deletion-routes-2026-11-13.md | PASS |
 | E1516 | T037 | macos | ui | normal | 2026-11-13T08:51:39+00:00 | 38db5fc | 0147b92eb43781c7d8a4295b | docs/agent-deletion-routes-2026-11-13.md | PASS |
+| E1517 | T037 | build | build | normal | 2026-11-13T09:11:47+00:00 | 93fe7eb | 7d801979b9de9040820eedca | docs/research-trial-2026-11-13.md | PASS |
+| E1518 | T037 | unit | unit | normal | 2026-11-13T09:11:47+00:00 | 93fe7eb | 7d801979b9de9040820eedca | docs/research-trial-2026-11-13.md | PASS |
+| E1519 | T037 | macos | ui | normal | 2026-11-13T09:11:48+00:00 | 93fe7eb | 7d801979b9de9040820eedca | docs/research-trial-2026-11-13.md | PASS |
 
 ## Reviews
 
