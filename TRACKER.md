@@ -4,43 +4,43 @@
 
 | ID | Status | Evidence | Reason |
 |---|---|---|---|
-| T001 | ERLEDIGT | E1025 | Regression auf Release 1.13.1 (0c32a02) |
-| T002 | ERLEDIGT | E1438,E1439,E1440 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T003 | ERLEDIGT | E1363,E1364 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
-| T004 | ERLEDIGT | E1441 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T005 | ERLEDIGT | E1442 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T006 | ERLEDIGT | E1443,E1444 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T007 | ERLEDIGT | E1445,E1446 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T008 | ERLEDIGT | E1447,E1448 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T009 | ERLEDIGT | E1449 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T010 | ERLEDIGT | E1450,E1451,E1452,E1453 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T011 | ERLEDIGT | E1454,E1455 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T013 | ERLEDIGT | E1456,E1457 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T014 | ERLEDIGT | E1458,E1459,E1460 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T015 | ERLEDIGT | E1461,E1462 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T012 | ERLEDIGT | E1463,E1464 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T016 | ERLEDIGT | E1465,E1466,E1467 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T017 | ERLEDIGT | E1468,E1469,E1470 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T018 | ERLEDIGT | E1471,E1472,E1473,E1474 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T019 | ERLEDIGT | E1475,E1476,E1477 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T020 | ERLEDIGT | E1478,E1479,E1480 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T021 | ERLEDIGT | E1405,E1406,E1407 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
-| T022 | ERLEDIGT | E1481,E1482,E1483 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T023 | ERLEDIGT | E1411,E1412,E1413 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
-| T024 | ERLEDIGT | E1484,E1485,E1486 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T025 | ERLEDIGT | E1487,E1488,E1489 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T026 | IN_ARBEIT | E1086,E1087 | Code fertig, 2 Kritikrunden; offen: Wiederherstellen/Schlüssel prüfen in der App und iCloud-Lauf mit echtem Tresor durch Uli |
-| T027 | ERLEDIGT | E1420,E1421,E1422 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
-| T028 | ERLEDIGT | E1423,E1424,E1425 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
-| T029 | ERLEDIGT | E1426,E1427,E1428 | Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
-| T030 | ERLEDIGT | E1435,E1436,E1437 | Redesign; Neubindung nach Team-Ausbau, siehe docs/rebind-team-2026-11-13.md |
-| T031 | ERLEDIGT | E1490,E1491,E1492 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
-| T032 | ERLEDIGT | E1354,E1355,E1356 | Austritt und Rotations-Markierung, App-Lauf, Abnahme PASS |
-| T033 | BLOCKIERT | E1496,E1497,E1498 | pkg signiert, notarisiert, live (2c76bdaf); Abnahme PASS; macos-Nachweis der verwalteten Mitglieder nur per Fixture, ein echter erzwungener Wert braucht ein installiertes Profil (Ulis Ja) |
-| T034 | OFFEN | E1505,E1506,E1507 | Code fertig und geprüft (3da23b0, build/unit/macos PASS, inkl. Chrome-Profile); Abschluss nach Neubindung beim Release 1.17.0 |
-| T035 | OFFEN | E1508,E1509,E1510 | Code fertig und geprüft (440ea61, build/unit/macos PASS); Abschluss mit Neubindung beim Release 1.17.0 |
-| T036 | OFFEN | E1511,E1512,E1513 | Code fertig und geprüft (63db701, build/unit/macos PASS); Abschluss mit Neubindung beim Release 1.17.0 |
-| T037 | OFFEN | E1517,E1518,E1519 | Code fertig und geprüft (93fe7eb); Recherche-Probelauf 20 Sites; Abschluss mit Neubindung beim Release 1.17.0 |
+| T001 | ERLEDIGT | E1520,E1525 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T002 | ERLEDIGT | E1526,E1527,E1528 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T003 | ERLEDIGT | E1529,E1530 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T004 | ERLEDIGT | E1521,E1524,E1531 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T005 | ERLEDIGT | E1522,E1532 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T006 | ERLEDIGT | E1533,E1534 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T007 | ERLEDIGT | E1535,E1536 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T008 | ERLEDIGT | E1537,E1538 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T009 | ERLEDIGT | E1523,E1539 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T010 | ERLEDIGT | E1540,E1541,E1542,E1543 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T011 | ERLEDIGT | E1544,E1545 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T013 | ERLEDIGT | E1548,E1549 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T014 | ERLEDIGT | E1550,E1551,E1552 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T015 | ERLEDIGT | E1553,E1554 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T012 | ERLEDIGT | E1546,E1547 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T016 | ERLEDIGT | E1555,E1556,E1557 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T017 | ERLEDIGT | E1558,E1559,E1560 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T018 | ERLEDIGT | E1561,E1562,E1563,E1564 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T019 | ERLEDIGT | E1565,E1566,E1567 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T020 | ERLEDIGT | E1568,E1569,E1570 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T021 | ERLEDIGT | E1571,E1572,E1573 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T022 | ERLEDIGT | E1574,E1575,E1576 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T023 | ERLEDIGT | E1577,E1578,E1579 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T024 | ERLEDIGT | E1580,E1581,E1582 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T025 | ERLEDIGT | E1583,E1584,E1585 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T026 | IN_ARBEIT | E1586,E1587,E1588 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T027 | ERLEDIGT | E1589,E1590,E1591 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T028 | ERLEDIGT | E1592,E1593,E1594 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T029 | ERLEDIGT | E1595,E1596,E1597 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T030 | ERLEDIGT | E1598,E1599,E1600 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T031 | ERLEDIGT | E1601,E1602,E1603 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T032 | ERLEDIGT | E1604,E1605,E1606 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T033 | BLOCKIERT | E1607,E1608,E1609 | pkg signiert, notarisiert, live (2c76bdaf); Abnahme PASS; macos-Nachweis der verwalteten Mitglieder nur per Fixture, ein echter erzwungener Wert braucht ein installiertes Profil (Ulis Ja) |
+| T034 | ERLEDIGT | E1610,E1611,E1612 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T035 | ERLEDIGT | E1613,E1614,E1615 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T036 | ERLEDIGT | E1616,E1617,E1618 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
+| T037 | ERLEDIGT | E1619,E1620,E1621 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
 
 ## Evidence
 
@@ -1565,6 +1565,108 @@
 | E1517 | T037 | build | build | normal | 2026-11-13T09:11:47+00:00 | 93fe7eb | 7d801979b9de9040820eedca | docs/research-trial-2026-11-13.md | PASS |
 | E1518 | T037 | unit | unit | normal | 2026-11-13T09:11:47+00:00 | 93fe7eb | 7d801979b9de9040820eedca | docs/research-trial-2026-11-13.md | PASS |
 | E1519 | T037 | macos | ui | normal | 2026-11-13T09:11:48+00:00 | 93fe7eb | 7d801979b9de9040820eedca | docs/research-trial-2026-11-13.md | PASS |
+| E1520 | T001 | inspection | inspection | normal | 2026-11-13T09:20:11+00:00 | 786f1ab | 3d9ebcdb2d4b0f29337a5e50 | docs/release-1.17.0.md | PASS |
+| E1521 | T004 | unit | unit | normal | 2026-11-13T09:20:12+00:00 | 786f1ab | 1662de229b3a8e693ab6f92a | docs/release-1.17.0.md | PASS |
+| E1522 | T005 | macos | ui | normal | 2026-11-13T09:20:12+00:00 | 786f1ab | da97ef65ba61d2ac4c7da053 | docs/release-1.17.0.md | PASS |
+| E1523 | T009 | inspection | inspection | normal | 2026-11-13T09:20:12+00:00 | 786f1ab | dccd53006867452a6ab59baa | docs/release-1.17.0.md | PASS |
+| E1524 | T004 | unit | unit | normal | 2026-11-13T09:20:44+00:00 | 786f1ab | 1662de229b3a8e693ab6f92a | docs/release-1.17.0.md | PASS |
+| E1525 | T001 | inspection | inspection | normal | 2026-11-13T09:20:57+00:00 | 786f1ab | 3d9ebcdb2d4b0f29337a5e50 | docs/release-1.17.0.md | PASS |
+| E1526 | T002 | build | build | normal | 2026-11-13T09:20:57+00:00 | 786f1ab | 3006d5427fbbfdfe08f5311c | docs/release-1.17.0.md | PASS |
+| E1527 | T002 | unit | unit | normal | 2026-11-13T09:20:57+00:00 | 786f1ab | 3006d5427fbbfdfe08f5311c | docs/release-1.17.0.md | PASS |
+| E1528 | T002 | macos | ui | normal | 2026-11-13T09:20:57+00:00 | 786f1ab | 3006d5427fbbfdfe08f5311c | docs/release-1.17.0.md | PASS |
+| E1529 | T003 | macos | ui | normal | 2026-11-13T09:20:58+00:00 | 786f1ab | 26b28c522d5b34cd398523d5 | docs/release-1.17.0.md | PASS |
+| E1530 | T003 | unit | unit | normal | 2026-11-13T09:20:58+00:00 | 786f1ab | 26b28c522d5b34cd398523d5 | docs/release-1.17.0.md | PASS |
+| E1531 | T004 | unit | unit | normal | 2026-11-13T09:20:58+00:00 | 786f1ab | 1662de229b3a8e693ab6f92a | docs/release-1.17.0.md | PASS |
+| E1532 | T005 | macos | ui | normal | 2026-11-13T09:20:59+00:00 | 786f1ab | da97ef65ba61d2ac4c7da053 | docs/release-1.17.0.md | PASS |
+| E1533 | T006 | inspection | inspection | normal | 2026-11-13T09:20:59+00:00 | 786f1ab | 7fa10de433733e606a52f867 | docs/release-1.17.0.md | PASS |
+| E1534 | T006 | macos | ui | normal | 2026-11-13T09:20:59+00:00 | 786f1ab | 7fa10de433733e606a52f867 | docs/release-1.17.0.md | PASS |
+| E1535 | T007 | build | build | normal | 2026-11-13T09:21:00+00:00 | 786f1ab | 6003096217925bf64f02d364 | docs/release-1.17.0.md | PASS |
+| E1536 | T007 | unit | unit | normal | 2026-11-13T09:21:00+00:00 | 786f1ab | 6003096217925bf64f02d364 | docs/release-1.17.0.md | PASS |
+| E1537 | T008 | unit | unit | normal | 2026-11-13T09:21:00+00:00 | 786f1ab | 21078aa1d5e722c9ba3f8b98 | docs/release-1.17.0.md | PASS |
+| E1538 | T008 | macos | ui | normal | 2026-11-13T09:21:00+00:00 | 786f1ab | 21078aa1d5e722c9ba3f8b98 | docs/release-1.17.0.md | PASS |
+| E1539 | T009 | inspection | inspection | normal | 2026-11-13T09:21:01+00:00 | 786f1ab | dccd53006867452a6ab59baa | docs/release-1.17.0.md | PASS |
+| E1540 | T010 | build | build | normal | 2026-11-13T09:21:01+00:00 | 786f1ab | 8d571489363407181e89b030 | docs/release-1.17.0.md | PASS |
+| E1541 | T010 | unit | unit | normal | 2026-11-13T09:21:01+00:00 | 786f1ab | 8d571489363407181e89b030 | docs/release-1.17.0.md | PASS |
+| E1542 | T010 | macos | ui | normal | 2026-11-13T09:21:01+00:00 | 786f1ab | 8d571489363407181e89b030 | docs/release-1.17.0.md | PASS |
+| E1543 | T010 | inspection | inspection | normal | 2026-11-13T09:21:02+00:00 | 786f1ab | 8d571489363407181e89b030 | docs/release-1.17.0.md | PASS |
+| E1544 | T011 | build | build | normal | 2026-11-13T09:21:02+00:00 | 786f1ab | 51bda85da6a886d55f66845b | docs/release-1.17.0.md | PASS |
+| E1545 | T011 | unit | unit | normal | 2026-11-13T09:21:02+00:00 | 786f1ab | 51bda85da6a886d55f66845b | docs/release-1.17.0.md | PASS |
+| E1546 | T012 | macos | ui | normal | 2026-11-13T09:21:02+00:00 | 786f1ab | 5d8e654b250217b08715dcad | docs/release-1.17.0.md | PASS |
+| E1547 | T012 | inspection | inspection | normal | 2026-11-13T09:21:03+00:00 | 786f1ab | 5d8e654b250217b08715dcad | docs/release-1.17.0.md | PASS |
+| E1548 | T013 | build | build | normal | 2026-11-13T09:21:03+00:00 | 786f1ab | c971c02fb02f1ff1dd3a2698 | docs/release-1.17.0.md | PASS |
+| E1549 | T013 | inspection | inspection | normal | 2026-11-13T09:21:03+00:00 | 786f1ab | c971c02fb02f1ff1dd3a2698 | docs/release-1.17.0.md | PASS |
+| E1550 | T014 | build | build | normal | 2026-11-13T09:21:03+00:00 | 786f1ab | b2167bff4e3ac0649edb33c0 | docs/release-1.17.0.md | PASS |
+| E1551 | T014 | unit | unit | normal | 2026-11-13T09:21:04+00:00 | 786f1ab | b2167bff4e3ac0649edb33c0 | docs/release-1.17.0.md | PASS |
+| E1552 | T014 | macos | ui | normal | 2026-11-13T09:21:04+00:00 | 786f1ab | b2167bff4e3ac0649edb33c0 | docs/release-1.17.0.md | PASS |
+| E1553 | T015 | macos | ui | normal | 2026-11-13T09:21:04+00:00 | 786f1ab | d8577c58807dc4ff34831e0c | docs/release-1.17.0.md | PASS |
+| E1554 | T015 | inspection | inspection | normal | 2026-11-13T09:21:04+00:00 | 786f1ab | d8577c58807dc4ff34831e0c | docs/release-1.17.0.md | PASS |
+| E1555 | T016 | build | build | normal | 2026-11-13T09:21:05+00:00 | 786f1ab | cbba05c699dd6a8bf606b524 | docs/release-1.17.0.md | PASS |
+| E1556 | T016 | unit | unit | normal | 2026-11-13T09:21:05+00:00 | 786f1ab | cbba05c699dd6a8bf606b524 | docs/release-1.17.0.md | PASS |
+| E1557 | T016 | macos | ui | normal | 2026-11-13T09:21:05+00:00 | 786f1ab | cbba05c699dd6a8bf606b524 | docs/release-1.17.0.md | PASS |
+| E1558 | T017 | build | build | normal | 2026-11-13T09:21:06+00:00 | 786f1ab | 326cfd6a19a9e220c0aea152 | docs/release-1.17.0.md | PASS |
+| E1559 | T017 | unit | unit | normal | 2026-11-13T09:21:06+00:00 | 786f1ab | 326cfd6a19a9e220c0aea152 | docs/release-1.17.0.md | PASS |
+| E1560 | T017 | macos | ui | normal | 2026-11-13T09:21:06+00:00 | 786f1ab | 326cfd6a19a9e220c0aea152 | docs/release-1.17.0.md | PASS |
+| E1561 | T018 | build | build | normal | 2026-11-13T09:21:06+00:00 | 786f1ab | 23a061199a7ea81bd65ea45f | docs/release-1.17.0.md | PASS |
+| E1562 | T018 | unit | unit | normal | 2026-11-13T09:21:06+00:00 | 786f1ab | 23a061199a7ea81bd65ea45f | docs/release-1.17.0.md | PASS |
+| E1563 | T018 | macos | ui | normal | 2026-11-13T09:21:07+00:00 | 786f1ab | 23a061199a7ea81bd65ea45f | docs/release-1.17.0.md | PASS |
+| E1564 | T018 | inspection | inspection | normal | 2026-11-13T09:21:07+00:00 | 786f1ab | 23a061199a7ea81bd65ea45f | docs/release-1.17.0.md | PASS |
+| E1565 | T019 | build | build | normal | 2026-11-13T09:21:07+00:00 | 786f1ab | bfa4aad62e0c8b6469a2b377 | docs/release-1.17.0.md | PASS |
+| E1566 | T019 | unit | unit | normal | 2026-11-13T09:21:07+00:00 | 786f1ab | bfa4aad62e0c8b6469a2b377 | docs/release-1.17.0.md | PASS |
+| E1567 | T019 | macos | ui | normal | 2026-11-13T09:21:07+00:00 | 786f1ab | bfa4aad62e0c8b6469a2b377 | docs/release-1.17.0.md | PASS |
+| E1568 | T020 | build | build | normal | 2026-11-13T09:21:08+00:00 | 786f1ab | 97621b0c69a312317e83dabb | docs/release-1.17.0.md | PASS |
+| E1569 | T020 | unit | unit | normal | 2026-11-13T09:21:08+00:00 | 786f1ab | 97621b0c69a312317e83dabb | docs/release-1.17.0.md | PASS |
+| E1570 | T020 | macos | ui | normal | 2026-11-13T09:21:08+00:00 | 786f1ab | 97621b0c69a312317e83dabb | docs/release-1.17.0.md | PASS |
+| E1571 | T021 | build | build | normal | 2026-11-13T09:21:09+00:00 | 786f1ab | 8bfc6ae803eee9d2cd53d2a8 | docs/release-1.17.0.md | PASS |
+| E1572 | T021 | unit | unit | normal | 2026-11-13T09:21:09+00:00 | 786f1ab | 8bfc6ae803eee9d2cd53d2a8 | docs/release-1.17.0.md | PASS |
+| E1573 | T021 | macos | ui | normal | 2026-11-13T09:21:09+00:00 | 786f1ab | 8bfc6ae803eee9d2cd53d2a8 | docs/release-1.17.0.md | PASS |
+| E1574 | T022 | build | build | normal | 2026-11-13T09:21:09+00:00 | 786f1ab | b71822275e292995ba18536c | docs/release-1.17.0.md | PASS |
+| E1575 | T022 | unit | unit | normal | 2026-11-13T09:21:09+00:00 | 786f1ab | b71822275e292995ba18536c | docs/release-1.17.0.md | PASS |
+| E1576 | T022 | macos | ui | normal | 2026-11-13T09:21:10+00:00 | 786f1ab | b71822275e292995ba18536c | docs/release-1.17.0.md | PASS |
+| E1577 | T023 | build | build | normal | 2026-11-13T09:21:10+00:00 | 786f1ab | 20058f4149fde163692ed72b | docs/release-1.17.0.md | PASS |
+| E1578 | T023 | unit | unit | normal | 2026-11-13T09:21:10+00:00 | 786f1ab | 20058f4149fde163692ed72b | docs/release-1.17.0.md | PASS |
+| E1579 | T023 | macos | ui | normal | 2026-11-13T09:21:10+00:00 | 786f1ab | 20058f4149fde163692ed72b | docs/release-1.17.0.md | PASS |
+| E1580 | T024 | build | build | normal | 2026-11-13T09:21:11+00:00 | 786f1ab | 1209970724e8cd12536c0377 | docs/release-1.17.0.md | PASS |
+| E1581 | T024 | unit | unit | normal | 2026-11-13T09:21:11+00:00 | 786f1ab | 1209970724e8cd12536c0377 | docs/release-1.17.0.md | PASS |
+| E1582 | T024 | macos | ui | normal | 2026-11-13T09:21:11+00:00 | 786f1ab | 1209970724e8cd12536c0377 | docs/release-1.17.0.md | PASS |
+| E1583 | T025 | build | build | normal | 2026-11-13T09:21:12+00:00 | 786f1ab | 4ca5b3928819501f78c73320 | docs/release-1.17.0.md | PASS |
+| E1584 | T025 | unit | unit | normal | 2026-11-13T09:21:12+00:00 | 786f1ab | 4ca5b3928819501f78c73320 | docs/release-1.17.0.md | PASS |
+| E1585 | T025 | macos | ui | normal | 2026-11-13T09:21:12+00:00 | 786f1ab | 4ca5b3928819501f78c73320 | docs/release-1.17.0.md | PASS |
+| E1586 | T026 | build | build | normal | 2026-11-13T09:21:12+00:00 | 786f1ab | aa4dafa9f0812f6355351727 | docs/release-1.17.0.md | PASS |
+| E1587 | T026 | unit | unit | normal | 2026-11-13T09:21:12+00:00 | 786f1ab | aa4dafa9f0812f6355351727 | docs/release-1.17.0.md | PASS |
+| E1588 | T026 | macos | ui | normal | 2026-11-13T09:21:13+00:00 | 786f1ab | aa4dafa9f0812f6355351727 | docs/release-1.17.0.md | PASS |
+| E1589 | T027 | build | build | normal | 2026-11-13T09:21:13+00:00 | 786f1ab | a1d006ed4bd875d92c39a710 | docs/release-1.17.0.md | PASS |
+| E1590 | T027 | unit | unit | normal | 2026-11-13T09:21:13+00:00 | 786f1ab | a1d006ed4bd875d92c39a710 | docs/release-1.17.0.md | PASS |
+| E1591 | T027 | macos | ui | normal | 2026-11-13T09:21:13+00:00 | 786f1ab | a1d006ed4bd875d92c39a710 | docs/release-1.17.0.md | PASS |
+| E1592 | T028 | build | build | normal | 2026-11-13T09:21:14+00:00 | 786f1ab | 1fabf3c2a427e03ead4b6c41 | docs/release-1.17.0.md | PASS |
+| E1593 | T028 | unit | unit | normal | 2026-11-13T09:21:14+00:00 | 786f1ab | 1fabf3c2a427e03ead4b6c41 | docs/release-1.17.0.md | PASS |
+| E1594 | T028 | macos | ui | normal | 2026-11-13T09:21:14+00:00 | 786f1ab | 1fabf3c2a427e03ead4b6c41 | docs/release-1.17.0.md | PASS |
+| E1595 | T029 | build | build | normal | 2026-11-13T09:21:15+00:00 | 786f1ab | 0c4ddd81f6ac7fe41a1233f6 | docs/release-1.17.0.md | PASS |
+| E1596 | T029 | unit | unit | normal | 2026-11-13T09:21:15+00:00 | 786f1ab | 0c4ddd81f6ac7fe41a1233f6 | docs/release-1.17.0.md | PASS |
+| E1597 | T029 | macos | ui | normal | 2026-11-13T09:21:15+00:00 | 786f1ab | 0c4ddd81f6ac7fe41a1233f6 | docs/release-1.17.0.md | PASS |
+| E1598 | T030 | build | build | normal | 2026-11-13T09:21:15+00:00 | 786f1ab | 74a88252172ebe48a2397957 | docs/release-1.17.0.md | PASS |
+| E1599 | T030 | unit | unit | normal | 2026-11-13T09:21:15+00:00 | 786f1ab | 74a88252172ebe48a2397957 | docs/release-1.17.0.md | PASS |
+| E1600 | T030 | macos | ui | normal | 2026-11-13T09:21:16+00:00 | 786f1ab | 74a88252172ebe48a2397957 | docs/release-1.17.0.md | PASS |
+| E1601 | T031 | build | build | normal | 2026-11-13T09:21:16+00:00 | 786f1ab | 952b8fe2e2d9adf0f1597850 | docs/release-1.17.0.md | PASS |
+| E1602 | T031 | unit | unit | normal | 2026-11-13T09:21:16+00:00 | 786f1ab | 952b8fe2e2d9adf0f1597850 | docs/release-1.17.0.md | PASS |
+| E1603 | T031 | macos | ui | normal | 2026-11-13T09:21:16+00:00 | 786f1ab | 952b8fe2e2d9adf0f1597850 | docs/release-1.17.0.md | PASS |
+| E1604 | T032 | build | build | normal | 2026-11-13T09:21:17+00:00 | 786f1ab | 6d8a3a1b3af1741167922bb3 | docs/release-1.17.0.md | PASS |
+| E1605 | T032 | unit | unit | normal | 2026-11-13T09:21:17+00:00 | 786f1ab | 6d8a3a1b3af1741167922bb3 | docs/release-1.17.0.md | PASS |
+| E1606 | T032 | macos | ui | normal | 2026-11-13T09:21:17+00:00 | 786f1ab | 6d8a3a1b3af1741167922bb3 | docs/release-1.17.0.md | PASS |
+| E1607 | T033 | build | build | normal | 2026-11-13T09:21:17+00:00 | 786f1ab | 341235be3f265f5c14263ffd | docs/release-1.17.0.md | PASS |
+| E1608 | T033 | unit | unit | normal | 2026-11-13T09:21:18+00:00 | 786f1ab | 341235be3f265f5c14263ffd | docs/release-1.17.0.md | PASS |
+| E1609 | T033 | macos | ui | normal | 2026-11-13T09:21:18+00:00 | 786f1ab | 341235be3f265f5c14263ffd | docs/release-1.17.0.md | PASS |
+| E1610 | T034 | build | build | normal | 2026-11-13T09:21:18+00:00 | 786f1ab | 8331c8b4b8b3aa814ee97a4e | docs/release-1.17.0.md | PASS |
+| E1611 | T034 | unit | unit | normal | 2026-11-13T09:21:18+00:00 | 786f1ab | 8331c8b4b8b3aa814ee97a4e | docs/release-1.17.0.md | PASS |
+| E1612 | T034 | macos | ui | normal | 2026-11-13T09:21:19+00:00 | 786f1ab | 8331c8b4b8b3aa814ee97a4e | docs/release-1.17.0.md | PASS |
+| E1613 | T035 | build | build | normal | 2026-11-13T09:21:19+00:00 | 786f1ab | 965fe15be44baba48de7e9eb | docs/release-1.17.0.md | PASS |
+| E1614 | T035 | unit | unit | normal | 2026-11-13T09:21:19+00:00 | 786f1ab | 965fe15be44baba48de7e9eb | docs/release-1.17.0.md | PASS |
+| E1615 | T035 | macos | ui | normal | 2026-11-13T09:21:19+00:00 | 786f1ab | 965fe15be44baba48de7e9eb | docs/release-1.17.0.md | PASS |
+| E1616 | T036 | build | build | normal | 2026-11-13T09:21:20+00:00 | 786f1ab | 94343e9d0b416ac22ffdab05 | docs/release-1.17.0.md | PASS |
+| E1617 | T036 | unit | unit | normal | 2026-11-13T09:21:20+00:00 | 786f1ab | 94343e9d0b416ac22ffdab05 | docs/release-1.17.0.md | PASS |
+| E1618 | T036 | macos | ui | normal | 2026-11-13T09:21:20+00:00 | 786f1ab | 94343e9d0b416ac22ffdab05 | docs/release-1.17.0.md | PASS |
+| E1619 | T037 | build | build | normal | 2026-11-13T09:21:20+00:00 | 786f1ab | 03550f09f8bd83f31114b444 | docs/release-1.17.0.md | PASS |
+| E1620 | T037 | unit | unit | normal | 2026-11-13T09:21:21+00:00 | 786f1ab | 03550f09f8bd83f31114b444 | docs/release-1.17.0.md | PASS |
+| E1621 | T037 | macos | ui | normal | 2026-11-13T09:21:21+00:00 | 786f1ab | 03550f09f8bd83f31114b444 | docs/release-1.17.0.md | PASS |
 
 ## Reviews
 
@@ -2326,6 +2428,195 @@
 | RV754 | UC17 | self | PASS | d4e4874e58f9b6aace15bda7 | docs/release-1.16.0.md |
 | RV755 | UC19 | self | PASS | 5766ac0b6ac1c18b7599eda2 | docs/release-1.16.0.md |
 | RV756 | UC20 | self | PASS | d8d70f484e8ef2b97d5dd803 | docs/release-1.16.0.md |
+| RV757 | UC01 | self | PASS | d38de05328badffedc7a64f4 | docs/release-1.17.0.md |
+| RV758 | UC02 | self | PASS | 8989ca2c6cd922198568265d | docs/release-1.17.0.md |
+| RV759 | UC03 | self | PASS | edc2c9e279d88ff4efe5c65d | docs/release-1.17.0.md |
+| RV760 | UC04 | self | PASS | 8bd70c7e0bfb8a93d98c6943 | docs/release-1.17.0.md |
+| RV761 | UC05 | self | PASS | 3ae0a0bc22538d06e6a6bc7e | docs/release-1.17.0.md |
+| RV762 | UC06 | self | PASS | f8f4527a572e4b782135a3e4 | docs/release-1.17.0.md |
+| RV763 | UC07 | self | PASS | 5ca7bca930452acc1aaf5d68 | docs/release-1.17.0.md |
+| RV764 | UC08 | self | PASS | 7c20589e20cfb38705b71040 | docs/release-1.17.0.md |
+| RV765 | UC09 | self | PASS | b61d78ee7d9da9de85fa4371 | docs/release-1.17.0.md |
+| RV766 | UC10 | self | PASS | 243422a1584361d4cd4552d7 | docs/release-1.17.0.md |
+| RV767 | UC11 | self | PASS | e96a784a5a62a7795d4fc0eb | docs/release-1.17.0.md |
+| RV768 | UC12 | self | PASS | 0e267c5a2bb953a0abdefc27 | docs/release-1.17.0.md |
+| RV769 | UC13 | self | PASS | 36d55cbcfbde8a12d0748e11 | docs/release-1.17.0.md |
+| RV770 | UC14 | self | PASS | f28ddd9c6e4d8dd234517633 | docs/release-1.17.0.md |
+| RV771 | UC15 | self | PASS | 5a645ff984403f6975fc54f5 | docs/release-1.17.0.md |
+| RV772 | UC16 | self | PASS | 96eebf63b61fc980ddbd86b0 | docs/release-1.17.0.md |
+| RV773 | UC17 | self | PASS | 5d07dddf0f1a7be53b035507 | docs/release-1.17.0.md |
+| RV774 | UC18 | self | PASS | 2871eecf896add852f30d2c7 | docs/release-1.17.0.md |
+| RV775 | UC19 | self | PASS | 474d12860e20c3ca04586512 | docs/release-1.17.0.md |
+| RV776 | UC20 | self | PASS | bd299c8d6078194084c1b229 | docs/release-1.17.0.md |
+| RV777 | UC21 | self | PASS | b891fa999364246c2e14f0b2 | docs/release-1.17.0.md |
+| RV778 | UC22 | self | PASS | ad7fb61caaf6f42d1216a820 | docs/release-1.17.0.md |
+| RV779 | UC23 | self | PASS | 1ca9e1fc2a86ee401ed35f9d | docs/release-1.17.0.md |
+| RV780 | UC24 | self | PASS | a48254cd8cee8c39536852d4 | docs/release-1.17.0.md |
+| RV781 | UC25 | self | PASS | 8989f491c94ae37991ed1544 | docs/release-1.17.0.md |
+| RV782 | UC26 | self | PASS | a07249b844d6e1a67b23d851 | docs/release-1.17.0.md |
+| RV783 | UC27 | self | PASS | 822056c03f840fed82879da3 | docs/release-1.17.0.md |
+| RV784 | UC28 | self | PASS | 716e4e1bc9d8c82b0cb1dfaa | docs/release-1.17.0.md |
+| RV785 | UC29 | self | PASS | 6eff09318cd53f95a280e45d | docs/release-1.17.0.md |
+| RV786 | UC30 | self | PASS | c6a7c41d5880e1bd5d86dc14 | docs/release-1.17.0.md |
+| RV787 | UC31 | self | PASS | 4d4e4a0898e953b57a9ed1a2 | docs/release-1.17.0.md |
+| RV788 | PLAN | self | PASS | 4f35c498fe173eeef86bec0b | docs/release-1.17.0.md |
+| RV789 | UC01 | self | PASS | d38de05328badffedc7a64f4 | docs/release-1.17.0.md |
+| RV790 | UC02 | self | PASS | 8989ca2c6cd922198568265d | docs/release-1.17.0.md |
+| RV791 | UC03 | self | PASS | edc2c9e279d88ff4efe5c65d | docs/release-1.17.0.md |
+| RV792 | UC04 | self | PASS | 8bd70c7e0bfb8a93d98c6943 | docs/release-1.17.0.md |
+| RV793 | UC05 | self | PASS | 3ae0a0bc22538d06e6a6bc7e | docs/release-1.17.0.md |
+| RV794 | UC06 | self | PASS | f8f4527a572e4b782135a3e4 | docs/release-1.17.0.md |
+| RV795 | UC07 | self | PASS | 5ca7bca930452acc1aaf5d68 | docs/release-1.17.0.md |
+| RV796 | UC08 | self | PASS | 7c20589e20cfb38705b71040 | docs/release-1.17.0.md |
+| RV797 | UC09 | self | PASS | b61d78ee7d9da9de85fa4371 | docs/release-1.17.0.md |
+| RV798 | UC10 | self | PASS | 243422a1584361d4cd4552d7 | docs/release-1.17.0.md |
+| RV799 | UC11 | self | PASS | e96a784a5a62a7795d4fc0eb | docs/release-1.17.0.md |
+| RV800 | UC12 | self | PASS | 0e267c5a2bb953a0abdefc27 | docs/release-1.17.0.md |
+| RV801 | UC13 | self | PASS | 36d55cbcfbde8a12d0748e11 | docs/release-1.17.0.md |
+| RV802 | UC14 | self | PASS | f28ddd9c6e4d8dd234517633 | docs/release-1.17.0.md |
+| RV803 | UC15 | self | PASS | 5a645ff984403f6975fc54f5 | docs/release-1.17.0.md |
+| RV804 | UC16 | self | PASS | 96eebf63b61fc980ddbd86b0 | docs/release-1.17.0.md |
+| RV805 | UC17 | self | PASS | 5d07dddf0f1a7be53b035507 | docs/release-1.17.0.md |
+| RV806 | UC18 | self | PASS | 2871eecf896add852f30d2c7 | docs/release-1.17.0.md |
+| RV807 | UC19 | self | PASS | 474d12860e20c3ca04586512 | docs/release-1.17.0.md |
+| RV808 | UC20 | self | PASS | bd299c8d6078194084c1b229 | docs/release-1.17.0.md |
+| RV809 | UC21 | self | PASS | b891fa999364246c2e14f0b2 | docs/release-1.17.0.md |
+| RV810 | UC22 | self | PASS | ad7fb61caaf6f42d1216a820 | docs/release-1.17.0.md |
+| RV811 | UC23 | self | PASS | 1ca9e1fc2a86ee401ed35f9d | docs/release-1.17.0.md |
+| RV812 | UC24 | self | PASS | a48254cd8cee8c39536852d4 | docs/release-1.17.0.md |
+| RV813 | UC25 | self | PASS | 8989f491c94ae37991ed1544 | docs/release-1.17.0.md |
+| RV814 | UC26 | self | PASS | a07249b844d6e1a67b23d851 | docs/release-1.17.0.md |
+| RV815 | UC27 | self | PASS | 822056c03f840fed82879da3 | docs/release-1.17.0.md |
+| RV816 | UC28 | self | PASS | 716e4e1bc9d8c82b0cb1dfaa | docs/release-1.17.0.md |
+| RV817 | UC29 | self | PASS | 6eff09318cd53f95a280e45d | docs/release-1.17.0.md |
+| RV818 | UC30 | self | PASS | c6a7c41d5880e1bd5d86dc14 | docs/release-1.17.0.md |
+| RV819 | UC31 | self | PASS | 4d4e4a0898e953b57a9ed1a2 | docs/release-1.17.0.md |
+| RV820 | PLAN | self | PASS | 4f35c498fe173eeef86bec0b | docs/release-1.17.0.md |
+| RV821 | UC01 | self | PASS | bc26e28cb31ce9d11aa125c8 | docs/release-1.17.0.md |
+| RV822 | UC02 | self | PASS | 8989ca2c6cd922198568265d | docs/release-1.17.0.md |
+| RV823 | UC03 | self | PASS | acade8eccfd6729a422ff0bc | docs/release-1.17.0.md |
+| RV824 | UC04 | self | PASS | 8bd70c7e0bfb8a93d98c6943 | docs/release-1.17.0.md |
+| RV825 | UC05 | self | PASS | 2b801710fcc7ac97d3ccbe33 | docs/release-1.17.0.md |
+| RV826 | UC06 | self | PASS | f8f4527a572e4b782135a3e4 | docs/release-1.17.0.md |
+| RV827 | UC07 | self | PASS | 3d6bf8a11b92d30f1414dee4 | docs/release-1.17.0.md |
+| RV828 | UC08 | self | PASS | 7c20589e20cfb38705b71040 | docs/release-1.17.0.md |
+| RV829 | UC09 | self | PASS | 5bc2bc58c1ca2d3779900b90 | docs/release-1.17.0.md |
+| RV830 | UC10 | self | PASS | 243422a1584361d4cd4552d7 | docs/release-1.17.0.md |
+| RV831 | UC11 | self | PASS | 15e9b475baa5e277003aecda | docs/release-1.17.0.md |
+| RV832 | UC12 | self | PASS | 0e267c5a2bb953a0abdefc27 | docs/release-1.17.0.md |
+| RV833 | UC13 | self | PASS | fd7f2f72995cedac45b04335 | docs/release-1.17.0.md |
+| RV834 | UC14 | self | PASS | f28ddd9c6e4d8dd234517633 | docs/release-1.17.0.md |
+| RV835 | UC15 | self | PASS | a7ca82bf51a17e880c23a1f2 | docs/release-1.17.0.md |
+| RV836 | UC16 | self | PASS | 96eebf63b61fc980ddbd86b0 | docs/release-1.17.0.md |
+| RV837 | UC17 | self | PASS | ee6e7db0c79ac3ad946497ff | docs/release-1.17.0.md |
+| RV838 | UC18 | self | PASS | 2871eecf896add852f30d2c7 | docs/release-1.17.0.md |
+| RV839 | UC19 | self | PASS | 884488ac66d7ba4a76db7eec | docs/release-1.17.0.md |
+| RV840 | UC20 | self | PASS | d52cf5a8e65af4af56dd2aed | docs/release-1.17.0.md |
+| RV841 | UC21 | self | PASS | b891fa999364246c2e14f0b2 | docs/release-1.17.0.md |
+| RV842 | UC22 | self | PASS | ad7fb61caaf6f42d1216a820 | docs/release-1.17.0.md |
+| RV843 | UC23 | self | PASS | a11f03029c7f87dd3ac10410 | docs/release-1.17.0.md |
+| RV844 | UC24 | self | PASS | a48254cd8cee8c39536852d4 | docs/release-1.17.0.md |
+| RV845 | UC25 | self | PASS | e7cf9f549641b052200b1cba | docs/release-1.17.0.md |
+| RV846 | UC26 | self | PASS | a37690db587ae7fb079090e9 | docs/release-1.17.0.md |
+| RV847 | UC27 | self | PASS | 28c378f582829af85e9c076a | docs/release-1.17.0.md |
+| RV848 | UC28 | self | PASS | 910b4c25ec8cce590990d333 | docs/release-1.17.0.md |
+| RV849 | UC29 | self | PASS | 6eff09318cd53f95a280e45d | docs/release-1.17.0.md |
+| RV850 | UC30 | self | PASS | c6a7c41d5880e1bd5d86dc14 | docs/release-1.17.0.md |
+| RV851 | UC31 | self | PASS | 4d4e4a0898e953b57a9ed1a2 | docs/release-1.17.0.md |
+| RV852 | UC01 | self | PASS | 737d975ca2df6258d18363a6 | docs/release-1.17.0.md |
+| RV853 | UC02 | self | PASS | 8989ca2c6cd922198568265d | docs/release-1.17.0.md |
+| RV854 | UC03 | self | PASS | acade8eccfd6729a422ff0bc | docs/release-1.17.0.md |
+| RV855 | UC04 | self | PASS | b6d118dcb0da26a9e0f1f176 | docs/release-1.17.0.md |
+| RV856 | UC05 | self | PASS | 2b801710fcc7ac97d3ccbe33 | docs/release-1.17.0.md |
+| RV857 | UC06 | self | PASS | 3977dc9ab5c08f08c3955f6f | docs/release-1.17.0.md |
+| RV858 | UC07 | self | PASS | 3d6bf8a11b92d30f1414dee4 | docs/release-1.17.0.md |
+| RV859 | UC08 | self | PASS | fb17de7e5fae423bff7f66f7 | docs/release-1.17.0.md |
+| RV860 | UC09 | self | PASS | 5bc2bc58c1ca2d3779900b90 | docs/release-1.17.0.md |
+| RV861 | UC10 | self | PASS | 6f07bca063e22e826985c318 | docs/release-1.17.0.md |
+| RV862 | UC11 | self | PASS | 15e9b475baa5e277003aecda | docs/release-1.17.0.md |
+| RV863 | UC12 | self | PASS | 225089e02af2bd9d7a24c6c7 | docs/release-1.17.0.md |
+| RV864 | UC13 | self | PASS | fd7f2f72995cedac45b04335 | docs/release-1.17.0.md |
+| RV865 | UC14 | self | PASS | 914e47b50ef9bde8b190c799 | docs/release-1.17.0.md |
+| RV866 | UC15 | self | PASS | a7ca82bf51a17e880c23a1f2 | docs/release-1.17.0.md |
+| RV867 | UC16 | self | PASS | 1352c4a7c60d019126a5d48b | docs/release-1.17.0.md |
+| RV868 | UC17 | self | PASS | ee6e7db0c79ac3ad946497ff | docs/release-1.17.0.md |
+| RV869 | UC18 | self | PASS | e4bf6a3da959cae8ac8c3692 | docs/release-1.17.0.md |
+| RV870 | UC19 | self | PASS | 884488ac66d7ba4a76db7eec | docs/release-1.17.0.md |
+| RV871 | UC20 | self | PASS | d52cf5a8e65af4af56dd2aed | docs/release-1.17.0.md |
+| RV872 | UC21 | self | PASS | 147705daaf4394ce7f124eca | docs/release-1.17.0.md |
+| RV873 | UC22 | self | PASS | b199edb9a07d8be7de8e3eda | docs/release-1.17.0.md |
+| RV874 | UC23 | self | PASS | a11f03029c7f87dd3ac10410 | docs/release-1.17.0.md |
+| RV875 | UC24 | self | PASS | 6172b60b8f231f0d2f64993f | docs/release-1.17.0.md |
+| RV876 | UC25 | self | PASS | e7cf9f549641b052200b1cba | docs/release-1.17.0.md |
+| RV877 | UC26 | self | PASS | a37690db587ae7fb079090e9 | docs/release-1.17.0.md |
+| RV878 | UC27 | self | PASS | 28c378f582829af85e9c076a | docs/release-1.17.0.md |
+| RV879 | UC28 | self | PASS | 910b4c25ec8cce590990d333 | docs/release-1.17.0.md |
+| RV880 | UC29 | self | PASS | a483e6b1e2707399c4c4037a | docs/release-1.17.0.md |
+| RV881 | UC30 | self | PASS | b965287c2eeb903d3fef057b | docs/release-1.17.0.md |
+| RV882 | UC31 | self | PASS | 7949cf59b742744798297976 | docs/release-1.17.0.md |
+| RV883 | PLAN | self | PASS | 4f35c498fe173eeef86bec0b | docs/release-1.17.0.md |
+| RV884 | UC01 | self | PASS | 737d975ca2df6258d18363a6 | docs/release-1.17.0.md |
+| RV885 | UC02 | self | PASS | 91dfe451fe7600a5ed7a13f4 | docs/release-1.17.0.md |
+| RV886 | UC03 | self | PASS | acade8eccfd6729a422ff0bc | docs/release-1.17.0.md |
+| RV887 | UC04 | self | PASS | b6d118dcb0da26a9e0f1f176 | docs/release-1.17.0.md |
+| RV888 | UC05 | self | PASS | 2b801710fcc7ac97d3ccbe33 | docs/release-1.17.0.md |
+| RV889 | UC06 | self | PASS | 3977dc9ab5c08f08c3955f6f | docs/release-1.17.0.md |
+| RV890 | UC07 | self | PASS | b82acfe384baf385d193df0e | docs/release-1.17.0.md |
+| RV891 | UC08 | self | PASS | fb17de7e5fae423bff7f66f7 | docs/release-1.17.0.md |
+| RV892 | UC09 | self | PASS | 5bc2bc58c1ca2d3779900b90 | docs/release-1.17.0.md |
+| RV893 | UC10 | self | PASS | 6f07bca063e22e826985c318 | docs/release-1.17.0.md |
+| RV894 | UC11 | self | PASS | 15e9b475baa5e277003aecda | docs/release-1.17.0.md |
+| RV895 | UC12 | self | PASS | 225089e02af2bd9d7a24c6c7 | docs/release-1.17.0.md |
+| RV896 | UC13 | self | PASS | fd7f2f72995cedac45b04335 | docs/release-1.17.0.md |
+| RV897 | UC14 | self | PASS | 914e47b50ef9bde8b190c799 | docs/release-1.17.0.md |
+| RV898 | UC15 | self | PASS | a7ca82bf51a17e880c23a1f2 | docs/release-1.17.0.md |
+| RV899 | UC16 | self | PASS | 1352c4a7c60d019126a5d48b | docs/release-1.17.0.md |
+| RV900 | UC17 | self | PASS | ee6e7db0c79ac3ad946497ff | docs/release-1.17.0.md |
+| RV901 | UC18 | self | PASS | e4bf6a3da959cae8ac8c3692 | docs/release-1.17.0.md |
+| RV902 | UC19 | self | PASS | 884488ac66d7ba4a76db7eec | docs/release-1.17.0.md |
+| RV903 | UC20 | self | PASS | d52cf5a8e65af4af56dd2aed | docs/release-1.17.0.md |
+| RV904 | UC21 | self | PASS | 147705daaf4394ce7f124eca | docs/release-1.17.0.md |
+| RV905 | UC22 | self | PASS | b199edb9a07d8be7de8e3eda | docs/release-1.17.0.md |
+| RV906 | UC23 | self | PASS | a11f03029c7f87dd3ac10410 | docs/release-1.17.0.md |
+| RV907 | UC24 | self | PASS | 6172b60b8f231f0d2f64993f | docs/release-1.17.0.md |
+| RV908 | UC25 | self | PASS | e7cf9f549641b052200b1cba | docs/release-1.17.0.md |
+| RV909 | UC26 | self | PASS | a37690db587ae7fb079090e9 | docs/release-1.17.0.md |
+| RV910 | UC27 | self | PASS | 28c378f582829af85e9c076a | docs/release-1.17.0.md |
+| RV911 | UC28 | self | PASS | 910b4c25ec8cce590990d333 | docs/release-1.17.0.md |
+| RV912 | UC29 | self | PASS | a483e6b1e2707399c4c4037a | docs/release-1.17.0.md |
+| RV913 | UC30 | self | PASS | b965287c2eeb903d3fef057b | docs/release-1.17.0.md |
+| RV914 | UC31 | self | PASS | 7949cf59b742744798297976 | docs/release-1.17.0.md |
+| RV915 | UC01 | self | PASS | 737d975ca2df6258d18363a6 | docs/release-1.17.0.md |
+| RV916 | UC02 | self | PASS | 91dfe451fe7600a5ed7a13f4 | docs/release-1.17.0.md |
+| RV917 | UC03 | self | PASS | acade8eccfd6729a422ff0bc | docs/release-1.17.0.md |
+| RV918 | UC04 | self | PASS | b6d118dcb0da26a9e0f1f176 | docs/release-1.17.0.md |
+| RV919 | UC05 | self | PASS | 697a6d43366b274247a16a3a | docs/release-1.17.0.md |
+| RV920 | UC06 | self | PASS | 3977dc9ab5c08f08c3955f6f | docs/release-1.17.0.md |
+| RV921 | UC07 | self | PASS | 3a824be8fd819081585f8167 | docs/release-1.17.0.md |
+| RV922 | UC08 | self | PASS | fb17de7e5fae423bff7f66f7 | docs/release-1.17.0.md |
+| RV923 | UC09 | self | PASS | 5bc2bc58c1ca2d3779900b90 | docs/release-1.17.0.md |
+| RV924 | UC10 | self | PASS | 6f07bca063e22e826985c318 | docs/release-1.17.0.md |
+| RV925 | UC11 | self | PASS | 15e9b475baa5e277003aecda | docs/release-1.17.0.md |
+| RV926 | UC12 | self | PASS | 225089e02af2bd9d7a24c6c7 | docs/release-1.17.0.md |
+| RV927 | UC13 | self | PASS | fd7f2f72995cedac45b04335 | docs/release-1.17.0.md |
+| RV928 | UC14 | self | PASS | 914e47b50ef9bde8b190c799 | docs/release-1.17.0.md |
+| RV929 | UC15 | self | PASS | a7ca82bf51a17e880c23a1f2 | docs/release-1.17.0.md |
+| RV930 | UC16 | self | PASS | 1352c4a7c60d019126a5d48b | docs/release-1.17.0.md |
+| RV931 | UC17 | self | PASS | ee6e7db0c79ac3ad946497ff | docs/release-1.17.0.md |
+| RV932 | UC18 | self | PASS | e4bf6a3da959cae8ac8c3692 | docs/release-1.17.0.md |
+| RV933 | UC19 | self | PASS | 884488ac66d7ba4a76db7eec | docs/release-1.17.0.md |
+| RV934 | UC20 | self | PASS | d52cf5a8e65af4af56dd2aed | docs/release-1.17.0.md |
+| RV935 | UC21 | self | PASS | 147705daaf4394ce7f124eca | docs/release-1.17.0.md |
+| RV936 | UC22 | self | PASS | b199edb9a07d8be7de8e3eda | docs/release-1.17.0.md |
+| RV937 | UC23 | self | PASS | a11f03029c7f87dd3ac10410 | docs/release-1.17.0.md |
+| RV938 | UC24 | self | PASS | 6172b60b8f231f0d2f64993f | docs/release-1.17.0.md |
+| RV939 | UC25 | self | PASS | e7cf9f549641b052200b1cba | docs/release-1.17.0.md |
+| RV940 | UC26 | self | PASS | a37690db587ae7fb079090e9 | docs/release-1.17.0.md |
+| RV941 | UC27 | self | PASS | 28c378f582829af85e9c076a | docs/release-1.17.0.md |
+| RV942 | UC28 | self | PASS | 910b4c25ec8cce590990d333 | docs/release-1.17.0.md |
+| RV943 | UC29 | self | PASS | a483e6b1e2707399c4c4037a | docs/release-1.17.0.md |
+| RV944 | UC30 | self | PASS | b965287c2eeb903d3fef057b | docs/release-1.17.0.md |
+| RV945 | UC31 | self | PASS | 7949cf59b742744798297976 | docs/release-1.17.0.md |
 
 ## Releases
 
@@ -2354,5 +2645,6 @@
 | L021 | D001 | LOCAL | d3b63c4 | /Users/udi/Applications/Secretariat.app | E1171,E1172,E1173,E1174,E1175,E1176 |
 | L022 | D001 | LOCAL | d288a79 | /Users/udi/Applications/Secretariat.app | E1304,E1305,E1311,E1312,E1313,E1314 |
 | L023 | D001 | LOCAL | 82e3761 | /Users/udi/Applications/Secretariat.app | E1443,E1444,E1450,E1451,E1452,E1453 |
+| L024 | D001 | LOCAL | 786f1ab | /Users/udi/Applications/Secretariat.app | E1533,E1534,E1540,E1541,E1542,E1543 |
 
 Status, Beleg und Kritik sind unterschiedliche Angaben. `Evidence` in der Aufgabenzeile referenziert die für ihren Abschluss maßgeblichen Beleg-IDs. Ältere Belege dürfen als Historie bleiben. Bei Reviews ist die letzte Zeile je Scope maßgeblich.

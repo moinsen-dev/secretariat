@@ -2,25 +2,22 @@
 
 ## Übergabe
 
-- Geändert (2026-11-13): Passwort-Import aus Browser-CSV mit Chrome-Profil („Found in“), Website-Logins raus aus der Registry, Inventur der Logins (Library → Inventory, `audit-logins`). Commits c3de961 bis 773dff6, nicht gepusht.
-- Echter Tresor: 1270 Logins aus drei Chrome-Profilen importiert; Inventur offline: 92 lokal, 805 mehrfach, 74 schwach.
-- Lösch-Wege (JustDeleteMe, MIT, im Paket): 142 der 1270 Logins haben einen Weg (80 einfach), 1036 keinen. Richtung (Uli): Secretariat wird das umfassende Werkzeug rund um Zugangsdaten; Kontoabwicklung und Nachlass gehören hinein.
-- MCP für Agenten: `login_inventory`, `login_sites`, `set_deletion_route` (erforschte Wege mit Pflichtquelle, Vorrang vor JustDeleteMe).
-- Recherche-Probelauf: 20 Sites mit Agenten recherchiert und eingetragen (Stichprobe 6/6 korrekt, ~14 500 Tokens je Site), docs/research-trial-2026-11-13.md.
-- Halb fertig: T034–T037 OFFEN, schließen mit Release 1.17.0 und Neubindung aller älteren Aufgaben samt Planprüfung (`check` meldet PLAN_REVIEW und veraltete Belege). Uli will das Release später.
-- Nächster Schritt: Release 1.17.0 bauen und installieren (nach Ulis Ja), dann in der App „Check Online“.
-- Gelaufen: `xcrun swift test` 132/132, `script/regression_cli.sh` 24/24, App-Läufe in Testinstanzen (docs/password-import-2026-11-13.md, docs/login-inventory-2026-11-13.md).
+- Release 1.17.0 (2026-11-13): Passwort-Import mit „Found in“, Inventur, Lösch-Wege (JustDeleteMe), MCP-Werkzeuge für Agenten. Notarisiertes Zip und MDM-.pkg in `dist/`, lokal installiert, Website-Ordner `dist/site-1.17.0` gebaut. Bericht `docs/release-1.17.0.md`.
+- Tracker neu gebunden (T001–T037, Selbstprüfung), `check`: STRUCTURE_OK.
+- Offen bei Uli: Website deployen (`wrangler pages deploy dist/site-1.17.0 --project-name secretariat --branch main`) und `git push` (lokale Commits seit 93fe7eb).
+- Nächster Arbeitsschritt: in der Inventur Logins als „Close account“ markieren; Agenten recherchieren nur diese Sites (MCP `login_sites --decision close --needs-route`). Danach Bausteine Löschanträge per Mail und Abwickeln per Agent.
+- Regel: In docs/, PLAN, TRACKER, STATE und Tests keine Adressen, Benutzernamen oder Site-Namen aus Ulis Tresor (öffentliches Repo).
 
 ## State
 
 - schema: app-workflow/1
 - status: ACTIVE
-- phase: P25
-- use_case: UC27
-- task: T033
-- next: Uli: Test-Profil mit TeamMembers installieren, App zeigt verwaltetes Mitglied, Profil wieder entfernen
-- updated: 2026-11-13T07:52:42+00:00
-- plan_sha256: 14232fb1661398cfdf07e96ede2f00de0084f0dc747ae4add6352d4d5baf8c7e
-- tracker_sha256: ba134626095ee39158fe1be967441af3bd18608bf5182221791b8899229ad454
+- phase: P27
+- use_case: UC31
+- task: T037
+- next: Uli: Website dist/site-1.17.0 veröffentlichen und pushen; dann in der App Logins als Close markieren, Agenten recherchieren nur diese
+- updated: 2026-11-13T09:22:36+00:00
+- plan_sha256: 5fdb3479c00ca18c5711f5319f12594cf3048e9e6a9639cd098149734a5e01b7
+- tracker_sha256: 3435db58422e5049c46ce6706b12cacd4b73975c008ea5eef3b14c4d9827aaca
 
 Einstieg: `AGENTS.md`. Verbindliche Aufgabenstatus und Nachweise: `TRACKER.md`. Diese Zusammenfassung mit dem Werkzeug aus Plan und Tracker aktualisieren.
