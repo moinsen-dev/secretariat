@@ -39,6 +39,7 @@
 | T033 | BLOCKIERT | E1496,E1497,E1498 | pkg signiert, notarisiert, live (2c76bdaf); Abnahme PASS; macos-Nachweis der verwalteten Mitglieder nur per Fixture, ein echter erzwungener Wert braucht ein installiertes Profil (Ulis Ja) |
 | T034 | OFFEN | E1505,E1506,E1507 | Code fertig und geprüft (3da23b0, build/unit/macos PASS, inkl. Chrome-Profile); Abschluss nach Neubindung beim Release 1.17.0 |
 | T035 | OFFEN | E1508,E1509,E1510 | Code fertig und geprüft (440ea61, build/unit/macos PASS); Abschluss mit Neubindung beim Release 1.17.0 |
+| T036 | OFFEN | E1511,E1512,E1513 | Code fertig und geprüft (63db701, build/unit/macos PASS); Abschluss mit Neubindung beim Release 1.17.0 |
 
 ## Evidence
 
@@ -1554,6 +1555,9 @@
 | E1508 | T035 | build | build | normal | 2026-11-13T08:27:25+00:00 | 440ea61 | d9fb8bd35f7cdc0d557c1330 | docs/login-inventory-2026-11-13.md | PASS |
 | E1509 | T035 | unit | unit | normal | 2026-11-13T08:27:25+00:00 | 440ea61 | d9fb8bd35f7cdc0d557c1330 | docs/login-inventory-2026-11-13.md | PASS |
 | E1510 | T035 | macos | ui | normal | 2026-11-13T08:27:25+00:00 | 440ea61 | d9fb8bd35f7cdc0d557c1330 | docs/login-inventory-2026-11-13.md | PASS |
+| E1511 | T036 | build | build | normal | 2026-11-13T08:47:54+00:00 | 63db701 | 8a4b6fff7fe606f2312dcb33 | docs/deletion-guides-2026-11-13.md | PASS |
+| E1512 | T036 | unit | unit | normal | 2026-11-13T08:47:54+00:00 | 63db701 | 8a4b6fff7fe606f2312dcb33 | docs/deletion-guides-2026-11-13.md | PASS |
+| E1513 | T036 | macos | ui | normal | 2026-11-13T08:47:54+00:00 | 63db701 | 8a4b6fff7fe606f2312dcb33 | docs/deletion-guides-2026-11-13.md | PASS |
 
 ## Reviews
 
