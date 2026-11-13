@@ -20,8 +20,25 @@ Anlass: Uli hat seine Passwörter aus dem Google Passwortmanager als CSV exporti
 
 Aufräumen: Testinstanz beendet, Testeinträge im Schlüsselbund mit `CleanupTestItems` entfernt (Test-Tresor danach 0 Einträge), künstliche CSV-Dateien gelöscht bzw. im Papierkorb. Echter Tresor unberührt.
 
+## Mehrere Chrome-Profile (Nachtrag, gleicher Tag)
+
+Uli: Mehrere Chrome-Profile; das System muss wissen, aus welchem Profil ein Login stammt.
+
+Befund an Ulis echter Datei (nur Metadaten und Spaltenkopf gelesen, keine Werte): Chrome nennt jeden Export „Google Passwords.csv“; die Datei trägt nur die Quarantäne-Angabe „Chrome“, kein `kMDItemWhereFroms`, keinen Profilnamen; 1132 Zeilen. Chromes Profilliste (`Local State`) liegt in einem von macOS geschützten Ordner; sie zu lesen würde eine Systemabfrage „Zugriff auf Daten anderer Apps“ auslösen, darum nicht genutzt.
+
+Lösung: Beim Import nennt der Nutzer das Profil („Found in“, Pflicht in der App, `--from` in der CLI). Vorschläge: früher verwendete Profilnamen und die Google-Konten, deren Anmeldung in der Datei steht. Jeder neue Login trägt das Feld `found_in` (Kennung, im Login-Template „Found in“). Ein gleicher Login mit gleichem Passwort aus einem weiteren Profil bekommt das Profil ergänzt („Chrome: Work, Chrome: Privat“), ohne dass ein Wert neu geschrieben wird; ein abweichendes Passwort bleibt unverändert und wird genannt.
+
+| Ziel | Ergebnis |
+|---|---|
+| unit | 125/125 grün; neu: zweites Profil ergänzt die Herkunft ohne Wertänderung, abweichender Login unverändert, dritter Lauf ändert nichts, Verlauf nennt das Profil; Vorschläge aus früheren Importen und Google-Anmeldungen |
+| cli | Test-Tresor: `--from "Chrome: Work"` 3 Logins; Probelauf ohne `--from` zeigt den Hinweis mit Vorschlägen „Chrome: Work“, „Chrome: private@example.test“. `script/regression_cli.sh` 24/24 |
+| macos | Testinstanz, zweite Datei (4 Zeilen): Sheet mit Feld „Found in“ und Menü „Suggestions“, Import-Knopf ohne Profil ausgegraut; „Chrome: Privat“ eingegeben, Import: „2 logins imported“, „Chrome: Privat“ bei 1 vorhandenem Login ergänzt. CLI-Nachkontrolle: `web/shared.test` Found in „Chrome: Work, Chrome: Privat“, `web/work.test` nur „Chrome: Work“ (abweichendes Passwort unverändert), `web/shop.test` „Chrome: Privat“, zweites Google-Konto als `web/accounts.google.com/private@example.test` |
+
+Aufräumen: Testinstanz beendet, Test-Tresore geleert (je 0 Einträge im Test-Schlüsselbund), Testdateien gelöscht.
+
 ## Grenzen
 
-- Mit Ulis echter Google-CSV noch nicht gelaufen.
+- Mit Ulis echter Google-CSV noch nicht importiert (nur Kopfzeile und Metadaten geprüft).
+- Das Profil erkennt Secretariat nicht selbst; es schlägt nur vor. Ein falsch gewähltes Profil lässt sich im Eintrag (Feld „Found in“) korrigieren.
 - Die Bedienung der Testinstanz lief über System Events (Menü, Tastatur, ein Klick auf den Papierkorb-Knopf); der Knopf „Move CSV to Trash“ war über die Bedienungshilfen nicht per Name auffindbar.
 - Passkeys stehen nicht in der CSV und werden nicht übernommen.

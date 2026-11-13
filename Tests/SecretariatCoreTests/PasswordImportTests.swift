@@ -90,3 +90,37 @@ passkey-only.test,https://passkey-only.test/,dora,,
     let plan = PasswordImport.plan(rows, existing: [], source: "t") { _ in nil }
     #expect(plan.new.map(\.meta.path) == ["web/a.test", "web/a.test/two"])
 }
+
+@Test func secondProfileAddsItsOriginWithoutTouchingValues() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    let work = f.root.appendingPathComponent("Google Passwords.csv")
+    try "name,url,username,password,note\nx,https://shared.test/,me,same-pw,\ny,https://work.test/,me,work-pw,\n".write(to: work, atomically: true, encoding: .utf8)
+    try f.cli("import-logins", work.path, "--from", "Chrome: Work")
+    let shared = try f.vault.item(path: "web/shared.test")
+    #expect(shared.field("found_in")?.value == "Chrome: Work"); #expect(shared.field("found_in")?.kind == .identifier)
+
+    // The private profile's export: same login with the same password, one with another password, one new.
+    let personal = f.root.appendingPathComponent("Google Passwords (1).csv")
+    try "name,url,username,password,note\nx,https://shared.test/,me,same-pw,\ny,https://work.test/,me,other-pw,\nz,https://shop.test/,me,shop-pw,\n"
+        .write(to: personal, atomically: true, encoding: .utf8)
+    f.items.secretReads = 0
+    let (_, json) = try f.cli("import-logins", personal.path, "--from", "Chrome: Privat")
+    #expect(json.contains("\"originAdded\" : [\n    \"web/shared.test\""))
+    #expect(try f.vault.item(path: "web/shared.test").field("found_in")?.value == "Chrome: Work, Chrome: Privat")
+    #expect(try f.vault.personalValue(itemID: shared.id, field: "password") == "same-pw")
+    #expect(try f.vault.item(path: "web/work.test").field("found_in")?.value == "Chrome: Work")   // differs: left alone
+    #expect(try f.vault.item(path: "web/shop.test").field("found_in")?.value == "Chrome: Privat")
+    // Third run of the same file changes nothing more.
+    let (_, again) = try f.cli("import-logins", personal.path, "--from", "Chrome: Privat")
+    #expect(again.contains("\"originAdded\" : [\n\n  ]") || again.contains("\"originAdded\" : []"))
+    #expect(f.vault.audit.tail(3).contains { $0.contains("Chrome: Privat") })
+}
+
+@Test func originSuggestionsComeFromEarlierImportsAndGoogleSignIns() {
+    let rows = [PasswordImport.Row(url: "https://accounts.google.com/", username: "me@gmail.example", password: "p"),
+                PasswordImport.Row(url: "https://other.test/", username: "x@y.test", password: "p")]
+    let earlier = ItemMeta(path: "web/a.test", kind: "login", fields: [ItemField(name: "found_in", kind: .identifier, value: "Chrome: Work, Chrome: Privat")])
+    #expect(PasswordImport.originSuggestions(rows, existing: [earlier]) == ["Chrome: Work", "Chrome: Privat", "Chrome: me@gmail.example"])
+    let plan = PasswordImport.plan(rows, existing: [], source: "t", origin: " Chrome, Work ") { _ in nil }
+    #expect(plan.origin == "Chrome  Work")
+}
