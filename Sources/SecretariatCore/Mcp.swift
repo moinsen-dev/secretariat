@@ -63,7 +63,7 @@ public enum McpServer {
                 + ((a["decision"] as? String).map { ["--decision", $0] } ?? [])
                 + ((a["limit"] as? Int).map { ["--limit", String($0)] } ?? []) + ((a["offset"] as? Int).map { ["--offset", String($0)] } ?? [])
         },
-        Tool(name: "set_deletion_route", description: "Record how to close the account on a site, for every login of that site: deletion page (url) and/or contact for a deletion request (contact: privacy e-mail or contact form), difficulty (easy: a delete button; medium: extra steps; hard: only via support or a request; impossible: no real deletion) and the page you found it on (source, required). Optional one-line note. Only record what the source says; this does not close anything.",
+        Tool(name: "set_deletion_route", description: "Record how to close the account on a site, for every login of that site: deletion page (url) and/or contact for a deletion request (contact: privacy e-mail or contact form), difficulty (easy: a delete button; medium: extra steps; hard: only via support or a request; impossible: no real deletion, or the service shut down; then url and contact may be empty) and the page you found it on (source, required). Optional one-line note. Only record what the source says; this does not close anything.",
              properties: ["site": str, "difficulty": str, "url": str, "contact": str, "note": str, "source": str], required: ["site", "difficulty", "source"]) { a in
             ["login-route", try string(a, "site"), "--difficulty", try string(a, "difficulty"), "--source", try string(a, "source")]
                 + ((a["url"] as? String).map { ["--url", $0] } ?? []) + ((a["contact"] as? String).map { ["--contact", $0] } ?? [])

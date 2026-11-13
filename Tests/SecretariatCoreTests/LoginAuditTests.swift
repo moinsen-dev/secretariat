@@ -151,6 +151,8 @@ private func login(_ path: String, _ url: String, user: String = "me", origin: S
     func code(_ r: LoginRoutes.Route) -> String? { do { try LoginRoutes.set(r, site: "shop.test", vault: f.vault); return nil } catch let e as AgentError { return e.code } catch { return "other" } }
     #expect(code(.init(url: "https://x.test", contact: nil, difficulty: .easy, note: nil, source: "not a url")) == "invalid_arguments")
     #expect(code(.init(url: nil, contact: nil, difficulty: .easy, note: nil, source: "https://x.test")) == "invalid_arguments")
+    #expect(code(.init(url: nil, contact: nil, difficulty: .impossible, note: "Service shut down in 2017.", source: "https://x.test/news")) == nil)
+    #expect(LoginRoutes.route(try f.vault.item(path: "web/shop.test"))?.difficulty == .impossible)
     #expect(code(.init(url: nil, contact: "javascript:alert(1)", difficulty: .easy, note: nil, source: "https://x.test")) == "invalid_arguments")
     #expect(code(.init(url: "https://x.test", contact: nil, difficulty: .easy, note: "two\nlines", source: "https://x.test")) == "invalid_arguments")
     #expect((try? LoginRoutes.set(route, site: "nowhere.test", vault: f.vault)) == nil)

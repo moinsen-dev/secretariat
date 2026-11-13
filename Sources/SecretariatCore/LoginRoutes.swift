@@ -13,7 +13,7 @@ public enum LoginRoutes {
     public static func route(_ item: ItemMeta) -> AccountDeletion.Guide? {
         func value(_ name: String) -> String? { item.field(name)?.value.flatMap { $0.isEmpty ? nil : $0 } }
         guard let source = value(sourceField), let raw = value(difficultyField), let difficulty = AccountDeletion.Difficulty(rawValue: raw),
-              value(urlField) != nil || value(contactField) != nil else { return nil }
+              value(urlField) != nil || value(contactField) != nil || difficulty == .impossible else { return nil }
         return AccountDeletion.Guide(name: LoginAudit.host(item) ?? item.path, url: value(urlField), difficulty: difficulty, domains: [],
                                      notes: value(noteField), email: value(contactField), source: source, checked: value(checkedField))
     }
@@ -35,7 +35,10 @@ public enum LoginRoutes {
         static func isEmail(_ text: String) -> Bool { text.range(of: #"^[^@\s]+@[^@\s]+\.[A-Za-z]{2,}$"#, options: .regularExpression) != nil }
 
         func validate() throws {
-            guard url != nil || contact != nil else { throw AgentError("invalid_arguments", "Give a deletion page (--url) or a contact (--contact), or both.") }
+            // A service that shut down has neither; its source (and note) is the record.
+            guard url != nil || contact != nil || difficulty == .impossible else {
+                throw AgentError("invalid_arguments", "Give a deletion page (--url) or a contact (--contact), or both; only 'impossible' may have neither.")
+            }
             if let url, !Self.isWebURL(url) { throw AgentError("invalid_arguments", "--url must be an http(s) address.") }
             if let contact, !(Self.isEmail(contact) || Self.isWebURL(contact)) {
                 throw AgentError("invalid_arguments", "--contact must be an e-mail address or an http(s) contact form.")
