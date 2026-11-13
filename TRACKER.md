@@ -38,6 +38,7 @@
 | T032 | ERLEDIGT | E1354,E1355,E1356 | Austritt und Rotations-Markierung, App-Lauf, Abnahme PASS |
 | T033 | BLOCKIERT | E1496,E1497,E1498 | pkg signiert, notarisiert, live (2c76bdaf); Abnahme PASS; macos-Nachweis der verwalteten Mitglieder nur per Fixture, ein echter erzwungener Wert braucht ein installiertes Profil (Ulis Ja) |
 | T034 | OFFEN | E1505,E1506,E1507 | Code fertig und geprüft (3da23b0, build/unit/macos PASS, inkl. Chrome-Profile); Abschluss nach Neubindung beim Release 1.17.0 |
+| T035 | OFFEN | E1508,E1509,E1510 | Code fertig und geprüft (440ea61, build/unit/macos PASS); Abschluss mit Neubindung beim Release 1.17.0 |
 
 ## Evidence
 
