@@ -37,6 +37,7 @@
 | T031 | ERLEDIGT | E1490,E1491,E1492 | Neubindung Release 1.16.0, siehe docs/release-1.16.0.md |
 | T032 | ERLEDIGT | E1354,E1355,E1356 | Austritt und Rotations-Markierung, App-Lauf, Abnahme PASS |
 | T033 | BLOCKIERT | E1496,E1497,E1498 | pkg signiert, notarisiert, live (2c76bdaf); Abnahme PASS; macos-Nachweis der verwalteten Mitglieder nur per Fixture, ein echter erzwungener Wert braucht ein installiertes Profil (Ulis Ja) |
+| T034 | OFFEN | E1502,E1503,E1504 | Code fertig und geprüft (c3de961, build/unit/macos PASS); Abschluss nach Neubindung der älteren Aufgaben beim Release 1.17.0 |
 
 ## Evidence
 
@@ -1540,6 +1541,12 @@
 | E1496 | T033 | build | build | normal | 2026-11-13T07:52:17+00:00 | a5c3edf | 4787eba769fae1ff34dbfa39 | docs/team-2026-11-12.md | PASS |
 | E1497 | T033 | unit | unit | normal | 2026-11-13T07:52:17+00:00 | a5c3edf | 4787eba769fae1ff34dbfa39 | docs/team-2026-11-12.md | PASS |
 | E1498 | T033 | macos | ui | fixture | 2026-11-13T07:52:17+00:00 | a5c3edf | 4787eba769fae1ff34dbfa39 | docs/team-2026-11-12.md | PASS |
+| E1499 | T034 | unit | unit | normal | 2026-11-13T08:00:58+00:00 | c3de961 | 02c6dcc768e449b1f0541124 | docs/password-import-2026-11-13.md | PASS |
+| E1500 | T034 | macos | ui | normal | 2026-11-13T08:00:58+00:00 | c3de961 | 02c6dcc768e449b1f0541124 | docs/password-import-2026-11-13.md | PASS |
+| E1501 | T034 | build | build | normal | 2026-11-13T08:01:06+00:00 | c3de961 | 02c6dcc768e449b1f0541124 | docs/password-import-2026-11-13.md | PASS |
+| E1502 | T034 | build | build | normal | 2026-11-13T08:01:30+00:00 | c3de961 | 16d70cb951cef3786953ccef | docs/password-import-2026-11-13.md | PASS |
+| E1503 | T034 | unit | unit | normal | 2026-11-13T08:01:30+00:00 | c3de961 | 16d70cb951cef3786953ccef | docs/password-import-2026-11-13.md | PASS |
+| E1504 | T034 | macos | ui | normal | 2026-11-13T08:01:30+00:00 | c3de961 | 16d70cb951cef3786953ccef | docs/password-import-2026-11-13.md | PASS |
 
 ## Reviews
 
