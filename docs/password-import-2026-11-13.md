@@ -42,3 +42,9 @@ Aufräumen: Testinstanz beendet, Test-Tresore geleert (je 0 Einträge im Test-Sc
 - Das Profil erkennt Secretariat nicht selbst; es schlägt nur vor. Ein falsch gewähltes Profil lässt sich im Eintrag (Feld „Found in“) korrigieren.
 - Die Bedienung der Testinstanz lief über System Events (Menü, Tastatur, ein Klick auf den Papierkorb-Knopf); der Knopf „Move CSV to Trash“ war über die Bedienungshilfen nicht per Name auffindbar.
 - Passkeys stehen nicht in der CSV und werden nicht übernommen.
+
+## Echter Import (Uli, 2026-11-13)
+
+Vor dem Import gefunden: `exportRegistry` schreibt die Kennungen aller Einträge nach `~/.claude/registry/accounts.toml`, das Agenten lesen. Website-Logins gehören nicht dorthin; seit `0da3811` lässt der Export Einträge der Art `login` weg (Unit-Test).
+
+Ulis Export aus dem Chrome-Profil ulrich.diedrichsen@gmail.com, nach seiner Angabe im Chat: Probelauf 1132 Zeilen, 1060 neu, 70 doppelt, 2 ohne Passwort. Import mit `--from "Chrome: ulrich.diedrichsen@gmail.com"` in 5,3 s: Tresor 277 → 1337 Einträge, 1060 davon mit diesem „Found in“. Registry danach unverändert 277 Einträge. Die CSV liegt noch in `~/Downloads`; löschen macht Uli.
