@@ -4,7 +4,7 @@
 
 - Release 1.17.0 (2026-11-13): Passwort-Import mit „Found in“, Inventur, Lösch-Wege (JustDeleteMe), MCP-Werkzeuge für Agenten. Notarisiertes Zip und MDM-.pkg in `dist/`, lokal installiert, Website-Ordner `dist/site-1.17.0` gebaut. Bericht `docs/release-1.17.0.md`.
 - Tracker neu gebunden (T001–T037, Selbstprüfung), `check`: STRUCTURE_OK.
-- Offen bei Uli: Website deployen (`wrangler pages deploy dist/site-1.17.0 --project-name secretariat --branch main`) und `git push` (lokale Commits seit 93fe7eb).
+- Live (2026-11-13): Website und Feed 1.17.0 deployt und geprüft (Zip und .pkg byte-gleich), alles nach GitHub gepusht.
 - Nächster Arbeitsschritt: in der Inventur Logins als „Close account“ markieren; Agenten recherchieren nur diese Sites (MCP `login_sites --decision close --needs-route`). Danach Bausteine Löschanträge per Mail und Abwickeln per Agent.
 - Regel: In docs/, PLAN, TRACKER, STATE und Tests keine Adressen, Benutzernamen oder Site-Namen aus Ulis Tresor (öffentliches Repo).
 
