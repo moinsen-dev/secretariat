@@ -165,26 +165,26 @@ struct MainView: View {
     // MARK: Middle column
 
     private var query: String { search.trimmingCharacters(in: .whitespaces).lowercased() }
-    private func matches(_ item: ItemMeta) -> Bool {
-        item.path.lowercased().contains(query) || model.template(item.kind).title.lowercased().contains(query)
-            || item.source.lowercased().contains(query) || item.fields.contains {
-                $0.name.lowercased().contains(query) || ($0.value?.lowercased().contains(query) ?? false)
-                    || (model.template(item.kind).spec($0.name)?.label.lowercased().contains(query) ?? false)
-            }
+    private func searchText(_ item: ItemMeta, bindings: [UUID: [(owner: String, variable: String)]]) -> [String] {
+        let template = model.template(item.kind)
+        return Search.itemText(item, bindings: bindings, kindTitle: template.title,
+                               fieldLabels: item.fields.compactMap { template.spec($0.name)?.label })
     }
     private var filteredProfiles: [Profile] {
         let profiles = model.configuration.profiles.sorted { $0.name < $1.name }
         guard !query.isEmpty else { return profiles }
         let pathsByID = Dictionary(uniqueKeysWithValues: model.items.map { ($0.id, $0.path) })
-        return profiles.filter { p in
-            p.name.lowercased().contains(query) || p.directory.lowercased().contains(query)
-                || p.bindings.contains { $0.variable.lowercased().contains(query) || (pathsByID[$0.itemID]?.lowercased().contains(query) ?? false) }
+        return Search.filter(profiles, query: query) { p in
+            [p.name, p.directory] + p.bindings.flatMap { [$0.variable, pathsByID[$0.itemID] ?? ""] }
         }
     }
 
     /// The items the middle column shows for the current list (search runs across everything).
     private var visibleItems: [ItemMeta] {
-        if !query.isEmpty { return model.items.filter(matches) }
+        if !query.isEmpty {
+            let bindings = Search.bindings(model.configuration)
+            return Search.filter(model.items, query: query) { searchText($0, bindings: bindings) }
+        }
         switch model.selection {
         case "inbox": return inbox.sorted { (Capture.capturedAt($0) ?? "") > (Capture.capturedAt($1) ?? "") }
         case "expiring": return expiring.sorted { ($0.expires ?? "") < ($1.expires ?? "") }
@@ -254,10 +254,12 @@ struct MainView: View {
         let items = visibleItems
         // Notes-style: one flat list; the account stands in each row, not as a heading per item.
         let ordered = model.selection == "items" || !query.isEmpty ? items.sorted { $0.path < $1.path } : items
+        let bindings = query.isEmpty ? [:] : Search.bindings(model.configuration)
         return List(selection: $model.selectedItem) {
             ListTitle(title: listTitle, count: items.count, color: listColor)
             ForEach(ordered) { item in
-                ItemRow(model: model, item: item, showOrganisation: organisations > 1).tag(item.id)
+                ItemRow(model: model, item: item, showOrganisation: organisations > 1,
+                        boundAs: query.isEmpty ? [] : Search.boundAs(item, query: query, bindings: bindings)).tag(item.id)
             }
         }
         .listStyle(.inset)
@@ -569,6 +571,8 @@ struct ItemRow: View {
     let model: AppModel
     let item: ItemMeta
     var showOrganisation = false
+    /// While searching: the variables that bind this item and that the query names ("CF_FIX_TOKEN in moinsen-edge").
+    var boundAs: [String] = []
 
     private var title: String {
         if Capture.isCapture(item) {
@@ -595,6 +599,10 @@ struct ItemRow: View {
                           showOrganisation && !Capture.isCapture(item) ? item.path.split(separator: "/").first.map(String.init) : nil]
                             .compactMap { $0 }.joined(separator: " · ")).foregroundStyle(.secondary)
                 }.font(.subheadline).lineLimit(1)
+                if !boundAs.isEmpty {
+                    Label(boundAs.joined(separator: " · "), systemImage: "link")
+                        .font(.caption.monospaced()).foregroundStyle(.secondary).lineLimit(1)
+                }
             }
             Spacer(minLength: 6)
             if let reason = item.rotateReason {

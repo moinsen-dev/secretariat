@@ -187,7 +187,7 @@ struct ScreenshotList: View {
 
     private var shots: [Screenshot] {
         guard !query.isEmpty else { return model.screenshots }
-        return model.screenshots.filter { $0.title.lowercased().contains(query) || $0.note.lowercased().contains(query) }
+        return Search.filter(model.screenshots, query: query) { [$0.title, $0.note] }
     }
 
     var body: some View {
