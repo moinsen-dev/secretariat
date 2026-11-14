@@ -5,45 +5,46 @@
 | ID | Status | Evidence | Reason |
 |---|---|---|---|
 | T001 | ERLEDIGT | E1520,E1525 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T002 | ERLEDIGT | E1808,E1809,E1810 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T003 | ERLEDIGT | E1811,E1812 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T002 | ERLEDIGT | E1898,E1899,E1900 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T003 | ERLEDIGT | E1901,E1902 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T004 | ERLEDIGT | E1813 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T005 | ERLEDIGT | E1814 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T006 | ERLEDIGT | E1815,E1816 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T007 | ERLEDIGT | E1817,E1818 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T008 | ERLEDIGT | E1819,E1820 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T009 | ERLEDIGT | E1821 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T010 | ERLEDIGT | E1822,E1823,E1824,E1825 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T005 | ERLEDIGT | E1903 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T006 | ERLEDIGT | E1904,E1905 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T007 | ERLEDIGT | E1906,E1907 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T008 | ERLEDIGT | E1908,E1909 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T009 | ERLEDIGT | E1910 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T010 | ERLEDIGT | E1911,E1912,E1913,E1914 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T011 | ERLEDIGT | E1826,E1827 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
 | T013 | ERLEDIGT | E1828,E1829 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T014 | ERLEDIGT | E1830,E1831,E1832 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T014 | ERLEDIGT | E1915,E1916,E1917 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T015 | ERLEDIGT | E1833,E1834 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
 | T012 | ERLEDIGT | E1835,E1836 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
 | T016 | ERLEDIGT | E1837,E1838,E1839 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
 | T017 | ERLEDIGT | E1840,E1841,E1842 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T018 | ERLEDIGT | E1843,E1844,E1845,E1846 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T018 | ERLEDIGT | E1918,E1919,E1920,E1921 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T019 | ERLEDIGT | E1847,E1848,E1849 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T020 | ERLEDIGT | E1850,E1851,E1852 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T021 | ERLEDIGT | E1853,E1854,E1855 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T022 | ERLEDIGT | E1856,E1857,E1858 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T020 | ERLEDIGT | E1922,E1923,E1924 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T021 | ERLEDIGT | E1925,E1926,E1927 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T022 | ERLEDIGT | E1928,E1929,E1930 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T023 | ERLEDIGT | E1859,E1860,E1861 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T024 | ERLEDIGT | E1862,E1863,E1864 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T024 | ERLEDIGT | E1931,E1932,E1933 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T025 | ERLEDIGT | E1865,E1866,E1867 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
 | T026 | IN_ARBEIT | E1586,E1587,E1588 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T027 | ERLEDIGT | E1868,E1869,E1870 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T027 | ERLEDIGT | E1934,E1935,E1936 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T028 | ERLEDIGT | E1871,E1872,E1873 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
 | T029 | ERLEDIGT | E1685,E1686,E1687 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
-| T030 | ERLEDIGT | E1874,E1875,E1876 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T031 | ERLEDIGT | E1877,E1878,E1879 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T032 | ERLEDIGT | E1880,E1881,E1882 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T030 | ERLEDIGT | E1937,E1938,E1939 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T031 | ERLEDIGT | E1940,E1941,E1942 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T032 | ERLEDIGT | E1943,E1944,E1945 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T033 | BLOCKIERT | E1607,E1608,E1609 | pkg signiert, notarisiert, live (2c76bdaf); Abnahme PASS; macos-Nachweis der verwalteten Mitglieder nur per Fixture, ein echter erzwungener Wert braucht ein installiertes Profil (Ulis Ja) |
-| T034 | ERLEDIGT | E1883,E1884,E1885 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T035 | ERLEDIGT | E1886,E1887,E1888 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T034 | ERLEDIGT | E1946,E1947,E1948 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T035 | ERLEDIGT | E1949,E1950,E1951 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T036 | ERLEDIGT | E1889,E1890,E1891 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
 | T037 | ERLEDIGT | E1892,E1893,E1894 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T038 | ERLEDIGT | E1895,E1896,E1897 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T039 | ERLEDIGT | E1805,E1806,E1807 | siehe docs/search-2026-11-14.md; nach Löschdialog neu gebunden |
-| T040 | ERLEDIGT | E1802,E1803,E1804 | siehe docs/unbind-delete-2026-11-14.md |
+| T038 | ERLEDIGT | E1952,E1953,E1954 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T039 | ERLEDIGT | E1955,E1956,E1957 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T040 | ERLEDIGT | E1958,E1959,E1960 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T041 | ERLEDIGT | E1961,E1962,E1963 | Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 
 ## Evidence
 
@@ -1946,6 +1947,72 @@
 | E1895 | T038 | build | build | normal | 2026-11-14T10:13:26+00:00 | 4f3bd3a | 7ceb0eb12e9ffe024af95963 | docs/release-1.18.2.md | PASS |
 | E1896 | T038 | macos | ui | normal | 2026-11-14T10:13:26+00:00 | 4f3bd3a | 7ceb0eb12e9ffe024af95963 | docs/release-1.18.2.md | PASS |
 | E1897 | T038 | unit | unit | normal | 2026-11-14T10:13:26+00:00 | 4f3bd3a | 7ceb0eb12e9ffe024af95963 | docs/release-1.18.2.md | PASS |
+| E1898 | T002 | build | build | normal | 2026-11-14T12:47:33+00:00 | 53e4348+T041 | 019e23e25bfa4a1873dfaa8c | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1899 | T002 | macos | ui | normal | 2026-11-14T12:47:33+00:00 | 53e4348+T041 | 019e23e25bfa4a1873dfaa8c | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1900 | T002 | unit | unit | normal | 2026-11-14T12:47:33+00:00 | 53e4348+T041 | 019e23e25bfa4a1873dfaa8c | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1901 | T003 | macos | ui | normal | 2026-11-14T12:47:33+00:00 | 53e4348+T041 | afd4da0935f99d63ad13d47a | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1902 | T003 | unit | unit | normal | 2026-11-14T12:47:34+00:00 | 53e4348+T041 | afd4da0935f99d63ad13d47a | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1903 | T005 | macos | ui | normal | 2026-11-14T12:47:34+00:00 | 53e4348+T041 | f1105a18b1821b401b78096e | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1904 | T006 | inspection | inspection | normal | 2026-11-14T12:47:34+00:00 | 53e4348+T041 | 99dfc923701d6c200b269c36 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1905 | T006 | macos | ui | normal | 2026-11-14T12:47:35+00:00 | 53e4348+T041 | 99dfc923701d6c200b269c36 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1906 | T007 | build | build | normal | 2026-11-14T12:47:35+00:00 | 53e4348+T041 | 47d976b21384c0b49f22d4ca | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1907 | T007 | unit | unit | normal | 2026-11-14T12:47:35+00:00 | 53e4348+T041 | 47d976b21384c0b49f22d4ca | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1908 | T008 | macos | ui | normal | 2026-11-14T12:47:36+00:00 | 53e4348+T041 | 38fdb103a327a1745be44605 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1909 | T008 | unit | unit | normal | 2026-11-14T12:47:36+00:00 | 53e4348+T041 | 38fdb103a327a1745be44605 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1910 | T009 | inspection | inspection | normal | 2026-11-14T12:47:36+00:00 | 53e4348+T041 | f46630516d9c1761b7fcda4f | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1911 | T010 | build | build | normal | 2026-11-14T12:47:37+00:00 | 53e4348+T041 | de8988c4be07bbe43c17c573 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1912 | T010 | inspection | inspection | normal | 2026-11-14T12:47:37+00:00 | 53e4348+T041 | de8988c4be07bbe43c17c573 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1913 | T010 | macos | ui | normal | 2026-11-14T12:47:37+00:00 | 53e4348+T041 | de8988c4be07bbe43c17c573 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1914 | T010 | unit | unit | normal | 2026-11-14T12:47:38+00:00 | 53e4348+T041 | de8988c4be07bbe43c17c573 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1915 | T014 | build | build | normal | 2026-11-14T12:47:38+00:00 | 53e4348+T041 | 1b3e73f8791e4bf0720a3c98 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1916 | T014 | macos | ui | normal | 2026-11-14T12:47:38+00:00 | 53e4348+T041 | 1b3e73f8791e4bf0720a3c98 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1917 | T014 | unit | unit | normal | 2026-11-14T12:47:39+00:00 | 53e4348+T041 | 1b3e73f8791e4bf0720a3c98 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1918 | T018 | build | build | normal | 2026-11-14T12:47:39+00:00 | 53e4348+T041 | 64d8b3a1d8e9ca27b43177fa | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1919 | T018 | inspection | inspection | normal | 2026-11-14T12:47:39+00:00 | 53e4348+T041 | 64d8b3a1d8e9ca27b43177fa | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1920 | T018 | macos | ui | normal | 2026-11-14T12:47:40+00:00 | 53e4348+T041 | 64d8b3a1d8e9ca27b43177fa | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1921 | T018 | unit | unit | normal | 2026-11-14T12:47:40+00:00 | 53e4348+T041 | 64d8b3a1d8e9ca27b43177fa | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1922 | T020 | build | build | normal | 2026-11-14T12:47:41+00:00 | 53e4348+T041 | 6e6bca36719c4a403dd7afea | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1923 | T020 | macos | ui | normal | 2026-11-14T12:47:41+00:00 | 53e4348+T041 | 6e6bca36719c4a403dd7afea | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1924 | T020 | unit | unit | normal | 2026-11-14T12:47:41+00:00 | 53e4348+T041 | 6e6bca36719c4a403dd7afea | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1925 | T021 | build | build | normal | 2026-11-14T12:47:42+00:00 | 53e4348+T041 | edef2d7a857ad3d5973f80e1 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1926 | T021 | macos | ui | normal | 2026-11-14T12:47:42+00:00 | 53e4348+T041 | edef2d7a857ad3d5973f80e1 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1927 | T021 | unit | unit | normal | 2026-11-14T12:47:42+00:00 | 53e4348+T041 | edef2d7a857ad3d5973f80e1 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1928 | T022 | build | build | normal | 2026-11-14T12:47:43+00:00 | 53e4348+T041 | 0d5fceaf6318bdfe29b1e451 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1929 | T022 | macos | ui | normal | 2026-11-14T12:47:43+00:00 | 53e4348+T041 | 0d5fceaf6318bdfe29b1e451 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1930 | T022 | unit | unit | normal | 2026-11-14T12:47:43+00:00 | 53e4348+T041 | 0d5fceaf6318bdfe29b1e451 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1931 | T024 | build | build | normal | 2026-11-14T12:47:44+00:00 | 53e4348+T041 | f25470b771b528ba53840d60 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1932 | T024 | macos | ui | normal | 2026-11-14T12:47:44+00:00 | 53e4348+T041 | f25470b771b528ba53840d60 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1933 | T024 | unit | unit | normal | 2026-11-14T12:47:44+00:00 | 53e4348+T041 | f25470b771b528ba53840d60 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1934 | T027 | build | build | normal | 2026-11-14T12:47:44+00:00 | 53e4348+T041 | f505248db5eda2ca1b20dfac | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1935 | T027 | macos | ui | normal | 2026-11-14T12:47:45+00:00 | 53e4348+T041 | f505248db5eda2ca1b20dfac | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1936 | T027 | unit | unit | normal | 2026-11-14T12:47:45+00:00 | 53e4348+T041 | f505248db5eda2ca1b20dfac | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1937 | T030 | build | build | normal | 2026-11-14T12:47:45+00:00 | 53e4348+T041 | b49699176c5cd118eb9fb5b4 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1938 | T030 | macos | ui | normal | 2026-11-14T12:47:46+00:00 | 53e4348+T041 | b49699176c5cd118eb9fb5b4 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1939 | T030 | unit | unit | normal | 2026-11-14T12:47:46+00:00 | 53e4348+T041 | b49699176c5cd118eb9fb5b4 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1940 | T031 | build | build | normal | 2026-11-14T12:47:46+00:00 | 53e4348+T041 | a3024c42994c9264965ec408 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1941 | T031 | macos | ui | normal | 2026-11-14T12:47:47+00:00 | 53e4348+T041 | a3024c42994c9264965ec408 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1942 | T031 | unit | unit | normal | 2026-11-14T12:47:47+00:00 | 53e4348+T041 | a3024c42994c9264965ec408 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1943 | T032 | build | build | normal | 2026-11-14T12:47:47+00:00 | 53e4348+T041 | f5166439e3b9482ed2520298 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1944 | T032 | macos | ui | normal | 2026-11-14T12:47:48+00:00 | 53e4348+T041 | f5166439e3b9482ed2520298 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1945 | T032 | unit | unit | normal | 2026-11-14T12:47:48+00:00 | 53e4348+T041 | f5166439e3b9482ed2520298 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1946 | T034 | build | build | normal | 2026-11-14T12:47:49+00:00 | 53e4348+T041 | 0324b395a133a81cb6ac88c8 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1947 | T034 | macos | ui | normal | 2026-11-14T12:47:50+00:00 | 53e4348+T041 | 0324b395a133a81cb6ac88c8 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1948 | T034 | unit | unit | normal | 2026-11-14T12:47:50+00:00 | 53e4348+T041 | 0324b395a133a81cb6ac88c8 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1949 | T035 | build | build | normal | 2026-11-14T12:47:51+00:00 | 53e4348+T041 | bbfafc401c6113077d6e05c9 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1950 | T035 | macos | ui | normal | 2026-11-14T12:47:51+00:00 | 53e4348+T041 | bbfafc401c6113077d6e05c9 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1951 | T035 | unit | unit | normal | 2026-11-14T12:47:51+00:00 | 53e4348+T041 | bbfafc401c6113077d6e05c9 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1952 | T038 | build | build | normal | 2026-11-14T12:47:52+00:00 | 53e4348+T041 | 0ab65e8ba91c8ebd93edfb7e | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1953 | T038 | macos | ui | normal | 2026-11-14T12:47:52+00:00 | 53e4348+T041 | 0ab65e8ba91c8ebd93edfb7e | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1954 | T038 | unit | unit | normal | 2026-11-14T12:47:52+00:00 | 53e4348+T041 | 0ab65e8ba91c8ebd93edfb7e | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1955 | T039 | build | build | normal | 2026-11-14T12:47:53+00:00 | 53e4348+T041 | bb18775ca97f94ba716ce646 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1956 | T039 | macos | ui | normal | 2026-11-14T12:47:53+00:00 | 53e4348+T041 | bb18775ca97f94ba716ce646 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1957 | T039 | unit | unit | normal | 2026-11-14T12:47:53+00:00 | 53e4348+T041 | bb18775ca97f94ba716ce646 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1958 | T040 | build | build | normal | 2026-11-14T12:47:54+00:00 | 53e4348+T041 | 0d0ca742863c73ed7f03409c | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1959 | T040 | macos | ui | normal | 2026-11-14T12:47:54+00:00 | 53e4348+T041 | 0d0ca742863c73ed7f03409c | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1960 | T040 | unit | unit | normal | 2026-11-14T12:47:54+00:00 | 53e4348+T041 | 0d0ca742863c73ed7f03409c | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1961 | T041 | build | build | normal | 2026-11-14T12:48:24+00:00 | 53e4348+T041 | 976bc493dc79aadd54ff19a3 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1962 | T041 | unit | unit | normal | 2026-11-14T12:48:24+00:00 | 53e4348+T041 | 976bc493dc79aadd54ff19a3 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1963 | T041 | macos | ui | normal | 2026-11-14T12:48:24+00:00 | 53e4348+T041 | 976bc493dc79aadd54ff19a3 | docs/apple-pay-safari-2026-11-14.md | PASS |
 
 ## Reviews
 
@@ -3001,6 +3068,29 @@
 | RV1048 | UC30 | self | PASS | 987834b0def4086d080aa58b | docs/release-1.18.2.md |
 | RV1049 | UC31 | self | PASS | d739809d6ce095b56a01a6d7 | docs/release-1.18.2.md |
 | RV1050 | UC32 | self | PASS | 01119f32ed3d8521b70dbe2f | docs/release-1.18.2.md |
+| RV1051 | PLAN | independent | PASS | 86f436049d233125364e1ba5 | docs/apple-pay-safari-2026-11-14.md |
+| RV1052 | UC02 | self | PASS | 23f88f6ab5ee28b567a3803c | docs/apple-pay-safari-2026-11-14.md |
+| RV1053 | UC03 | self | PASS | 424002e94a8c59f121a2b6e4 | docs/apple-pay-safari-2026-11-14.md |
+| RV1054 | UC04 | self | PASS | ba53f3e587ca46299ef01b54 | docs/apple-pay-safari-2026-11-14.md |
+| RV1055 | UC05 | self | PASS | c794815744ac251ba5815a23 | docs/apple-pay-safari-2026-11-14.md |
+| RV1056 | UC06 | self | PASS | cee1ad5bc00f1a730237ca01 | docs/apple-pay-safari-2026-11-14.md |
+| RV1057 | UC07 | self | PASS | 073973397f232551344ffb3d | docs/apple-pay-safari-2026-11-14.md |
+| RV1058 | UC09 | self | PASS | fa28a85003163dee76627ff5 | docs/apple-pay-safari-2026-11-14.md |
+| RV1059 | UC13 | self | PASS | 035f72338cdfc6095870c1c3 | docs/apple-pay-safari-2026-11-14.md |
+| RV1060 | UC15 | self | PASS | 254726f8de0ead79044d3115 | docs/apple-pay-safari-2026-11-14.md |
+| RV1061 | UC16 | self | PASS | 957609c053eb2617809c747e | docs/apple-pay-safari-2026-11-14.md |
+| RV1062 | UC17 | self | PASS | d3cf743422b3b6e6601c22a2 | docs/apple-pay-safari-2026-11-14.md |
+| RV1063 | UC19 | self | PASS | e60a6362af77e866473d559c | docs/apple-pay-safari-2026-11-14.md |
+| RV1064 | UC13 | self | PASS | 035f72338cdfc6095870c1c3 | docs/apple-pay-safari-2026-11-14.md |
+| RV1065 | UC24 | self | PASS | 93abd5b9d968e6409375d01e | docs/apple-pay-safari-2026-11-14.md |
+| RV1066 | UC25 | self | PASS | 6ef15ad98972cc3969aa1954 | docs/apple-pay-safari-2026-11-14.md |
+| RV1067 | UC26 | self | PASS | 970bd8834e21c8ebcb9fc4b2 | docs/apple-pay-safari-2026-11-14.md |
+| RV1068 | UC28 | self | PASS | d6791dfe24207f00b777cd86 | docs/apple-pay-safari-2026-11-14.md |
+| RV1069 | UC29 | self | PASS | 1825c10f38997c7a905970f6 | docs/apple-pay-safari-2026-11-14.md |
+| RV1070 | UC32 | self | PASS | a65e92b7762f3d923904de56 | docs/apple-pay-safari-2026-11-14.md |
+| RV1071 | UC33 | self | PASS | 18ee3f00b879be3cbae1b0c7 | docs/apple-pay-safari-2026-11-14.md |
+| RV1072 | UC34 | self | PASS | 7098bd86e52ad0bf74959d8f | docs/apple-pay-safari-2026-11-14.md |
+| RV1073 | UC35 | independent | PASS | 3fa81e9c80595c29645be304 | docs/apple-pay-safari-2026-11-14.md |
 
 ## Releases
 

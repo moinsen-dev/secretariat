@@ -769,7 +769,6 @@ struct LicenseView: View {
     @State private var text = ""
     @State private var error: String?
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.openURL) private var openURL
 
     private var licensed: Bool { if case .licensed = model.license { true } else { false } }
 
@@ -804,7 +803,7 @@ struct LicenseView: View {
                         .foregroundStyle(.secondary)
                 }
                 Section {
-                    Button("Buy License (39 €)") { openURL(Licensing.buyURL) }
+                    Button("Buy License (39 €)") { Checkout.open(Licensing.buyURL) }
                 }
                 if let error { Section { Label(error, systemImage: "exclamationmark.triangle.fill").foregroundStyle(.red) } }
             }
