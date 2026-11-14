@@ -1,5 +1,12 @@
 # Aktueller Arbeitsstand
 
+## Übergabe
+
+- Release 1.18.1 (2026-11-14): Nachsichtige Suche (T039, R043/UC33) – Einträge auch über gebundene Variablen- und Projektnamen, Trennzeichen egal, eingefügte Sätze finden ihren Eintrag. Notarisiert, lokal installiert (Mesh verteilt), Website und Feed live geprüft. Berichte `docs/search-2026-11-14.md`, `docs/release-1.18.1.md`.
+- Tracker neu gebunden (T001–T039, Selbstprüfung), `check`: STRUCTURE_OK.
+- Nächster Arbeitsschritt: Nacharbeiten aus BACKLOG („Öffnen und anmelden: Nacharbeiten“) oder in der Inventur Logins als „Close account“ markieren.
+- Regel: In docs/, PLAN, TRACKER, STATE und Tests keine Adressen, Benutzernamen oder Site-Namen aus Ulis Tresor (öffentliches Repo).
+
 ## State
 
 - schema: app-workflow/1
