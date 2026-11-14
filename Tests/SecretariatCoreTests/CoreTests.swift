@@ -78,6 +78,30 @@ import Testing
     #expect(try f.vault.list().isEmpty)
 }
 
+@Test func deletingWithUnbindRemovesTheBindingsFirst() throws {
+    let f = try AgentFixture(); defer { f.cleanup() }
+    let other = ItemMeta(path: "moinsen/other", kind: "api-key", fields: [ItemField(name: "secret", kind: .secret)])
+    try f.vault.save(other, secrets: ["secret": "other-value"])
+    var profile = try f.vault.configuration.load().profiles[0]
+    profile.bindings.append(Binding(variable: "OTHER", itemID: other.id, field: "secret"))
+    try f.vault.saveProfile(profile)
+    try f.vault.saveTarget(Target(name: "box", kind: .envFile, host: "h", path: "/p",
+                                  bindings: [Binding(variable: "TOKEN", itemID: f.item.id, field: "secret")], pushed: ["TOKEN": "x"]))
+    let config = try f.vault.configuration.load()
+    let uses = config.uses(of: f.item.id)
+    #expect(uses.count == 2 && uses[0].hasPrefix("\(profile.name) (") && uses[1] == "target box (TOKEN)")
+    #expect(throws: SecretariatError.self) { try f.vault.delete(id: f.item.id) }
+
+    try f.vault.delete(id: f.item.id, unbinding: true)
+    let after = try f.vault.configuration.load()
+    #expect(after.uses(of: f.item.id).isEmpty)
+    #expect(after.targets[0].pushed.isEmpty)
+    #expect(after.profiles[0].bindings.map(\.variable) == ["OTHER"], "other items keep their bindings")
+    #expect(try f.vault.list().map(\.path) == ["moinsen/other"])
+    let history = History.parse(try Data(contentsOf: f.vault.configuration.paths.auditLog)).map(\.summary)
+    #expect(history.contains { $0.hasPrefix("Unbound ") && $0.contains("target box (TOKEN)") })
+}
+
 @Test func launchPutsSecretsInTheEnvironmentAndFilesIntoTemporaryPaths() throws {
     let f = try AgentFixture(); defer { f.cleanup() }
     try f.vault.setValue(FieldReference(path: "moinsen/asc", field: "private_key"), value: Data("-----BEGIN KEY-----".utf8).base64EncodedString(),

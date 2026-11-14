@@ -97,6 +97,15 @@ public struct ConfigurationStore {
 }
 
 extension Configuration {
+    /// Projects and targets that bind an item, with the variables: "web-app (API_KEY)", "target worker (TOKEN, SECRET)".
+    public func uses(of itemID: UUID) -> [String] {
+        func describe(_ name: String, _ bindings: [Binding]) -> String? {
+            let variables = bindings.filter { $0.itemID == itemID }.map(\.variable)
+            return variables.isEmpty ? nil : "\(name) (\(variables.joined(separator: ", ")))"
+        }
+        return profiles.compactMap { describe($0.name, $0.bindings) } + targets.compactMap { describe("target \($0.name)", $0.bindings) }
+    }
+
     static func validateVersion(_ version: Int) throws {
         var stale = Configuration(); stale.version = version
         try stale.validate()
@@ -321,13 +330,24 @@ public struct Vault {
         return meta
     }
 
-    /// Delete an item; refused while a profile or target of this Mac uses it.
-    public func delete(id: UUID) throws {
-        let config = try configuration.load()
-        let users = config.profiles.filter { $0.bindings.contains { $0.itemID == id } }.map(\.name)
-            + config.targets.filter { $0.bindings.contains { $0.itemID == id } }.map { "target \($0.name)" }
-        guard users.isEmpty else { throw SecretariatError("This item is still in use: \(users.joined(separator: ", ")). Please remove the bindings first.") }
+    /// Delete an item; refused while a profile or target of this Mac uses it, unless `unbinding`:
+    /// then its bindings there are removed first (one configuration change, written to the history).
+    public func delete(id: UUID, unbinding: Bool = false) throws {
         let path = (try? item(id: id).path) ?? id.uuidString
+        if unbinding {
+            var removed: [String] = []
+            try configuration.update(expectedRevision: expectedRevision) { config in
+                removed = config.uses(of: id)
+                for i in config.profiles.indices { config.profiles[i].bindings.removeAll { $0.itemID == id } }
+                for i in config.targets.indices {
+                    for binding in config.targets[i].bindings where binding.itemID == id { config.targets[i].pushed.removeValue(forKey: binding.variable) }
+                    config.targets[i].bindings.removeAll { $0.itemID == id }
+                }
+            }
+            if !removed.isEmpty { audit.record("item.unbind", ["item": path, "from": removed.joined(separator: ", ")]) }
+        }
+        let users = try configuration.load().uses(of: id)
+        guard users.isEmpty else { throw SecretariatError("This item is still in use: \(users.joined(separator: ", ")). Please remove the bindings first.") }
         try items.delete(id: id)
         audit.record("item.delete", ["item": path])
         exportRegistry()

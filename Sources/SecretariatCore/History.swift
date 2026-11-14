@@ -84,6 +84,7 @@ public struct HistoryEntry: Identifiable, Equatable, Sendable {
         case "read": return "\((details["purpose"] ?? "show").prefix(1).uppercased() + (details["purpose"] ?? "show").dropFirst()) \(details["field"] ?? "?")"
         case "item.save": return "Saved \(details["item"] ?? "?")" + (details["values"] == "set" ? " (values changed)" : "")
         case "item.delete": return "Deleted \(details["item"] ?? "?")"
+        case "item.unbind": return "Unbound \(details["item"] ?? "?") from \(details["from"] ?? "?")"
         case "field.move": return "Moved \(details["from"] ?? "?") to \(details["to"] ?? "?")"
         case "import": return "Imported \(count("fields", "field")) from \(URL(fileURLWithPath: details["file"] ?? "?").lastPathComponent)"
         case "inject": return "Filled \(URL(fileURLWithPath: details["out"] ?? "?").lastPathComponent) · \(count("fields", "field"))"

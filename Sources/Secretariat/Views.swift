@@ -52,10 +52,15 @@ struct MainView: View {
         } message: { Text(model.errorMessage ?? "") }
         .alert("Delete item?", isPresented: flag(model.pendingDelete != nil) { model.pendingDelete = nil }) {
             Button("Cancel", role: .cancel) { model.pendingDelete = nil }
-            Button("Delete", role: .destructive) {
-                if let item = model.pendingDelete { model.deleteItem(item) }; model.pendingDelete = nil
+            // An item that projects or targets still use: offer to remove those bindings in the same step.
+            Button(pendingDeleteUses.isEmpty ? "Delete" : "Unbind and Delete", role: .destructive) {
+                if let item = model.pendingDelete { model.deleteItem(item, unbinding: !pendingDeleteUses.isEmpty) }; model.pendingDelete = nil
             }
-        } message: { Text("‘\(model.pendingDelete?.path ?? "")’ will be removed from all your Macs. Items that are in use stay protected.") }
+        } message: {
+            Text(pendingDeleteUses.isEmpty
+                 ? "‘\(model.pendingDelete?.path ?? "")’ will be removed from all your Macs."
+                 : "‘\(model.pendingDelete?.path ?? "")’ is still used by \(pendingDeleteUses.joined(separator: ", ")). These bindings will be removed first, then the item is deleted from all your Macs. Programs started with those projects no longer get this value.")
+        }
         .alert("Delete screenshot?", isPresented: flag(model.pendingScreenshotDelete != nil) { model.pendingScreenshotDelete = nil }) {
             Button("Cancel", role: .cancel) { model.pendingScreenshotDelete = nil }
             Button("Delete", role: .destructive) {
@@ -85,6 +90,8 @@ struct MainView: View {
                  : "‘\(deletingTemplate?.title ?? "")’ will be removed from all your Macs. Existing items keep their fields and show plain field names.")
         }
     }
+
+    private var pendingDeleteUses: [String] { model.pendingDelete.map { model.configuration.uses(of: $0.id) } ?? [] }
 
     private func flag(_ value: Bool, clear: @escaping () -> Void) -> SwiftUI.Binding<Bool> {
         SwiftUI.Binding(get: { value }, set: { if !$0 { clear() } })

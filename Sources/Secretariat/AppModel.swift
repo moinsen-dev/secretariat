@@ -347,8 +347,9 @@ final class AppModel {
     var pendingDelete: ItemMeta?
     func item(_ id: UUID) -> ItemMeta? { items.first { $0.id == id } }
     func edit(_ item: ItemMeta) { itemEditor = ItemDraft(item: item, template: template(item.kind), revision: configuration.revision) }
-    func deleteItem(_ item: ItemMeta) {
-        if perform({ try vault.delete(id: item.id) }) { selectedItem = nil }
+    /// `unbinding`: the user confirmed removing the item's bindings in projects and targets first.
+    func deleteItem(_ item: ItemMeta, unbinding: Bool = false) {
+        if perform({ try vault.delete(id: item.id, unbinding: unbinding) }) { selectedItem = nil }
     }
     /// A stored value without a history line; the caller records the use once it has really happened (Fill Login).
     func storedValue(_ item: ItemMeta, _ field: ItemField) -> String? {
