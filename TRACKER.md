@@ -5,43 +5,43 @@
 | ID | Status | Evidence | Reason |
 |---|---|---|---|
 | T001 | ERLEDIGT | E1520,E1525 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T002 | ERLEDIGT | E1715,E1716,E1717 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T003 | ERLEDIGT | E1718,E1719 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T004 | ERLEDIGT | E1720 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T005 | ERLEDIGT | E1721 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T006 | ERLEDIGT | E1722,E1723 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T007 | ERLEDIGT | E1724,E1725 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T008 | ERLEDIGT | E1726,E1727 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T009 | ERLEDIGT | E1728 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T010 | ERLEDIGT | E1729,E1730,E1731,E1732 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T011 | ERLEDIGT | E1733,E1734 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T013 | ERLEDIGT | E1735,E1736 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T014 | ERLEDIGT | E1737,E1738,E1739 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T015 | ERLEDIGT | E1740,E1741 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T012 | ERLEDIGT | E1742,E1743 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T016 | ERLEDIGT | E1744,E1745,E1746 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T017 | ERLEDIGT | E1747,E1748,E1749 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T018 | ERLEDIGT | E1750,E1751,E1752,E1753 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T019 | ERLEDIGT | E1754,E1755,E1756 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T020 | ERLEDIGT | E1757,E1758,E1759 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T021 | ERLEDIGT | E1760,E1761,E1762 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T022 | ERLEDIGT | E1763,E1764,E1765 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T023 | ERLEDIGT | E1766,E1767,E1768 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T024 | ERLEDIGT | E1769,E1770,E1771 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T025 | ERLEDIGT | E1772,E1773,E1774 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
+| T002 | ERLEDIGT | E1808,E1809,E1810 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T003 | ERLEDIGT | E1811,E1812 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T004 | ERLEDIGT | E1813 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T005 | ERLEDIGT | E1814 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T006 | ERLEDIGT | E1815,E1816 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T007 | ERLEDIGT | E1817,E1818 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T008 | ERLEDIGT | E1819,E1820 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T009 | ERLEDIGT | E1821 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T010 | ERLEDIGT | E1822,E1823,E1824,E1825 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T011 | ERLEDIGT | E1826,E1827 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T013 | ERLEDIGT | E1828,E1829 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T014 | ERLEDIGT | E1830,E1831,E1832 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T015 | ERLEDIGT | E1833,E1834 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T012 | ERLEDIGT | E1835,E1836 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T016 | ERLEDIGT | E1837,E1838,E1839 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T017 | ERLEDIGT | E1840,E1841,E1842 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T018 | ERLEDIGT | E1843,E1844,E1845,E1846 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T019 | ERLEDIGT | E1847,E1848,E1849 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T020 | ERLEDIGT | E1850,E1851,E1852 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T021 | ERLEDIGT | E1853,E1854,E1855 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T022 | ERLEDIGT | E1856,E1857,E1858 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T023 | ERLEDIGT | E1859,E1860,E1861 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T024 | ERLEDIGT | E1862,E1863,E1864 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T025 | ERLEDIGT | E1865,E1866,E1867 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
 | T026 | IN_ARBEIT | E1586,E1587,E1588 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T027 | ERLEDIGT | E1775,E1776,E1777 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T028 | ERLEDIGT | E1682,E1683,E1684 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T027 | ERLEDIGT | E1868,E1869,E1870 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T028 | ERLEDIGT | E1871,E1872,E1873 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
 | T029 | ERLEDIGT | E1685,E1686,E1687 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
-| T030 | ERLEDIGT | E1778,E1779,E1780 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T031 | ERLEDIGT | E1781,E1782,E1783 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T032 | ERLEDIGT | E1784,E1785,E1786 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
+| T030 | ERLEDIGT | E1874,E1875,E1876 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T031 | ERLEDIGT | E1877,E1878,E1879 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T032 | ERLEDIGT | E1880,E1881,E1882 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
 | T033 | BLOCKIERT | E1607,E1608,E1609 | pkg signiert, notarisiert, live (2c76bdaf); Abnahme PASS; macos-Nachweis der verwalteten Mitglieder nur per Fixture, ein echter erzwungener Wert braucht ein installiertes Profil (Ulis Ja) |
-| T034 | ERLEDIGT | E1787,E1788,E1789 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T035 | ERLEDIGT | E1790,E1791,E1792 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T036 | ERLEDIGT | E1793,E1794,E1795 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T037 | ERLEDIGT | E1796,E1797,E1798 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T038 | ERLEDIGT | E1799,E1800,E1801 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
+| T034 | ERLEDIGT | E1883,E1884,E1885 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T035 | ERLEDIGT | E1886,E1887,E1888 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T036 | ERLEDIGT | E1889,E1890,E1891 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T037 | ERLEDIGT | E1892,E1893,E1894 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T038 | ERLEDIGT | E1895,E1896,E1897 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
 | T039 | ERLEDIGT | E1805,E1806,E1807 | siehe docs/search-2026-11-14.md; nach Löschdialog neu gebunden |
 | T040 | ERLEDIGT | E1802,E1803,E1804 | siehe docs/unbind-delete-2026-11-14.md |
 
@@ -1856,6 +1856,96 @@
 | E1805 | T039 | build | build | normal | 2026-11-14T08:30:44+00:00 | 6435b47 | 3e03a44aa9cddbddbf629d91 | docs/search-2026-11-14.md | PASS |
 | E1806 | T039 | unit | unit | normal | 2026-11-14T08:30:44+00:00 | 6435b47 | 3e03a44aa9cddbddbf629d91 | docs/search-2026-11-14.md | PASS |
 | E1807 | T039 | macos | ui | normal | 2026-11-14T08:30:45+00:00 | 6435b47 | 3e03a44aa9cddbddbf629d91 | docs/search-2026-11-14.md | PASS |
+| E1808 | T002 | build | build | normal | 2026-11-14T10:13:01+00:00 | 4f3bd3a | 544cc8b15c2036cdef130d56 | docs/release-1.18.2.md | PASS |
+| E1809 | T002 | macos | ui | normal | 2026-11-14T10:13:02+00:00 | 4f3bd3a | 544cc8b15c2036cdef130d56 | docs/release-1.18.2.md | PASS |
+| E1810 | T002 | unit | unit | normal | 2026-11-14T10:13:02+00:00 | 4f3bd3a | 544cc8b15c2036cdef130d56 | docs/release-1.18.2.md | PASS |
+| E1811 | T003 | macos | ui | normal | 2026-11-14T10:13:02+00:00 | 4f3bd3a | 10ae4c72161f0a37d6464683 | docs/release-1.18.2.md | PASS |
+| E1812 | T003 | unit | unit | normal | 2026-11-14T10:13:03+00:00 | 4f3bd3a | 10ae4c72161f0a37d6464683 | docs/release-1.18.2.md | PASS |
+| E1813 | T004 | unit | unit | normal | 2026-11-14T10:13:03+00:00 | 4f3bd3a | 9a84bc9b165722b7c2c21b97 | docs/release-1.18.2.md | PASS |
+| E1814 | T005 | macos | ui | normal | 2026-11-14T10:13:03+00:00 | 4f3bd3a | 904085e1eed1f7041a3e850a | docs/release-1.18.2.md | PASS |
+| E1815 | T006 | inspection | inspection | normal | 2026-11-14T10:13:04+00:00 | 4f3bd3a | 1c0db0a5c69ddb7cb87b7a5e | docs/release-1.18.2.md | PASS |
+| E1816 | T006 | macos | ui | normal | 2026-11-14T10:13:04+00:00 | 4f3bd3a | 1c0db0a5c69ddb7cb87b7a5e | docs/release-1.18.2.md | PASS |
+| E1817 | T007 | build | build | normal | 2026-11-14T10:13:04+00:00 | 4f3bd3a | af006c1b5bbabb1baaf6d106 | docs/release-1.18.2.md | PASS |
+| E1818 | T007 | unit | unit | normal | 2026-11-14T10:13:05+00:00 | 4f3bd3a | af006c1b5bbabb1baaf6d106 | docs/release-1.18.2.md | PASS |
+| E1819 | T008 | macos | ui | normal | 2026-11-14T10:13:05+00:00 | 4f3bd3a | fed5f8fad1e8a5034c0d12f6 | docs/release-1.18.2.md | PASS |
+| E1820 | T008 | unit | unit | normal | 2026-11-14T10:13:06+00:00 | 4f3bd3a | fed5f8fad1e8a5034c0d12f6 | docs/release-1.18.2.md | PASS |
+| E1821 | T009 | inspection | inspection | normal | 2026-11-14T10:13:06+00:00 | 4f3bd3a | 34df4b1fed96a0f2be84e0aa | docs/release-1.18.2.md | PASS |
+| E1822 | T010 | build | build | normal | 2026-11-14T10:13:07+00:00 | 4f3bd3a | 89a03a0a300c453a100bac58 | docs/release-1.18.2.md | PASS |
+| E1823 | T010 | inspection | inspection | normal | 2026-11-14T10:13:07+00:00 | 4f3bd3a | 89a03a0a300c453a100bac58 | docs/release-1.18.2.md | PASS |
+| E1824 | T010 | macos | ui | normal | 2026-11-14T10:13:07+00:00 | 4f3bd3a | 89a03a0a300c453a100bac58 | docs/release-1.18.2.md | PASS |
+| E1825 | T010 | unit | unit | normal | 2026-11-14T10:13:08+00:00 | 4f3bd3a | 89a03a0a300c453a100bac58 | docs/release-1.18.2.md | PASS |
+| E1826 | T011 | build | build | normal | 2026-11-14T10:13:08+00:00 | 4f3bd3a | faa08e1688fde39529b58cd2 | docs/release-1.18.2.md | PASS |
+| E1827 | T011 | unit | unit | normal | 2026-11-14T10:13:09+00:00 | 4f3bd3a | faa08e1688fde39529b58cd2 | docs/release-1.18.2.md | PASS |
+| E1828 | T013 | build | build | normal | 2026-11-14T10:13:09+00:00 | 4f3bd3a | c3154e5eea3009673b601462 | docs/release-1.18.2.md | PASS |
+| E1829 | T013 | inspection | inspection | normal | 2026-11-14T10:13:09+00:00 | 4f3bd3a | c3154e5eea3009673b601462 | docs/release-1.18.2.md | PASS |
+| E1830 | T014 | build | build | normal | 2026-11-14T10:13:10+00:00 | 4f3bd3a | f61f58e9530db37e379b2611 | docs/release-1.18.2.md | PASS |
+| E1831 | T014 | macos | ui | normal | 2026-11-14T10:13:10+00:00 | 4f3bd3a | f61f58e9530db37e379b2611 | docs/release-1.18.2.md | PASS |
+| E1832 | T014 | unit | unit | normal | 2026-11-14T10:13:10+00:00 | 4f3bd3a | f61f58e9530db37e379b2611 | docs/release-1.18.2.md | PASS |
+| E1833 | T015 | inspection | inspection | normal | 2026-11-14T10:13:10+00:00 | 4f3bd3a | 6e8343f1f71373435d3daa8b | docs/release-1.18.2.md | PASS |
+| E1834 | T015 | macos | ui | normal | 2026-11-14T10:13:11+00:00 | 4f3bd3a | 6e8343f1f71373435d3daa8b | docs/release-1.18.2.md | PASS |
+| E1835 | T012 | inspection | inspection | normal | 2026-11-14T10:13:11+00:00 | 4f3bd3a | 5f39c34df3f68f9b68bb96cd | docs/release-1.18.2.md | PASS |
+| E1836 | T012 | macos | ui | normal | 2026-11-14T10:13:11+00:00 | 4f3bd3a | 5f39c34df3f68f9b68bb96cd | docs/release-1.18.2.md | PASS |
+| E1837 | T016 | build | build | normal | 2026-11-14T10:13:11+00:00 | 4f3bd3a | 51d68daf5fa900ff70c323a8 | docs/release-1.18.2.md | PASS |
+| E1838 | T016 | macos | ui | normal | 2026-11-14T10:13:12+00:00 | 4f3bd3a | 51d68daf5fa900ff70c323a8 | docs/release-1.18.2.md | PASS |
+| E1839 | T016 | unit | unit | normal | 2026-11-14T10:13:12+00:00 | 4f3bd3a | 51d68daf5fa900ff70c323a8 | docs/release-1.18.2.md | PASS |
+| E1840 | T017 | build | build | normal | 2026-11-14T10:13:12+00:00 | 4f3bd3a | b706d97afb981165ecfaa497 | docs/release-1.18.2.md | PASS |
+| E1841 | T017 | macos | ui | normal | 2026-11-14T10:13:12+00:00 | 4f3bd3a | b706d97afb981165ecfaa497 | docs/release-1.18.2.md | PASS |
+| E1842 | T017 | unit | unit | normal | 2026-11-14T10:13:13+00:00 | 4f3bd3a | b706d97afb981165ecfaa497 | docs/release-1.18.2.md | PASS |
+| E1843 | T018 | build | build | normal | 2026-11-14T10:13:13+00:00 | 4f3bd3a | 5de661b200d5889cba681abe | docs/release-1.18.2.md | PASS |
+| E1844 | T018 | inspection | inspection | normal | 2026-11-14T10:13:13+00:00 | 4f3bd3a | 5de661b200d5889cba681abe | docs/release-1.18.2.md | PASS |
+| E1845 | T018 | macos | ui | normal | 2026-11-14T10:13:13+00:00 | 4f3bd3a | 5de661b200d5889cba681abe | docs/release-1.18.2.md | PASS |
+| E1846 | T018 | unit | unit | normal | 2026-11-14T10:13:14+00:00 | 4f3bd3a | 5de661b200d5889cba681abe | docs/release-1.18.2.md | PASS |
+| E1847 | T019 | build | build | normal | 2026-11-14T10:13:14+00:00 | 4f3bd3a | ff05579e5c53d482be8c9834 | docs/release-1.18.2.md | PASS |
+| E1848 | T019 | macos | ui | normal | 2026-11-14T10:13:14+00:00 | 4f3bd3a | ff05579e5c53d482be8c9834 | docs/release-1.18.2.md | PASS |
+| E1849 | T019 | unit | unit | normal | 2026-11-14T10:13:14+00:00 | 4f3bd3a | ff05579e5c53d482be8c9834 | docs/release-1.18.2.md | PASS |
+| E1850 | T020 | build | build | normal | 2026-11-14T10:13:15+00:00 | 4f3bd3a | c45f3a91f573590296b4b11f | docs/release-1.18.2.md | PASS |
+| E1851 | T020 | macos | ui | normal | 2026-11-14T10:13:15+00:00 | 4f3bd3a | c45f3a91f573590296b4b11f | docs/release-1.18.2.md | PASS |
+| E1852 | T020 | unit | unit | normal | 2026-11-14T10:13:15+00:00 | 4f3bd3a | c45f3a91f573590296b4b11f | docs/release-1.18.2.md | PASS |
+| E1853 | T021 | build | build | normal | 2026-11-14T10:13:16+00:00 | 4f3bd3a | ed6f1a4ee71ab0ea26802fb4 | docs/release-1.18.2.md | PASS |
+| E1854 | T021 | macos | ui | normal | 2026-11-14T10:13:16+00:00 | 4f3bd3a | ed6f1a4ee71ab0ea26802fb4 | docs/release-1.18.2.md | PASS |
+| E1855 | T021 | unit | unit | normal | 2026-11-14T10:13:16+00:00 | 4f3bd3a | ed6f1a4ee71ab0ea26802fb4 | docs/release-1.18.2.md | PASS |
+| E1856 | T022 | build | build | normal | 2026-11-14T10:13:16+00:00 | 4f3bd3a | 8b19ddcbe67a8b0b1ce31872 | docs/release-1.18.2.md | PASS |
+| E1857 | T022 | macos | ui | normal | 2026-11-14T10:13:16+00:00 | 4f3bd3a | 8b19ddcbe67a8b0b1ce31872 | docs/release-1.18.2.md | PASS |
+| E1858 | T022 | unit | unit | normal | 2026-11-14T10:13:17+00:00 | 4f3bd3a | 8b19ddcbe67a8b0b1ce31872 | docs/release-1.18.2.md | PASS |
+| E1859 | T023 | build | build | normal | 2026-11-14T10:13:17+00:00 | 4f3bd3a | 000fee402214f59a3caa4c94 | docs/release-1.18.2.md | PASS |
+| E1860 | T023 | macos | ui | normal | 2026-11-14T10:13:17+00:00 | 4f3bd3a | 000fee402214f59a3caa4c94 | docs/release-1.18.2.md | PASS |
+| E1861 | T023 | unit | unit | normal | 2026-11-14T10:13:17+00:00 | 4f3bd3a | 000fee402214f59a3caa4c94 | docs/release-1.18.2.md | PASS |
+| E1862 | T024 | build | build | normal | 2026-11-14T10:13:18+00:00 | 4f3bd3a | acf8d6ea7a0e3e4beba30fb7 | docs/release-1.18.2.md | PASS |
+| E1863 | T024 | macos | ui | normal | 2026-11-14T10:13:18+00:00 | 4f3bd3a | acf8d6ea7a0e3e4beba30fb7 | docs/release-1.18.2.md | PASS |
+| E1864 | T024 | unit | unit | normal | 2026-11-14T10:13:18+00:00 | 4f3bd3a | acf8d6ea7a0e3e4beba30fb7 | docs/release-1.18.2.md | PASS |
+| E1865 | T025 | build | build | normal | 2026-11-14T10:13:18+00:00 | 4f3bd3a | f4ff8295ff8cc040df286c8a | docs/release-1.18.2.md | PASS |
+| E1866 | T025 | macos | ui | normal | 2026-11-14T10:13:19+00:00 | 4f3bd3a | f4ff8295ff8cc040df286c8a | docs/release-1.18.2.md | PASS |
+| E1867 | T025 | unit | unit | normal | 2026-11-14T10:13:19+00:00 | 4f3bd3a | f4ff8295ff8cc040df286c8a | docs/release-1.18.2.md | PASS |
+| E1868 | T027 | build | build | normal | 2026-11-14T10:13:19+00:00 | 4f3bd3a | 4f84fc5a2378e3f63622e83d | docs/release-1.18.2.md | PASS |
+| E1869 | T027 | macos | ui | normal | 2026-11-14T10:13:19+00:00 | 4f3bd3a | 4f84fc5a2378e3f63622e83d | docs/release-1.18.2.md | PASS |
+| E1870 | T027 | unit | unit | normal | 2026-11-14T10:13:19+00:00 | 4f3bd3a | 4f84fc5a2378e3f63622e83d | docs/release-1.18.2.md | PASS |
+| E1871 | T028 | build | build | normal | 2026-11-14T10:13:20+00:00 | 4f3bd3a | c8782b2f9675e54ec726b353 | docs/release-1.18.2.md | PASS |
+| E1872 | T028 | macos | ui | normal | 2026-11-14T10:13:20+00:00 | 4f3bd3a | c8782b2f9675e54ec726b353 | docs/release-1.18.2.md | PASS |
+| E1873 | T028 | unit | unit | normal | 2026-11-14T10:13:20+00:00 | 4f3bd3a | c8782b2f9675e54ec726b353 | docs/release-1.18.2.md | PASS |
+| E1874 | T030 | build | build | normal | 2026-11-14T10:13:21+00:00 | 4f3bd3a | 44f67e846660e818d8bf8f78 | docs/release-1.18.2.md | PASS |
+| E1875 | T030 | macos | ui | normal | 2026-11-14T10:13:21+00:00 | 4f3bd3a | 44f67e846660e818d8bf8f78 | docs/release-1.18.2.md | PASS |
+| E1876 | T030 | unit | unit | normal | 2026-11-14T10:13:21+00:00 | 4f3bd3a | 44f67e846660e818d8bf8f78 | docs/release-1.18.2.md | PASS |
+| E1877 | T031 | build | build | normal | 2026-11-14T10:13:21+00:00 | 4f3bd3a | 9f01ef2b83ea74d9a28c39d8 | docs/release-1.18.2.md | PASS |
+| E1878 | T031 | macos | ui | normal | 2026-11-14T10:13:22+00:00 | 4f3bd3a | 9f01ef2b83ea74d9a28c39d8 | docs/release-1.18.2.md | PASS |
+| E1879 | T031 | unit | unit | normal | 2026-11-14T10:13:22+00:00 | 4f3bd3a | 9f01ef2b83ea74d9a28c39d8 | docs/release-1.18.2.md | PASS |
+| E1880 | T032 | build | build | normal | 2026-11-14T10:13:22+00:00 | 4f3bd3a | 23a96b5aed56d16bf998978d | docs/release-1.18.2.md | PASS |
+| E1881 | T032 | macos | ui | normal | 2026-11-14T10:13:22+00:00 | 4f3bd3a | 23a96b5aed56d16bf998978d | docs/release-1.18.2.md | PASS |
+| E1882 | T032 | unit | unit | normal | 2026-11-14T10:13:22+00:00 | 4f3bd3a | 23a96b5aed56d16bf998978d | docs/release-1.18.2.md | PASS |
+| E1883 | T034 | build | build | normal | 2026-11-14T10:13:23+00:00 | 4f3bd3a | b9426dce204690273b0a5b52 | docs/release-1.18.2.md | PASS |
+| E1884 | T034 | macos | ui | normal | 2026-11-14T10:13:23+00:00 | 4f3bd3a | b9426dce204690273b0a5b52 | docs/release-1.18.2.md | PASS |
+| E1885 | T034 | unit | unit | normal | 2026-11-14T10:13:23+00:00 | 4f3bd3a | b9426dce204690273b0a5b52 | docs/release-1.18.2.md | PASS |
+| E1886 | T035 | build | build | normal | 2026-11-14T10:13:23+00:00 | 4f3bd3a | 850e62a9c2f97b9fb2b25dbf | docs/release-1.18.2.md | PASS |
+| E1887 | T035 | macos | ui | normal | 2026-11-14T10:13:24+00:00 | 4f3bd3a | 850e62a9c2f97b9fb2b25dbf | docs/release-1.18.2.md | PASS |
+| E1888 | T035 | unit | unit | normal | 2026-11-14T10:13:24+00:00 | 4f3bd3a | 850e62a9c2f97b9fb2b25dbf | docs/release-1.18.2.md | PASS |
+| E1889 | T036 | build | build | normal | 2026-11-14T10:13:24+00:00 | 4f3bd3a | 042e33441accc2e8318907a5 | docs/release-1.18.2.md | PASS |
+| E1890 | T036 | macos | ui | normal | 2026-11-14T10:13:24+00:00 | 4f3bd3a | 042e33441accc2e8318907a5 | docs/release-1.18.2.md | PASS |
+| E1891 | T036 | unit | unit | normal | 2026-11-14T10:13:25+00:00 | 4f3bd3a | 042e33441accc2e8318907a5 | docs/release-1.18.2.md | PASS |
+| E1892 | T037 | build | build | normal | 2026-11-14T10:13:25+00:00 | 4f3bd3a | bb5deb9a96d8dd718584ba2d | docs/release-1.18.2.md | PASS |
+| E1893 | T037 | macos | ui | normal | 2026-11-14T10:13:25+00:00 | 4f3bd3a | bb5deb9a96d8dd718584ba2d | docs/release-1.18.2.md | PASS |
+| E1894 | T037 | unit | unit | normal | 2026-11-14T10:13:25+00:00 | 4f3bd3a | bb5deb9a96d8dd718584ba2d | docs/release-1.18.2.md | PASS |
+| E1895 | T038 | build | build | normal | 2026-11-14T10:13:26+00:00 | 4f3bd3a | 7ceb0eb12e9ffe024af95963 | docs/release-1.18.2.md | PASS |
+| E1896 | T038 | macos | ui | normal | 2026-11-14T10:13:26+00:00 | 4f3bd3a | 7ceb0eb12e9ffe024af95963 | docs/release-1.18.2.md | PASS |
+| E1897 | T038 | unit | unit | normal | 2026-11-14T10:13:26+00:00 | 4f3bd3a | 7ceb0eb12e9ffe024af95963 | docs/release-1.18.2.md | PASS |
 
 ## Reviews
 
@@ -2882,6 +2972,35 @@
 | RV1019 | PLAN | self | PASS | 8c8072fff8d35d36ef5e769f | docs/unbind-delete-2026-11-14.md |
 | RV1020 | UC33 | self | PASS | 6b8994d794d78084d2a750f3 | docs/search-2026-11-14.md |
 | RV1021 | UC34 | self | PASS | d27afaaa8882f4f89d5d3548 | docs/unbind-delete-2026-11-14.md |
+| RV1022 | UC02 | self | PASS | 208b19973aa0d363f4e498fa | docs/release-1.18.2.md |
+| RV1023 | UC03 | self | PASS | 678c901ffbce963f79dc136b | docs/release-1.18.2.md |
+| RV1024 | UC04 | self | PASS | d3f70be2cd6ba1a2ef46d542 | docs/release-1.18.2.md |
+| RV1025 | UC05 | self | PASS | 68828f888fdf487b387e179e | docs/release-1.18.2.md |
+| RV1026 | UC06 | self | PASS | 1194f38312b8507bb4f94fb0 | docs/release-1.18.2.md |
+| RV1027 | UC07 | self | PASS | 18e5fcf42dd027a83bbb2c91 | docs/release-1.18.2.md |
+| RV1028 | UC08 | self | PASS | 66672ac84c20f8706c62e130 | docs/release-1.18.2.md |
+| RV1029 | UC09 | self | PASS | b7dd4c117d6b96d5a3553a68 | docs/release-1.18.2.md |
+| RV1030 | UC10 | self | PASS | 61c818a35670bab526c941a4 | docs/release-1.18.2.md |
+| RV1031 | UC11 | self | PASS | d554eba5d461e52e9ddb4b64 | docs/release-1.18.2.md |
+| RV1032 | UC12 | self | PASS | 3017addeed015fdb7de9f305 | docs/release-1.18.2.md |
+| RV1033 | UC13 | self | PASS | e7e333b6676d85a6e2d5d31c | docs/release-1.18.2.md |
+| RV1034 | UC14 | self | PASS | 6ab787cacb757053077daf3e | docs/release-1.18.2.md |
+| RV1035 | UC15 | self | PASS | f0a8bd143b7757f33c4f429c | docs/release-1.18.2.md |
+| RV1036 | UC16 | self | PASS | 19632235afbce51bb3b36e55 | docs/release-1.18.2.md |
+| RV1037 | UC17 | self | PASS | 0220055f1fad6b636f0240fc | docs/release-1.18.2.md |
+| RV1038 | UC18 | self | PASS | 38fcf69c422623d089b88335 | docs/release-1.18.2.md |
+| RV1039 | UC19 | self | PASS | 6682e631cbe3994fd61a5f4b | docs/release-1.18.2.md |
+| RV1040 | UC20 | self | PASS | 3743431da5a9def7ccfef05c | docs/release-1.18.2.md |
+| RV1041 | UC22 | self | PASS | 3a91fdc209061a2d778c3a03 | docs/release-1.18.2.md |
+| RV1042 | UC24 | self | PASS | 0db061b5cc35bb4b04b114a0 | docs/release-1.18.2.md |
+| RV1043 | UC25 | self | PASS | 0a56a9f701e015cbf9d3137b | docs/release-1.18.2.md |
+| RV1044 | UC26 | self | PASS | 5e3083a41718ea519f41e42a | docs/release-1.18.2.md |
+| RV1045 | UC27 | self | PASS | 393c6bf150bea8f2b3656515 | docs/release-1.18.2.md |
+| RV1046 | UC28 | self | PASS | 4c51a97afeafe4e631dd5ced | docs/release-1.18.2.md |
+| RV1047 | UC29 | self | PASS | ea088f02983a0805f746461d | docs/release-1.18.2.md |
+| RV1048 | UC30 | self | PASS | 987834b0def4086d080aa58b | docs/release-1.18.2.md |
+| RV1049 | UC31 | self | PASS | d739809d6ce095b56a01a6d7 | docs/release-1.18.2.md |
+| RV1050 | UC32 | self | PASS | 01119f32ed3d8521b70dbe2f | docs/release-1.18.2.md |
 
 ## Releases
 
