@@ -2,9 +2,10 @@
 
 ## Übergabe
 
-- Release 1.18.0 (2026-11-13): „Open and Sign In“ – Login-Seite im Standardbrowser öffnen, nach Touch ID Benutzername und Passwort eintragen (App-Knopf, `secretariat open PATH`, MCP `open_login`). Notarisiert, lokal installiert (Mesh verteilt), Website und Feed live und geprüft. Berichte `docs/open-login-2026-11-13.md`, `docs/release-1.18.0.md`.
-- Tracker neu gebunden (T001–T038, Selbstprüfung), `check`: STRUCTURE_OK.
-- Nächster Arbeitsschritt: Nacharbeiten aus BACKLOG („Öffnen und anmelden: Nacharbeiten“) oder in der Inventur Logins als „Close account“ markieren und Agenten recherchieren lassen.
+- 2026-11-14: Nachsichtige Suche (T039, R043/UC33): Einträge auch über gebundene Variablen- und Projektnamen, Trennzeichen egal, eingefügte Sätze finden ihren Eintrag. Commit eeb60a9, 148 Tests grün, Testinstanz belegt (docs/search-2026-11-14.md). Noch nicht released.
+- `check` meldet seitdem veraltete Nachweise vieler Aufgaben (ihre `Files` nennen `Sources/Secretariat/Views.swift`); `state` verweigert deshalb die Aktualisierung. Neubindung wie üblich beim nächsten Release.
+- Release 1.18.0 (2026-11-13): „Open and Sign In“. Berichte `docs/open-login-2026-11-13.md`, `docs/release-1.18.0.md`.
+- Nächster Arbeitsschritt: Release mit der neuen Suche (dann Nachweise neu binden) oder Nacharbeiten aus BACKLOG („Öffnen und anmelden: Nacharbeiten“).
 - Regel: In docs/, PLAN, TRACKER, STATE und Tests keine Adressen, Benutzernamen oder Site-Namen aus Ulis Tresor (öffentliches Repo).
 
 ## State

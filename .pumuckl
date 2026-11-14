@@ -9,17 +9,17 @@
   "git" : {
     "current_branch" : "main",
     "github_url" : "https:\/\/github.com\/moinsen-dev\/secretariat",
-    "has_uncommitted_changes" : true,
+    "has_uncommitted_changes" : false,
     "is_repo" : true,
     "last_commit_author" : "Ulrich Diedrichsen",
-    "last_commit_date" : "2026-11-12T19:23:23Z",
-    "last_commit_message" : "Teams: share codes, sealed share packages (HPKE auth per recipient), offboarding with rotation marks, managed team members (MDM), pkg script; site section, admin guide, threat model",
+    "last_commit_date" : "2026-11-13T16:11:36Z",
+    "last_commit_message" : "Site: plain-language section for vibe-coders",
     "local_secret_files" : 4,
     "stale_days" : 0,
     "stash_count" : 0,
-    "total_commits" : 147,
-    "uncommitted_files_count" : 7,
-    "unpushed_commits" : 3
+    "total_commits" : 197,
+    "uncommitted_files_count" : 0,
+    "unpushed_commits" : 0
   },
   "in_progress_since" : "2026-11-11T07:41:18Z",
   "kreislauf" : {
@@ -140,13 +140,13 @@
       }
     ]
   },
-  "last_scanned" : "2026-11-13T04:39:59Z",
+  "last_scanned" : "2026-11-14T05:27:36Z",
   "project_path" : "\/Users\/udi\/work\/moinsen\/ideas\/local_secrets_orchestrator",
   "pumuckl_version" : 1,
   "report" : {
-    "accent" : "#2E7D6B",
-    "ai_note" : "Secretariat is far along: 147 commits, a sealed-share and team feature just landed, and the public docs and threat model are already written.",
-    "ai_suggestion" : "Run the test suite locally with `xcrun swift test` and confirm the app still builds and launches, then update Sparkle and KeyboardShortcuts to current versions and get the tests green again.",
+    "accent" : "#2E6B4F",
+    "ai_note" : "Secretariat is already shipped with tests, release records and a public threat model, and its last commit was active today, so you can pick it up right where you left off.",
+    "ai_suggestion" : "Finish the plain-language site section started in commit d801f57 and check the result locally in the browser.",
     "architecture" : [
       {
         "lbl" : "UI",
@@ -254,7 +254,7 @@
     "history" : [
       "Das Projekt begann als Neubau einer nativen Minimal-App, der Altstand liegt im Legacy-Archiv. Danach kamen die Agenten-Einrichtung und die nichtinteraktive Keychain-CLI, zuletzt die lokale Abnahme von Version 0.2."
     ],
-    "impact" : 78,
+    "impact" : 75,
     "last_state" : [
       {
         "meta" : "Abschlussstand in PLAN\/TRACKER aktualisiert, vor 2 Tagen",
@@ -277,13 +277,13 @@
         "wip" : false
       }
     ],
-    "overall_gem_score" : 72,
-    "progress" : 85,
+    "overall_gem_score" : 82,
+    "progress" : 80,
     "re_entry_action" : "Die signierte dist\/Secretariat.app lokal mit xcrun notarytool notarisieren, das Ticket mit stapler anheften und die Installation per spctl --assess sowie einen echten Lauf von .\/script\/install.sh prüfen.",
     "re_entry_effort" : "~2h",
     "re_entry_why" : "Release-Reife ist die schwächste Dimension, weil die Abnahme zwar mit Developer-ID signiert, aber nicht notarisiert ist; erst damit lässt sich die App außerhalb dieses Macs ohne Gatekeeper-Warnung weitergeben.",
-    "recency" : 40,
-    "resumption_ease" : 70,
+    "recency" : 100,
+    "resumption_ease" : 85,
     "roadmap" : [
       {
         "d" : "Signierte App mit notarytool notarisieren, Ticket anheften, mit spctl prüfen",
@@ -377,7 +377,7 @@
         "t" : "Anforderungen und Nachweise pflegen"
       }
     ],
-    "vision" : "A native Mac vault that keeps API keys away from coding agents while letting the tools they launch still use them."
+    "vision" : "A native Mac app that keeps API keys in the iCloud keychain so coding agents can run tools without ever reading the secret values."
   },
   "retired" : false,
   "scan" : {
@@ -391,23 +391,23 @@
       "head" : "64e0af0"
     },
     "fast" : {
-      "at" : "2026-11-13T04:39:59Z",
-      "head" : "342e7c8",
-      "mtime" : 1794511527.56665
+      "at" : "2026-11-14T05:27:36Z",
+      "head" : "d801f57",
+      "mtime" : 1794586611.0268164
     },
     "git" : {
-      "at" : "2026-11-13T04:39:37Z",
-      "head" : "342e7c8",
-      "mtime" : 1794511527.56665
+      "at" : "2026-11-14T05:27:01Z",
+      "head" : "d801f57",
+      "mtime" : 1794586611.0268164
     }
   },
   "scoring" : {
-    "ai_note" : "Secretariat is far along: 147 commits, a sealed-share and team feature just landed, and the public docs and threat model are already written.",
-    "ai_suggestion" : "Run the test suite locally with `xcrun swift test` and confirm the app still builds and launches, then update Sparkle and KeyboardShortcuts to current versions and get the tests green again.",
+    "ai_note" : "Secretariat is already shipped with tests, release records and a public threat model, and its last commit was active today, so you can pick it up right where you left off.",
+    "ai_suggestion" : "Finish the plain-language site section started in commit d801f57 and check the result locally in the browser.",
     "effort_to_complete" : 35,
-    "impact" : 78,
-    "overall_gem_score" : 72,
-    "progress" : 85,
-    "recency" : 40
+    "impact" : 75,
+    "overall_gem_score" : 82,
+    "progress" : 80,
+    "recency" : 100
   }
 }

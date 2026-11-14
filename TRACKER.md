@@ -41,7 +41,8 @@
 | T035 | ERLEDIGT | E1700,E1701,E1702 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
 | T036 | ERLEDIGT | E1703,E1704,E1705 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
 | T037 | ERLEDIGT | E1706,E1707,E1708 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
-| T038 | OFFEN | - | - |
+| T038 | ERLEDIGT | E1709,E1710,E1711 | Release 1.18.0, siehe docs/release-1.18.0.md; nachgebunden 2026-11-14 |
+| T039 | ERLEDIGT | E1712,E1713,E1714 | siehe docs/search-2026-11-14.md |
 
 ## Evidence
 
@@ -1755,6 +1756,12 @@
 | E1706 | T037 | build | build | normal | 2026-11-13T12:56:44+00:00 | 741198e | e4d3917f64a76041d882c658 | docs/release-1.18.0.md | PASS |
 | E1707 | T037 | unit | unit | normal | 2026-11-13T12:56:44+00:00 | 741198e | e4d3917f64a76041d882c658 | docs/release-1.18.0.md | PASS |
 | E1708 | T037 | macos | ui | normal | 2026-11-13T12:56:44+00:00 | 741198e | e4d3917f64a76041d882c658 | docs/release-1.18.0.md | PASS |
+| E1709 | T038 | build | build | normal | 2026-11-14T07:28:07+00:00 | eeb60a9 | 07a74f91d17a26ab4fedadba | docs/release-1.18.0.md | PASS |
+| E1710 | T038 | unit | unit | normal | 2026-11-14T07:28:07+00:00 | eeb60a9 | 07a74f91d17a26ab4fedadba | docs/release-1.18.0.md | PASS |
+| E1711 | T038 | macos | ui | normal | 2026-11-14T07:28:07+00:00 | eeb60a9 | 07a74f91d17a26ab4fedadba | docs/release-1.18.0.md | PASS |
+| E1712 | T039 | build | build | normal | 2026-11-14T07:28:07+00:00 | eeb60a9 | db16a98ee0068f0fefdb04a3 | docs/search-2026-11-14.md | PASS |
+| E1713 | T039 | unit | unit | normal | 2026-11-14T07:28:07+00:00 | eeb60a9 | db16a98ee0068f0fefdb04a3 | docs/search-2026-11-14.md | PASS |
+| E1714 | T039 | macos | ui | normal | 2026-11-14T07:28:07+00:00 | eeb60a9 | db16a98ee0068f0fefdb04a3 | docs/search-2026-11-14.md | PASS |
 
 ## Reviews
 
@@ -2740,6 +2747,9 @@
 | RV978 | PLAN | self | PASS | a25b17b11034449b8e97866e | docs/release-1.18.0.md |
 | RV979 | UC05 | self | PASS | bd2b9ee51eb9245efb0fd049 | docs/release-1.18.0.md |
 | RV980 | UC07 | self | PASS | 4025059007b54c1b77ef1440 | docs/release-1.18.0.md |
+| RV981 | UC32 | self | PASS | d23d173f788506ff49b93ecf | docs/release-1.18.0.md |
+| RV982 | UC33 | self | PASS | e417fac6cd37207e1eb3bc30 | docs/search-2026-11-14.md |
+| RV983 | PLAN | self | PASS | 93af359f834efd70427115a0 | docs/search-2026-11-14.md |
 
 ## Releases
 
