@@ -5,46 +5,46 @@
 | ID | Status | Evidence | Reason |
 |---|---|---|---|
 | T001 | ERLEDIGT | E1520,E1525 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
-| T002 | ERLEDIGT | E1898,E1899,E1900 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T002 | ERLEDIGT | E1964,E1965,E1966 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
 | T003 | ERLEDIGT | E1901,E1902 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T004 | ERLEDIGT | E1813 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T005 | ERLEDIGT | E1903 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T006 | ERLEDIGT | E1904,E1905 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T007 | ERLEDIGT | E1906,E1907 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T008 | ERLEDIGT | E1908,E1909 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T009 | ERLEDIGT | E1910 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T010 | ERLEDIGT | E1911,E1912,E1913,E1914 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T011 | ERLEDIGT | E1826,E1827 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T013 | ERLEDIGT | E1828,E1829 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T014 | ERLEDIGT | E1915,E1916,E1917 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T015 | ERLEDIGT | E1833,E1834 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T012 | ERLEDIGT | E1835,E1836 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T016 | ERLEDIGT | E1837,E1838,E1839 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T017 | ERLEDIGT | E1840,E1841,E1842 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T018 | ERLEDIGT | E1918,E1919,E1920,E1921 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T019 | ERLEDIGT | E1847,E1848,E1849 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T020 | ERLEDIGT | E1922,E1923,E1924 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T004 | ERLEDIGT | E1967 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T005 | ERLEDIGT | E1968 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T006 | ERLEDIGT | E1969,E1970 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T007 | ERLEDIGT | E1971,E1972 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T008 | ERLEDIGT | E1973,E1974 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T009 | ERLEDIGT | E1975 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T010 | ERLEDIGT | E1976,E1977,E1978,E1979 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T011 | ERLEDIGT | E1980,E1981 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T013 | ERLEDIGT | E1982,E1983 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T014 | ERLEDIGT | E1984,E1985,E1986 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T015 | ERLEDIGT | E1987,E1988 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T012 | ERLEDIGT | E1989,E1990 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T016 | ERLEDIGT | E1991,E1992,E1993 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T017 | ERLEDIGT | E1994,E1995,E1996 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T018 | ERLEDIGT | E1997,E1998,E1999,E2000 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T019 | ERLEDIGT | E2001,E2002,E2003 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T020 | ERLEDIGT | E2004,E2005,E2006 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
 | T021 | ERLEDIGT | E1925,E1926,E1927 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T022 | ERLEDIGT | E1928,E1929,E1930 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T022 | ERLEDIGT | E2007,E2008,E2009 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
 | T023 | ERLEDIGT | E1859,E1860,E1861 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T024 | ERLEDIGT | E1931,E1932,E1933 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T025 | ERLEDIGT | E1865,E1866,E1867 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
+| T024 | ERLEDIGT | E2010,E2011,E2012 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T025 | ERLEDIGT | E2013,E2014,E2015 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
 | T026 | IN_ARBEIT | E1586,E1587,E1588 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
 | T027 | ERLEDIGT | E1934,E1935,E1936 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T028 | ERLEDIGT | E1871,E1872,E1873 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
 | T029 | ERLEDIGT | E1685,E1686,E1687 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
 | T030 | ERLEDIGT | E1937,E1938,E1939 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T031 | ERLEDIGT | E1940,E1941,E1942 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T031 | ERLEDIGT | E2016,E2017,E2018 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
 | T032 | ERLEDIGT | E1943,E1944,E1945 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T033 | BLOCKIERT | E1607,E1608,E1609 | pkg signiert, notarisiert, live (2c76bdaf); Abnahme PASS; macos-Nachweis der verwalteten Mitglieder nur per Fixture, ein echter erzwungener Wert braucht ein installiertes Profil (Ulis Ja) |
-| T034 | ERLEDIGT | E1946,E1947,E1948 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T035 | ERLEDIGT | E1949,E1950,E1951 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T036 | ERLEDIGT | E1889,E1890,E1891 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T037 | ERLEDIGT | E1892,E1893,E1894 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T038 | ERLEDIGT | E1952,E1953,E1954 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T034 | ERLEDIGT | E2019,E2020,E2021 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T035 | ERLEDIGT | E2022,E2023,E2024 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T036 | ERLEDIGT | E2025,E2026,E2027 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T037 | ERLEDIGT | E2028,E2029,E2030 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T038 | ERLEDIGT | E2031,E2032,E2033 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
 | T039 | ERLEDIGT | E1955,E1956,E1957 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T040 | ERLEDIGT | E1958,E1959,E1960 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T041 | ERLEDIGT | E1961,E1962,E1963 | Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
+| T041 | ERLEDIGT | E2034,E2035,E2036 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
 
 ## Evidence
 
@@ -2013,6 +2013,79 @@
 | E1961 | T041 | build | build | normal | 2026-11-14T12:48:24+00:00 | 53e4348+T041 | 976bc493dc79aadd54ff19a3 | docs/apple-pay-safari-2026-11-14.md | PASS |
 | E1962 | T041 | unit | unit | normal | 2026-11-14T12:48:24+00:00 | 53e4348+T041 | 976bc493dc79aadd54ff19a3 | docs/apple-pay-safari-2026-11-14.md | PASS |
 | E1963 | T041 | macos | ui | normal | 2026-11-14T12:48:24+00:00 | 53e4348+T041 | 976bc493dc79aadd54ff19a3 | docs/apple-pay-safari-2026-11-14.md | PASS |
+| E1964 | T002 | build | build | normal | 2026-11-14T13:37:15+00:00 | 34d4086 | 466799a21fe78a2da8ee23d8 | docs/release-1.18.3.md | PASS |
+| E1965 | T002 | macos | ui | normal | 2026-11-14T13:37:16+00:00 | 34d4086 | 466799a21fe78a2da8ee23d8 | docs/release-1.18.3.md | PASS |
+| E1966 | T002 | unit | unit | normal | 2026-11-14T13:37:17+00:00 | 34d4086 | 466799a21fe78a2da8ee23d8 | docs/release-1.18.3.md | PASS |
+| E1967 | T004 | unit | unit | normal | 2026-11-14T13:37:17+00:00 | 34d4086 | 567c4239021e209661ea870c | docs/release-1.18.3.md | PASS |
+| E1968 | T005 | macos | ui | normal | 2026-11-14T13:37:18+00:00 | 34d4086 | e12360093b300dbc638513f1 | docs/release-1.18.3.md | PASS |
+| E1969 | T006 | inspection | inspection | normal | 2026-11-14T13:37:18+00:00 | 34d4086 | ac616d3f879e1e3e7fa53a24 | docs/release-1.18.3.md | PASS |
+| E1970 | T006 | macos | ui | normal | 2026-11-14T13:37:20+00:00 | 34d4086 | ac616d3f879e1e3e7fa53a24 | docs/release-1.18.3.md | PASS |
+| E1971 | T007 | build | build | normal | 2026-11-14T13:37:20+00:00 | 34d4086 | 7605e3c9298f1c62f7f4ddfa | docs/release-1.18.3.md | PASS |
+| E1972 | T007 | unit | unit | normal | 2026-11-14T13:37:21+00:00 | 34d4086 | 7605e3c9298f1c62f7f4ddfa | docs/release-1.18.3.md | PASS |
+| E1973 | T008 | macos | ui | normal | 2026-11-14T13:37:21+00:00 | 34d4086 | e7d3b3572690ac45ffd42198 | docs/release-1.18.3.md | PASS |
+| E1974 | T008 | unit | unit | normal | 2026-11-14T13:37:22+00:00 | 34d4086 | e7d3b3572690ac45ffd42198 | docs/release-1.18.3.md | PASS |
+| E1975 | T009 | inspection | inspection | normal | 2026-11-14T13:37:22+00:00 | 34d4086 | 3f915b2ee3643febd3f339c7 | docs/release-1.18.3.md | PASS |
+| E1976 | T010 | build | build | normal | 2026-11-14T13:37:23+00:00 | 34d4086 | 5dfc10735e3043804e4805a7 | docs/release-1.18.3.md | PASS |
+| E1977 | T010 | inspection | inspection | normal | 2026-11-14T13:37:23+00:00 | 34d4086 | 5dfc10735e3043804e4805a7 | docs/release-1.18.3.md | PASS |
+| E1978 | T010 | macos | ui | normal | 2026-11-14T13:37:23+00:00 | 34d4086 | 5dfc10735e3043804e4805a7 | docs/release-1.18.3.md | PASS |
+| E1979 | T010 | unit | unit | normal | 2026-11-14T13:37:24+00:00 | 34d4086 | 5dfc10735e3043804e4805a7 | docs/release-1.18.3.md | PASS |
+| E1980 | T011 | build | build | normal | 2026-11-14T13:37:24+00:00 | 34d4086 | aae8bd13399ab6a2456bd9f6 | docs/release-1.18.3.md | PASS |
+| E1981 | T011 | unit | unit | normal | 2026-11-14T13:37:24+00:00 | 34d4086 | aae8bd13399ab6a2456bd9f6 | docs/release-1.18.3.md | PASS |
+| E1982 | T013 | build | build | normal | 2026-11-14T13:37:24+00:00 | 34d4086 | 322651e1ecd930f7ca363d73 | docs/release-1.18.3.md | PASS |
+| E1983 | T013 | inspection | inspection | normal | 2026-11-14T13:37:25+00:00 | 34d4086 | 322651e1ecd930f7ca363d73 | docs/release-1.18.3.md | PASS |
+| E1984 | T014 | build | build | normal | 2026-11-14T13:37:25+00:00 | 34d4086 | 344d71d56108a84734f2a2a2 | docs/release-1.18.3.md | PASS |
+| E1985 | T014 | macos | ui | normal | 2026-11-14T13:37:26+00:00 | 34d4086 | 344d71d56108a84734f2a2a2 | docs/release-1.18.3.md | PASS |
+| E1986 | T014 | unit | unit | normal | 2026-11-14T13:37:26+00:00 | 34d4086 | 344d71d56108a84734f2a2a2 | docs/release-1.18.3.md | PASS |
+| E1987 | T015 | inspection | inspection | normal | 2026-11-14T13:37:26+00:00 | 34d4086 | e33c3e5deee52afcda581c89 | docs/release-1.18.3.md | PASS |
+| E1988 | T015 | macos | ui | normal | 2026-11-14T13:37:27+00:00 | 34d4086 | e33c3e5deee52afcda581c89 | docs/release-1.18.3.md | PASS |
+| E1989 | T012 | inspection | inspection | normal | 2026-11-14T13:37:27+00:00 | 34d4086 | f16c2278459cbf1ba3ca7764 | docs/release-1.18.3.md | PASS |
+| E1990 | T012 | macos | ui | normal | 2026-11-14T13:37:28+00:00 | 34d4086 | f16c2278459cbf1ba3ca7764 | docs/release-1.18.3.md | PASS |
+| E1991 | T016 | build | build | normal | 2026-11-14T13:37:28+00:00 | 34d4086 | 93dd284d066f90c4cfa1a631 | docs/release-1.18.3.md | PASS |
+| E1992 | T016 | macos | ui | normal | 2026-11-14T13:37:29+00:00 | 34d4086 | 93dd284d066f90c4cfa1a631 | docs/release-1.18.3.md | PASS |
+| E1993 | T016 | unit | unit | normal | 2026-11-14T13:37:29+00:00 | 34d4086 | 93dd284d066f90c4cfa1a631 | docs/release-1.18.3.md | PASS |
+| E1994 | T017 | build | build | normal | 2026-11-14T13:37:30+00:00 | 34d4086 | eab7c65b06b2c696e0d9e9a1 | docs/release-1.18.3.md | PASS |
+| E1995 | T017 | macos | ui | normal | 2026-11-14T13:37:30+00:00 | 34d4086 | eab7c65b06b2c696e0d9e9a1 | docs/release-1.18.3.md | PASS |
+| E1996 | T017 | unit | unit | normal | 2026-11-14T13:37:31+00:00 | 34d4086 | eab7c65b06b2c696e0d9e9a1 | docs/release-1.18.3.md | PASS |
+| E1997 | T018 | build | build | normal | 2026-11-14T13:37:31+00:00 | 34d4086 | f1772fb0de19e57b0bd7aaa0 | docs/release-1.18.3.md | PASS |
+| E1998 | T018 | inspection | inspection | normal | 2026-11-14T13:37:32+00:00 | 34d4086 | f1772fb0de19e57b0bd7aaa0 | docs/release-1.18.3.md | PASS |
+| E1999 | T018 | macos | ui | normal | 2026-11-14T13:37:32+00:00 | 34d4086 | f1772fb0de19e57b0bd7aaa0 | docs/release-1.18.3.md | PASS |
+| E2000 | T018 | unit | unit | normal | 2026-11-14T13:37:33+00:00 | 34d4086 | f1772fb0de19e57b0bd7aaa0 | docs/release-1.18.3.md | PASS |
+| E2001 | T019 | build | build | normal | 2026-11-14T13:37:33+00:00 | 34d4086 | 03edcf2918057259d387e67b | docs/release-1.18.3.md | PASS |
+| E2002 | T019 | macos | ui | normal | 2026-11-14T13:37:34+00:00 | 34d4086 | 03edcf2918057259d387e67b | docs/release-1.18.3.md | PASS |
+| E2003 | T019 | unit | unit | normal | 2026-11-14T13:37:34+00:00 | 34d4086 | 03edcf2918057259d387e67b | docs/release-1.18.3.md | PASS |
+| E2004 | T020 | build | build | normal | 2026-11-14T13:37:35+00:00 | 34d4086 | a14699fcc923b62a6c71d066 | docs/release-1.18.3.md | PASS |
+| E2005 | T020 | macos | ui | normal | 2026-11-14T13:37:36+00:00 | 34d4086 | a14699fcc923b62a6c71d066 | docs/release-1.18.3.md | PASS |
+| E2006 | T020 | unit | unit | normal | 2026-11-14T13:37:37+00:00 | 34d4086 | a14699fcc923b62a6c71d066 | docs/release-1.18.3.md | PASS |
+| E2007 | T022 | build | build | normal | 2026-11-14T13:37:38+00:00 | 34d4086 | 1098bde088138da52c0ab45d | docs/release-1.18.3.md | PASS |
+| E2008 | T022 | macos | ui | normal | 2026-11-14T13:37:39+00:00 | 34d4086 | 1098bde088138da52c0ab45d | docs/release-1.18.3.md | PASS |
+| E2009 | T022 | unit | unit | normal | 2026-11-14T13:37:40+00:00 | 34d4086 | 1098bde088138da52c0ab45d | docs/release-1.18.3.md | PASS |
+| E2010 | T024 | build | build | normal | 2026-11-14T13:37:40+00:00 | 34d4086 | ce5431508cbe5b13e2429006 | docs/release-1.18.3.md | PASS |
+| E2011 | T024 | macos | ui | normal | 2026-11-14T13:37:40+00:00 | 34d4086 | ce5431508cbe5b13e2429006 | docs/release-1.18.3.md | PASS |
+| E2012 | T024 | unit | unit | normal | 2026-11-14T13:37:41+00:00 | 34d4086 | ce5431508cbe5b13e2429006 | docs/release-1.18.3.md | PASS |
+| E2013 | T025 | build | build | normal | 2026-11-14T13:37:42+00:00 | 34d4086 | 6422a9cc0a266e99aadf5b8f | docs/release-1.18.3.md | PASS |
+| E2014 | T025 | macos | ui | normal | 2026-11-14T13:37:42+00:00 | 34d4086 | 6422a9cc0a266e99aadf5b8f | docs/release-1.18.3.md | PASS |
+| E2015 | T025 | unit | unit | normal | 2026-11-14T13:37:43+00:00 | 34d4086 | 6422a9cc0a266e99aadf5b8f | docs/release-1.18.3.md | PASS |
+| E2016 | T031 | build | build | normal | 2026-11-14T13:37:43+00:00 | 34d4086 | d5a5a7c2ec94e2f50de4548d | docs/release-1.18.3.md | PASS |
+| E2017 | T031 | macos | ui | normal | 2026-11-14T13:37:44+00:00 | 34d4086 | d5a5a7c2ec94e2f50de4548d | docs/release-1.18.3.md | PASS |
+| E2018 | T031 | unit | unit | normal | 2026-11-14T13:37:44+00:00 | 34d4086 | d5a5a7c2ec94e2f50de4548d | docs/release-1.18.3.md | PASS |
+| E2019 | T034 | build | build | normal | 2026-11-14T13:37:45+00:00 | 34d4086 | 0c3eba65d193d3d8e401c342 | docs/release-1.18.3.md | PASS |
+| E2020 | T034 | macos | ui | normal | 2026-11-14T13:37:46+00:00 | 34d4086 | 0c3eba65d193d3d8e401c342 | docs/release-1.18.3.md | PASS |
+| E2021 | T034 | unit | unit | normal | 2026-11-14T13:37:47+00:00 | 34d4086 | 0c3eba65d193d3d8e401c342 | docs/release-1.18.3.md | PASS |
+| E2022 | T035 | build | build | normal | 2026-11-14T13:37:48+00:00 | 34d4086 | 9ab4c1bc466943d214fee218 | docs/release-1.18.3.md | PASS |
+| E2023 | T035 | macos | ui | normal | 2026-11-14T13:37:48+00:00 | 34d4086 | 9ab4c1bc466943d214fee218 | docs/release-1.18.3.md | PASS |
+| E2024 | T035 | unit | unit | normal | 2026-11-14T13:37:49+00:00 | 34d4086 | 9ab4c1bc466943d214fee218 | docs/release-1.18.3.md | PASS |
+| E2025 | T036 | build | build | normal | 2026-11-14T13:37:50+00:00 | 34d4086 | 3e2af23fabcd834871e2356c | docs/release-1.18.3.md | PASS |
+| E2026 | T036 | macos | ui | normal | 2026-11-14T13:37:50+00:00 | 34d4086 | 3e2af23fabcd834871e2356c | docs/release-1.18.3.md | PASS |
+| E2027 | T036 | unit | unit | normal | 2026-11-14T13:37:51+00:00 | 34d4086 | 3e2af23fabcd834871e2356c | docs/release-1.18.3.md | PASS |
+| E2028 | T037 | build | build | normal | 2026-11-14T13:37:51+00:00 | 34d4086 | 01bc480609fb6e3bfb63e34b | docs/release-1.18.3.md | PASS |
+| E2029 | T037 | macos | ui | normal | 2026-11-14T13:37:51+00:00 | 34d4086 | 01bc480609fb6e3bfb63e34b | docs/release-1.18.3.md | PASS |
+| E2030 | T037 | unit | unit | normal | 2026-11-14T13:37:52+00:00 | 34d4086 | 01bc480609fb6e3bfb63e34b | docs/release-1.18.3.md | PASS |
+| E2031 | T038 | build | build | normal | 2026-11-14T13:37:52+00:00 | 34d4086 | 09d3b2cbec60714c43b5fe8d | docs/release-1.18.3.md | PASS |
+| E2032 | T038 | macos | ui | normal | 2026-11-14T13:37:52+00:00 | 34d4086 | 09d3b2cbec60714c43b5fe8d | docs/release-1.18.3.md | PASS |
+| E2033 | T038 | unit | unit | normal | 2026-11-14T13:37:53+00:00 | 34d4086 | 09d3b2cbec60714c43b5fe8d | docs/release-1.18.3.md | PASS |
+| E2034 | T041 | build | build | normal | 2026-11-14T13:37:53+00:00 | 34d4086 | 29afe3f90fdcaca6b49234a2 | docs/release-1.18.3.md | PASS |
+| E2035 | T041 | macos | ui | normal | 2026-11-14T13:37:53+00:00 | 34d4086 | 29afe3f90fdcaca6b49234a2 | docs/release-1.18.3.md | PASS |
+| E2036 | T041 | unit | unit | normal | 2026-11-14T13:37:54+00:00 | 34d4086 | 29afe3f90fdcaca6b49234a2 | docs/release-1.18.3.md | PASS |
 
 ## Reviews
 
@@ -3091,6 +3164,53 @@
 | RV1071 | UC33 | self | PASS | 18ee3f00b879be3cbae1b0c7 | docs/apple-pay-safari-2026-11-14.md |
 | RV1072 | UC34 | self | PASS | 7098bd86e52ad0bf74959d8f | docs/apple-pay-safari-2026-11-14.md |
 | RV1073 | UC35 | independent | PASS | 3fa81e9c80595c29645be304 | docs/apple-pay-safari-2026-11-14.md |
+| RV1074 | UC02 | self | PASS | 1469a5bf32a1379a1a66ba47 | docs/release-1.18.3.md |
+| RV1075 | UC04 | self | PASS | 696424be80c2625932c4e9dc | docs/release-1.18.3.md |
+| RV1076 | UC05 | self | PASS | e33fd51c1dedf8803cddcd03 | docs/release-1.18.3.md |
+| RV1077 | UC06 | self | PASS | 4e29b6bc313915374210ee22 | docs/release-1.18.3.md |
+| RV1078 | UC07 | self | PASS | 62f10fbb7e2834eb6364e2e6 | docs/release-1.18.3.md |
+| RV1079 | UC08 | self | PASS | 393f99bd05b9b4ff6d81988c | docs/release-1.18.3.md |
+| RV1080 | UC09 | self | PASS | 46c8f4acd94614f26e9d1e48 | docs/release-1.18.3.md |
+| RV1081 | UC10 | self | PASS | 8c6b5713dc06a8005c8803ec | docs/release-1.18.3.md |
+| RV1082 | UC11 | self | PASS | f684f988da31c3642ba21a95 | docs/release-1.18.3.md |
+| RV1083 | UC12 | self | PASS | 18c5dff727e2333f0affcb6e | docs/release-1.18.3.md |
+| RV1084 | UC13 | self | PASS | 42eb0d352797c6339b8cae06 | docs/release-1.18.3.md |
+| RV1085 | UC14 | self | PASS | 662b6e7bb6d4e09215ed09eb | docs/release-1.18.3.md |
+| RV1086 | UC15 | self | PASS | 822c34a835a64ed4d619c9ae | docs/release-1.18.3.md |
+| RV1087 | UC17 | self | PASS | 81446e583390c97394203eb1 | docs/release-1.18.3.md |
+| RV1088 | UC19 | self | PASS | 60c8aafedbe464db711135c7 | docs/release-1.18.3.md |
+| RV1089 | UC20 | self | PASS | ff03414c1b2ca393aa70c5b9 | docs/release-1.18.3.md |
+| RV1090 | UC13 | self | PASS | 42eb0d352797c6339b8cae06 | docs/release-1.18.3.md |
+| RV1091 | UC25 | self | PASS | 0d33900b5457785a81767b30 | docs/release-1.18.3.md |
+| RV1092 | UC28 | self | PASS | 303c7767fd6488581b6bee43 | docs/release-1.18.3.md |
+| RV1093 | UC29 | self | PASS | e4bbc28ebc0918a515a682f7 | docs/release-1.18.3.md |
+| RV1094 | UC30 | self | PASS | c9b03aa74500b4d4feb95e3f | docs/release-1.18.3.md |
+| RV1095 | UC31 | self | PASS | ccc8e94ab051cc087729872d | docs/release-1.18.3.md |
+| RV1096 | UC32 | self | PASS | f33267921d8ec3903992a90e | docs/release-1.18.3.md |
+| RV1097 | UC35 | self | PASS | bfc6ac78cc40eb16d8f360d1 | docs/release-1.18.3.md |
+| RV1098 | UC02 | self | PASS | 9c7bf0917b8e7445d6c80c95 | docs/release-1.18.3.md |
+| RV1099 | UC04 | self | PASS | 122408878bc5114692b68fcd | docs/release-1.18.3.md |
+| RV1100 | UC05 | self | PASS | c66f0c40764a1338895f7c29 | docs/release-1.18.3.md |
+| RV1101 | UC06 | self | PASS | 6e4add6e663c8d4e533526a9 | docs/release-1.18.3.md |
+| RV1102 | UC07 | self | PASS | e410399eb96bd9ef5f3584ce | docs/release-1.18.3.md |
+| RV1103 | UC08 | self | PASS | ef91598b7140799e675d1855 | docs/release-1.18.3.md |
+| RV1104 | UC09 | self | PASS | f916ca443ca6af8e8bb39934 | docs/release-1.18.3.md |
+| RV1105 | UC10 | self | PASS | eb8d1955715ad32693f84c2a | docs/release-1.18.3.md |
+| RV1106 | UC11 | self | PASS | a8d0f0c44cfe6d71c8787f1f | docs/release-1.18.3.md |
+| RV1107 | UC12 | self | PASS | 6f6747067b6bf648c5ef5668 | docs/release-1.18.3.md |
+| RV1108 | UC13 | self | PASS | d8546943741fe5d7afd58bc4 | docs/release-1.18.3.md |
+| RV1109 | UC14 | self | PASS | 5f2e022a3e656da3a0378535 | docs/release-1.18.3.md |
+| RV1110 | UC15 | self | PASS | 53268e6716c0125c91e8f8f6 | docs/release-1.18.3.md |
+| RV1111 | UC17 | self | PASS | ad7d5740abd8feec45cfa1f2 | docs/release-1.18.3.md |
+| RV1112 | UC19 | self | PASS | 2044f195870ee9afc671d987 | docs/release-1.18.3.md |
+| RV1113 | UC20 | self | PASS | 345ce38d19802727dd6b475c | docs/release-1.18.3.md |
+| RV1114 | UC25 | self | PASS | f15d4d8c578d000d6bba8b37 | docs/release-1.18.3.md |
+| RV1115 | UC28 | self | PASS | 5dc83b7b47e5caea90898b72 | docs/release-1.18.3.md |
+| RV1116 | UC29 | self | PASS | 884f5c9a13b6c1411d1e56a4 | docs/release-1.18.3.md |
+| RV1117 | UC30 | self | PASS | d7df7313db84460b9b04bb9f | docs/release-1.18.3.md |
+| RV1118 | UC31 | self | PASS | 4b3392b3b264cab77e84e9d9 | docs/release-1.18.3.md |
+| RV1119 | UC32 | self | PASS | 5ef8dd2d6d3b55804bdff476 | docs/release-1.18.3.md |
+| RV1120 | UC35 | self | PASS | f6d56661328d09739bb09ca0 | docs/release-1.18.3.md |
 
 ## Releases
 
