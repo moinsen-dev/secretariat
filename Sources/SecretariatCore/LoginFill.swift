@@ -48,6 +48,10 @@ public enum LoginFill {
         let take = twoPartSuffixes.contains(lastTwo) || sharedHosting.contains(lastTwo) ? 3 : 2
         return labels.suffix(take).joined(separator: ".")
     }
+    /// Whether a host lives on a domain where strangers get their own subdomain (`*.ts.net`, `*.pages.dev` …).
+    public static func isSharedHosting(_ host: String) -> Bool {
+        sharedHosting.contains(host.split(separator: ".").suffix(2).joined(separator: "."))
+    }
     private static let twoPartSuffixes: Set<String> = ["co.uk", "org.uk", "ac.uk", "com.au", "net.au", "co.nz", "co.jp", "com.br", "co.za", "com.tr", "co.at"]
     /// Domains where strangers get their own subdomain (from the private part of the Public Suffix List): two sites there
     /// are never "the same site". Not the whole list; an unknown shared domain only changes the order, never the seal.

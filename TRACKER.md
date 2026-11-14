@@ -31,8 +31,8 @@
 | T025 | ERLEDIGT | E2013,E2014,E2015 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
 | T026 | IN_ARBEIT | E1586,E1587,E1588 | Neubindung Release 1.17.0, siehe docs/release-1.17.0.md |
 | T027 | ERLEDIGT | E1934,E1935,E1936 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
-| T028 | ERLEDIGT | E1871,E1872,E1873 | Neubindung Release 1.18.2, siehe docs/release-1.18.2.md |
-| T029 | ERLEDIGT | E1685,E1686,E1687 | Neubindung Release 1.18.0, siehe docs/release-1.18.0.md |
+| T028 | ERLEDIGT | E2040,E2041,E2042 | Neubindung nach T042, siehe docs/open-login-followups-2026-11-14.md |
+| T029 | ERLEDIGT | E2043,E2044,E2045 | Neubindung nach T042, siehe docs/open-login-followups-2026-11-14.md |
 | T030 | ERLEDIGT | E1937,E1938,E1939 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T031 | ERLEDIGT | E2016,E2017,E2018 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
 | T032 | ERLEDIGT | E1943,E1944,E1945 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
@@ -41,10 +41,11 @@
 | T035 | ERLEDIGT | E2022,E2023,E2024 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
 | T036 | ERLEDIGT | E2025,E2026,E2027 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
 | T037 | ERLEDIGT | E2028,E2029,E2030 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
-| T038 | ERLEDIGT | E2031,E2032,E2033 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T038 | ERLEDIGT | E2046,E2047,E2048 | Neubindung nach T042, siehe docs/open-login-followups-2026-11-14.md |
 | T039 | ERLEDIGT | E1955,E1956,E1957 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T040 | ERLEDIGT | E1958,E1959,E1960 | Neubindung nach Kaufen in Safari, siehe docs/apple-pay-safari-2026-11-14.md |
 | T041 | ERLEDIGT | E2034,E2035,E2036 | Neubindung Release 1.18.3, siehe docs/release-1.18.3.md |
+| T042 | ERLEDIGT | E2037,E2038,E2039 | Öffnen und anmelden: Nacharbeiten, siehe docs/open-login-followups-2026-11-14.md |
 
 ## Evidence
 
@@ -2086,6 +2087,18 @@
 | E2034 | T041 | build | build | normal | 2026-11-14T13:37:53+00:00 | 34d4086 | 29afe3f90fdcaca6b49234a2 | docs/release-1.18.3.md | PASS |
 | E2035 | T041 | macos | ui | normal | 2026-11-14T13:37:53+00:00 | 34d4086 | 29afe3f90fdcaca6b49234a2 | docs/release-1.18.3.md | PASS |
 | E2036 | T041 | unit | unit | normal | 2026-11-14T13:37:54+00:00 | 34d4086 | 29afe3f90fdcaca6b49234a2 | docs/release-1.18.3.md | PASS |
+| E2037 | T042 | build | build | normal | 2026-11-14T15:52:51+00:00 | 7d62de4+T042 | 99e4ae431be76f1fac59fec8 | docs/open-login-followups-2026-11-14.md | PASS |
+| E2038 | T042 | unit | unit | normal | 2026-11-14T15:52:52+00:00 | 7d62de4+T042 | 99e4ae431be76f1fac59fec8 | docs/open-login-followups-2026-11-14.md | PASS |
+| E2039 | T042 | macos | ui | normal | 2026-11-14T15:52:52+00:00 | 7d62de4+T042 | 99e4ae431be76f1fac59fec8 | docs/open-login-followups-2026-11-14.md | PASS |
+| E2040 | T028 | build | build | normal | 2026-11-14T15:53:17+00:00 | 7d62de4+T042 | 7af0d5be0efb4132e8c62892 | docs/open-login-followups-2026-11-14.md | PASS |
+| E2041 | T028 | macos | ui | normal | 2026-11-14T15:53:17+00:00 | 7d62de4+T042 | 7af0d5be0efb4132e8c62892 | docs/open-login-followups-2026-11-14.md | PASS |
+| E2042 | T028 | unit | unit | normal | 2026-11-14T15:53:17+00:00 | 7d62de4+T042 | 7af0d5be0efb4132e8c62892 | docs/open-login-followups-2026-11-14.md | PASS |
+| E2043 | T029 | build | build | normal | 2026-11-14T15:53:17+00:00 | 7d62de4+T042 | 7608f62dfc58830c05c4ca93 | docs/open-login-followups-2026-11-14.md | PASS |
+| E2044 | T029 | macos | ui | normal | 2026-11-14T15:53:18+00:00 | 7d62de4+T042 | 7608f62dfc58830c05c4ca93 | docs/open-login-followups-2026-11-14.md | PASS |
+| E2045 | T029 | unit | unit | normal | 2026-11-14T15:53:18+00:00 | 7d62de4+T042 | 7608f62dfc58830c05c4ca93 | docs/open-login-followups-2026-11-14.md | PASS |
+| E2046 | T038 | build | build | normal | 2026-11-14T15:53:18+00:00 | 7d62de4+T042 | ed8dc713d49b24ac5db9b991 | docs/open-login-followups-2026-11-14.md | PASS |
+| E2047 | T038 | macos | ui | normal | 2026-11-14T15:53:18+00:00 | 7d62de4+T042 | ed8dc713d49b24ac5db9b991 | docs/open-login-followups-2026-11-14.md | PASS |
+| E2048 | T038 | unit | unit | normal | 2026-11-14T15:53:19+00:00 | 7d62de4+T042 | ed8dc713d49b24ac5db9b991 | docs/open-login-followups-2026-11-14.md | PASS |
 
 ## Reviews
 
@@ -3211,6 +3224,12 @@
 | RV1118 | UC31 | self | PASS | 4b3392b3b264cab77e84e9d9 | docs/release-1.18.3.md |
 | RV1119 | UC32 | self | PASS | 5ef8dd2d6d3b55804bdff476 | docs/release-1.18.3.md |
 | RV1120 | UC35 | self | PASS | f6d56661328d09739bb09ca0 | docs/release-1.18.3.md |
+| RV1121 | PLAN | independent | PASS | dc2a77ab61260e8fdfd765ff | docs/open-login-followups-2026-11-14.md |
+| RV1122 | PLAN | self | PASS | dc2a77ab61260e8fdfd765ff | docs/open-login-followups-2026-11-14.md |
+| RV1123 | UC22 | self | PASS | 078dc5867df128fa861caf1c | docs/open-login-followups-2026-11-14.md |
+| RV1124 | UC23 | self | PASS | 7bcc5d983331be9aa28ec988 | docs/open-login-followups-2026-11-14.md |
+| RV1125 | UC32 | self | PASS | 657265d8d694ebfd991edcb9 | docs/open-login-followups-2026-11-14.md |
+| RV1126 | UC36 | self | PASS | f41f835349e557c44ad69d83 | docs/open-login-followups-2026-11-14.md |
 
 ## Releases
 
