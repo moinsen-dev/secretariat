@@ -2,9 +2,10 @@
 
 ## Übergabe
 
-- Release 1.18.1 (2026-11-14): Nachsichtige Suche (T039, R043/UC33) – Einträge auch über gebundene Variablen- und Projektnamen, Trennzeichen egal, eingefügte Sätze finden ihren Eintrag. Notarisiert, lokal installiert (Mesh verteilt), Website und Feed live geprüft. Berichte `docs/search-2026-11-14.md`, `docs/release-1.18.1.md`.
-- Tracker neu gebunden (T001–T039, Selbstprüfung), `check`: STRUCTURE_OK.
-- Nächster Arbeitsschritt: Nacharbeiten aus BACKLOG („Öffnen und anmelden: Nacharbeiten“) oder in der Inventur Logins als „Close account“ markieren.
+- 2026-11-14 nach 1.18.1: Löschen mit Entkoppeln (T040, R044/UC34) – der Löschdialog nennt Projekte/Ziele mit Variablen und bietet „Unbind and Delete“. Commit 6435b47, 149 Tests grün, Dialog in Testinstanz belegt, Klick auf den Knopf nur per Unit-Test (docs/unbind-delete-2026-11-14.md). Noch nicht released, nicht gepusht.
+- `check` meldet veraltete Nachweise vieler Aufgaben (Dateien `Storage.swift`, `Views.swift`, `AppModel.swift`); `state` verweigert deshalb. Neubindung beim nächsten Release (Ablauf wie docs/release-1.18.1.md).
+- Release 1.18.1 (2026-11-14): Nachsichtige Suche. Berichte `docs/search-2026-11-14.md`, `docs/release-1.18.1.md`.
+- Nächster Arbeitsschritt: Release 1.18.2 mit dem Löschdialog, dann Nachweise neu binden; sonst Nacharbeiten aus BACKLOG.
 - Regel: In docs/, PLAN, TRACKER, STATE und Tests keine Adressen, Benutzernamen oder Site-Namen aus Ulis Tresor (öffentliches Repo).
 
 ## State

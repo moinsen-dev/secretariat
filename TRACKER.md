@@ -42,7 +42,8 @@
 | T036 | ERLEDIGT | E1793,E1794,E1795 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
 | T037 | ERLEDIGT | E1796,E1797,E1798 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
 | T038 | ERLEDIGT | E1799,E1800,E1801 | Neubindung Release 1.18.1, siehe docs/release-1.18.1.md |
-| T039 | ERLEDIGT | E1712,E1713,E1714 | siehe docs/search-2026-11-14.md |
+| T039 | ERLEDIGT | E1805,E1806,E1807 | siehe docs/search-2026-11-14.md; nach Löschdialog neu gebunden |
+| T040 | ERLEDIGT | E1802,E1803,E1804 | siehe docs/unbind-delete-2026-11-14.md |
 
 ## Evidence
 
@@ -1849,6 +1850,12 @@
 | E1799 | T038 | build | build | normal | 2026-11-14T07:39:22+00:00 | d8c9eec | c1c60143566bc8db9e20c3f1 | docs/release-1.18.1.md | PASS |
 | E1800 | T038 | macos | ui | normal | 2026-11-14T07:39:22+00:00 | d8c9eec | c1c60143566bc8db9e20c3f1 | docs/release-1.18.1.md | PASS |
 | E1801 | T038 | unit | unit | normal | 2026-11-14T07:39:22+00:00 | d8c9eec | c1c60143566bc8db9e20c3f1 | docs/release-1.18.1.md | PASS |
+| E1802 | T040 | build | build | normal | 2026-11-14T08:30:28+00:00 | 6435b47 | f4b04e10685c68baa17642b1 | docs/unbind-delete-2026-11-14.md | PASS |
+| E1803 | T040 | unit | unit | normal | 2026-11-14T08:30:28+00:00 | 6435b47 | f4b04e10685c68baa17642b1 | docs/unbind-delete-2026-11-14.md | PASS |
+| E1804 | T040 | macos | ui | normal | 2026-11-14T08:30:28+00:00 | 6435b47 | f4b04e10685c68baa17642b1 | docs/unbind-delete-2026-11-14.md | PASS |
+| E1805 | T039 | build | build | normal | 2026-11-14T08:30:44+00:00 | 6435b47 | 3e03a44aa9cddbddbf629d91 | docs/search-2026-11-14.md | PASS |
+| E1806 | T039 | unit | unit | normal | 2026-11-14T08:30:44+00:00 | 6435b47 | 3e03a44aa9cddbddbf629d91 | docs/search-2026-11-14.md | PASS |
+| E1807 | T039 | macos | ui | normal | 2026-11-14T08:30:45+00:00 | 6435b47 | 3e03a44aa9cddbddbf629d91 | docs/search-2026-11-14.md | PASS |
 
 ## Reviews
 
@@ -2871,6 +2878,10 @@
 | RV1015 | UC32 | self | PASS | 0db29c86c2f1423e18341ae8 | docs/release-1.18.1.md |
 | RV1016 | UC33 | self | PASS | e417fac6cd37207e1eb3bc30 | docs/release-1.18.1.md |
 | RV1017 | PLAN | self | PASS | 93af359f834efd70427115a0 | docs/release-1.18.1.md |
+| RV1018 | UC34 | self | PASS | 456b3548d6a16ca3f717e758 | docs/unbind-delete-2026-11-14.md |
+| RV1019 | PLAN | self | PASS | 8c8072fff8d35d36ef5e769f | docs/unbind-delete-2026-11-14.md |
+| RV1020 | UC33 | self | PASS | 6b8994d794d78084d2a750f3 | docs/search-2026-11-14.md |
+| RV1021 | UC34 | self | PASS | d27afaaa8882f4f89d5d3548 | docs/unbind-delete-2026-11-14.md |
 
 ## Releases
 
